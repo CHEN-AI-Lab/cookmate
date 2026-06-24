@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -11,6 +11,7 @@ model User {
   id             String   @id @default(cuid())
   name           String?
   email          String?  @unique
+  phone          String?  @unique
   emailVerified  DateTime?
   image          String?
   passwordHash   String?
@@ -31,6 +32,7 @@ model User {
   recipes     Recipe[]
   usageDaily  UsageDaily[]
   groceryItems GroceryItem[]
+  paymentOrders PaymentOrder[]
 }
 
 model Account {
@@ -102,6 +104,8 @@ model Recipe {
 
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   mealSlots MealSlot[]
+
+  @@unique([userId, title])
 }
 
 model MealPlan {
@@ -139,6 +143,21 @@ model GroceryItem {
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name])
+}
+
+model VerificationCode {
+  id        String   @id @default(cuid())
+  phone     String?
+  email     String?
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([phone, code])
+  @@index([email, code])
 }
 
 model UsageDaily {
@@ -149,4 +168,18 @@ model UsageDaily {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([userId, date])
+}
+
+model PaymentOrder {
+  id            String   @id @default(cuid())
+  userId        String
+  orderId       String   @unique           // CM 开头订单号
+  channel       String                     // "wechat" | "alipay"
+  amount        Int                        // 分
+  payjsOrderId  String?                    // PayJS 订单号
+  status        String   @default("PENDING") // PENDING | PAID | EXPIRED | CANCELLED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

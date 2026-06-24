@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { isStaple } from "@/lib/grocery-categories"
 
 export async function POST(req: Request) {
   const session = await auth()
@@ -8,8 +9,15 @@ export async function POST(req: Request) {
   try {
     const { name } = await req.json()
     if (!name) return NextResponse.json({ error: "请输入物品名称" }, { status: 400 })
+    const normalizedName = name.trim().toLowerCase()
+    if (!normalizedName) return NextResponse.json({ error: "请输入物品名称" }, { status: 400 })
+    if (isStaple(normalizedName)) return NextResponse.json({ error: "该物品不需要购买" }, { status: 400 })
+    const existing = await prisma.groceryItem.findFirst({
+      where: { userId: session.user.id, name: normalizedName },
+    })
+    if (existing) return NextResponse.json({ error: "该物品已存在" }, { status: 400 })
     const item = await prisma.groceryItem.create({
-      data: { userId: session.user.id, name },
+      data: { userId: session.user.id, name: normalizedName },
     })
     return NextResponse.json({ success: true, item })
   } catch (error) {

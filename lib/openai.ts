@@ -8,6 +8,8 @@ function getOpenAI() {
       apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
       baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
       dangerouslyAllowBrowser: false,
+      timeout: 120000,
+      maxRetries: 2,
     })
   }
   return openaiInstance
@@ -26,12 +28,14 @@ async function callAI(params: {
   systemPrompt: string
   userContent: string
   maxTokens: number
+  client?: OpenAI  // 可选的自定义 client，用于设置超时等
 }): Promise<string> {
-  const { systemPrompt, userContent, maxTokens } = params
+  const { systemPrompt, userContent, maxTokens, client } = params
+  const ai = client || getOpenAI()
 
   // 第一次：带 response_format（开箱即用 OpenAI、DeepSeek 官方等）
   try {
-    const response = await getOpenAI().chat.completions.create({
+    const response = await ai.chat.completions.create({
       model: getModel(),
       messages: [
         { role: "system", content: systemPrompt },
@@ -44,12 +48,13 @@ async function callAI(params: {
     const content = response.choices[0]?.message?.content
     if (content) return cleanJSONResponse(content)
   } catch (err: any) {
-    // 只有 400 错误（不支持 json_object）才降级重试
-    if (err?.status !== 400) throw err
+    // 400/403 错误（不支持 json_object）才降级重试
+    // SenseNova 返回 403，OpenAI 返回 400
+    if (err?.status !== 400 && err?.status !== 403) throw err
   }
 
   // 降级：不带 response_format（商汤、部分代理中转等）
-  const response = await getOpenAI().chat.completions.create({
+  const response = await ai.chat.completions.create({
     model: getModel(),
     messages: [
       { role: "system", content: systemPrompt },
@@ -179,6 +184,14 @@ export async function generateWeeklyPlan(
     return getMockWeeklyPlan(preferences)
   }
 
+  // 为周计划生成单独创建带超时的 client，避免长时间挂起
+  const planClient = new OpenAI({
+    apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
+    baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
+    timeout: 120000,
+    maxRetries: 0,
+  })
+
   const days = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
   const weeklyPrompt = `你是 CookMate 的 AI 厨师助手。你的任务是为一周七天生成早、午、晚餐菜谱。
 1. 自由推荐多样化的菜谱，涵盖不同菜系（中餐、西餐、川菜、日料等混搭），确保一周饮食丰富不重复
@@ -219,6 +232,7 @@ JSON 格式:
     systemPrompt: weeklyPrompt,
     userContent,
     maxTokens: 12000,
+    client: planClient,
   })
 
   return JSON.parse(content)

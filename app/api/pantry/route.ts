@@ -29,13 +29,17 @@ export async function POST(req: Request) {
     // 批量添加
     if (body.items && Array.isArray(body.items)) {
       const created = []
+      const skipped = []
       for (const item of body.items) {
-        const name = (item.name || "").trim()
+        const name = (item.name || "").trim().toLowerCase()
         if (!name) continue
         const exists = await prisma.pantryItem.findFirst({
-          where: { name: name.toLowerCase(), userId: session.user.id },
+          where: { name, userId: session.user.id },
         })
-        if (exists) continue
+        if (exists) {
+          skipped.push(item.name || "")
+          continue
+        }
         const createdItem = await prisma.pantryItem.create({
           data: {
             userId: session.user.id,
@@ -46,20 +50,21 @@ export async function POST(req: Request) {
         })
         created.push(createdItem)
       }
-      return NextResponse.json({ items: created, count: created.length })
+      return NextResponse.json({ items: created, count: created.length, skipped, skippedCount: skipped.length })
     }
 
     // 单个添加
     const { name, category, quantity } = body
-    if (!name?.trim()) return NextResponse.json({ error: "请输入食材名称" }, { status: 400 })
+    const normalizedName = (name || "").trim().toLowerCase()
+    if (!normalizedName) return NextResponse.json({ error: "请输入食材名称" }, { status: 400 })
 
-    const existing = await prisma.pantryItem.findFirst({ where: { name: name.trim().toLowerCase(), userId: session.user.id } })
+    const existing = await prisma.pantryItem.findFirst({ where: { name: normalizedName, userId: session.user.id } })
     if (existing) return NextResponse.json({ error: "该食材已存在" }, { status: 400 })
 
     const item = await prisma.pantryItem.create({
       data: {
         userId: session.user.id,
-        name: name.trim(),
+        name: normalizedName,
         category: category || null,
         quantity: quantity || null,
       },

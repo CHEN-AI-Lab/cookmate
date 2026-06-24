@@ -43,6 +43,7 @@ export default function PantryPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   const [showAddDialog, setShowAddDialog] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const toggleSelect = (id: string) => {
     const next = new Set(selected)
@@ -65,23 +66,38 @@ export default function PantryPage() {
   const [dupDialog, setDupDialog] = useState<string | null>(null)
 
   const addItem = async (name: string, category?: string) => {
-    if (!name.trim()) return
-    if (items.some((i) => i.name === name.trim())) {
-      setDupDialog(name.trim())
+    const trimmed = name.trim()
+    if (!trimmed) return
+    // 检查本地列表（忽略大小写）
+    if (items.some((i) => i.name.toLowerCase() === trimmed.toLowerCase())) {
+      setDupDialog(trimmed)
       setTimeout(() => setDupDialog(null), 2500)
+      setInputName("")
       return
     }
     try {
       const res = await fetch("/api/pantry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), category: category }),
+        body: JSON.stringify({ name: trimmed, category: category }),
       })
       if (res.ok) {
         const data = await res.json()
         setItems((prev) => [data.item, ...prev])
+      } else {
+        const data = await res.json().catch(() => ({}))
+        if (data.error?.includes("已存在")) {
+          setDupDialog(trimmed)
+          setTimeout(() => setDupDialog(null), 2500)
+        } else {
+          setError(data.error || "添加失败，请稍后重试")
+          setTimeout(() => setError(null), 2500)
+        }
       }
-    } catch {}
+    } catch {
+      setError("网络错误，请稍后重试")
+      setTimeout(() => setError(null), 2500)
+    }
     setInputName("")
   }
 
@@ -194,7 +210,7 @@ export default function PantryPage() {
                 <p className="text-sm text-gray-500 mb-2">{group.category}</p>
                 <div className="flex flex-wrap gap-2">
                   {group.items.map((item) => {
-                    const alreadyAdded = items.some((i) => i.name === item)
+                    const alreadyAdded = items.some((i) => i.name.toLowerCase() === item.toLowerCase())
                     return (
                       <button
                         key={item}

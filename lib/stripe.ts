@@ -1,19 +1,25 @@
 import Stripe from "stripe"
 
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY
-const STRIPE_PRO_PRICE_ID = process.env.STRIPE_PRO_PRICE_ID
-const STRIPE_FAMILY_PRICE_ID = process.env.STRIPE_FAMILY_PRICE_ID
+let stripeInstance: Stripe | null = null
 
-if (!STRIPE_SECRET_KEY || !STRIPE_PRO_PRICE_ID || !STRIPE_FAMILY_PRICE_ID) {
-  console.warn("Stripe environment variables not configured")
+export function getStripe(): Stripe {
+  const key = process.env.STRIPE_SECRET_KEY
+  if (!key) {
+    throw new Error("STRIPE_SECRET_KEY is not configured")
+  }
+  if (!stripeInstance) {
+    stripeInstance = new Stripe(key, {
+      apiVersion: "2026-04-22.dahlia",
+      typescript: true,
+    })
+  }
+  return stripeInstance
 }
 
-export const stripe = new Stripe(STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-02-24" as any,
-  typescript: true,
-})
-
-export const PRICE_IDS = {
-  pro: STRIPE_PRO_PRICE_ID!,
-  family: STRIPE_FAMILY_PRICE_ID!,
-} as const
+export function getPriceIds() {
+  const pro = process.env.STRIPE_PRO_PRICE_ID
+  if (!pro) {
+    throw new Error("STRIPE_PRO_PRICE_ID is not configured")
+  }
+  return { pro }
+}

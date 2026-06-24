@@ -73,33 +73,41 @@ export async function POST(req: Request) {
 
     // saveOnly 模式：直接保存菜谱到数据库，不调用 AI
     if (saveOnly) {
-      const existing = await prisma.recipe.findFirst({
-        where: { userId: session.user.id, title },
-      })
-      if (existing) {
-        // 已存在则切换收藏
-        const updated = await prisma.recipe.update({
-          where: { id: existing.id },
-          data: { starred: starred ?? !existing.starred },
+      const normalizedName = (title || "").trim().toLowerCase()
+      if (!normalizedName) return NextResponse.json({ error: "请输入菜谱名称" }, { status: 400 })
+      try {
+        const saved = await prisma.recipe.create({
+          data: {
+            userId: session.user.id,
+            title: normalizedName,
+            description: description || "",
+            ingredients: Array.isArray(ingredients) ? ingredients.join("、") : (ingredients || ""),
+            steps: Array.isArray(steps) ? steps.join("\n") : (steps || ""),
+            cookingTime: cookingTime ? Number(cookingTime) : null,
+            calories: calories ? Number(calories) : null,
+            cuisineType: cuisineType || null,
+            difficulty: difficulty || null,
+            isGenerated: true,
+            starred: starred ?? false,
+          },
         })
-        return NextResponse.json({ recipe: updated })
+        return NextResponse.json({ recipe: saved })
+      } catch (err: any) {
+        // P2002 = 同名菜谱已存在，切换收藏
+        if (err?.code === "P2002") {
+          const existing = await prisma.recipe.findFirst({
+            where: { userId: session.user.id, title: normalizedName },
+          })
+          if (existing) {
+            const updated = await prisma.recipe.update({
+              where: { id: existing.id },
+              data: { starred: starred ?? !existing.starred },
+            })
+            return NextResponse.json({ recipe: updated })
+          }
+        }
+        throw err
       }
-      const saved = await prisma.recipe.create({
-        data: {
-          userId: session.user.id,
-          title: title || "",
-          description: description || "",
-          ingredients: Array.isArray(ingredients) ? ingredients.join("、") : (ingredients || ""),
-          steps: Array.isArray(steps) ? steps.join("\n") : (steps || ""),
-          cookingTime: cookingTime ? Number(cookingTime) : null,
-          calories: calories ? Number(calories) : null,
-          cuisineType: cuisineType || null,
-          difficulty: difficulty || null,
-          isGenerated: true,
-          starred: starred ?? false,
-        },
-      })
-      return NextResponse.json({ recipe: saved })
     }
 
     if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
@@ -144,21 +152,28 @@ export async function POST(req: Request) {
     // 保存生成的菜谱到数据库
     const savedRecipes = []
     for (const recipe of recipes) {
-      const saved = await prisma.recipe.create({
-        data: {
-          userId: session.user.id,
-          title: recipe.title,
-          description: recipe.description || "",
-          ingredients: normalizeIngredients(recipe.ingredients).join(", "),
-          steps: Array.isArray(recipe.steps) ? recipe.steps.join("\n") : (recipe.steps || ""),
-          cookingTime: recipe.cookingTime ? Number(recipe.cookingTime) : null,
-          calories: recipe.calories ? Number(recipe.calories) : null,
-          cuisineType: recipe.cuisineType || null,
-          difficulty: recipe.difficulty || null,
-          isGenerated: true,
-        },
-      })
-      savedRecipes.push({ ...recipe, id: saved.id })
+      const normalizedName = recipe.title.trim().toLowerCase()
+      try {
+        const saved = await prisma.recipe.create({
+          data: {
+            userId: session.user.id,
+            title: normalizedName,
+            description: recipe.description || "",
+            ingredients: normalizeIngredients(recipe.ingredients).join(", "),
+            steps: Array.isArray(recipe.steps) ? recipe.steps.join("\n") : (recipe.steps || ""),
+            cookingTime: recipe.cookingTime ? Number(recipe.cookingTime) : null,
+            calories: recipe.calories ? Number(recipe.calories) : null,
+            cuisineType: recipe.cuisineType || null,
+            difficulty: recipe.difficulty || null,
+            isGenerated: true,
+          },
+        })
+        savedRecipes.push({ ...recipe, id: saved.id })
+      } catch (err: any) {
+        // P2002 = unique constraint violation（同名菜谱已存在）
+        if (err?.code === "P2002") continue
+        throw err
+      }
     }
 
     if (!isMock && !isDev) {

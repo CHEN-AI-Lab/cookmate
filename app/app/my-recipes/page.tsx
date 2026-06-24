@@ -345,7 +345,7 @@ export default function MyRecipesPage() {
                 </div>
               )}
             </div>
-          )}
+          )})}
         </div>
       )}
 

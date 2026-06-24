@@ -2,16 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from "@/lib/preferences"
 
 const STEPS = ["欢迎", "偏好", "食材", "上手", "完成"]
 
-const DIET_OPTIONS = ["不限", "减脂", "增肌", "素食", "低碳水", "无麸质"]
-const CUISINE_OPTIONS = ["中餐", "西餐", "日料", "韩餐", "东南亚", "印度菜", "中东菜", "墨西哥菜"]
-
 const QUICK_INGREDIENTS = [
-  { cat: "🥬 蔬菜", items: ["鸡蛋", "西红柿", "土豆", "青菜", "胡萝卜", "洋葱", "大蒜", "姜", "葱"] },
-  { cat: "🥩 肉禽", items: ["鸡胸肉", "鸡腿", "五花肉", "牛肉", "排骨", "培根"] },
-  { cat: "🍚 主食", items: ["大米", "面条", "面粉", "挂面", "食用油"] },
+  { cat: "🥬 蔬菜", items: ["西红柿", "青菜", "白菜", "土豆", "胡萝卜", "洋葱", "大蒜", "姜", "葱"] },
+  { cat: "🥩 肉禽蛋", items: ["鸡蛋", "鸡胸肉", "鸡腿", "五花肉", "牛肉", "培根"] },
+  { cat: "🍚 主食粮油", items: ["大米", "面条", "面粉", "挂面", "食用油"] },
 ]
 
 export default function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
@@ -211,7 +209,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
               <div className="mt-5">
                 <label className="text-sm font-semibold text-gray-700">几人份</label>
                 <div className="flex items-center gap-3 mt-2">
-                  {[1, 2, 3, 4, 5, 6].map((n) => (
+                  {SERVING_SIZE_OPTIONS.map((n) => (
                     <button
                       key={n}
                       onClick={() => setServingSize(n)}

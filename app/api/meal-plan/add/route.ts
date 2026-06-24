@@ -68,11 +68,11 @@ export async function POST(req: Request) {
       if (existing.recipeId) {
         await prisma.recipe.update({
           where: { id: existing.recipeId },
-          data: { title, description: description || "", ingredients: ingredients || "", steps: steps || "", cookingTime, calories, cuisineType, starred: starred ?? false },
+          data: { title: title.trim().toLowerCase(), description: description || "", ingredients: ingredients || "", steps: steps || "", cookingTime, calories, cuisineType, starred: starred ?? false },
         })
       } else {
         const r = await prisma.recipe.create({
-          data: { userId: session.user.id, title, description: description || "", ingredients: ingredients || "", steps: steps || "", cookingTime, calories, cuisineType, isGenerated: false, starred: starred ?? false },
+          data: { userId: session.user.id, title: title.trim().toLowerCase(), description: description || "", ingredients: ingredients || "", steps: steps || "", cookingTime, calories, cuisineType, isGenerated: false, starred: starred ?? false },
         })
         await prisma.mealSlot.update({
           where: { id: existing.id },
@@ -81,10 +81,11 @@ export async function POST(req: Request) {
       }
     } else {
       // 先创建 Recipe 记录
+      const normalizedName = title.trim().toLowerCase()
       const recipe = await prisma.recipe.create({
         data: {
           userId: session.user.id,
-          title,
+          title: normalizedName,
           description: description || "",
           ingredients: ingredients || "",
           steps: steps || "",

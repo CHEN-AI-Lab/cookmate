@@ -50,13 +50,14 @@ export async function DELETE(req: NextRequest) {
     try {
       body = await req.json()
     } catch {
-      // no body — delete all
+      return NextResponse.json({ error: "请提供要删除的菜谱 ID 列表" }, { status: 400 })
     }
 
-    const where: Record<string, unknown> = { userId: session.user.id }
-    if (body.ids && Array.isArray(body.ids) && body.ids.length > 0) {
-      where.id = { in: body.ids }
+    if (!body.ids || !Array.isArray(body.ids) || body.ids.length === 0) {
+      return NextResponse.json({ error: "请提供要删除的菜谱 ID 列表" }, { status: 400 })
     }
+
+    const where: Record<string, unknown> = { userId: session.user.id, id: { in: body.ids } }
 
     const result = await prisma.recipe.deleteMany({ where })
     return NextResponse.json({ success: true, count: result.count })

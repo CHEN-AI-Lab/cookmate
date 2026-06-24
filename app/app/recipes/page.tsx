@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { RecipeCard } from "@/components/features/RecipeCard"
 
 interface Recipe {
-  id: string | number
+  id: string
   title: string
   description: string
   ingredients: string[]
@@ -42,9 +43,7 @@ export default function RecipesPage() {
   const [dupDialog, setDupDialog] = useState<string | null>(null)
   // 菜谱删除
   const [deleteDialog, setDeleteDialog] = useState<Recipe | null>(null)
-  const [bulkDeleteDialog, setBulkDeleteDialog] = useState(false)
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [selectMode, setSelectMode] = useState(false)
+  const [deleteError, setDeleteError] = useState("")
   // 食材库相关
   const [pantryItems, setPantryItems] = useState<PantryItem[]>([])
   const [pantryLoaded, setPantryLoaded] = useState(false)
@@ -90,42 +89,8 @@ export default function RecipesPage() {
       setDeleteDialog(null)
     } else {
       const data = await res.json()
-      alert(`删除失败: ${data.error || "未知错误"}`)
-    }
-  }
-
-  const deleteSelected = async () => {
-    if (selectedIds.size === 0) return
-    const res = await fetch("/api/recipes", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids: Array.from(selectedIds) }),
-    })
-    if (res.ok) {
-      setRecipes(recipes.filter((r) => !selectedIds.has(String(r.id))))
-      setSelectedIds(new Set())
-      setSelectMode(false)
-    } else {
-      const data = await res.json()
-      alert(`批量删除失败: ${data.error || "未知错误"}`)
-    }
-  }
-
-  const toggleSelect = (recipe: Recipe) => {
-    const id = String(recipe.id)
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
-  const toggleSelectAll = () => {
-    if (selectedIds.size === recipes.length) {
-      setSelectedIds(new Set())
-    } else {
-      setSelectedIds(new Set(recipes.map((r) => String(r.id))))
+      setDeleteError(data.error || "未知错误")
+      setTimeout(() => setDeleteError(""), 2500)
     }
   }
 
@@ -204,7 +169,8 @@ export default function RecipesPage() {
   const addIngredient = () => {
     const trimmed = input.trim()
     if (!trimmed) return
-    if (ingredients.includes(trimmed)) {
+    // 检查是否已在食材列表中（忽略大小写）
+    if (ingredients.some((i) => i.toLowerCase() === trimmed.toLowerCase())) {
       setDupDialog(trimmed)
       setTimeout(() => setDupDialog(null), 2500)
       setInput("")
@@ -227,22 +193,29 @@ export default function RecipesPage() {
 
   // 从食材库导入单个食材
   const importPantryItem = (name: string) => {
-    if (ingredients.includes(name)) {
-      setIngredients(ingredients.filter((i) => i !== name))
+    // 忽略大小写检查
+    const exists = ingredients.some((i) => i.toLowerCase() === name.toLowerCase())
+    if (exists) {
+      setIngredients(ingredients.filter((i) => i.toLowerCase() !== name.toLowerCase()))
     } else {
       setIngredients([...ingredients, name])
     }
   }
 
-  // 一键导入全部食材库
+  // 一键导入全部食材库（忽略大小写去重）
   const importAllPantry = () => {
-    const names = pantryItems.map((i) => i.name)
-    const merged = [...new Set([...ingredients, ...names])]
+    const merged = [...ingredients]
+    for (const item of pantryItems) {
+      const exists = merged.some((i) => i.toLowerCase() === item.name.toLowerCase())
+      if (!exists) {
+        merged.push(item.name)
+      }
+    }
     setIngredients(merged)
   }
 
-  // 检查食材是否来自食材库
-  const isFromPantry = (name: string) => pantryItems.some((i) => i.name === name)
+  // 检查食材是否来自食材库（忽略大小写）
+  const isFromPantry = (name: string) => pantryItems.some((i) => i.name.toLowerCase() === name.toLowerCase())
 
   const generateRecipes = async () => {
     if (ingredients.length === 0) {
@@ -407,133 +380,19 @@ export default function RecipesPage() {
 
       {recipes.length > 0 && (
         <div className="space-y-4">
-          {/* 选择模式工具栏 */}
-          {selectMode ? (
-            <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-2.5">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={toggleSelectAll}
-                  className="text-sm text-gray-600 hover:text-[#FF6B35]"
-                >
-                  {selectedIds.size === recipes.length ? "取消全选" : "全选"}
-                </button>
-                <span className="text-sm text-gray-500">已选 {selectedIds.size} 个</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => { setSelectedIds(new Set()); setSelectMode(false) }}
-                  className="text-sm text-gray-600 hover:text-gray-800"
-                >
-                  取消
-                </button>
-                <button
-                  onClick={() => setBulkDeleteDialog(true)}
-                  className="text-sm text-red-600 hover:text-red-800 font-medium"
-                >
-                  删除选中
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-end">
-              <button
-                onClick={() => setSelectMode(true)}
-                className="text-sm text-gray-500 hover:text-[#FF6B35]"
-              >
-                多选管理
-              </button>
-            </div>
-          )}
-
           {recipes.map((recipe, idx) => (
-            <div
+            <RecipeCard
               key={idx}
-              className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all ${
-                selectedIds.has(String(recipe.id)) ? "border-[#FF6B35] ring-2 ring-[#FF6B35]/20" : "border-orange-50"
-              }`}
-            >
-              <div
-                onClick={() => setExpanded(expanded === `${idx}` ? null : `${idx}`)}
-                className="w-full text-left p-6 flex items-start justify-between hover:bg-orange-50/30 transition-colors cursor-pointer"
-              >
-                <div className="flex items-start gap-3 flex-1">
-                  {/* 选择框 */}
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(String(recipe.id))}
-                    onChange={(e) => { e.stopPropagation(); toggleSelect(recipe); }}
-                    className="mt-1 w-4 h-4 rounded border-gray-300 text-[#FF6B35] focus:ring-[#FF6B35] cursor-pointer"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">🍽️</span>
-                      <h3 className="text-lg font-bold text-[#2D3436]">{recipe.title}</h3>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); toggleStar(recipe); }}
-                        className={`transition-colors ${starredIds.has(recipe.id?.toString() || "") ? "text-amber-400" : "text-gray-300 hover:text-amber-400"}`}
-                        title={starredIds.has(recipe.id?.toString() || "") ? "取消收藏" : "收藏菜谱"}
-                      >
-                        {starredIds.has(recipe.id?.toString() || "") ? "⭐" : "☆"}
-                      </button>
-                      {/* 删除按钮 */}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setDeleteDialog(recipe); }}
-                        className="ml-1 text-gray-400 hover:text-red-500 transition-colors"
-                        title="删除菜谱"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                    <p className="text-sm text-gray-500 mt-1">{recipe.description}</p>
-                    <div className="flex flex-wrap gap-3 mt-2 text-xs">
-                      <span>⏱ {recipe.cookingTime}分钟</span>
-                      <span>🔥 {recipe.calories}卡</span>
-                      <span>{recipe.cuisineType}</span>
-                      <span className={`px-2 py-0.5 rounded-full ${diffColor(recipe.difficulty)}`}>
-                        {(["easy","简单"]).includes(recipe.difficulty?.toLowerCase()) ? "简单" : (["medium","中等"]).includes(recipe.difficulty?.toLowerCase()) ? "中等" : recipe.difficulty || "中等"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <span className="text-gray-400 ml-4">{expanded === `${idx}` ? "▲" : "▼"}</span>
-              </div>
-
-              {expanded === `${idx}` && (
-                <div className="px-6 pb-6 border-t border-gray-100">
-                  <div className="mt-4">
-                    <p className="text-sm font-medium text-[#2D3436] mb-2">🥄 食材</p>
-                    <ul className="space-y-1">
-                      {recipe.ingredients.map((ing, i) => (
-                        <li key={i} className="text-sm text-gray-600 flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B35]" />
-                          {ing}
-                          {isFromPantry(ing.split(" ")[0]) && (
-                            <span className="text-[10px] text-green-500 bg-green-50 px-1 rounded">食材库有</span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="mt-4">
-                    <p className="text-sm font-medium text-[#2D3436] mb-2">👨‍🍳 步骤</p>
-                    <ol className="space-y-2">
-                      {recipe.steps.map((step, i) => (
-                        <li key={i} className="text-sm text-gray-600 flex gap-2">
-                          <span className="text-[#FF6B35] font-bold shrink-0">{i + 1}.</span>
-                          <span>{step}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                  <button
-                    onClick={() => setAddDialog({ recipe, day: "周一", meal: "午餐" })}
-                    className="mt-4 bg-orange-50 text-[#FF6B35] px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-100 transition-colors"
-                  >
-                    📅 加入周计划
-                  </button>
-                </div>
-              )}
-            </div>
+              recipe={recipe}
+              index={idx}
+              isStarred={starredIds.has(recipe.id?.toString() || "")}
+              onToggleStar={toggleStar}
+              onAddToPlan={(r) => setAddDialog({ recipe: r, day: "周一", meal: "午餐" })}
+              onDelete={(r) => setDeleteDialog(r)}
+              isFromPantry={isFromPantry}
+              expanded={expanded === `${idx}`}
+              onToggleExpand={() => setExpanded(expanded === `${idx}` ? null : `${idx}`)}
+            />
           ))}
         </div>
       )}
@@ -605,7 +464,7 @@ export default function RecipesPage() {
       )}
 
       {/* 删除确认弹窗 - 单个菜谱 */}
-      {deleteDialog && selectedIds.size <= 1 && (
+      {deleteDialog && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setDeleteDialog(null)}>
           <div className="bg-white rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
             <p className="text-lg mb-2">🗑️</p>
@@ -620,18 +479,11 @@ export default function RecipesPage() {
         </div>
       )}
 
-      {/* 删除确认弹窗 - 批量删除 */}
-      {bulkDeleteDialog && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setBulkDeleteDialog(false)}>
-          <div className="bg-white rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
-            <p className="text-lg mb-2">🗑️</p>
-            <p className="text-sm text-[#2D3436] font-medium mb-1">批量删除确认</p>
-            <p className="text-sm text-gray-500">确定要删除选中的 <strong>{selectedIds.size}</strong> 个菜谱吗？</p>
-            <p className="text-xs text-gray-400 mt-2">此操作不可恢复</p>
-            <div className="flex gap-2 mt-4">
-              <button onClick={() => setBulkDeleteDialog(false)} className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl text-sm">取消</button>
-              <button onClick={deleteSelected} className="flex-1 bg-red-500 text-white py-2 rounded-xl text-sm">确认删除</button>
-            </div>
+      {deleteError && (
+        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
+          <div className="bg-white border border-gray-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+            <span className="text-red-500 text-base shrink-0">⚠️</span>
+            <span className="text-gray-700">删除失败：{deleteError}</span>
           </div>
         </div>
       )}

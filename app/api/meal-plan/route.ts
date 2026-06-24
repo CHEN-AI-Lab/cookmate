@@ -73,48 +73,80 @@ export async function POST() {
     await prisma.mealSlot.deleteMany({ where: { mealPlan: { userId: userId, weekStart: monday } } })
 
 
-    // 清理孤立的旧 Recipe（没有 MealSlot 引用的）
-    await prisma.recipe.deleteMany({
-      where: { mealSlots: { none: {} }, userId, isGenerated: true },
-    })
+    // 清理孤立的旧 Recipe（没有 MealSlot 引用的），排除已收藏的
+    try {
+      await prisma.recipe.deleteMany({
+        where: { mealSlots: { none: {} }, userId, isGenerated: true, starred: false },
+      })
+    } catch (err) {
+      console.error("Cleanup orphan recipes error:", err)
+    }
 
     await prisma.mealPlan.deleteMany({ where: { userId: userId, weekStart: monday } })
 
+    // 先创建每个菜谱（处理重复标题：P2002 时查找已有）
+    const slotEntries = Object.entries(weekPlan).flatMap(([dayName, meals], dayIdx) => {
+      const dayMap: Record<string, number> = { "周一": 0, "周二": 1, "周三": 2, "周四": 3, "周五": 4, "周六": 5, "周日": 6 }
+      const dow = dayMap[dayName] ?? dayIdx
+      return Object.entries(meals).map(([mealType, recipe]) => ({ dayOfWeek: dow, mealType, recipe }))
+    })
+
+    // 创建菜谱并处理重复
+    const slotData: { dayOfWeek: number; mealType: string; recipeId: string; note: string }[] = []
+    for (const { dayOfWeek, mealType, recipe } of slotEntries) {
+      let recipeId: string
+      try {
+        const created = await prisma.recipe.create({
+          data: {
+            userId,
+            title: recipe.title,
+            description: recipe.description || "",
+            ingredients: normalizeIngredients(recipe.ingredients).join(", "),
+            steps: recipe.steps.join("\n"),
+            cookingTime: recipe.cookingTime || 0,
+            calories: recipe.calories || 0,
+            cuisineType: recipe.cuisineType || "",
+            difficulty: recipe.difficulty || "easy",
+            isGenerated: true,
+          },
+        })
+        recipeId = created.id
+      } catch (err: any) {
+        if (err?.code === "P2002") {
+          // 同名菜谱已存在，复用
+          const existing = await prisma.recipe.findFirst({ where: { userId, title: recipe.title } })
+          if (existing) {
+            recipeId = existing.id
+          } else {
+            throw err
+          }
+        } else {
+          throw err
+        }
+      }
+      slotData.push({ dayOfWeek, mealType, recipeId, note: (recipe.description || "").substring(0, 100) })
+    }
+
     const mealPlan = await prisma.mealPlan.create({
       data: {
-        userId: userId,
+        userId,
         weekStart: monday,
         slots: {
-          create: Object.entries(weekPlan).flatMap(([dayName, meals], dayIdx) => {
-            const dayMap: Record<string, number> = { "周一": 0, "周二": 1, "周三": 2, "周四": 3, "周五": 4, "周六": 5, "周日": 6 }
-            const dow = dayMap[dayName] ?? dayIdx
-            return Object.entries(meals).map(([mealType, recipe]) => ({
-              dayOfWeek: dow,
-              mealType,
-              note: recipe.description.substring(0, 100),
-              recipe: {
-                create: {
-                  userId: userId,
-                  title: recipe.title,
-                  description: recipe.description,
-                  ingredients: normalizeIngredients(recipe.ingredients).join(", "),
-                  steps: recipe.steps.join("\n"),
-                  cookingTime: recipe.cookingTime,
-                  calories: recipe.calories,
-                  cuisineType: recipe.cuisineType,
-                  difficulty: recipe.difficulty,
-                  isGenerated: true,
-                },
-              },
-            }))
-          }),
+          create: slotData.map(({ dayOfWeek, mealType, recipeId, note }) => ({
+            dayOfWeek,
+            mealType,
+            note,
+            recipeId,
+          })),
         },
       },
       include: { slots: { include: { recipe: true } } },
     })
 
-    // 消耗一次使用次数
-    await incrementUsage(userId)
+    // 消耗一次使用次数（仅在正式环境计数）
+    if (!isDev) {
+      await incrementUsage(userId)
+    }
 
     return NextResponse.json({ plan: mealPlan })
   } catch (error) {

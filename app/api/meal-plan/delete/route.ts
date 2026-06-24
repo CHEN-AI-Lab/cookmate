@@ -7,14 +7,11 @@ export async function POST() {
   if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
   try {
     const userId = session.user.id
-    // 先删除关联的 Recipe（isGenerated=true 的）
-    const mealPlans = await prisma.mealPlan.findMany({ where: { userId }, include: { slots: true } })
-    for (const plan of mealPlans) {
-      for (const slot of plan.slots) {
-        if (slot.recipeId) {
-          await prisma.recipe.deleteMany({ where: { id: slot.recipeId, userId, isGenerated: true } })
-        }
-      }
+    // 收集所有 Recipe ID 批量删除
+    const mealPlans = await prisma.mealPlan.findMany({ where: { userId }, include: { slots: { select: { recipeId: true } } } })
+    const recipeIds = mealPlans.flatMap((plan) => plan.slots.map((slot) => slot.recipeId).filter(Boolean))
+    if (recipeIds.length > 0) {
+      await prisma.recipe.deleteMany({ where: { id: { in: recipeIds as string[] }, userId, isGenerated: true } })
     }
     await prisma.mealPlan.deleteMany({ where: { userId } })
     return NextResponse.json({ success: true })

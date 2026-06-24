@@ -1,0 +1,89 @@
+"use client"
+
+const DAY_LABELS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+const MEAL_TYPES = ["breakfast", "lunch", "dinner"]
+const MEAL_LABELS: Record<string, string> = {
+  breakfast: "早餐",
+  lunch: "午餐",
+  dinner: "晚餐",
+}
+const MEAL_EMOJIS: Record<string, string> = {
+  breakfast: "🌅",
+  lunch: "☀️",
+  dinner: "🌙",
+}
+
+interface MealPlanSlotRecipe {
+  title: string
+  cookingTime?: number
+  starred?: boolean
+}
+
+interface MealPlanSlot {
+  id: string
+  dayOfWeek: number
+  mealType: string
+  recipe: MealPlanSlotRecipe | null
+  note: string | null
+}
+
+interface MealPlan {
+  slots: MealPlanSlot[]
+}
+
+interface MealPlanGridProps {
+  plan: MealPlan
+  onSlotClick: (day: number, meal: string) => void
+}
+
+export function MealPlanGrid({ plan, onSlotClick }: MealPlanGridProps) {
+  return (
+    <div className="space-y-3">
+      {DAY_LABELS.map((day, dayIdx) => (
+        <div
+          key={day}
+          className="bg-white rounded-2xl shadow-sm border border-orange-50 overflow-hidden"
+        >
+          <div className="bg-orange-50 px-4 py-2 font-bold text-[#2D3436] text-sm">{day}</div>
+          <div className="grid grid-cols-3 divide-x divide-gray-100">
+            {MEAL_TYPES.map((meal) => {
+              const slot = plan.slots.find(
+                (s) => s.dayOfWeek === dayIdx && s.mealType === meal
+              )
+              return (
+                <button
+                  key={meal}
+                  onClick={() => onSlotClick(dayIdx, meal)}
+                  className="p-3 text-left hover:bg-orange-50/50 transition-colors min-h-[70px]"
+                >
+                  <p className="text-xs text-gray-400 mb-1">
+                    {MEAL_EMOJIS[meal]} {MEAL_LABELS[meal]}
+                  </p>
+                  {slot?.recipe ? (
+                    <div>
+                      <div className="flex items-center gap-1">
+                        <p className="text-sm font-medium text-[#2D3436] truncate">
+                          {slot.recipe.title}
+                        </p>
+                        {slot.recipe.starred && (
+                          <span className="text-amber-400 text-xs shrink-0">⭐</span>
+                        )}
+                      </div>
+                      {slot.recipe.cookingTime && (
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          ⏱ {slot.recipe.cookingTime}分钟
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-300">未安排</p>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}

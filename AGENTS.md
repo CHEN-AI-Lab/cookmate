@@ -9,6 +9,7 @@
 - **AI**: OpenAI GPT-4o
 - **支付**: Stripe
 - **部署**: Vercel
+- **域名**: cookmate.ai (待定)
 
 ## 目录结构
 
@@ -19,43 +20,84 @@ cookmate/
 │   │   ├── page.tsx        # 首页
 │   │   ├── pricing/        # 定价页
 │   │   ├── about/          # 关于
-│   │   └── blog/           # 博客
+│   │   ├── blog/           # 博客
+│   │   └── community/      # 社区菜谱 ⏸️
 │   ├── (auth)/             # 认证页面
 │   │   ├── login/
 │   │   ├── register/
 │   │   └── layout.tsx
 │   ├── app/                # 登录后页面
-│   │   ├── dashboard/      # 主面板
-│   │   ├── recipes/        # AI 食谱生成
+│   │   ├── dashboard/      # 仪表盘
+│   │   ├── recipes/        # AI 菜谱
+│   │   ├── my-recipes/     # 我的菜谱
 │   │   ├── meal-plan/      # 周计划
 │   │   ├── grocery-list/   # 购物清单
-│   │   ├── pantry/         # 食材管理
-│   │   ├── settings/       # 账户设置
-│   │   └── billing/        # 账单
+│   │   ├── pantry/         # 食材库
+│   │   ├── settings/       # 设置
+│   │   ├── billing/        # 账单
+│   │   ├── nutrition/      # 营养追踪 ⏸️
+│   │   └── onboarding-preview/
 │   └── api/                # API routes
 │       ├── auth/
-│       ├── recipes/
-│       ├── meal-plans/
-│       ├── grocery-lists/
+│       │   └── [...nextauth]/
+│       ├── dashboard/
+│       ├── grocery-list/
+│       │   ├── manual/
+│       │   └── purchase/
+│       ├── meal-plan/
+│       │   ├── add/
+│       │   ├── delete/
+│       │   └── slot/
 │       ├── pantry/
-│       └── stripe/
+│       │   └── [id]/
+│       ├── recipes/
+│       │   ├── [id]/
+│       │   │   └── star/
+│       │   ├── generate/
+│       │   └── star/
+│       ├── settings/
+│       ├── stripe/          # Stripe webhook（待实现）
+│       └── user/
+│           └── onboarding/
+│       ├── nutrition/        # 营养追踪 API ⏸️
+│       │   └── route.ts
+│       ├── vision/           # 拍照识别 API ⏸️
+│       │   └── ingredients/
+│       │       └── route.ts
+│       ├── community/        # 社区菜谱 API ⏸️
+│       │   └── recipes/
+│       │       └── [id]/
+│       │       └── route.ts
 ├── components/             # 共享组件
 │   ├── ui/                 # shadcn/ui 基础组件
 │   ├── layout/             # 布局组件
-│   └── features/           # 功能组件
+│   ├── features/           # 功能组件
+│   └── OnboardingWizard.tsx
 ├── lib/                    # 工具函数
-│   ├── prisma.ts
+│   ├── auth.ts
+│   ├── auth-helpers.ts
+│   ├── grocery-categories.ts
 │   ├── openai.ts
+│   ├── prisma.ts
 │   ├── stripe.ts
 │   └── utils.ts
 ├── prisma/
-│   └── schema.prisma
+│   ├── schema.prisma
+│   └── schema.postgres.prisma
 ├── docs/                   # 文档
 │   ├── product-specs/
+│   │   └── overview.md
 │   ├── design-docs/
-│   └── references/
+│   │   └── design-system.md
+│   ├── references/
+│   └── risk-control.md
 ├── public/                 # 静态资源
-└── AGENTS.md
+├── AGENTS.md
+├── CLAUDE.md
+├── PROJECT_OVERVIEW.md
+├── README.md
+├── package.json
+└── next.config.ts
 ```
 
 ## 关键规则

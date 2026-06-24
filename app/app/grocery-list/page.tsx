@@ -129,12 +129,12 @@ export default function GroceryListPage() {
   const addManualItem = () => {
     const trimmed = newItem.trim()
     if (!trimmed) return
-    // 检查是否已在手动列表或分类列表中
+    // 检查是否已在手动列表或分类列表中（忽略大小写）
     const allItems = [
       ...manualItems,
       ...categories.flatMap((cat) => cat.items.map((i) => i.name))
     ]
-    if (allItems.includes(trimmed)) {
+    if (allItems.some((item) => item.toLowerCase() === trimmed.toLowerCase())) {
       setDupDialog(trimmed)
       setTimeout(() => setDupDialog(null), 2500)
       setNewItem("")
@@ -146,7 +146,18 @@ export default function GroceryListPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: trimmed }),
-    }).catch(() => {})
+    })
+    .then((r) => {
+      if (!r.ok) {
+        r.json().then((data) => {
+          if (data.error?.includes("已存在")) {
+            setDupDialog(trimmed)
+            setTimeout(() => setDupDialog(null), 2500)
+          }
+        }).catch(() => {})
+      }
+    })
+    .catch(() => {})
     setNewItem("")
   }
 

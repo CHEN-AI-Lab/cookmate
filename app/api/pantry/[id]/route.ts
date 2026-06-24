@@ -8,6 +8,17 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
   try {
     const { name, category, quantity } = await req.json()
+
+    // 检查是否已存在同名食材
+    if (name) {
+      const existing = await prisma.pantryItem.findFirst({
+        where: { userId: session.user.id, name, id: { not: id } },
+      })
+      if (existing) {
+        return NextResponse.json({ error: "已存在同名食材" }, { status: 409 })
+      }
+    }
+
     const item = await prisma.pantryItem.update({
       where: { id, userId: session.user.id },
       data: { name, category, quantity },
