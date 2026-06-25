@@ -21,4 +21,4 @@
 next-env.d.ts
 
 # Vercl
-.vercel
+.vercel.turbo\n.next
