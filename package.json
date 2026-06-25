@@ -2,6 +2,9 @@
     "name":  "cookmate",
     "version":  "0.1.0",
     "private":  true,
+    "pnpm": {
+        "onlyBuiltDependencies": ["@prisma/client", "@prisma/engines", "prisma", "sharp", "unrs-resolver"]
+    },
     "scripts":  {
                     "dev":  "next dev -p 3001",
                     "build":  "next build",
