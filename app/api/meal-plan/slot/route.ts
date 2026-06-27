@@ -50,10 +50,12 @@ export async function PATCH(req: Request) {
       const recipe = await prisma.recipe.create({
         data: { userId: session.user.id, title, ingredients: ingredients || "", steps: steps || "", cookingTime, calories, cuisineType, isGenerated: false },
       }).catch(() => null)
-      await prisma.mealSlot.update({
-        where: { id: slotId },
-        data: { recipeId: recipe.id },
-      }).catch(() => {})
+      if (recipe) {
+        await prisma.mealSlot.update({
+          where: { id: slotId },
+          data: { recipeId: recipe.id },
+        }).catch(() => {})
+      }
     }
 
     return NextResponse.json({ success: true })

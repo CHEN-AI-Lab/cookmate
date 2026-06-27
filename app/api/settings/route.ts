@@ -47,7 +47,7 @@ export async function PUT(req: Request) {
     }).catch(() => null)
 
     return NextResponse.json({
-      settings: { dietType: user.dietType, cuisinePref: user.cuisinePref, servingSize: user.servingSize },
+      settings: { dietType: user?.dietType, cuisinePref: user?.cuisinePref, servingSize: user?.servingSize ?? 2 },
     })
   } catch (error) {
     console.error("Settings PUT:", error)

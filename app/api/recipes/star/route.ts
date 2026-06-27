@@ -38,7 +38,7 @@ export async function PATCH(req: Request) {
       data: { starred: !recipe.starred },
     }).catch(() => null)
 
-    return NextResponse.json({ success: true, starred: updated.starred })
+    return NextResponse.json({ success: true, starred: updated?.starred ?? false })
   } catch (error) {
     console.error("Star recipe error:", error)
     return NextResponse.json({ error: "操作失败" }, { status: 500 })

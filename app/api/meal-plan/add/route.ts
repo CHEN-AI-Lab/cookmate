@@ -46,11 +46,11 @@ export async function POST(req: Request) {
       }).catch(() => null)
     }
 
-    // 检查该时段是否有内容
-    const existing = await prisma.mealSlot.findFirst({
+    // 检查该时段是否有内容（无数据库时不检查）
+    const existing = plan ? await prisma.mealSlot.findFirst({
       where: { mealPlanId: plan.id, dayOfWeek: dayNum, mealType },
       include: { recipe: true },
-    }).catch(() => null)
+    }).catch(() => null) : null
 
     const existingTitle = existing?.recipe?.title || null
     
@@ -98,7 +98,7 @@ export async function POST(req: Request) {
           starred: starred ?? false,
         },
       }).catch(() => null)
-      if (recipe) {
+      if (recipe && plan) {
         await prisma.mealSlot.create({
           data: {
             mealPlanId: plan.id,
