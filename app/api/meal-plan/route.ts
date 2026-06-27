@@ -39,8 +39,8 @@ export async function POST() {
   try {
     const userId = session.user.id
 
-    const user = await prisma.user.findUnique({ where: { id: userId } })
-    const pantryItems = await prisma.pantryItem.findMany({ where: { userId }, select: { name: true } })
+    const user = await prisma.user.findUnique({ where: { id: userId } }).catch(() => null)
+    const pantryItems = await prisma.pantryItem.findMany({ where: { userId }, select: { name: true } }).catch(() => [])
     const pantryNames = pantryItems.map((i) => i.name)
 
     // 使用限额检查（仅在开发模式跳过）
