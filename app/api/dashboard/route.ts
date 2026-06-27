@@ -11,9 +11,9 @@ export async function GET() {
     const userId = session.user.id
 
     const [pantryCount, starredCount, mealPlanCount, usage] = await Promise.all([
-      prisma.pantryItem.count({ where: { userId } }),
-      prisma.recipe.count({ where: { userId, starred: true } }),
-      prisma.mealPlan.count({ where: { userId } }),
+      prisma.pantryItem.count({ where: { userId } }).catch(() => 0),
+      prisma.recipe.count({ where: { userId, starred: true } }).catch(() => 0),
+      prisma.mealPlan.count({ where: { userId } }).catch(() => 0),
       prisma.usageDaily.findUnique({
         where: {
           userId_date: {
@@ -21,13 +21,13 @@ export async function GET() {
             date: (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d })(),
           },
         },
-      }),
+      }).catch(() => null),
     ])
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { subscriptionTier: true },
-    })
+    }).catch(() => null)
 
     return NextResponse.json({
       pantryCount,

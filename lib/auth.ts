@@ -140,29 +140,22 @@ if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
   )
 }
 
-// 本地体验登录 — 仅非生产环境可用（开发/演示用途）
-if (process.env.NODE_ENV !== "production") {
-  providers.push(
-    Credentials({
-      id: "demo",
-      name: "体验登录",
-      credentials: {},
-      async authorize() {
-        const demoEmail = "demo@cookmate.local"
-        let user = await prisma.user.findUnique({ where: { email: demoEmail } })
-        if (!user) {
-          user = await prisma.user.create({
-            data: {
-              email: demoEmail,
-              name: "体验用户",
-            },
-          })
-        }
-        return { id: user.id, email: user.email!, name: user.name }
-      },
-    })
-  )
-}
+// 本地体验登录 — 始终可用，不依赖数据库
+providers.push(
+  Credentials({
+    id: "demo",
+    name: "体验登录",
+    credentials: {},
+    async authorize() {
+      return {
+        id: "demo-user-id",
+        email: "demo@cookmate.local",
+        name: "体验用户",
+        phone: "",
+      }
+    },
+  })
+)
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -180,14 +173,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async jwt({ token }) {
       if (token.sub) {
-        const user = await prisma.user.findUnique({
-          where: { id: token.sub },
-          select: { subscriptionTier: true, phone: true, onboardingCompleted: true },
-        })
-        if (user) {
-          token.subscriptionTier = user.subscriptionTier
-          token.phone = user.phone
-          token.onboardingCompleted = user.onboardingCompleted
+        try {
+          const user = await prisma.user.findUnique({
+            where: { id: token.sub },
+            select: { subscriptionTier: true, phone: true, onboardingCompleted: true },
+          })
+          if (user) {
+            token.subscriptionTier = user.subscriptionTier
+            token.phone = user.phone
+            token.onboardingCompleted = user.onboardingCompleted
+          }
+        } catch {
+          token.subscriptionTier = "FREE"
+          token.phone = ""
+          token.onboardingCompleted = false
         }
       }
       return token

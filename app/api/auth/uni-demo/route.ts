@@ -4,23 +4,9 @@
  * 返回 session cookie + user profile
  */
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
 
 export async function POST() {
   try {
-    const demoEmail = "demo@cookmate.local"
-
-    // 查找或创建体验用户
-    let user = await prisma.user.findUnique({ where: { email: demoEmail } })
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: demoEmail,
-          name: "体验用户",
-        },
-      })
-    }
-
     // 获取 NextAuth signIn 函数，用于创建 session
     const { signIn } = await import("@/lib/auth")
     const result = await signIn("demo", { redirect: false })
@@ -30,17 +16,17 @@ export async function POST() {
       return NextResponse.json({ error: "登录失败" }, { status: 500 })
     }
 
-    // 返回用户信息
+    // 返回用户信息（不依赖数据库查询）
     return NextResponse.json({
       success: true,
       user: {
-        id: user.id,
-        name: user.name || "体验用户",
-        email: user.email || demoEmail,
-        phone: user.phone || "",
+        id: "demo-user-id",
+        name: "体验用户",
+        email: "demo@cookmate.local",
+        phone: "",
         loginMethod: "体验演示",
-        createdAt: user.createdAt.toISOString(),
-        subscriptionTier: user.subscriptionTier || "FREE",
+        createdAt: new Date().toISOString(),
+        subscriptionTier: "FREE",
       },
     })
   } catch (error) {

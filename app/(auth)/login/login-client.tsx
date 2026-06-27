@@ -149,8 +149,8 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       const result = await signIn(provider, { callbackUrl: "/app/dashboard", redirect: false })
       if (result?.error) {
         setError("登录失败，请重试")
-      } else if (result?.url) {
-        window.location.href = result.url
+      } else {
+        window.location.href = result?.url || "/app/dashboard"
       }
     } catch {
       setError("该登录方式尚未配置，上线后即可使用")
