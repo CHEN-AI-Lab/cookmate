@@ -129,6 +129,28 @@ export async function POST() {
       if (!isDev) { await incrementUsage(userId).catch(() => {}) }
     } catch (err) {
       console.error("Failed to save meal plan to DB (returning generated data only):", err)
+      // 把 weekPlan 转成前端可展示的格式
+      const dayMap: Record<string, number> = { "周一": 0, "周二": 1, "周三": 2, "周四": 3, "周五": 4, "周六": 5, "周日": 6 }
+      const mealTypeKeys = ["breakfast", "lunch", "dinner"] as const
+      const slots = Object.entries(weekPlan).flatMap(([dayName, meals]) =>
+        mealTypeKeys.map((mealType, idx) => ({
+          id: `${dayName}-${mealType}`,
+          dayOfWeek: dayMap[dayName] ?? 0,
+          mealType,
+          note: meals[mealType]?.description?.substring(0, 100) || "",
+          recipe: meals[mealType] ? {
+            id: `${dayName}-${mealType}-recipe`,
+            title: meals[mealType].title,
+            description: meals[mealType].description,
+            ingredients: Array.isArray(meals[mealType].ingredients) ? meals[mealType].ingredients.join(", ") : "",
+            steps: Array.isArray(meals[mealType].steps) ? meals[mealType].steps.join("\n") : "",
+            cookingTime: meals[mealType].cookingTime || 0,
+            calories: meals[mealType].calories || 0,
+            cuisineType: meals[mealType].cuisineType || "",
+          } : null,
+        }))
+      )
+      mealPlan = { id: "demo-plan", weekStart: monday.toISOString(), slots } as any
     }
 
     return NextResponse.json({ plan: mealPlan, generated: weekPlan })
