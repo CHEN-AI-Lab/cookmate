@@ -8,12 +8,12 @@ export async function POST() {
   try {
     const userId = session.user.id
     // 收集所有 Recipe ID 批量删除
-    const mealPlans = await prisma.mealPlan.findMany({ where: { userId }, include: { slots: { select: { recipeId: true } } } })
+    const mealPlans = await prisma.mealPlan.findMany({ where: { userId }, include: { slots: { select: { recipeId: true } } } }).catch(() => [])
     const recipeIds = mealPlans.flatMap((plan) => plan.slots.map((slot) => slot.recipeId).filter(Boolean))
     if (recipeIds.length > 0) {
-      await prisma.recipe.deleteMany({ where: { id: { in: recipeIds as string[] }, userId, isGenerated: true } })
+      await prisma.recipe.deleteMany({ where: { id: { in: recipeIds as string[] }, userId, isGenerated: true } }).catch(() => {})
     }
-    await prisma.mealPlan.deleteMany({ where: { userId } })
+    await prisma.mealPlan.deleteMany({ where: { userId } }).catch(() => {})
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Delete meal plan error:", error)

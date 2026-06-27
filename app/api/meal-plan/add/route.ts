@@ -38,19 +38,19 @@ export async function POST(req: Request) {
     // 查找或创建本周计划
     let plan = await prisma.mealPlan.findUnique({
       where: { userId_weekStart: { userId: session.user.id, weekStart: mon } },
-    })
+    }).catch(() => null)
 
     if (!plan) {
       plan = await prisma.mealPlan.create({
         data: { userId: session.user.id, weekStart: mon },
-      })
+      }).catch(() => null)
     }
 
     // 检查该时段是否有内容
     const existing = await prisma.mealSlot.findFirst({
       where: { mealPlanId: plan.id, dayOfWeek: dayNum, mealType },
       include: { recipe: true },
-    })
+    }).catch(() => null)
 
     const existingTitle = existing?.recipe?.title || null
     
@@ -69,15 +69,17 @@ export async function POST(req: Request) {
         await prisma.recipe.update({
           where: { id: existing.recipeId },
           data: { title: title.trim().toLowerCase(), description: description || "", ingredients: ingredients || "", steps: steps || "", cookingTime, calories, cuisineType, starred: starred ?? false },
-        })
+        }).catch(() => {})
       } else {
         const r = await prisma.recipe.create({
           data: { userId: session.user.id, title: title.trim().toLowerCase(), description: description || "", ingredients: ingredients || "", steps: steps || "", cookingTime, calories, cuisineType, isGenerated: false, starred: starred ?? false },
-        })
-        await prisma.mealSlot.update({
-          where: { id: existing.id },
-          data: { recipeId: r.id, note: `${title}${description ? ` - ${description}` : ""}` },
-        })
+        }).catch(() => null)
+        if (r) {
+          await prisma.mealSlot.update({
+            where: { id: existing.id },
+            data: { recipeId: r.id, note: `${title}${description ? ` - ${description}` : ""}` },
+          }).catch(() => {})
+        }
       }
     } else {
       // 先创建 Recipe 记录
@@ -95,16 +97,18 @@ export async function POST(req: Request) {
           isGenerated: false,
           starred: starred ?? false,
         },
-      })
-      await prisma.mealSlot.create({
-        data: {
-          mealPlanId: plan.id,
-          dayOfWeek: dayNum,
-          mealType,
-          note: `${title}${description ? ` - ${description}` : ""}`,
-          recipeId: recipe.id,
-        },
-      })
+      }).catch(() => null)
+      if (recipe) {
+        await prisma.mealSlot.create({
+          data: {
+            mealPlanId: plan.id,
+            dayOfWeek: dayNum,
+            mealType,
+            note: `${title}${description ? ` - ${description}` : ""}`,
+            recipeId: recipe.id,
+          },
+        }).catch(() => {})
+      }
     }
 
     return NextResponse.json({ success: true })

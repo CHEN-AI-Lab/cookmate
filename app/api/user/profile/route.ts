@@ -10,7 +10,7 @@ export async function GET() {
 const user = await prisma.user.findUnique({
         where: { id: session.user.id },
         select: { name: true, email: true, phone: true, createdAt: true, subscriptionTier: true },
-      })
+      }).catch(() => null)
 
     if (!user) return NextResponse.json({ error: "用户不存在" }, { status: 404 })
 

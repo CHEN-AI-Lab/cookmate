@@ -134,12 +134,12 @@ export async function GET(req: Request) {
     const plans = await prisma.mealPlan.findMany({
       where: { userId: session.user.id, weekStart: { gte: monday, lte: sunday } },
       include: { slots: { include: { recipe: true } } },
-    })
+    }).catch(() => [])
 
     // 获取食材库
     const pantryItems = await prisma.pantryItem.findMany({
       where: { userId: session.user.id },
-    })
+    }).catch(() => [])
     const pantryNames: string[] = pantryItems.map((i) => i.name)
 
     // 将食材库名称也归一化，用于精确匹配（必须在 ingredientsWithStatus 之前定义）

@@ -17,18 +17,18 @@ export async function DELETE(
     const slot = await prisma.mealSlot.findFirst({
       where: { id: slotId, mealPlan: { userId: session.user.id } },
       include: { recipe: true },
-    })
+    }).catch(() => null)
     if (!slot) return NextResponse.json({ error: "未找到该餐次" }, { status: 404 })
 
     // 解除关联
     await prisma.mealSlot.update({
       where: { id: slotId },
       data: { recipeId: null, note: "" },
-    })
+    }).catch(() => {})
 
     // 清理孤儿 Recipe 记录
     if (slot.recipeId) {
-      await prisma.recipe.delete({ where: { id: slot.recipeId } })
+      await prisma.recipe.delete({ where: { id: slot.recipeId } }).catch(() => {})
     }
 
     return NextResponse.json({ success: true })

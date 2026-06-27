@@ -13,7 +13,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (name) {
       const existing = await prisma.pantryItem.findFirst({
         where: { userId: session.user.id, name, id: { not: id } },
-      })
+      }).catch(() => null)
       if (existing) {
         return NextResponse.json({ error: "已存在同名食材" }, { status: 409 })
       }
@@ -22,7 +22,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const item = await prisma.pantryItem.update({
       where: { id, userId: session.user.id },
       data: { name, category, quantity },
-    })
+    }).catch(() => null)
     return NextResponse.json({ success: true, item })
   } catch (error) {
     console.error("Update pantry item error:", error)
@@ -35,7 +35,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
   try {
-    await prisma.pantryItem.deleteMany({ where: { id, userId: session.user.id } })
+    await prisma.pantryItem.deleteMany({ where: { id, userId: session.user.id } }).catch(() => {})
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Delete pantry item error:", error)

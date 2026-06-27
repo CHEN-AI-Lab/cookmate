@@ -12,11 +12,11 @@ export async function DELETE(
   const { id } = await params
 
   try {
-    const recipe = await prisma.recipe.findUnique({ where: { id } })
+    const recipe = await prisma.recipe.findUnique({ where: { id } }).catch(() => null)
     if (!recipe) return NextResponse.json({ error: "菜谱不存在" }, { status: 404 })
     if (recipe.userId !== session.user.id) return NextResponse.json({ error: "无权限" }, { status: 403 })
 
-    await prisma.recipe.delete({ where: { id } })
+    await prisma.recipe.delete({ where: { id } }).catch(() => {})
 
     return NextResponse.json({ success: true })
   } catch (error) {

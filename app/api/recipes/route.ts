@@ -31,8 +31,8 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * pageSize,
         take: pageSize,
-      }),
-      prisma.recipe.count({ where }),
+      }).catch(() => []),
+      prisma.recipe.count({ where }).catch(() => 0),
     ])
 
     return NextResponse.json({ recipes, total, page, pageSize })
