@@ -63,6 +63,8 @@ export default function MealPlanPage() {
       const data = await res.json()
       if (res.ok && data.plan) {
         setPlan(data.plan)
+      } else if (res.ok && data.generated) {
+        setError("AI 已生成周计划，但保存失败（演示模式无数据库）")
       } else {
         setError(data.error || "生成失败")
       }

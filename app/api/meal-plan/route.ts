@@ -21,7 +21,7 @@ export async function GET() {
       where: { userId: session.user.id, weekStart: { gte: monday, lte: sunday } },
       include: { slots: { include: { recipe: true } } },
       orderBy: { weekStart: "asc" },
-    })
+    }).catch(() => [])
 
     return NextResponse.json({ plans, weekStart: monday.toISOString() })
   } catch (error) {
