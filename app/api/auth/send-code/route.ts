@@ -9,6 +9,37 @@ function isEmail(val: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
 }
 
+async function sendEmailViaResend(to: string, code: string) {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) return false
+
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "CookMate <noreply@aaigc.online>",
+        to,
+        subject: "CookMate 登录验证码",
+        html: `<div style="font-family:sans-serif;padding:24px;max-width:400px">
+          <h2 style="color:#FF6B35">🍳 CookMate</h2>
+          <p style="color:#333">您的验证码是：</p>
+          <div style="font-size:32px;font-weight:bold;color:#FF6B35;letter-spacing:8px;text-align:center;padding:16px;background:#FFF8F0;border-radius:12px;margin:16px 0">
+            ${code}
+          </div>
+          <p style="color:#999;font-size:12px">验证码 5 分钟内有效，请勿泄露给他人。</p>
+        </div>`,
+      }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const { phone, email } = await req.json()
@@ -61,12 +92,27 @@ export async function POST(req: Request) {
       })
     }
 
+    // 环境判断：开发环境直接返验证码，生产环境尝试发邮件
+    const isDev = process.env.NODE_ENV === "development"
+
+    if (email && !isDev) {
+      // 生产环境发真实邮件
+      const sent = await sendEmailViaResend(email, code)
+      if (!sent) {
+        console.error(`[Resend] Failed to send code to ${email}`)
+      }
+    }
+
     console.log(`[DEV] 验证码 for ${phone || email}: ${code}`)
 
-    return NextResponse.json({
-      success: true,
-      devCode: process.env.NODE_ENV === "development" ? code : undefined,
-    })
+    if (isDev) {
+      return NextResponse.json({
+        success: true,
+        devCode: code,
+      })
+    }
+
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Send code error:", error)
     return NextResponse.json({ error: "发送失败" }, { status: 500 })
