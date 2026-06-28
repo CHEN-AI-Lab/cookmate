@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     const day = now.getDay()
     const mon = new Date(now)
     mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1))
-    mon.setHours(0, 0, 0, 0, 0)
+    mon.setHours(0, 0, 0, 0)
 
     // 查找或创建本周计划
     let plan = await prisma.mealPlan.findUnique({
