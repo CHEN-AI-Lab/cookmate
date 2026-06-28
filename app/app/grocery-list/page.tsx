@@ -149,6 +149,10 @@ export default function GroceryListPage() {
           if (data.error?.includes("已存在")) {
             setDupDialog(trimmed)
             setTimeout(() => setDupDialog(null), 2500)
+          } else if (data.error) {
+            // 显示其他拒绝原因（如常备品限制、网络错误等）
+            setDupDialog(`${trimmed} (${data.error})`)
+            setTimeout(() => setDupDialog(null), 3000)
           }
         }).catch(() => {})
       }
