@@ -246,7 +246,20 @@ export async function GET(req: Request) {
       }
     }
 
-    return NextResponse.json({ categories, stapleItems: [...stapleIncluded].sort(), total: ingredientsWithStatus.length, inPantryCount: ingredientsWithStatus.filter((i) => i.inPantry).length })
+    // 查询手动添加的物品（按用户隔离）
+    const manualDbItems = await prisma.groceryItem.findMany({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: "asc" },
+    }).catch(() => [])
+    const manualNames = manualDbItems.map((i) => i.name)
+
+    return NextResponse.json({
+      categories,
+      stapleItems: [...stapleIncluded].sort(),
+      total: ingredientsWithStatus.length,
+      inPantryCount: ingredientsWithStatus.filter((i) => i.inPantry).length,
+      manualItems: manualNames,
+    })
   } catch (error) {
     console.error("Grocery list GET:", error)
     return NextResponse.json({ error: "请求失败，请稍后重试" }, { status: 500 })

@@ -30,10 +30,11 @@ export async function DELETE(req: Request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
   try {
-    const { searchParams } = new URL(req.url)
-    const id = searchParams.get("id")
-    if (!id) return NextResponse.json({ error: "缺少 ID" }, { status: 400 })
-    await prisma.groceryItem.deleteMany({ where: { id, userId: session.user.id } }).catch(() => {})
+    const { name } = await req.json()
+    if (!name?.trim()) return NextResponse.json({ error: "缺少物品名称" }, { status: 400 })
+    await prisma.groceryItem.deleteMany({
+      where: { userId: session.user.id, name: name.trim().toLowerCase() },
+    })
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Delete grocery item error:", error)

@@ -47,20 +47,14 @@ export default function GroceryListPage() {
     try {
       const saved = localStorage.getItem("cookmate_grocery_checked")
       if (saved) setChecked(new Set(JSON.parse(saved)))
-      const manual = localStorage.getItem("cookmate_grocery_manual")
-      if (manual) setManualItems(JSON.parse(manual))
-      // 恢复已同步标记到 ref（同步访问）
+      // 注意：manualItems 不再从 localStorage 读取，改为从 API 获取（按用户隔离）
+      // 历史残留的 localStorage 数据会被 API 的正确数据覆盖
       const synced = localStorage.getItem("cookmate_grocery_synced")
       if (synced) syncedRef.current = new Set(JSON.parse(synced))
       const added = localStorage.getItem("cookmate_grocery_newly_added")
       if (added) newlyAddedRef.current = new Map(Object.entries(JSON.parse(added)))
     } catch {}
   }, [])
-
-  const saveManualItems = (items: string[]) => {
-    setManualItems(items)
-    localStorage.setItem("cookmate_grocery_manual", JSON.stringify(items))
-  }
 
   // 同步单个物品到食材库
   const syncToPantry = async (name: string) => {
@@ -140,15 +134,17 @@ export default function GroceryListPage() {
       setNewItem("")
       return
     }
-    saveManualItems([...manualItems, trimmed])
-    // 同步到服务端
+    // 先调 API 存到数据库（按用户隔离），成功才更新本地状态
     fetch("/api/grocery-list/manual", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: trimmed }),
     })
     .then((r) => {
-      if (!r.ok) {
+      if (r.ok) {
+        // API 成功 → 更新本地状态
+        setManualItems((prev) => [...prev, trimmed])
+      } else {
         r.json().then((data) => {
           if (data.error?.includes("已存在")) {
             setDupDialog(trimmed)
@@ -157,12 +153,24 @@ export default function GroceryListPage() {
         }).catch(() => {})
       }
     })
-    .catch(() => {})
+    .catch(() => {
+      // 网络失败时用一个简单提示（不阻塞用户）
+    })
     setNewItem("")
   }
 
   const removeManualItem = (name: string) => {
-    saveManualItems(manualItems.filter((i) => i !== name))
+    fetch("/api/grocery-list/manual", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    })
+    .then((r) => {
+      if (r.ok) {
+        setManualItems((prev) => prev.filter((i) => i !== name))
+      }
+    })
+    .catch(() => {})
   }
 
   const loadData = useCallback(() => {
@@ -178,6 +186,7 @@ export default function GroceryListPage() {
           setTotal(data.total || 0)
           setInPantryCount(data.inPantryCount || 0)
           setStapleItems(data.stapleItems || [])
+          if (data.manualItems) setManualItems(data.manualItems)
 
 // 同步勾选状态：从食材库删除了的，自动取消勾选
           setChecked((prev) => {
