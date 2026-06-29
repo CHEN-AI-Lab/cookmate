@@ -188,7 +188,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       }
       if (!checkData.hasPassword) {
         setPasswordSetupMode(true)
-        setError("该账号未设置密码，请先验证邮箱，再设置密码")
+        setError("该账号未设置密码，请先验证后再设置")
         setLoading(null)
         return
       }
@@ -211,13 +211,15 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   }
 
   const sendSetupCode = async () => {
+    const isPhone = /^1\d{10}$/.test(email)
     setLoading("setup_code")
     setError("")
     try {
+      const body = isPhone ? { phone: email } : { email }
       const res = await fetch("/api/auth/send-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(body),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -230,7 +232,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         setSetupCode(data.devCode)
         setError(`⚠️ 开发模式：验证码 ${data.devCode}`)
       } else {
-        setError("验证码已发送到您的邮箱")
+        setError(`验证码已发送到您的${isPhone ? "手机" : "邮箱"}`)
         setTimeout(() => setError(""), 3000)
       }
     } catch {
@@ -256,11 +258,13 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     setLoading("setup_submit")
     setError("")
     try {
+      const isPhone = /^1\d{10}$/.test(email)
+      const body = isPhone ? { phone: email, code: setupCode } : { email, code: setupCode }
       // 验证验证码
       const verifyRes = await fetch("/api/auth/verify-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code: setupCode }),
+        body: JSON.stringify(body),
       })
       const verifyData = await verifyRes.json()
       if (!verifyRes.ok) {
@@ -486,7 +490,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         {tab === "password" && passwordSetupMode && (
           <div className="space-y-4">
             <div className="bg-orange-50 rounded-xl p-3 text-sm text-gray-600">
-              <p>📧 为 <strong>{email}</strong> 设置密码</p>
+              <p>{/^1\d{10}$/.test(email) ? "📱" : "📧"} 为 <strong>{email}</strong> 设置密码</p>
             </div>
             <div className="flex gap-2">
               <input
