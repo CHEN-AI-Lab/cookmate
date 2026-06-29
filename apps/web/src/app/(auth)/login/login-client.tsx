@@ -284,17 +284,8 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         return
       }
 
-      // 设置成功，自动登录
-      const result = await signIn("password", {
-        account: email,
-        password: setupNewPassword,
-        redirect: false,
-      })
-      if (result?.error) {
-        setError("设置成功，但登录失败，请手动登录")
-      } else {
-        window.location.href = result?.url || "/app/dashboard"
-      }
+      // 设置成功，验证码已登录，直接跳转
+      window.location.href = "/app/dashboard"
     } catch {
       setError("设置失败，请重试")
     } finally {
