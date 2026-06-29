@@ -1,5 +1,4 @@
 {
-  "rootDirectory": "apps/web",
   "git": {
     "deploymentEnabled": {
       "main": true,
