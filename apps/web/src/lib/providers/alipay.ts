@@ -55,7 +55,7 @@ function buildSignedParams(
     format: "JSON",
     charset: "utf-8",
     sign_type: "RSA2",
-    timestamp: new Date().toISOString(),
+    timestamp: (() => { const d = new Date(); d.setHours(d.getHours() + 8); return d.toISOString().replace('T', ' ').replace(/\..+/, ''); })(),
     version: "1.0",
     biz_content: JSON.stringify(bizContent),
   }
@@ -88,7 +88,7 @@ export default function AlipayProvider<P extends AlipayProfile>(
       params: { grant_type: "authorization_code" },
       async request(ctx: any) {
         const { clientId, clientSecret, params } = ctx
-        const code = params.code
+        const code = params.code || params.auth_code
         if (!code) throw new Error("Missing auth_code")
 
         const body = buildSignedParams(
