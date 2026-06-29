@@ -22,6 +22,7 @@ import Google from "next-auth/providers/google"
 import GitHub from "next-auth/providers/github"
 import Credentials from "next-auth/providers/credentials"
 import AlipayProvider from "@/lib/providers/alipay"
+import WeChatProvider from "@/lib/providers/wechat"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 
@@ -180,6 +181,16 @@ if (process.env.AUTH_ALIPAY_ID && process.env.AUTH_ALIPAY_SECRET) {
       clientId: process.env.AUTH_ALIPAY_ID,
       clientSecret: process.env.AUTH_ALIPAY_SECRET,
       alipayPublicKey: process.env.ALIPAY_PUBLIC_KEY || "",
+    })
+  )
+}
+
+// 微信登录 — 仅当配置了凭证时才启用
+if (process.env.AUTH_WECHAT_ID && process.env.AUTH_WECHAT_SECRET) {
+  providers.push(
+    WeChatProvider({
+      clientId: process.env.AUTH_WECHAT_ID,
+      clientSecret: process.env.AUTH_WECHAT_SECRET,
     })
   )
 }
