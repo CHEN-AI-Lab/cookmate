@@ -217,6 +217,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   providers,
   callbacks: {
+    async signIn({ account }) {
+      // Trust Google/GitHub verified emails - allow linking to existing accounts
+      if (account?.provider === "google" || account?.provider === "github") {
+        return true
+      }
+      return true
+    },
     async session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub
