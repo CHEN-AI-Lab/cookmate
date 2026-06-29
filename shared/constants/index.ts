@@ -35,3 +35,5 @@ export const API_ROUTES = {
   user: '/api/user',
   settings: '/api/settings',
 } as const;
+
+export * from './preferences';
