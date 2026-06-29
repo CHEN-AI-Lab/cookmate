@@ -172,7 +172,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         return
       }
       if (!checkData.hasPassword) {
-        setError("该账号未设置密码，请使用验证码登录，或先到设置页设置密码")
+        setError("该账号未设置密码，请先用验证码登录，之后去设置页设置密码")
         setLoading(null)
         return
       }
