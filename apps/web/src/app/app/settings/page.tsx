@@ -12,6 +12,7 @@ export default function SettingsPage() {
   const [showSaved, setShowSaved] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(true)
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -95,6 +96,26 @@ const save = async () => {
                   <span className="text-sm text-gray-500">邮箱</span>
                   <span className="text-sm font-medium text-[#2D3436]">{profile.email || "未绑定"}</span>
                 </div>
+                <div className="flex items-center justify-between py-2 border-b border-gray-50">
+                  <span className="text-sm text-gray-500">密码</span>
+                  <span className="text-sm font-medium text-[#2D3436]">
+                    {profile.hasPassword ? "已设置" : "未设置"}
+                    <button
+                      onClick={() => setShowPasswordForm(!showPasswordForm)}
+                      className="ml-2 text-[#FF6B35] text-xs hover:underline"
+                    >
+                      {profile.hasPassword ? "修改" : "设置"}
+                    </button>
+                  </span>
+                </div>
+                {showPasswordForm && (
+                  <div className="py-3 border-b border-gray-50">
+                    <PasswordForm
+                      hasPassword={profile.hasPassword ?? false}
+                      onClose={() => setShowPasswordForm(false)}
+                    />
+                  </div>
+                )}
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
                   <span className="text-sm text-gray-500">注册时间</span>
                   <span className="text-sm font-medium text-[#2D3436]">{new Date(profile.createdAt).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}</span>
@@ -209,36 +230,43 @@ const save = async () => {
         </div>
       </div>
 
-      {/* 密码设置 */}
-      <PasswordSection hasPassword={profile?.hasPassword ?? false} />
+      {/* 密码设置 - 已整合到账号信息中 */}
+
+      {/* 密码设置 - 已整合到账号信息中 */}
     </div>
   )
 }
 
-function PasswordSection({ hasPassword }: { hasPassword: boolean }) {
-  const [password, setPassword] = useState("")
+function PasswordForm({ hasPassword, onClose }: { hasPassword: boolean; onClose: () => void }) {
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
   const [confirm, setConfirm] = useState("")
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState("")
 
   const handleSubmit = async () => {
-    if (password.length < 8) { setMsg("密码至少 8 位"); return }
-    if (password !== confirm) { setMsg("两次密码不一致"); return }
+    if (hasPassword && !currentPassword) {
+      setMsg("请输入当前密码"); return
+    }
+    if (newPassword.length < 8) { setMsg("新密码至少 8 位"); return }
+    if (newPassword !== confirm) { setMsg("两次密码不一致"); return }
     setSaving(true)
     setMsg("")
     try {
       const res = await fetch("/api/auth/set-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ password: newPassword }),
       })
       const data = await res.json()
       if (res.ok) {
-        setMsg("✅ 密码设置成功")
-        setPassword("")
+        setMsg("✅ 密码已" + (hasPassword ? "修改" : "设置"))
+        setNewPassword("")
         setConfirm("")
+        setCurrentPassword("")
+        setTimeout(onClose, 1500)
       } else {
-        setMsg(`❌ ${data.error || "设置失败"}`)
+        setMsg(`❌ ${data.error || "操作失败"}`)
       }
     } catch {
       setMsg("❌ 网络错误")
@@ -248,46 +276,51 @@ function PasswordSection({ hasPassword }: { hasPassword: boolean }) {
   }
 
   return (
-    <div className="mt-6 bg-white rounded-2xl shadow-sm border border-orange-50 p-6">
-      <h2 className="font-bold text-[#2D3436] mb-4">🔑 {hasPassword ? "修改密码" : "设置密码"}</h2>
-      <p className="text-sm text-gray-500 mb-4">
-        {hasPassword
-          ? "设置后可用「邮箱/手机号 + 密码」直接登录"
-          : "设置一个密码，以后可以用「邮箱/手机号 + 密码」直接登录，不用每次收验证码"}
-      </p>
-      <div className="space-y-3 max-w-sm">
+    <div className="space-y-3">
+      {hasPassword && (
         <div>
-          <label className="text-sm text-gray-600 font-medium">密码</label>
+          <label className="text-xs text-gray-500">当前密码</label>
           <input
             type="password"
-            placeholder="至少 8 位"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#FF6B35] mt-1"
+            placeholder="输入当前密码"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35] mt-1"
           />
         </div>
-        <div>
-          <label className="text-sm text-gray-600 font-medium">确认密码</label>
-          <input
-            type="password"
-            placeholder="再次输入密码"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#FF6B35] mt-1"
-          />
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleSubmit}
-            disabled={saving || !password || !confirm}
-            className="bg-[#FF6B35] text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
-          >
-            {saving ? "保存中..." : hasPassword ? "修改密码" : "设置密码"}
-          </button>
-          {msg && (
-            <span className={`text-sm ${msg.startsWith("✅") ? "text-green-600" : "text-red-500"}`}>{msg}</span>
-          )}
-        </div>
+      )}
+      <div>
+        <label className="text-xs text-gray-500">新密码</label>
+        <input
+          type="password"
+          placeholder="至少 8 位，需含 2 种以上字符"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35] mt-1"
+        />
+      </div>
+      <div>
+        <label className="text-xs text-gray-500">确认新密码</label>
+        <input
+          type="password"
+          placeholder="再次输入新密码"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35] mt-1"
+        />
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={handleSubmit}
+          disabled={saving || !newPassword || !confirm}
+          className="bg-[#FF6B35] text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300 transition-all"
+        >
+          {saving ? "保存中..." : hasPassword ? "修改密码" : "设置密码"}
+        </button>
+        <button onClick={onClose} className="text-sm text-gray-400 hover:text-gray-600">取消</button>
+        {msg && (
+          <span className={`text-xs ${msg.startsWith("✅") ? "text-green-600" : "text-red-500"}`}>{msg}</span>
+        )}
       </div>
     </div>
   )
