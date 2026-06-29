@@ -17,12 +17,27 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   const [countdown, setCountdown] = useState(0)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // 密码设置模式（在密码登录 tab 中设密码）
+  const [passwordSetupMode, setPasswordSetupMode] = useState(false)
+  const [setupCode, setSetupCode] = useState("")
+  const [setupNewPassword, setSetupNewPassword] = useState("")
+  const [setupConfirmPassword, setSetupConfirmPassword] = useState("")
+  const [setupCodeSent, setSetupCodeSent] = useState(false)
+  const [setupCountdown, setSetupCountdown] = useState(0)
+
   useEffect(() => {
     if (countdown > 0) {
       timerRef.current = setTimeout(() => setCountdown(countdown - 1), 1000)
     }
     return () => clearTimeout(timerRef.current ?? undefined)
   }, [countdown])
+
+  useEffect(() => {
+    if (setupCountdown > 0) {
+      const t = setTimeout(() => setSetupCountdown(setupCountdown - 1), 1000)
+      return () => clearTimeout(t)
+    }
+  }, [setupCountdown])
 
   const sendCode = async () => {
     if (!/^1\d{10}$/.test(phone)) {
@@ -172,7 +187,8 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         return
       }
       if (!checkData.hasPassword) {
-        setError("请先用验证码登录，再到设置页设密码")
+        setPasswordSetupMode(true)
+        setError("该账号未设置密码，请先验证邮箱，再设置密码")
         setLoading(null)
         return
       }
@@ -189,6 +205,94 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       }
     } catch {
       setError("登录失败，请稍后重试")
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  const sendSetupCode = async () => {
+    setLoading("setup_code")
+    setError("")
+    try {
+      const res = await fetch("/api/auth/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || "发送失败")
+        return
+      }
+      setSetupCodeSent(true)
+      setSetupCountdown(60)
+      if (data.devCode) {
+        setSetupCode(data.devCode)
+        setError(`⚠️ 开发模式：验证码 ${data.devCode}`)
+      } else {
+        setError("验证码已发送到您的邮箱")
+        setTimeout(() => setError(""), 3000)
+      }
+    } catch {
+      setError("发送失败")
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  const handleSetupPassword = async () => {
+    if (!setupCode) {
+      setError("请输入验证码")
+      return
+    }
+    if (setupNewPassword.length < 8) {
+      setError("密码至少 8 位")
+      return
+    }
+    if (setupNewPassword !== setupConfirmPassword) {
+      setError("两次密码不一致")
+      return
+    }
+    setLoading("setup_submit")
+    setError("")
+    try {
+      // 验证验证码
+      const verifyRes = await fetch("/api/auth/verify-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code: setupCode }),
+      })
+      const verifyData = await verifyRes.json()
+      if (!verifyRes.ok) {
+        setError(verifyData.error || "验证码错误")
+        return
+      }
+
+      // 设置密码
+      const setRes = await fetch("/api/auth/set-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: setupNewPassword }),
+      })
+      if (!setRes.ok) {
+        const setData = await setRes.json()
+        setError(setData.error || "设置密码失败")
+        return
+      }
+
+      // 设置成功，自动登录
+      const result = await signIn("password", {
+        account: email,
+        password: setupNewPassword,
+        redirect: false,
+      })
+      if (result?.error) {
+        setError("设置成功，但登录失败，请手动登录")
+      } else {
+        window.location.href = result?.url || "/app/dashboard"
+      }
+    } catch {
+      setError("设置失败，请重试")
     } finally {
       setLoading(null)
     }
@@ -354,7 +458,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           </div>
         )}
 
-        {/* 密码登录 */}        {tab === "password" && (          <div className="space-y-4">
+        {/* 密码登录 */}        {tab === "password" && !passwordSetupMode && (          <div className="space-y-4">
             <div>
               <label className="text-sm text-gray-600 font-medium">邮箱 / 手机号</label>
               <input
@@ -377,6 +481,65 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
             >
               {loading === "password" ? "登录中..." : "登录"}
             </button>          </div>        )}
+
+        {/* 密码设置模式（没设密码时直接设） */}
+        {tab === "password" && passwordSetupMode && (
+          <div className="space-y-4">
+            <div className="bg-orange-50 rounded-xl p-3 text-sm text-gray-600">
+              <p>📧 为 <strong>{email}</strong> 设置密码</p>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="输入验证码"
+                value={setupCode}
+                onChange={(e) => setSetupCode(e.target.value.replace(/\D/g, ""))}
+                className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white"
+                maxLength={6}
+              />
+              <button
+                onClick={sendSetupCode}
+                disabled={loading === "setup_code" || setupCountdown > 0}
+                className="px-4 py-3 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap"
+              >
+                {setupCountdown > 0 ? `${setupCountdown}s` : loading === "setup_code" ? "发送中..." : "获取验证码"}
+              </button>
+            </div>
+            <div>
+              <label className="text-sm text-gray-600 font-medium">新密码</label>
+              <input
+                type="password"
+                placeholder="至少 8 位，需含 2 种以上字符"
+                value={setupNewPassword}
+                onChange={(e) => setSetupNewPassword(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-gray-600 font-medium">确认密码</label>
+              <input
+                type="password"
+                placeholder="再次输入新密码"
+                value={setupConfirmPassword}
+                onChange={(e) => setSetupConfirmPassword(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
+              />
+            </div>
+            <button
+              onClick={handleSetupPassword}
+              disabled={loading === "setup_submit" || !setupCode || !setupNewPassword || !setupConfirmPassword}
+              className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
+            >
+              {loading === "setup_submit" ? "设置中..." : "设置密码并登录"}
+            </button>
+            <button
+              onClick={() => { setPasswordSetupMode(false); setError(""); setSetupCodeSent(false) }}
+              className="w-full text-sm text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              ← 返回密码登录
+            </button>
+          </div>
+        )}
 
         {error && (
           <div className={`mt-2 p-3 rounded-xl text-sm text-center ${
