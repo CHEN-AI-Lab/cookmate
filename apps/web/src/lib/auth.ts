@@ -141,7 +141,11 @@ providers.push(
         ? await prisma.user.findUnique({ where: { phone: account } })
         : await prisma.user.findUnique({ where: { email: account } })
 
-      if (!user?.passwordHash) return null
+      if (!user) return null
+
+      if (!user.passwordHash) {
+        throw new Error("NO_PASSWORD_SET")
+      }
 
       const bcrypt = await import("bcryptjs")
       const valid = await bcrypt.compare(password, user.passwordHash)

@@ -50,6 +50,9 @@ export const COMMON_PASSWORDS = new Set([
   'welcome', 'monkey', 'sunshine', 'princess', 'football',
   'iloveyou', 'trustno1', 'abc12345', '1234qwer', '1q2w3e4r',
   '66666666', '88888888', '00000000', 'passw0rd', 'admin123',
+  'qwertyuiop', 'asdfghjk', 'zxcvbnm', 'asdfghjkl', '1234567',
+  '98765432', '1111111111', '22222222', '33333333', '44444444',
+  '55555555', '77777777', '99999999', '12121212', '123123123',
 ]);
 
 export const setPasswordSchema = z.object({

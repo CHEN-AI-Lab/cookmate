@@ -161,7 +161,11 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         redirect: false,
       })
       if (result?.error) {
-        setError("邮箱或密码错误")
+        if (result.error === "NO_PASSWORD_SET") {
+          setError("该账号未设置密码，请使用验证码登录，或先到设置页设置密码")
+        } else {
+          setError("邮箱/手机号或密码错误")
+        }
       } else {
         window.location.href = result?.url || "/app/dashboard"
       }
