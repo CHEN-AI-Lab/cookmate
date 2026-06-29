@@ -38,10 +38,25 @@ export const pantryItemSchema = z.object({
   expiryDate: z.string().optional(),
 });
 
-export const passwordSchema = z.string().min(6, '密码至少 6 位').max(100, '密码最多 100 位');
+export const passwordSchema = z
+  .string()
+  .min(8, '密码至少 8 位')
+  .max(128, '密码最多 128 位');
+
+// NIST 推荐：禁止常见弱密码
+export const COMMON_PASSWORDS = new Set([
+  '12345678', 'password', 'password1', '123456789', '1234567890',
+  'qwerty123', 'qwerty1', '11111111', 'abcdefgh', 'letmein',
+  'welcome', 'monkey', 'sunshine', 'princess', 'football',
+  'iloveyou', 'trustno1', 'abc12345', '1234qwer', '1q2w3e4r',
+  '66666666', '88888888', '00000000', 'passw0rd', 'admin123',
+]);
 
 export const setPasswordSchema = z.object({
-  password: passwordSchema,
+  password: passwordSchema.refine(
+    (val) => !COMMON_PASSWORDS.has(val.toLowerCase()),
+    { message: '密码过于常见，请换一个' }
+  ),
 });
 
 export type RecipeGenerateInput = z.infer<typeof recipeGenerateSchema>;

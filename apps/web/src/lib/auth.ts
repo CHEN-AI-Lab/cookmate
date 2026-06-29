@@ -120,22 +120,27 @@ providers.push(
   })
 )
 
-// 邮箱+密码登录（设过密码的用户可用）
+// 邮箱/手机号+密码登录（设过密码的用户可用）
 providers.push(
   Credentials({
     id: "password",
     name: "密码登录",
     credentials: {
-      email: { label: "邮箱", type: "text" },
+      account: { label: "邮箱或手机号", type: "text" },
       password: { label: "密码", type: "password" },
     },
     async authorize(credentials) {
-      const email = credentials?.email as string
+      const account = credentials?.account as string
       const password = credentials?.password as string
 
-      if (!email || !password) return null
+      if (!account || !password) return null
 
-      const user = await prisma.user.findUnique({ where: { email } })
+      // 支持邮箱或手机号登录
+      const isPhone = /^1\d{10}$/.test(account)
+      const user = isPhone
+        ? await prisma.user.findUnique({ where: { phone: account } })
+        : await prisma.user.findUnique({ where: { email: account } })
+
       if (!user?.passwordHash) return null
 
       const bcrypt = await import("bcryptjs")

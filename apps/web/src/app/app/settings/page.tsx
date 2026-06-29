@@ -222,7 +222,7 @@ function PasswordSection({ hasPassword }: { hasPassword: boolean }) {
   const [msg, setMsg] = useState("")
 
   const handleSubmit = async () => {
-    if (password.length < 6) { setMsg("密码至少 6 位"); return }
+    if (password.length < 8) { setMsg("密码至少 8 位"); return }
     if (password !== confirm) { setMsg("两次密码不一致"); return }
     setSaving(true)
     setMsg("")
@@ -252,15 +252,15 @@ function PasswordSection({ hasPassword }: { hasPassword: boolean }) {
       <h2 className="font-bold text-[#2D3436] mb-4">🔑 {hasPassword ? "修改密码" : "设置密码"}</h2>
       <p className="text-sm text-gray-500 mb-4">
         {hasPassword
-          ? "设置后可用「邮箱 + 密码」直接登录"
-          : "设置一个密码，以后可以用「邮箱 + 密码」直接登录，不用每次收验证码"}
+          ? "设置后可用「邮箱/手机号 + 密码」直接登录"
+          : "设置一个密码，以后可以用「邮箱/手机号 + 密码」直接登录，不用每次收验证码"}
       </p>
       <div className="space-y-3 max-w-sm">
         <div>
           <label className="text-sm text-gray-600 font-medium">密码</label>
           <input
             type="password"
-            placeholder="至少 6 位"
+            placeholder="至少 8 位"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#FF6B35] mt-1"

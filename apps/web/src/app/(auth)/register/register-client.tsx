@@ -126,8 +126,8 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
       setError("两次密码不一致")
       return
     }
-    if (password && password.length < 6) {
-      setError("密码至少 6 位")
+    if (password && password.length < 8) {
+      setError("密码至少 8 位")
       return
     }
     setLoading("email_login")
@@ -313,7 +313,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
                   <label className="text-sm text-gray-600 font-medium">设置密码（选填）</label>
                   <input
                     type="password"
-                    placeholder="至少 6 位"
+                    placeholder="至少 8 位（选填）"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"

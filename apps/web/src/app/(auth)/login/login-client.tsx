@@ -144,8 +144,8 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   }
 
   const handlePasswordLogin = async () => {
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError("请输入正确的邮箱地址")
+    if (!email || (!/^1\d{10}$/.test(email) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+      setError("请输入正确的邮箱或手机号")
       return
     }
     if (!password) {
@@ -156,7 +156,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     setError("")
     try {
       const result = await signIn("password", {
-        email,
+        account: email,
         password,
         redirect: false,
       })
@@ -342,38 +342,29 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           </div>
         )}
 
-        {/* 密码登录 */}
-        {tab === "password" && (
-          <div className="space-y-4">
+        {/* 密码登录 */}        {tab === "password" && (          <div className="space-y-4">
             <div>
-              <label className="text-sm text-gray-600 font-medium">邮箱地址</label>
+              <label className="text-sm text-gray-600 font-medium">邮箱 / 手机号</label>
               <input
-                type="email"
-                placeholder="请输入邮箱"
+                type="text"
+                placeholder="请输入邮箱或手机号"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
               />
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 font-medium">密码</label>
-              <input
+            </div>            <div>              <label className="text-sm text-gray-600 font-medium">密码</label>              <input
                 type="password"
                 placeholder="请输入密码"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
-              />
-            </div>
-            <button
+              />            </div>            <button
               onClick={handlePasswordLogin}
               disabled={loading === "password" || !email || !password}
               className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
             >
               {loading === "password" ? "登录中..." : "登录"}
-            </button>
-          </div>
-        )}
+            </button>          </div>        )}
 
         {/* 社交账号登录 */}
         <div className="my-6 flex items-center gap-4">
