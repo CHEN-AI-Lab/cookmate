@@ -21,6 +21,7 @@ declare module "next-auth" {
 import Google from "next-auth/providers/google"
 import GitHub from "next-auth/providers/github"
 import Credentials from "next-auth/providers/credentials"
+import AlipayProvider from "@/lib/providers/alipay"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 
@@ -168,6 +169,17 @@ if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID,
       clientSecret: process.env.AUTH_GITHUB_SECRET,
+    })
+  )
+}
+
+// 支付宝登录 — 仅当配置了凭证时才启用
+if (process.env.AUTH_ALIPAY_ID && process.env.AUTH_ALIPAY_SECRET) {
+  providers.push(
+    AlipayProvider({
+      clientId: process.env.AUTH_ALIPAY_ID,
+      clientSecret: process.env.AUTH_ALIPAY_SECRET,
+      alipayPublicKey: process.env.ALIPAY_PUBLIC_KEY || "",
     })
   )
 }
