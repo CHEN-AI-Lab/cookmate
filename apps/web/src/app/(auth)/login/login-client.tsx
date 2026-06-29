@@ -260,8 +260,8 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     try {
       const isPhone = /^1\d{10}$/.test(email)
       const body = isPhone ? { phone: email, code: setupCode } : { email, code: setupCode }
-      // 验证验证码
-      const verifyRes = await fetch("/api/auth/verify-code", {
+      // 验证验证码（不创建 session）
+      const verifyRes = await fetch("/api/auth/verify-code-only", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -284,8 +284,17 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         return
       }
 
-      // 设置成功，验证码已登录，直接跳转
-      window.location.href = "/app/dashboard"
+      // 设置成功，用密码登录
+      const result = await signIn("password", {
+        account: email,
+        password: setupNewPassword,
+        redirect: false,
+      })
+      if (result?.error) {
+        setError("设置成功，请手动登录")
+      } else {
+        window.location.href = result?.url || "/app/dashboard"
+      }
     } catch {
       setError("设置失败，请重试")
     } finally {
