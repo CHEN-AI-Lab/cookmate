@@ -74,6 +74,7 @@ export default function AlipayProvider<P extends AlipayProfile>(
     name: "Alipay",
     type: "oauth",
     style: { logo: "/alipay.svg", bg: "#1677FF", text: "#fff" },
+    checks: [], // Alipay doesn't return state/PKCE params
 
     authorization: {
       url: "https://openauth.alipay.com/oauth2/publicAppAuthorize.htm",
