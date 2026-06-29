@@ -152,20 +152,38 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       setError("请输入密码")
       return
     }
+    if (password.length < 8) {
+      setError("密码至少 8 位")
+      return
+    }
     setLoading("password")
     setError("")
     try {
+      // 先检查账号是否设置了密码
+      const checkRes = await fetch("/api/auth/check-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ account: email }),
+      })
+      const checkData = await checkRes.json()
+      if (!checkData.userExists) {
+        setError("该账号不存在，请先注册")
+        setLoading(null)
+        return
+      }
+      if (!checkData.hasPassword) {
+        setError("该账号未设置密码，请使用验证码登录，或先到设置页设置密码")
+        setLoading(null)
+        return
+      }
+
       const result = await signIn("password", {
         account: email,
         password,
         redirect: false,
       })
       if (result?.error) {
-        if (result.error === "NO_PASSWORD_SET") {
-          setError("该账号未设置密码，请使用验证码登录，或先到设置页设置密码")
-        } else {
-          setError("邮箱/手机号或密码错误")
-        }
+        setError("邮箱/手机号或密码错误")
       } else {
         window.location.href = result?.url || "/app/dashboard"
       }

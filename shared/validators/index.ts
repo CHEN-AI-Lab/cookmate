@@ -41,7 +41,18 @@ export const pantryItemSchema = z.object({
 export const passwordSchema = z
   .string()
   .min(8, '密码至少 8 位')
-  .max(128, '密码最多 128 位');
+  .max(128, '密码最多 128 位')
+  .refine(
+    (val) => {
+      let types = 0;
+      if (/[a-z]/.test(val)) types++;
+      if (/[A-Z]/.test(val)) types++;
+      if (/[0-9]/.test(val)) types++;
+      if (/[^a-zA-Z0-9]/.test(val)) types++;
+      return types >= 2;
+    },
+    { message: '密码需包含至少两种字符类型（大小写字母、数字、符号）' }
+  );
 
 // NIST 推荐：禁止常见弱密码
 export const COMMON_PASSWORDS = new Set([
