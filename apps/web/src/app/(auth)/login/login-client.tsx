@@ -495,8 +495,15 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         {/* 密码设置模式（没设密码时直接设） */}
         {tab === "password" && passwordSetupMode && (
           <div className="space-y-4">
-            <div className="bg-orange-50 rounded-xl p-3 text-sm text-gray-600">
-              <p>{/^1\d{10}$/.test(email) ? "📱" : "📧"} 为 <strong>{email}</strong> 设置密码</p>
+            <div>
+              <label className="text-sm text-gray-600 font-medium">邮箱 / 手机号</label>
+              <input
+                type="text"
+                placeholder="请输入邮箱或手机号"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
+              />
             </div>
             <div className="flex gap-2">
               <input
