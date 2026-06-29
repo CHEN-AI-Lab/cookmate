@@ -21,37 +21,10 @@ declare module "next-auth" {
 import Google from "next-auth/providers/google"
 import GitHub from "next-auth/providers/github"
 import Credentials from "next-auth/providers/credentials"
+import { prisma } from "@/lib/prisma"
+import { PrismaAdapter } from "@auth/prisma-adapter"
 import AlipayProvider from "@/lib/providers/alipay"
 import WeChatProvider from "@/lib/providers/wechat"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import { prisma } from "@/lib/prisma"
-
-// 自定义 Adapter：允许通过邮箱自动关联 OAuth 账号
-const baseAdapter = PrismaAdapter(prisma)
-const customAdapter = {
-  ...baseAdapter,
-  async linkAccount(data: any) {
-    // 先尝试标准关联
-    try {
-      return await (baseAdapter as any).linkAccount(data)
-    } catch {
-      // 如果关联失败（OAuthAccountNotLinked），按邮箱查找用户手动关联
-      const user = await prisma.user.findFirst({
-        where: {
-          OR: [
-            { email: data.email || undefined },
-          ].filter(Boolean),
-        },
-      })
-      if (user) {
-        return prisma.account.create({
-          data: { ...data, userId: user.id },
-        })
-      }
-      throw new Error("OAuthAccountNotLinked")
-    }
-  },
-}
 
 const providers = []
 
@@ -187,6 +160,7 @@ if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      allowDangerousEmailAccountLinking: true,
     })
   )
 }
@@ -197,6 +171,7 @@ if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID,
       clientSecret: process.env.AUTH_GITHUB_SECRET,
+      allowDangerousEmailAccountLinking: true,
     })
   )
 }
@@ -240,7 +215,7 @@ providers.push(
 )
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: customAdapter,
+  adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   providers,
   callbacks: {
