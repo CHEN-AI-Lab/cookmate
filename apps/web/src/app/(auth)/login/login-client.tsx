@@ -484,6 +484,12 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
               className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
             >
               {loading === "password" ? "登录中..." : "登录"}
+            </button>
+            <button
+              onClick={() => { setPasswordSetupMode(true); setError(""); setPassword(""); setSetupNewPassword(""); setSetupConfirmPassword(""); setSetupCode(""); setSetupCodeSent(false) }}
+              className="w-full text-xs text-gray-400 hover:text-[#FF6B35] transition-colors"
+            >
+              忘记密码？
             </button>          </div>        )}
 
         {/* 密码设置模式（没设密码时直接设） */}
