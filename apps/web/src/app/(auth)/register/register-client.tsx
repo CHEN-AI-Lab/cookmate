@@ -163,12 +163,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
     setLoading(provider)
     setError("")
     try {
-      const result = await signIn(provider, { callbackUrl: "/app/dashboard", redirect: false })
-      if (result?.error) {
-        setError("登录失败，请重试")
-      } else {
-        window.location.href = result?.url || "/app/dashboard"
-      }
+      await signIn(provider, { callbackUrl: "/app/dashboard" })
     } catch {
       setError("该登录方式尚未配置，上线后即可使用")
     } finally {
