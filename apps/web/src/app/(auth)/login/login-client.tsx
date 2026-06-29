@@ -5,12 +5,13 @@ import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 
 export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boolean; userName?: string }) {
-  const [tab, setTab] = useState<"phone" | "email">("phone")
+  const [tab, setTab] = useState<"phone" | "email" | "password">("phone")
   const [phone, setPhone] = useState("")
   const [code, setCode] = useState("")
   const [email, setEmail] = useState("")
   const [emailCode, setEmailCode] = useState("")
   const [emailCodeSent, setEmailCodeSent] = useState(false)
+  const [password, setPassword] = useState("")
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState("")
   const [countdown, setCountdown] = useState(0)
@@ -142,6 +143,35 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     }
   }
 
+  const handlePasswordLogin = async () => {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("请输入正确的邮箱地址")
+      return
+    }
+    if (!password) {
+      setError("请输入密码")
+      return
+    }
+    setLoading("password")
+    setError("")
+    try {
+      const result = await signIn("password", {
+        email,
+        password,
+        redirect: false,
+      })
+      if (result?.error) {
+        setError("邮箱或密码错误")
+      } else {
+        window.location.href = result?.url || "/app/dashboard"
+      }
+    } catch {
+      setError("登录失败，请稍后重试")
+    } finally {
+      setLoading(null)
+    }
+  }
+
   const handleOAuth = async (provider: string) => {
     setLoading(provider)
     setError("")
@@ -208,6 +238,14 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
             }`}
           >
             📧 邮箱
+          </button>
+          <button
+            onClick={() => setTab("password")}
+            className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
+              tab === "password" ? "bg-white text-[#2D3436] shadow-sm" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            🔑 密码
           </button>
         </div>
 
@@ -301,6 +339,39 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
             ) : (
               <p className="text-xs text-gray-400 text-center">点击"获取验证码"，验证码将发送到您的邮箱</p>
             )}
+          </div>
+        )}
+
+        {/* 密码登录 */}
+        {tab === "password" && (
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-gray-600 font-medium">邮箱地址</label>
+              <input
+                type="email"
+                placeholder="请输入邮箱"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-gray-600 font-medium">密码</label>
+              <input
+                type="password"
+                placeholder="请输入密码"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
+              />
+            </div>
+            <button
+              onClick={handlePasswordLogin}
+              disabled={loading === "password" || !email || !password}
+              className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
+            >
+              {loading === "password" ? "登录中..." : "登录"}
+            </button>
           </div>
         )}
 

@@ -38,6 +38,13 @@ export const pantryItemSchema = z.object({
   expiryDate: z.string().optional(),
 });
 
+export const passwordSchema = z.string().min(6, '密码至少 6 位').max(100, '密码最多 100 位');
+
+export const setPasswordSchema = z.object({
+  password: passwordSchema,
+});
+
 export type RecipeGenerateInput = z.infer<typeof recipeGenerateSchema>;
 export type MealPlanCreateInput = z.infer<typeof mealPlanCreateSchema>;
 export type PantryItemInput = z.infer<typeof pantryItemSchema>;
+export type SetPasswordInput = z.infer<typeof setPasswordSchema>;

@@ -120,6 +120,33 @@ providers.push(
   })
 )
 
+// 邮箱+密码登录（设过密码的用户可用）
+providers.push(
+  Credentials({
+    id: "password",
+    name: "密码登录",
+    credentials: {
+      email: { label: "邮箱", type: "text" },
+      password: { label: "密码", type: "password" },
+    },
+    async authorize(credentials) {
+      const email = credentials?.email as string
+      const password = credentials?.password as string
+
+      if (!email || !password) return null
+
+      const user = await prisma.user.findUnique({ where: { email } })
+      if (!user?.passwordHash) return null
+
+      const bcrypt = await import("bcryptjs")
+      const valid = await bcrypt.compare(password, user.passwordHash)
+      if (!valid) return null
+
+      return { id: user.id, name: user.name, email: user.email! }
+    },
+  })
+)
+
 // Google / GitHub — 仅当配置了凭证时才启用
 if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
   providers.push(

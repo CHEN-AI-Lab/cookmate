@@ -10,6 +10,8 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   const [email, setEmail] = useState("")
   const [emailCode, setEmailCode] = useState("")
   const [emailCodeSent, setEmailCodeSent] = useState(false)
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState("")
   const [countdown, setCountdown] = useState(0)
@@ -120,6 +122,14 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
       setError("请输入邮箱和验证码")
       return
     }
+    if (password && password !== confirmPassword) {
+      setError("两次密码不一致")
+      return
+    }
+    if (password && password.length < 6) {
+      setError("密码至少 6 位")
+      return
+    }
     setLoading("email_login")
     setError("")
     try {
@@ -132,6 +142,14 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
       if (!res.ok) {
         setError(data.error || "验证失败")
         return
+      }
+      // 如果设置了密码，一并保存
+      if (password) {
+        await fetch("/api/auth/set-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password }),
+        })
       }
       window.location.href = "/app/dashboard"
     } catch {
@@ -288,6 +306,30 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
                 />
               </div>
+            )}
+            {emailCodeSent && (
+              <>
+                <div>
+                  <label className="text-sm text-gray-600 font-medium">设置密码（选填）</label>
+                  <input
+                    type="password"
+                    placeholder="至少 6 位"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-600 font-medium">确认密码</label>
+                  <input
+                    type="password"
+                    placeholder="再次输入密码"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
+                  />
+                </div>
+              </>
             )}
             {emailCodeSent ? (
               <button
