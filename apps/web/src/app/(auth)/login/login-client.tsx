@@ -172,7 +172,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         return
       }
       if (!checkData.hasPassword) {
-        setError("该账号未设置密码，请先用验证码登录，之后去设置页设置密码")
+        setError("请先用验证码登录，再到设置页设密码")
         setLoading(null)
         return
       }
@@ -230,16 +230,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
               <Link href="/app/dashboard" className="flex-1 bg-blue-600 text-white text-center text-sm py-2 rounded-lg hover:bg-blue-700">进入仪表盘</Link>
               <button onClick={() => signOut({ callbackUrl: "/" })} className="flex-1 bg-white text-gray-600 text-center text-sm py-2 rounded-lg border border-gray-200 hover:bg-gray-50">退出登录</button>
             </div>
-          </div>
-        )}
-
-        {error && (
-          <div className={`mb-4 p-3 rounded-xl text-sm text-center ${
-            error.includes("自动填入") ? "bg-green-50 border border-green-200 text-green-600"
-            : error.includes("已发送") ? "bg-blue-50 border border-blue-200 text-blue-600"
-            : "bg-red-50 border border-red-200 text-red-600"
-          }`}>
-            {error}
           </div>
         )}
 
@@ -387,6 +377,16 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
             >
               {loading === "password" ? "登录中..." : "登录"}
             </button>          </div>        )}
+
+        {error && (
+          <div className={`mt-2 p-3 rounded-xl text-sm text-center ${
+            error.includes("自动填入") ? "bg-green-50 border border-green-200 text-green-600"
+            : error.includes("已发送") ? "bg-blue-50 border border-blue-200 text-blue-600"
+            : "bg-red-50 border border-red-200 text-red-600"
+          }`}>
+            {error}
+          </div>
+        )}
 
         {/* 社交账号登录 */}
         <div className="my-6 flex items-center gap-4">
