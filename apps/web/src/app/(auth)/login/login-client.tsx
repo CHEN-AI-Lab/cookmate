@@ -259,24 +259,15 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     setError("")
     try {
       const isPhone = /^1\d{10}$/.test(email)
-      const body = isPhone ? { phone: email, code: setupCode } : { email, code: setupCode }
-      // 验证验证码（不创建 session）
-      const verifyRes = await fetch("/api/auth/verify-code-only", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      })
-      const verifyData = await verifyRes.json()
-      if (!verifyRes.ok) {
-        setError(verifyData.error || "验证码错误")
-        return
-      }
 
-      // 设置密码
+      // 设置密码（set-password 会自己验证验证码）
+      const body = isPhone
+        ? { phone: email, password: setupNewPassword, code: setupCode }
+        : { email, password: setupNewPassword, code: setupCode }
       const setRes = await fetch("/api/auth/set-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: setupNewPassword }),
+        body: JSON.stringify(body),
       })
       if (!setRes.ok) {
         const setData = await setRes.json()
