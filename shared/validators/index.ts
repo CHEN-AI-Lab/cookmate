@@ -21,9 +21,13 @@ export const FAKE_PHONES = new Set([
 ]);
 
 export const bindPhoneSchema = z.object({
-  phone: phoneSchema.refine((val) => !FAKE_PHONES.has(val), {
-    message: '请输入真实的手机号码',
-  }),
+  phone: phoneSchema
+    .refine((val) => !FAKE_PHONES.has(val), {
+      message: '请输入真实的手机号码',
+    })
+    .refine((val) => !/^1(\d)\1{9}$/.test(val), {
+      message: '请输入真实的手机号码',
+    }),
   password: z.string().min(8, '密码至少 8 位'),
 });
 
