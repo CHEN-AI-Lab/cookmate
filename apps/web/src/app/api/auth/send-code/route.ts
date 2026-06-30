@@ -110,6 +110,15 @@ export async function POST(req: Request) {
 
     console.log(`[DEV] 验证码 for ${phone || email}: ${code}`)
 
+    // 生产环境：手机号没有短信服务，直接返回验证码
+    if (phone && !isDev) {
+      console.log(`[DEV] No SMS service configured, returning code directly for ${phone}`)
+      return NextResponse.json({
+        success: true,
+        devCode: code,
+      })
+    }
+
     if (isDev) {
       return NextResponse.json({
         success: true,
