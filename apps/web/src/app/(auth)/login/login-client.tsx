@@ -276,16 +276,11 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       }
 
       // 设置成功，用密码登录
-      const result = await signIn("password", {
+      await signIn("password", {
         account: email,
         password: setupNewPassword,
-        redirect: false,
+        callbackUrl: "/app/dashboard",
       })
-      if (result?.error) {
-        setError("设置成功，请手动登录")
-      } else {
-        window.location.href = result?.url || "/app/dashboard"
-      }
     } catch {
       setError("设置失败，请重试")
     } finally {
