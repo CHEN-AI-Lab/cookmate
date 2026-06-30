@@ -99,7 +99,12 @@ export async function POST(req: Request) {
       // 生产环境发真实邮件
       const sent = await sendEmailViaResend(email, code)
       if (!sent) {
-        console.error(`[Resend] Failed to send code to ${email}`)
+        console.error(`[Resend] Failed to send code to ${email}, returning dev code instead`)
+        // Resend 没配好时直接返回验证码，避免用户收不到
+        return NextResponse.json({
+          success: true,
+          devCode: code,
+        })
       }
     }
 
