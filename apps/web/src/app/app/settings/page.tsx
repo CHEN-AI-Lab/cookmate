@@ -300,17 +300,13 @@ const save = async () => {
 }
 
 function PasswordForm({ hasPassword, onClose }: { hasPassword: boolean; onClose: () => void }) {
-  const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirm, setConfirm] = useState("")
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState("")
 
   const handleSubmit = async () => {
-    if (hasPassword && !currentPassword) {
-      setMsg("请输入当前密码"); return
-    }
-    if (newPassword.length < 8) { setMsg("新密码至少 8 位"); return }
+    if (newPassword.length < 8) { setMsg("密码至少 8 位"); return }
     if (newPassword !== confirm) { setMsg("两次密码不一致"); return }
     setSaving(true)
     setMsg("")
@@ -325,7 +321,6 @@ function PasswordForm({ hasPassword, onClose }: { hasPassword: boolean; onClose:
         setMsg("✅ 密码已" + (hasPassword ? "修改" : "设置"))
         setNewPassword("")
         setConfirm("")
-        setCurrentPassword("")
         setTimeout(onClose, 1500)
       } else {
         setMsg(`❌ ${data.error || "操作失败"}`)
@@ -339,18 +334,6 @@ function PasswordForm({ hasPassword, onClose }: { hasPassword: boolean; onClose:
 
   return (
     <div className="space-y-3">
-      {hasPassword && (
-        <div>
-          <label className="text-xs text-gray-500">当前密码</label>
-          <input
-            type="password"
-            placeholder="输入当前密码"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35] mt-1"
-          />
-        </div>
-      )}
       <div>
         <label className="text-xs text-gray-500">新密码</label>
         <input

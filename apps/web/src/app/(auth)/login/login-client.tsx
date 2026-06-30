@@ -193,13 +193,18 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         return
       }
 
-      await signIn("password", {
+      const result = await signIn("password", {
         account: email,
         password,
-        callbackUrl: "/app/dashboard",
+        redirect: false,
       })
+      if (result?.error) {
+        setError("邮箱/手机号或密码错误")
+      } else {
+        window.location.href = result?.url || "/app/dashboard"
+      }
     } catch {
-      setError("登录失败，请稍后重试")
+      setError("邮箱/手机号或密码错误")
     } finally {
       setLoading(null)
     }
