@@ -125,27 +125,26 @@ const save = async () => {
                       className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
                     />
                     <button
-                                          onClick={async () => {
-                                            if (!/^1\d{10}$/.test(bindPhone)) { setBindError("请输入正确手机号"); return }
-                                            if (!bindCode) { setBindError("请输入密码"); return }
-                                            setBindLoading(true)
-                                            setBindError("")
-                                            try {
-                                              const r = await fetch("/api/user/profile", {
-                                                method: "PUT", headers: { "Content-Type": "application/json" },
-                                                body: JSON.stringify({ phone: bindPhone, password: bindCode }),
-                                              })
-                                              const d = await r.json()
-                                              if (r.ok) {
-                                                setProfile((p) => p ? { ...p, phone: bindPhone } : p)
-                                                setShowBindPhone(false)
-                                                setError("✅ 手机号绑定成功")
-                                              } else {
-                                                setBindError(d.error || "绑定失败")
-                                              }
-                                            } catch { setBindError("网络错误") }
-                                            finally { setBindLoading(false) }
-                                          }}
+                      onClick={async () => {
+                        if (!/^1\d{10}$/.test(bindPhone)) { setBindError("请输入正确手机号"); return }
+                        if (!bindCode) { setBindError("请输入密码"); return }
+                        setBindLoading(true)
+                        setBindError("")
+                        try {
+                          const r = await fetch("/api/user/profile", {
+                            method: "PUT", headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ phone: bindPhone, password: bindCode }),
+                          })
+                          const d = await r.json()
+                          if (r.ok) {
+                            setProfile((p) => p ? { ...p, phone: bindPhone } : p)
+                            setShowBindPhone(false)
+                            setError("✅ 手机号绑定成功")
+                          } else {
+                            setBindError(d.error || "绑定失败")
+                          }
+                        } catch { setBindError("网络错误") }
+                        finally { setBindLoading(false) }
                       }}
                       disabled={bindLoading || !bindPhone || !bindCode}
                       className="w-full bg-[#FF6B35] text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
