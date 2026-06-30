@@ -112,6 +112,10 @@ const save = async () => {
                 {showBindPhone && (
                   <div className="py-3 border-b border-gray-50 space-y-3">
                     <p className="text-xs text-gray-400">输入手机号 + 当前密码即可绑定，无需短信验证码</p>
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                      <p className="text-xs text-amber-700 font-medium">⚠️ 重要提醒</p>
+                      <p className="text-xs text-amber-600 mt-1">手机号一旦绑定，后续不可修改或解绑。请务必输入您本人正在使用的手机号码。</p>
+                    </div>
                     <input
                       type="tel" maxLength={11} placeholder="输入手机号"
                       value={bindPhone}
