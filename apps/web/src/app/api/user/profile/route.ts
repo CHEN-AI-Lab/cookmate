@@ -46,25 +46,20 @@ export async function PUT(req: Request) {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
 
-    const { name, phone, code } = await req.json()
+    const { name, phone, password } = await req.json()
 
     // 绑定手机号
     if (phone) {
-      if (!code) return NextResponse.json({ error: "请输入验证码" }, { status: 400 })
+      if (!password) return NextResponse.json({ error: "请输入密码验证身份" }, { status: 400 })
       if (!/^1\d{10}$/.test(phone)) return NextResponse.json({ error: "请输入正确的手机号" }, { status: 400 })
 
-      // 验证码校验
-      const record = await prisma.verificationCode.findFirst({
-        where: { phone, code, used: false, expiresAt: { gte: new Date() } },
-        orderBy: { createdAt: "desc" },
-      })
-      if (!record) return NextResponse.json({ error: "验证码错误或已过期" }, { status: 401 })
+      // 密码验证（用户已登录，用密码确认身份）
+      const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { passwordHash: true } })
+      if (!user?.passwordHash) return NextResponse.json({ error: "请先设置密码后再绑定手机号" }, { status: 400 })
 
-      // 标记验证码已使用
-      await prisma.verificationCode.update({
-        where: { id: record.id },
-        data: { used: true },
-      })
+      const bcrypt = await import("bcryptjs")
+      const valid = await bcrypt.compare(password, user.passwordHash)
+      if (!valid) return NextResponse.json({ error: "密码错误" }, { status: 401 })
 
       // 检查手机号是否已被其他账号绑定
       const existing = await prisma.user.findUnique({ where: { phone } })
