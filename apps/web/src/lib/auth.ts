@@ -248,9 +248,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             select: { subscriptionTier: true, phone: true, onboardingCompleted: true, tokenVersion: true },
           })
           if (user) {
-            // 版本号检查：如果数据库版本号比 JWT 中的新，说明在其他设备登录过，此 token 失效
-            const jwtVersion = (token.tokenVersion as number) || 0
-            if (user.tokenVersion > jwtVersion) {
+            // 首次创建 JWT 时 tokenVersion 为空，直接设置
+            // 后续请求如果数据库版本号比 JWT 中的新，说明在其他设备登录过，此 token 失效
+            if (token.tokenVersion !== undefined && user.tokenVersion > token.tokenVersion) {
               return {}
             }
             token.tokenVersion = user.tokenVersion
