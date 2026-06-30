@@ -219,10 +219,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   providers,
   callbacks: {
-    async signIn({ account }) {
-      // Trust Google/GitHub verified emails - allow linking to existing accounts
-      if (account?.provider === "google" || account?.provider === "github") {
-        return true
+    async signIn({ user, account }) {
+      if (user?.id) {
+        // 每次登录递增版本号，使其他设备上的旧 token 失效
+        try {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { tokenVersion: { increment: 1 } },
+          })
+        } catch {}
       }
       return true
     },
@@ -240,9 +245,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         try {
           const user = await prisma.user.findUnique({
             where: { id: token.sub },
-            select: { subscriptionTier: true, phone: true, onboardingCompleted: true },
+            select: { subscriptionTier: true, phone: true, onboardingCompleted: true, tokenVersion: true },
           })
           if (user) {
+            // 版本号检查：如果数据库版本号比 JWT 中的新，说明在其他设备登录过，此 token 失效
+            const jwtVersion = (token.tokenVersion as number) || 0
+            if (user.tokenVersion > jwtVersion) {
+              return {}
+            }
+            token.tokenVersion = user.tokenVersion
             token.subscriptionTier = user.subscriptionTier
             token.phone = user.phone
             token.onboardingCompleted = user.onboardingCompleted
@@ -251,6 +262,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.subscriptionTier = "FREE"
           token.phone = ""
           token.onboardingCompleted = false
+          token.tokenVersion = 0
         }
       }
       return token

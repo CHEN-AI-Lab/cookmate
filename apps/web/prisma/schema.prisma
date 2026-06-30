@@ -23,6 +23,7 @@ model User {
   cuisinePref    String?  @default("不限")
   servingSize    Int      @default(2)
   onboardingCompleted Boolean @default(false)
+  tokenVersion     Int      @default(0)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
