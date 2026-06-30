@@ -40,3 +40,58 @@ const user = await prisma.user.findUnique({
     return NextResponse.json({ error: "请求失败" }, { status: 500 })
   }
 }
+
+export async function PUT(req: Request) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+
+    const { name, phone, code } = await req.json()
+
+    // 绑定手机号
+    if (phone) {
+      if (!code) return NextResponse.json({ error: "请输入验证码" }, { status: 400 })
+      if (!/^1\d{10}$/.test(phone)) return NextResponse.json({ error: "请输入正确的手机号" }, { status: 400 })
+
+      // 验证码校验
+      const record = await prisma.verificationCode.findFirst({
+        where: { phone, code, used: false, expiresAt: { gte: new Date() } },
+        orderBy: { createdAt: "desc" },
+      })
+      if (!record) return NextResponse.json({ error: "验证码错误或已过期" }, { status: 401 })
+
+      // 标记验证码已使用
+      await prisma.verificationCode.update({
+        where: { id: record.id },
+        data: { used: true },
+      })
+
+      // 检查手机号是否已被其他账号绑定
+      const existing = await prisma.user.findUnique({ where: { phone } })
+      if (existing && existing.id !== session.user.id) {
+        return NextResponse.json({ error: "该手机号已被其他账号绑定" }, { status: 409 })
+      }
+
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: { phone },
+      })
+
+      return NextResponse.json({ success: true, phone })
+    }
+
+    // 更新用户名
+    if (name !== undefined) {
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: { name },
+      })
+      return NextResponse.json({ success: true, name })
+    }
+
+    return NextResponse.json({ error: "没有要更新的内容" }, { status: 400 })
+  } catch (error) {
+    console.error("Profile PUT:", error)
+    return NextResponse.json({ error: "更新失败" }, { status: 500 })
+  }
+}

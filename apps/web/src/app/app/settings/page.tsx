@@ -13,6 +13,12 @@ export default function SettingsPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(true)
   const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const [showBindPhone, setShowBindPhone] = useState(false)
+  const [bindPhone, setBindPhone] = useState("")
+  const [bindCode, setBindCode] = useState("")
+  const [bindCodeSent, setBindCodeSent] = useState(false)
+  const [bindLoading, setBindLoading] = useState(false)
+  const [bindCountdown, setBindCountdown] = useState(0)
 
   useEffect(() => {
     Promise.all([
@@ -90,8 +96,84 @@ const save = async () => {
                 </div>
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
                   <span className="text-sm text-gray-500">手机号</span>
-                  <span className="text-sm font-medium text-[#2D3436]">{profile.phone ? profile.phone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2") : "未绑定"}</span>
+                  <span className="text-sm font-medium text-[#2D3436]">
+                    {profile.phone ? profile.phone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2") : "未绑定"}
+                    {!profile.phone && (
+                      <button
+                        onClick={() => setShowBindPhone(!showBindPhone)}
+                        className="ml-2 text-[#FF6B35] text-xs hover:underline"
+                      >
+                        绑定
+                      </button>
+                    )}
+                  </span>
                 </div>
+                {showBindPhone && (
+                  <div className="py-3 border-b border-gray-50 space-y-3">
+                    <div className="flex gap-2">
+                      <input
+                        type="tel" maxLength={11} placeholder="输入手机号"
+                        value={bindPhone}
+                        onChange={(e) => setBindPhone(e.target.value.replace(/\D/g, ""))}
+                        className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
+                      />
+                      <button
+                        onClick={async () => {
+                          if (!/^1\d{10}$/.test(bindPhone)) { setError("请输入正确手机号"); return }
+                          setBindLoading(true)
+                          try {
+                            const r = await fetch("/api/auth/send-code", {
+                              method: "POST", headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ phone: bindPhone }),
+                            })
+                            const d = await r.json()
+                            if (d.devCode) setBindCode(d.devCode)
+                            if (r.ok) { setBindCodeSent(true); setBindCountdown(60); setError("验证码已发送") }
+                            else setError(d.error || "发送失败")
+                          } catch { setError("网络错误") }
+                          finally { setBindLoading(false) }
+                        }}
+                        disabled={bindLoading || bindCountdown > 0}
+                        className="px-3 py-2 rounded-xl text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap"
+                      >
+                        {bindCountdown > 0 ? `${bindCountdown}s` : "获取验证码"}
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text" maxLength={6} placeholder="验证码"
+                        value={bindCode}
+                        onChange={(e) => setBindCode(e.target.value.replace(/\D/g, ""))}
+                        className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
+                      />
+                      <button
+                        onClick={async () => {
+                          if (!bindCode) { setError("请输入验证码"); return }
+                          setBindLoading(true)
+                          try {
+                            const r = await fetch("/api/user/profile", {
+                              method: "PUT", headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ phone: bindPhone, code: bindCode }),
+                            })
+                            const d = await r.json()
+                            if (r.ok) {
+                              setProfile((p) => p ? { ...p, phone: bindPhone } : p)
+                              setShowBindPhone(false)
+                              setError("✅ 手机号绑定成功")
+                            } else {
+                              setError(d.error || "绑定失败")
+                            }
+                          } catch { setError("网络错误") }
+                          finally { setBindLoading(false) }
+                        }}
+                        disabled={bindLoading || !bindCode}
+                        className="px-3 py-2 rounded-xl text-sm bg-[#FF6B35] text-white hover:bg-orange-600 disabled:bg-gray-300"
+                      >
+                        确认绑定
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
                   <span className="text-sm text-gray-500">邮箱</span>
                   <span className="text-sm font-medium text-[#2D3436]">{profile.email || "未绑定"}</span>
