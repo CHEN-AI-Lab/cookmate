@@ -130,8 +130,9 @@ const save = async () => {
                     />
                     <button
                       onClick={async () => {
-                        if (!/^1\d{10}$/.test(bindPhone)) { setBindError("请输入正确手机号"); return }
-                        if (!bindCode) { setBindError("请输入密码"); return }
+                        if (!/^1[3-9]\d{9}$/.test(bindPhone)) { setBindError("请输入正确的11位手机号"); return }
+                        if (bindPhone === '11111111111' || bindPhone === '00000000000' || bindPhone === '12345678901') { setBindError("请输入真实的手机号码"); return }
+                        if (!bindCode || bindCode.length < 8) { setBindError("请输入正确的密码（至少 8 位）"); return }
                         setBindLoading(true)
                         setBindError("")
                         try {

@@ -9,6 +9,24 @@ export const dietaryPreferenceSchema = z.enum([
 
 export const difficultySchema = z.enum(['easy', 'medium', 'hard']);
 
+// 中国手机号校验：1 开头，第二位 3-9，共 11 位
+export const phoneSchema = z.string().regex(/^1[3-9]\d{9}$/, '请输入正确的手机号码');
+
+// 常见虚假手机号黑名单（连续数字、重复数字等）
+export const FAKE_PHONES = new Set([
+  '12345678901', '11111111111', '22222222222', '33333333333',
+  '44444444444', '55555555555', '66666666666', '77777777777',
+  '88888888888', '99999999999', '00000000000',
+  '12345678910', '10987654321', '13579246801',
+]);
+
+export const bindPhoneSchema = z.object({
+  phone: phoneSchema.refine((val) => !FAKE_PHONES.has(val), {
+    message: '请输入真实的手机号码',
+  }),
+  password: z.string().min(8, '密码至少 8 位'),
+});
+
 export const recipeGenerateSchema = z.object({
   mealType: mealTypeSchema.optional(),
   dietaryPreference: dietaryPreferenceSchema.optional().default('none'),
