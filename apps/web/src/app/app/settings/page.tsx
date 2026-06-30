@@ -133,6 +133,12 @@ const save = async () => {
                         if (!/^1[3-9]\d{9}$/.test(bindPhone)) { setBindError("请输入正确的11位手机号"); return }
                         if (bindPhone === '11111111111' || bindPhone === '00000000000' || bindPhone === '12345678901' || /^1(\d)\1{9}$/.test(bindPhone)) { setBindError("请输入真实的手机号码"); return }
                         if (!bindCode || bindCode.length < 8) { setBindError("请输入正确的密码（至少 8 位）"); return }
+                        let pwdTypes = 0;
+                        if (/[a-z]/.test(bindCode)) pwdTypes++;
+                        if (/[A-Z]/.test(bindCode)) pwdTypes++;
+                        if (/[0-9]/.test(bindCode)) pwdTypes++;
+                        if (/[^a-zA-Z0-9]/.test(bindCode)) pwdTypes++;
+                        if (pwdTypes < 2) { setBindError("密码需包含至少两种字符（大小写字母、数字、符号）"); return }
                         setBindLoading(true)
                         setBindError("")
                         try {
