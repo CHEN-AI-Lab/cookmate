@@ -99,25 +99,16 @@ export async function POST(req: Request) {
       // 生产环境发真实邮件
       const sent = await sendEmailViaResend(email, code)
       if (!sent) {
-        console.error(`[Resend] Failed to send code to ${email}, returning dev code instead`)
-        // Resend 没配好时直接返回验证码，避免用户收不到
-        return NextResponse.json({
-          success: true,
-          devCode: code,
-        })
+        return NextResponse.json({ error: "邮件发送失败，请检查 RESEND_API_KEY 配置" }, { status: 500 })
       }
     }
 
-    console.log(`[DEV] 验证码 for ${phone || email}: ${code}`)
-
-    // 生产环境：手机号没有短信服务，直接返回验证码
     if (phone && !isDev) {
-      console.log(`[DEV] No SMS service configured, returning code directly for ${phone}`)
-      return NextResponse.json({
-        success: true,
-        devCode: code,
-      })
+      // 生产环境不支持短信验证码（未配置短信服务）
+      return NextResponse.json({ error: "手机号登录暂未开放，请使用邮箱或密码登录" }, { status: 400 })
     }
+
+    console.log(`[DEV] 验证码 for ${phone || email}: ${code}`)
 
     if (isDev) {
       return NextResponse.json({
