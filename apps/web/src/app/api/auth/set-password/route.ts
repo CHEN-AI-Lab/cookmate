@@ -1,10 +1,33 @@
 import { NextResponse } from "next/server"
+import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { setPasswordSchema } from "@cookmate/shared/validators"
 
 export async function POST(req: Request) {
   try {
+    const session = await auth()
     const { password, phone, email, code } = await req.json()
+
+    if (session?.user?.id) {
+      // 已登录用户：直接设置密码，无需验证码
+      if (!password) {
+        return NextResponse.json({ error: "请输入密码" }, { status: 400 })
+      }
+      const parsed = setPasswordSchema.safeParse({ password })
+      if (!parsed.success) {
+        return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
+      }
+      const bcrypt = await import("bcryptjs")
+      const salt = await bcrypt.genSalt(10)
+      const passwordHash = await bcrypt.hash(parsed.data.password, salt)
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: { passwordHash },
+      })
+      return NextResponse.json({ success: true })
+    }
+
+    // 未登录用户：需要验证码 + 邮箱/手机号
     if (!password || !code || (!phone && !email)) {
       return NextResponse.json({ error: "缺少必要参数" }, { status: 400 })
     }
