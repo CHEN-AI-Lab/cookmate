@@ -13,6 +13,8 @@ export default function SettingsPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(true)
   const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const [editingName, setEditingName] = useState(false)
+  const [editNameValue, setEditNameValue] = useState("")
   const [showBindPhone, setShowBindPhone] = useState(false)
   const [bindPhone, setBindPhone] = useState("")
   const [bindCode, setBindCode] = useState("")
@@ -42,6 +44,30 @@ export default function SettingsPage() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
+
+  const saveName = async () => {
+    if (!editNameValue.trim() || editNameValue.trim() === profile?.name) {
+      setEditingName(false)
+      return
+    }
+    try {
+      const r = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editNameValue.trim() }),
+      })
+      if (r.ok) {
+        setProfile((p) => p ? { ...p, name: editNameValue.trim() } : p)
+        setEditingName(false)
+        setError("✅ 用户名已更新")
+      } else {
+        const d = await r.json()
+        setError(d.error || "更新失败")
+      }
+    } catch {
+      setError("网络错误")
+    }
+  }
 
 const save = async () => {
     // 至少选择一个菜系
@@ -86,13 +112,34 @@ const save = async () => {
           <div className="bg-white rounded-2xl shadow-sm border border-orange-50 p-6 h-full">
             <h2 className="font-bold text-[#2D3436] mb-4">👤 账号信息</h2>
             {profile ? (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between py-2 border-b border-gray-50">
-                  <span className="text-sm text-gray-500">用户名</span>
-                  <span className="text-sm font-medium text-[#2D3436]">{profile.name || "未设置"}</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-gray-50">
-                  <span className="text-sm text-gray-500">登录方式</span>
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between py-2 border-b border-gray-50">
+                              <span className="text-sm text-gray-500">用户名</span>
+                              <span className="text-sm font-medium text-[#2D3436]">
+                                {editingName ? (
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="text"
+                                      value={editNameValue}
+                                      onChange={(e) => setEditNameValue(e.target.value)}
+                                      maxLength={30}
+                                      className="border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-[#FF6B35] w-32"
+                                      autoFocus
+                                      onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setEditingName(false) }}
+                                    />
+                                    <button onClick={saveName} className="text-xs text-[#FF6B35] hover:underline">保存</button>
+                                    <button onClick={() => setEditingName(false)} className="text-xs text-gray-400 hover:text-gray-600">取消</button>
+                                  </div>
+                                ) : (
+                                  <>
+                                    {profile.name || "未设置"}
+                                    <button onClick={() => { setEditNameValue(profile.name || ""); setEditingName(true) }} className="ml-2 text-[#FF6B35] text-xs hover:underline">修改</button>
+                                  </>
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between py-2 border-b border-gray-50">
+                              <span className="text-sm text-gray-500">登录方式</span>
                   <span className="text-sm font-medium text-[#2D3436]">{profile.loginMethod}</span>
                 </div>
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
