@@ -22,7 +22,7 @@ interface AlipayUserInfoResponse {
 }
 
 interface AlipayTokenResponse {
-  alipay_system_oauth_token_response: {
+  alipay_system_oauth_token_response?: {
     access_token: string
     user_id: string
     alipay_user_id: string
@@ -30,6 +30,7 @@ interface AlipayTokenResponse {
     refresh_token: string
     re_expires_in: number
   }
+  error_response?: { code: string; msg: string; sub_code?: string; sub_msg?: string }
   sign: string
 }
 
@@ -106,10 +107,12 @@ export default function AlipayProvider<P extends AlipayProfile>(
         })
 
         const text = await res.text()
+        console.log("[Alipay] Token response:", res.status, text.substring(0, 300))
         const data: AlipayTokenResponse = JSON.parse(text)
 
         if (!data.alipay_system_oauth_token_response?.access_token) {
-          throw new Error("Alipay token error: " + text)
+          const errMsg = (data as any).alipay_system_oauth_token_response?.msg || (data as any).error_response?.sub_msg || text
+          throw new Error("Alipay token error: " + errMsg)
         }
 
         return {
