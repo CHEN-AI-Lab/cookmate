@@ -93,12 +93,22 @@ export default function AlipayProvider<P extends AlipayProfile>(
         const code = params.code || params.auth_code
         if (!code) throw new Error("Missing auth_code")
 
-        const body = buildSignedParams(
-          "alipay.system.oauth.token",
-          { grant_type: "authorization_code", code },
-          clientId,
-          clientSecret,
-        )
+        // alipay.system.oauth.token 接口特殊：
+        // grant_type 和 code 是顶级参数，不在 biz_content 里
+        const commonParams: Record<string, string> = {
+          app_id: clientId,
+          method: "alipay.system.oauth.token",
+          format: "JSON",
+          charset: "utf-8",
+          sign_type: "RSA2",
+          timestamp: (() => { const d = new Date(); d.setHours(d.getHours() + 8); return d.toISOString().replace('T', ' ').replace(/\\..+/, ''); })(),
+          version: "1.0",
+          grant_type: "authorization_code",
+          code,
+        }
+        commonParams.sign = signParams(commonParams, clientSecret)
+
+        const body = new URLSearchParams(commonParams)
 
         const res = await fetch(apiBase, {
           method: "POST",
@@ -128,12 +138,20 @@ export default function AlipayProvider<P extends AlipayProfile>(
     userinfo: {
       url: apiBase,
       async request(ctx: any) {
-        const body = buildSignedParams(
-          "alipay.user.info.share",
-          { auth_token: ctx.tokens.access_token },
-          ctx.provider.clientId,
-          ctx.provider.clientSecret,
-        )
+        // alipay.user.info.share 接口：auth_token 是顶级参数
+        const commonParams: Record<string, string> = {
+          app_id: ctx.provider.clientId,
+          method: "alipay.user.info.share",
+          format: "JSON",
+          charset: "utf-8",
+          sign_type: "RSA2",
+          timestamp: (() => { const d = new Date(); d.setHours(d.getHours() + 8); return d.toISOString().replace('T', ' ').replace(/\\..+/, ''); })(),
+          version: "1.0",
+          auth_token: ctx.tokens.access_token,
+        }
+        commonParams.sign = signParams(commonParams, ctx.provider.clientSecret)
+
+        const body = new URLSearchParams(commonParams)
 
         const res = await fetch(apiBase, {
           method: "POST",
