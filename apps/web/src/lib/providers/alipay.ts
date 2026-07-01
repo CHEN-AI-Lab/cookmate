@@ -35,33 +35,10 @@ interface AlipayTokenResponse {
 }
 
 function signParams(params: Record<string, string>, privateKey: string): string {
-  const sorted = Object.keys(params)
-    .sort()
-    .map((k) => k + "=" + params[k])
-    .join("&")
+  const sorted = Object.keys(params).sort().map((k) => k + "=" + params[k]).join("&")
   const signer = crypto.createSign("RSA-SHA256")
   signer.update(sorted, "utf8")
   return signer.sign(privateKey, "base64")
-}
-
-function buildSignedParams(
-  apiName: string,
-  bizContent: Record<string, unknown>,
-  appId: string,
-  privateKey: string,
-): URLSearchParams {
-  const commonParams: Record<string, string> = {
-    app_id: appId,
-    method: apiName,
-    format: "JSON",
-    charset: "utf-8",
-    sign_type: "RSA2",
-    timestamp: (() => { const d = new Date(); d.setHours(d.getHours() + 8); return d.toISOString().replace('T', ' ').replace(/\..+/, ''); })(),
-    version: "1.0",
-    biz_content: JSON.stringify(bizContent),
-  }
-  commonParams.sign = signParams(commonParams, privateKey)
-  return new URLSearchParams(commonParams)
 }
 
 export default function AlipayProvider<P extends AlipayProfile>(
@@ -69,16 +46,16 @@ export default function AlipayProvider<P extends AlipayProfile>(
 ): OAuthConfig<P> {
   const alipayPublicKey = options.alipayPublicKey || ""
   const apiBase = "https://openapi.alipay.com/gateway.do"
+  const fixedSecret = (options.clientSecret || "").replace(/\\n/g, "\n")
 
   return {
     id: "alipay",
     name: "Alipay",
     type: "oauth",
     style: { logo: "/alipay.svg", bg: "#1677FF", text: "#fff" },
-    checks: [], // Alipay doesn't return state/PKCE params
+    checks: [],
 
-    authorization: {
-      url: "https://openauth.alipay.com/oauth2/publicAppAuthorize.htm",
+    authorization: ***      url: "https://openauth.alipay.com/oauth2/publicAppAuthorize.htm",
       params: {
         app_id: options.clientId,
         scope: "auth_user",
@@ -89,42 +66,32 @@ export default function AlipayProvider<P extends AlipayProfile>(
       url: apiBase,
       params: { grant_type: "authorization_code" },
       async request(ctx: any) {
-        const { clientId, clientSecret, params } = ctx
+        const { clientId, params } = ctx
         const code = params.code || params.auth_code
         if (!code) throw new Error("Missing auth_code")
 
-        // alipay.system.oauth.token 接口特殊：
-        // grant_type 和 code 是顶级参数，不在 biz_content 里
-        const commonParams: Record<string, string> = {
+        const ts = (() => { const d = new Date(); d.setHours(d.getHours() + 8); return d.toISOString().replace("T", " ").replace(/\..+/, ""); })()
+        const p: Record<string, string> = {
           app_id: clientId,
           method: "alipay.system.oauth.token",
-          format: "JSON",
-          charset: "utf-8",
-          sign_type: "RSA2",
-          timestamp: (() => { const d = new Date(); d.setHours(d.getHours() + 8); return d.toISOString().replace('T', ' ').replace(/\..+/, ''); })(),
-          version: "1.0",
+          format: "JSON", charset: "utf-8", sign_type: "RSA2",
+          timestamp: ts, version: "1.0",
           grant_type: "authorization_code",
           code,
         }
-        commonParams.sign = signParams(commonParams, clientSecret)
-
-        const body = new URLSearchParams(commonParams)
-
+        p.sign = signParams(p, fixedSecret)
+        const body = new URLSearchParams(p)
         const res = await fetch(apiBase, {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
           body: body.toString(),
         })
-
         const text = await res.text()
-        console.log("[Alipay] Token response:", res.status, text.substring(0, 300))
         const data: AlipayTokenResponse = JSON.parse(text)
-
         if (!data.alipay_system_oauth_token_response?.access_token) {
-          const errMsg = (data as any).alipay_system_oauth_token_response?.msg || (data as any).error_response?.sub_msg || text
-          throw new Error("Alipay token error: " + errMsg)
+          const e = (data as any).error_response
+          throw new Error("Alipay token error: " + (e?.sub_msg || e?.msg || text))
         }
-
         return {
           tokens: {
             access_token: data.alipay_system_oauth_token_response.access_token,
@@ -138,47 +105,35 @@ export default function AlipayProvider<P extends AlipayProfile>(
     userinfo: {
       url: apiBase,
       async request(ctx: any) {
-        // alipay.user.info.share 接口：auth_token 是顶级参数
-        const commonParams: Record<string, string> = {
+        const ts = (() => { const d = new Date(); d.setHours(d.getHours() + 8); return d.toISOString().replace("T", " ").replace(/\..+/, ""); })()
+        const p: Record<string, string> = {
           app_id: ctx.provider.clientId,
           method: "alipay.user.info.share",
-          format: "JSON",
-          charset: "utf-8",
-          sign_type: "RSA2",
-          timestamp: (() => { const d = new Date(); d.setHours(d.getHours() + 8); return d.toISOString().replace('T', ' ').replace(/\..+/, ''); })(),
-          version: "1.0",
+          format: "JSON", charset: "utf-8", sign_type: "RSA2",
+          timestamp: ts, version: "1.0",
           auth_token: ctx.tokens.access_token,
         }
-        commonParams.sign = signParams(commonParams, ctx.provider.clientSecret)
-
-        const body = new URLSearchParams(commonParams)
-
+        p.sign = signParams(p, fixedSecret)
+        const body = new URLSearchParams(p)
         const res = await fetch(apiBase, {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
           body: body.toString(),
         })
-
         const text = await res.text()
         const data: AlipayUserInfoResponse = JSON.parse(text)
-
         if (!data.alipay_user_info_share_response?.userId) {
           throw new Error("Alipay userinfo error: " + text)
         }
-
         if (alipayPublicKey && data.sign) {
-          const sorted = Object.keys(data.alipay_user_info_share_response)
-            .sort()
-            .map((k) => k + "=" + String((data.alipay_user_info_share_response as any)[k]))
-            .join("&")
+          const sorted = Object.keys(data.alipay_user_info_share_response).sort()
+            .map((k) => k + "=" + String((data.alipay_user_info_share_response as any)[k])).join("&")
           const verifier = crypto.createVerify("RSA-SHA256")
           verifier.update(sorted, "utf8")
-          const valid = verifier.verify(alipayPublicKey, data.sign, "base64")
-          if (!valid) {
+          if (!verifier.verify(alipayPublicKey, data.sign, "base64")) {
             console.warn("Alipay response signature verification failed")
           }
         }
-
         return data.alipay_user_info_share_response as unknown as P
       },
     },
