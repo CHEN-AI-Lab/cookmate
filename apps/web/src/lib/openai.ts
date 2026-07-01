@@ -137,6 +137,7 @@ export async function generateRecipes(
     cuisinePref?: string
     maxTime?: number
     mealType?: "breakfast" | "lunch" | "dinner" | "snack"
+    servingSize?: number
   },
   pantryContext?: string[]
 ): Promise<RecipeResult[]> {
@@ -156,6 +157,7 @@ const pantryInfo = pantryContext?.length
     preferences?.cuisinePref ? `菜系偏好: ${preferences.cuisinePref}` : "",
     preferences?.dietType ? `饮食类型: ${preferences.dietType}` : "",
     preferences?.maxTime ? `最多烹饪时间: ${preferences.maxTime}分钟` : "",
+    preferences?.servingSize ? `份量: ${preferences.servingSize}人份，请按此人数调整食材用量` : "",
   ]
     .filter(Boolean)
     .join("\n")

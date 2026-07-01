@@ -141,12 +141,13 @@ export async function POST(req: Request) {
     // 读取用户偏好设置
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { dietType: true, cuisinePref: true },
+      select: { dietType: true, cuisinePref: true, servingSize: true },
     }).catch(() => null)
 
     const recipes = await generateRecipes(ingredients, {
       dietType: user?.dietType || undefined,
       cuisinePref: user?.cuisinePref || undefined,
+      servingSize: user?.servingSize || undefined,
     }, pantryContext)
 
     // 保存生成的菜谱到数据库
