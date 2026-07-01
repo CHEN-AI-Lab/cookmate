@@ -1,23 +1,41 @@
 import { NextResponse } from "next/server"
 import crypto from "node:crypto"
 
-function signParams(params: Record<string, string>, privateKey: string): string {
-  const sorted = Object.keys(params).sort().map((k) => k + "=" + params[k]).join("&")
-  const signer = crypto.createSign("RSA-SHA256")
-  signer.update(sorted, "utf8")
-  return signer.sign(privateKey, "base64")
-}
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const authCode = searchParams.get("auth_code") || "b5f09d46046f4577a37db1f5b03eIB57"
 
-export async function GET() {
   const appId = process.env.AUTH_ALIPAY_ID
-  const privateKey = process.env.AUTH_ALIPAY_SECRET
-  const publicKey = process.env.ALIPAY_PUBLIC_KEY
+  const rawKey = process.env.AUTH_ALIPAY_SECRET || ""
 
-  if (!appId) return NextResponse.json({ error: "AUTH_ALIPAY_ID 未配置" })
-  if (!privateKey) return NextResponse.json({ error: "AUTH_ALIPAY_SECRET 未配置" })
+  // 整理私钥：处理 Vercel env 中可能存在的 \n 字面量
+  const privateKey = rawKey.replace(/\\n/g, "\n")
 
-  // 测试1：用假 auth_code 调支付宝 API，看返回什么错误
-  const testCode = "test_auth_code_2026"
+  const result: any = {
+    appId_configured: !!appId,
+    rawKey_has_value: rawKey.length > 0,
+    rawKey_starts_with: rawKey.substring(0, 40),
+    rawKey_has_literal_n: rawKey.includes("\\n"),
+    privateKey_has_newlines: privateKey.includes("\n"),
+    auth_code: authCode.substring(0, 10) + "...",
+  }
+
+  // 测试1：检查私钥是否能被 crypto 解析
+  try {
+    const signer = crypto.createSign("RSA-SHA256")
+    signer.update("test", "utf8")
+    const sig = signer.sign(privateKey, "base64")
+    result.key_test = "✅ 私钥可用，签名长度: " + sig.length
+  } catch (e: any) {
+    result.key_test = "❌ 私钥不可用: " + e.message
+  }
+
+  if (!appId || !privateKey) {
+    result.error = "环境变量未配置"
+    return NextResponse.json(result)
+  }
+
+  // 测试2：实际调支付宝 token 接口
   const d = new Date()
   d.setHours(d.getHours() + 8)
   const timestamp = d.toISOString().replace('T', ' ').replace(/\..+/, '')
@@ -31,46 +49,33 @@ export async function GET() {
     timestamp,
     version: "1.0",
     grant_type: "authorization_code",
-    code: testCode,
+    code: authCode,
   }
-  params.sign = signParams(params, privateKey)
+  params.sign = crypto.createSign("RSA-SHA256")
+    .update(Object.keys(params).sort().map(k => k + "=" + params[k]).join("&"), "utf8")
+    .sign(privateKey, "base64")
 
-  const body = new URLSearchParams(params)
-
-  let alipayResponse: any = null
-  let error = null
+  result.timestamp_sent = timestamp
+  result.params_sorted = Object.keys(params).sort()
 
   try {
+    const body = new URLSearchParams(params)
     const res = await fetch("https://openapi.alipay.com/gateway.do", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
       body: body.toString(),
     })
     const text = await res.text()
-    try { alipayResponse = JSON.parse(text) } catch { alipayResponse = { raw: text } }
+    try { result.alipay_response = JSON.parse(text) } catch { result.alipay_response = { raw: text } }
+
+    if (result.alipay_response?.error_response) {
+      const e = result.alipay_response.error_response
+      result.error_analysis = `支付宝错误: ${e.msg} (${e.code})${e.sub_msg ? " - " + e.sub_msg : ""}`
+    } else if (result.alipay_response?.alipay_system_oauth_token_response?.access_token) {
+      result.success = "✅ 成功了！"
+    }
   } catch (e: any) {
-    error = e.message
-  }
-
-  // 构建结果
-  const result: any = {
-    appId_configured: !!appId,
-    privateKey_configured: !!privateKey,
-    publicKey_configured: !!publicKey,
-    private_key_length: privateKey?.length || 0,
-    private_key_format: privateKey?.startsWith("-----BEGIN RSA PRIVATE KEY-----") ? "PKCS1" :
-      privateKey?.startsWith("-----BEGIN PRIVATE KEY-----") ? "PKCS8" : "未知格式",
-    timestamp_sent: timestamp,
-    alipay_response: alipayResponse,
-    error,
-  }
-
-  // 如果支付宝返回了错误，加一份中文说明
-  if (alipayResponse?.error_response) {
-    const err = alipayResponse.error_response
-    result.error_analysis = `支付宝返回错误: ${err.msg} (${err.code})${err.sub_msg ? ` - ${err.sub_msg}` : ""}`
-  } else if (alipayResponse?.alipay_system_oauth_token_response?.access_token) {
-    result.success = "✅ 假的 auth_code 居然返回了 token，说明 API 通讯正常"
+    result.network_error = e.message
   }
 
   return NextResponse.json(result)
