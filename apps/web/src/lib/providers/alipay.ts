@@ -101,7 +101,7 @@ export default function AlipayProvider<P extends AlipayProfile>(
           format: "JSON",
           charset: "utf-8",
           sign_type: "RSA2",
-          timestamp: (() => { const d = new Date(); d.setHours(d.getHours() + 8); return d.toISOString().replace('T', ' ').replace(/\\..+/, ''); })(),
+          timestamp: (() => { const d = new Date(); d.setHours(d.getHours() + 8); return d.toISOString().replace('T', ' ').replace(/\..+/, ''); })(),
           version: "1.0",
           grant_type: "authorization_code",
           code,
@@ -145,7 +145,7 @@ export default function AlipayProvider<P extends AlipayProfile>(
           format: "JSON",
           charset: "utf-8",
           sign_type: "RSA2",
-          timestamp: (() => { const d = new Date(); d.setHours(d.getHours() + 8); return d.toISOString().replace('T', ' ').replace(/\\..+/, ''); })(),
+          timestamp: (() => { const d = new Date(); d.setHours(d.getHours() + 8); return d.toISOString().replace('T', ' ').replace(/\..+/, ''); })(),
           version: "1.0",
           auth_token: ctx.tokens.access_token,
         }
