@@ -197,6 +197,22 @@ if (process.env.AUTH_WECHAT_ID && process.env.AUTH_WECHAT_SECRET) {
   )
 }
 
+// 支付宝授权登录回调 — 仅被自定义回调路由调用
+providers.push(
+  Credentials({
+    id: "alipay-auth",
+    name: "支付宝",
+    credentials: {},
+    async authorize(credentials) {
+      const uid = credentials?.userId as string
+      if (!uid) return null
+      const user = await prisma.user.findUnique({ where: { id: uid } }).catch(() => null)
+      if (!user) return null
+      return { id: user.id, name: user.name, email: user.email!, image: user.image }
+    },
+  })
+)
+
 // 本地体验登录 — 始终可用，不依赖数据库
 providers.push(
   Credentials({
