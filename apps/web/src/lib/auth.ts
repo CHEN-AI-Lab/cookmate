@@ -202,7 +202,7 @@ providers.push(
   Credentials({
     id: "alipay-auth",
     name: "支付宝",
-    credentials: {},
+    credentials: { userId: { label: "User ID", type: "text" } },
     async authorize(credentials) {
       const uid = credentials?.userId as string
       if (!uid) return null
