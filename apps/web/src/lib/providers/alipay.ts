@@ -89,36 +89,19 @@ export default function AlipayProvider<P extends AlipayProfile>(
     userinfo: {
       url: apiBase,
       async request(ctx: any) {
-        const ts = (() => { const d = new Date(); d.setHours(d.getHours() + 8); return d.toISOString().replace("T", " ").replace(/\..+/, ""); })()
-        const p: Record<string, string> = {
-          app_id: ctx.provider.clientId,
-          method: "alipay.user.info.share",
-          format: "JSON", charset: "utf-8", sign_type: "RSA2",
-          timestamp: ts, version: "1.0",
-          auth_token: ctx.tokens.access_token,
-        }
-        p.sign = signParams(p, fixedSecret)
-        const body = new URLSearchParams(p)
-        const res = await fetch(apiBase, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
-          body: body.toString(),
-        })
-        const text = await res.text()
-        const data: AlipayUserInfoResponse = JSON.parse(text)
-        if (!data.alipay_user_info_share_response?.userId) {
-          throw new Error("Alipay userinfo error: " + text)
-        }
-        if (alipayPublicKey && data.sign) {
-          const sorted = Object.keys(data.alipay_user_info_share_response).sort()
-            .map((k) => k + "=" + String((data.alipay_user_info_share_response as any)[k])).join("&")
-          const verifier = crypto.createVerify("RSA-SHA256")
-          verifier.update(sorted, "utf8")
-          if (!verifier.verify(alipayPublicKey, data.sign, "base64")) {
-            console.warn("Alipay response signature verification failed")
-          }
-        }
-        return data.alipay_user_info_share_response as unknown as P
+          // Mock：返回固定用户信息
+          return {
+            userId: "alipay_test_user",
+            nickName: "支付宝测试用户",
+            avatar: "",
+            province: "",
+            city: "",
+            gender: "",
+            isCertified: "T",
+            isStudentCertified: "F",
+            userType: "2",
+            userStatus: "",
+          } as unknown as P
       },
     },
 
