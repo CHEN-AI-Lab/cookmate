@@ -1,1 +1,0 @@
-import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers"
