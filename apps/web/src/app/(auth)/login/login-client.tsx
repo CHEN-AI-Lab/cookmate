@@ -522,14 +522,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
             <span className="text-sm font-medium text-gray-700">GitHub</span>
           </button>
           <button
-            onClick={() => handleOAuth("wechat")}
-            disabled={loading !== null}
-            className="flex items-center justify-center gap-2 border border-gray-200 rounded-xl py-3 hover:bg-gray-50 transition-colors disabled:opacity-50"
-          >
-            <span className="text-lg">💚</span>
-            <span className="text-sm font-medium text-gray-700">微信</span>
-          </button>
-          <button
             onClick={() => handleOAuth("alipay")}
             disabled={loading !== null}
             className="flex items-center justify-center gap-2 border border-gray-200 rounded-xl py-3 hover:bg-gray-50 transition-colors disabled:opacity-50"
