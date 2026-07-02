@@ -62,13 +62,13 @@ export async function GET(req: Request) {
     })
     const userData = JSON.parse(await uRes.text())
     const profile = userData.alipay_user_info_share_response
-    if (!profile?.userId) {
+    const alipayUserId = profile?.open_id || profile?.userId || profile?.user_id
+    if (!alipayUserId) {
       const errMsg = userData.error_response?.sub_msg || userData.error_response?.msg || JSON.stringify(userData).substring(0, 200)
       return NextResponse.redirect(new URL("/login?error=userinfo_failed&detail=" + encodeURIComponent(errMsg), req.url))
     }
 
     // Step 3: 查找或创建用户（用支付宝 userId 作为标识）
-    const alipayUserId = profile.userId
     const alipayNick = profile.nickName || "支付宝用户"
 
     // 先在 Account 表找是否已有绑定
