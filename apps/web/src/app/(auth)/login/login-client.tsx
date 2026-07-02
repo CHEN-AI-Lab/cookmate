@@ -526,7 +526,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
             disabled={loading !== null}
             className="flex items-center justify-center gap-1.5 border border-gray-200 rounded-xl py-2.5 hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm"
           >
-            <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0"><rect x="2" y="2" width="20" height="20" rx="4" fill="#1677FF"/><path fill="#fff" d="M12.5 6.5c1.8 0 3.2.4 4.3 1.2.5.4.8.6 1.2.8l-.6 1.1c-.3-.2-.7-.5-1.2-.8-.6-.4-1.3-.7-2.2-.9l.5 2.7h3.2v1.3h-3.4l.8 4.1h-1.5l-.8-4.1h-2.4l-1.6 4.1H7.4l3.1-6.6c-1.2.2-2.1.6-2.8 1.1-.6.4-1.1.8-1.4 1.1l-.7-1c.5-.5 1.1-1.1 1.9-1.6.9-.6 2-1 3.4-1.2l.3-1.9h1.3l-.3 1.9z"/></svg>
+            <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0"><rect width="24" height="24" rx="5" fill="#1677FF"/><text x="12" y="17" textAnchor="middle" fill="#fff" fontSize="15" fontFamily="sans-serif" fontWeight="bold">支</text></svg>
             <span className="font-medium text-gray-700">支付宝</span>
           </button>
         </div>
