@@ -61,12 +61,15 @@ export default function SettingsPage() {
         setProfile((p) => p ? { ...p, name: editNameValue.trim() } : p)
         setEditingName(false)
         setAccountMsg("✅ 用户名已更新")
+        setTimeout(() => setAccountMsg(""), 3000)
       } else {
         const d = await r.json()
         setAccountMsg(d.error || "更新失败")
+        setTimeout(() => setAccountMsg(""), 3000)
       }
     } catch {
       setAccountMsg("网络错误")
+      setTimeout(() => setAccountMsg(""), 3000)
     }
   }
 
@@ -74,6 +77,7 @@ const save = async () => {
     // 至少选择一个菜系
     if (settings.cuisinePref.length === 0) {
       setError("请至少选择一个菜系")
+      setTimeout(() => setError(""), 3000)
       return
     }
     setError("")
@@ -199,6 +203,7 @@ const save = async () => {
                             setProfile((p) => p ? { ...p, phone: bindPhone } : p)
                             setShowBindPhone(false)
                             setAccountMsg("✅ 手机号绑定成功")
+                            setTimeout(() => setAccountMsg(""), 3000)
                           } else {
                             setBindError(d.error || "绑定失败")
                           }
