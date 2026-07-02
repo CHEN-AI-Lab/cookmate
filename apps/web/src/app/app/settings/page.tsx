@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const [bindLoading, setBindLoading] = useState(false)
   const [bindCountdown, setBindCountdown] = useState(0)
   const [bindError, setBindError] = useState("")
+  const [accountMsg, setAccountMsg] = useState("")
 
   useEffect(() => {
     Promise.all([
@@ -59,13 +60,13 @@ export default function SettingsPage() {
       if (r.ok) {
         setProfile((p) => p ? { ...p, name: editNameValue.trim() } : p)
         setEditingName(false)
-        setError("✅ 用户名已更新")
+        setAccountMsg("✅ 用户名已更新")
       } else {
         const d = await r.json()
-        setError(d.error || "更新失败")
+        setAccountMsg(d.error || "更新失败")
       }
     } catch {
-      setError("网络错误")
+      setAccountMsg("网络错误")
     }
   }
 
@@ -197,7 +198,7 @@ const save = async () => {
                           if (r.ok) {
                             setProfile((p) => p ? { ...p, phone: bindPhone } : p)
                             setShowBindPhone(false)
-                            setError("✅ 手机号绑定成功")
+                            setAccountMsg("✅ 手机号绑定成功")
                           } else {
                             setBindError(d.error || "绑定失败")
                           }
@@ -234,6 +235,11 @@ const save = async () => {
                       hasPassword={profile.hasPassword ?? false}
                       onClose={() => setShowPasswordForm(false)}
                     />
+                  </div>
+                )}
+                {accountMsg && (
+                  <div className={`py-2 text-sm text-center ${accountMsg.startsWith("✅") ? "text-green-600" : "text-red-500"}`}>
+                    {accountMsg}
                   </div>
                 )}
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
