@@ -55,7 +55,8 @@ export default function AlipayProvider<P extends AlipayProfile>(
     style: { logo: "/alipay.svg", bg: "#1677FF", text: "#fff" },
     checks: [],
 
-    authorization: ***      url: "https://openauth.alipay.com/oauth2/publicAppAuthorize.htm",
+    authorization: {
+      url: "https://openauth.alipay.com/oauth2/publicAppAuthorize.htm",
       params: {
         app_id: options.clientId,
         scope: "auth_user",
