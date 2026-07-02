@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 
 export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boolean; userName?: string }) {
-  const [tab, setTab] = useState<"phone" | "email" | "password">("phone")
+  const [tab, setTab] = useState<"email" | "password">("email")
   const [phone, setPhone] = useState("")
   const [code, setCode] = useState("")
   const [email, setEmail] = useState("")
@@ -325,14 +325,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         {/* 登录方式切换标签 */}
         <div className="flex mb-6 bg-gray-100 rounded-xl p-1">
           <button
-            onClick={() => setTab("phone")}
-            className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
-              tab === "phone" ? "bg-white text-[#2D3436] shadow-sm" : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            📱 手机号
-          </button>
-          <button
             onClick={() => setTab("email")}
             className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
               tab === "email" ? "bg-white text-[#2D3436] shadow-sm" : "text-gray-500 hover:text-gray-700"
@@ -349,50 +341,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
             🔑 密码
           </button>
         </div>
-
-        {/* 手机号登录 */}
-        {tab === "phone" && (
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm text-gray-600 font-medium">手机号</label>
-              <div className="flex gap-2 mt-1.5">
-                <input
-                  type="tel"
-                  maxLength={11}
-                  placeholder="请输入手机号"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                  className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white"
-                />
-                <button
-                  onClick={sendCode}
-                  disabled={loading === "send" || countdown > 0}
-                  className="px-4 py-3 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap transition-colors"
-                >
-                  {countdown > 0 ? `${countdown}s` : loading === "send" ? "发送中..." : "获取验证码"}
-                </button>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 font-medium">验证码</label>
-              <input
-                type="text"
-                maxLength={6}
-                placeholder="请输入6位验证码"
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
-              />
-            </div>
-            <button
-              onClick={handlePhoneLogin}
-              disabled={loading === "phone" || !phone || !code}
-              className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
-            >
-              {loading === "phone" ? "登录中..." : "登录 / 注册"}
-            </button>
-          </div>
-        )}
 
         {/* 邮箱登录 */}
         {tab === "email" && (
