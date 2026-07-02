@@ -53,7 +53,7 @@ export async function PUT(req: Request) {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
 
-    const { name, phone, password } = await req.json()
+    const { name, phone, email, password } = await req.json()
 
     // 绑定手机号
     if (phone) {
@@ -80,6 +80,24 @@ export async function PUT(req: Request) {
       })
 
       return NextResponse.json({ success: true, phone })
+    }
+
+    // 绑定邮箱
+    if (email) {
+      if (!password) return NextResponse.json({ error: "请输入密码验证身份" }, { status: 400 })
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ error: "请输入正确的邮箱" }, { status: 400 })
+
+      const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { passwordHash: true } })
+      if (!user?.passwordHash) return NextResponse.json({ error: "请先设置密码后再绑定邮箱" }, { status: 400 })
+
+      const bcrypt = await import("bcryptjs")
+      if (!await bcrypt.compare(password, user.passwordHash)) return NextResponse.json({ error: "密码错误" }, { status: 401 })
+
+      const existing = await prisma.user.findUnique({ where: { email } })
+      if (existing && existing.id !== session.user.id) return NextResponse.json({ error: "该邮箱已被其他账号绑定" }, { status: 409 })
+
+      await prisma.user.update({ where: { id: session.user.id }, data: { email } })
+      return NextResponse.json({ success: true, email })
     }
 
     // 更新用户名

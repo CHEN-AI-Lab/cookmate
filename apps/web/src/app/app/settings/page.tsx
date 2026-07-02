@@ -222,6 +222,9 @@ const save = async () => {
                   <span className="text-sm text-gray-500">邮箱</span>
                   <span className="text-sm font-medium text-[#2D3436]">{profile.email || "未绑定"}</span>
                 </div>
+                {!profile?.email && (
+                  <p className="text-xs text-gray-400 -mt-2 pb-2">登录页使用邮箱+验证码登录后会自动绑定邮箱</p>
+                )}
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
                   <span className="text-sm text-gray-500">密码</span>
                   <span className="text-sm font-medium text-[#2D3436]">
