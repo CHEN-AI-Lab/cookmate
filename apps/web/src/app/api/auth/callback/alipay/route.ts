@@ -41,7 +41,8 @@ export async function GET(req: Request) {
     const tokenData = JSON.parse(await res.text())
     const accessToken = tokenData.alipay_system_oauth_token_response?.access_token
     if (!accessToken) {
-      return NextResponse.redirect(new URL("/login?error=token_failed", req.url))
+      const errMsg = tokenData.error_response?.sub_msg || tokenData.error_response?.msg || JSON.stringify(tokenData).substring(0, 200)
+      return NextResponse.redirect(new URL("/login?error=token_failed&detail=" + encodeURIComponent(errMsg), req.url))
     }
 
     // Step 2: 获取用户信息
@@ -62,7 +63,8 @@ export async function GET(req: Request) {
     const userData = JSON.parse(await uRes.text())
     const profile = userData.alipay_user_info_share_response
     if (!profile?.userId) {
-      return NextResponse.redirect(new URL("/login?error=userinfo_failed", req.url))
+      const errMsg = userData.error_response?.sub_msg || userData.error_response?.msg || JSON.stringify(userData).substring(0, 200)
+      return NextResponse.redirect(new URL("/login?error=userinfo_failed&detail=" + encodeURIComponent(errMsg), req.url))
     }
 
     // Step 3: 查找或创建用户（用支付宝 userId 作为标识）
