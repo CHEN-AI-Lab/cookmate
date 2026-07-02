@@ -2,6 +2,7 @@
 import { signIn, signOut } from "next-auth/react"
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
+import OAuthLoadingOverlay from "@/components/ui/OAuthLoadingOverlay"
 
 export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: boolean; userName?: string }) {
   const [tab, setTab] = useState<"phone" | "email">("phone")
@@ -16,6 +17,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   const [error, setError] = useState("")
   const [countdown, setCountdown] = useState(0)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [oauthProvider, setOauthProvider] = useState<string | null>(null)
 
   useEffect(() => {
     if (countdown > 0) {
@@ -160,19 +162,20 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   }
 
   const handleOAuth = async (provider: string) => {
-    setLoading(provider)
+    setOauthProvider(provider)
     setError("")
     try {
       await signIn(provider, { callbackUrl: "/app/dashboard" })
     } catch {
       setError("该登录方式尚未配置，上线后即可使用")
-    } finally {
-      setLoading(null)
+      setOauthProvider(null)
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#FFF8F0] flex items-center justify-center p-4">
+    <>
+      <OAuthLoadingOverlay provider={oauthProvider} />
+      <div className="min-h-screen bg-[#FFF8F0] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
         <div className="text-center mb-8">
           <Link href="/" className="text-2xl">🍳</Link>
@@ -406,5 +409,6 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
         </p>
       </div>
     </div>
+    </>
   )
 }
