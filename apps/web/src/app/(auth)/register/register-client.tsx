@@ -280,12 +280,6 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
           </div>
         )}
 
-        {/* 社交账号注册 */}
-        <div className="my-6 flex items-center gap-4">
-          <div className="flex-1 h-px bg-gray-200" />
-          <span className="text-sm text-gray-400">社交账号</span>
-          <div className="flex-1 h-px bg-gray-200" />
-        </div>
 
         <div className="my-6 flex items-center gap-4">
           <div className="flex-1 h-px bg-gray-200" />
@@ -335,7 +329,6 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
           <ul className="mt-2 text-sm text-gray-600 space-y-1">
             <li>✅ 每日 1 次 AI 菜谱推荐</li>
             <li>✅ 基础食材管理</li>
-            <li>✅ 无需信用卡</li>
           </ul>
         </div>
 
