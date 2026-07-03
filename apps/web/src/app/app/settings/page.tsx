@@ -18,6 +18,9 @@ export default function SettingsPage() {
   const [showBindPhone, setShowBindPhone] = useState(false)
   const [bindPhone, setBindPhone] = useState("")
   const [bindCode, setBindCode] = useState("")
+  const [showBindEmail, setShowBindEmail] = useState(false)
+  const [bindEmail, setBindEmail] = useState("")
+  const [bindEmailPwd, setBindEmailPwd] = useState("")
   const [bindCodeSent, setBindCodeSent] = useState(false)
   const [bindLoading, setBindLoading] = useState(false)
   const [bindCountdown, setBindCountdown] = useState(0)
@@ -224,12 +227,37 @@ const save = async () => {
                   </div>
                 )}
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
-                  <span className="text-sm text-gray-500">邮箱</span>
-                  <span className="text-sm font-medium text-[#2D3436]">{profile.email || "未绑定"}</span>
-                </div>
-                {!profile?.email && (
-                  <p className="text-xs text-gray-400 -mt-2 pb-2">登录页使用邮箱+验证码登录后会自动绑定邮箱</p>
-                )}
+                                  <span className="text-sm text-gray-500">邮箱</span>
+                                  <span className="text-sm font-medium text-[#2D3436]">
+                                    {profile.email || "未绑定"}
+                                    {!profile.email && !showBindEmail && (
+                                      <button onClick={() => setShowBindEmail(true)} className="ml-2 text-[#FF6B35] text-xs hover:underline">绑定</button>
+                                    )}
+                                  </span>
+                                </div>
+                                {showBindEmail && (
+                                  <div className="py-3 border-b border-gray-50 space-y-3">
+                                    <input type="email" placeholder="输入新邮箱" value={bindEmail} onChange={(e) => setBindEmail(e.target.value)} className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]" />
+                                    <input type="password" placeholder="输入当前密码验证身份" value={bindEmailPwd} onChange={(e) => setBindEmailPwd(e.target.value)} className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]" />
+                                    <button
+                                      onClick={async () => {
+                                        if (!bindEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(bindEmail)) { setAccountMsg("请输入正确邮箱"); setTimeout(() => setAccountMsg(""), 3000); return }
+                                        if (!bindEmailPwd || bindEmailPwd.length < 8) { setAccountMsg("请输入正确的密码（至少 8 位）"); setTimeout(() => setAccountMsg(""), 3000); return }
+                                        setBindLoading(true)
+                                        try {
+                                          const r = await fetch("/api/user/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: bindEmail, password: bindEmailPwd }) })
+                                          const d = await r.json()
+                                          if (r.ok) { setProfile((p) => p ? { ...p, email: bindEmail } : p); setShowBindEmail(false); setAccountMsg("✅ 邮箱绑定成功"); setTimeout(() => setAccountMsg(""), 3000) }
+                                          else { setAccountMsg(d.error || "绑定失败"); setTimeout(() => setAccountMsg(""), 3000) }
+                                        } catch { setAccountMsg("网络错误"); setTimeout(() => setAccountMsg(""), 3000) }
+                                        finally { setBindLoading(false) }
+                                      }}
+                                      disabled={bindLoading || !bindEmail || !bindEmailPwd}
+                                      className="w-full bg-[#FF6B35] text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
+                                    >{bindLoading ? "绑定中..." : "确认绑定"}</button>
+                                    {accountMsg && <p className="text-xs text-red-500">{accountMsg}</p>}
+                                  </div>
+                                )}
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
                   <span className="text-sm text-gray-500">密码</span>
                   <span className="text-sm font-medium text-[#2D3436]">
@@ -435,15 +463,15 @@ function PasswordForm({ hasPassword, onClose }: { hasPassword: boolean; onClose:
         <button
           onClick={handleSubmit}
           disabled={saving || !newPassword || !confirm}
-          className="bg-[#FF6B35] text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300 transition-all"
+          className="bg-[#FF6B35] text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300 transition-all whitespace-nowrap"
         >
           {saving ? "保存中..." : hasPassword ? "修改密码" : "设置密码"}
         </button>
-        <button onClick={onClose} className="text-sm text-gray-400 hover:text-gray-600">取消</button>
-        {msg && (
-          <span className={`text-xs ${msg.startsWith("✅") ? "text-green-600" : "text-red-500"}`}>{msg}</span>
-        )}
+        <button onClick={onClose} className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap">取消</button>
       </div>
+      {msg && (
+        <p className={`text-xs ${msg.startsWith("✅") ? "text-green-600" : "text-red-500"}`}>{msg}</p>
+      )}
     </div>
   )
 }
