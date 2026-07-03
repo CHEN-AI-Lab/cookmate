@@ -29,6 +29,14 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   const [setupCountdown, setSetupCountdown] = useState(0)
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const alipayAuth = params.get("alipay_auth")
+    if (alipayAuth) {
+      window.history.replaceState({}, "", "/login")
+      signIn("alipay-auth", { userId: alipayAuth, callbackUrl: "/app/dashboard" })
+    }
+  }, [])
+  useEffect(() => {
     if (countdown > 0) {
       timerRef.current = setTimeout(() => setCountdown(countdown - 1), 1000)
     }

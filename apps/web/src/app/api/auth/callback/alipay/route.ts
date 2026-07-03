@@ -1,4 +1,4 @@
-// 支付宝登录回调 — 手动处理
+// 支付宝登录回调 — 仅获取用户信息，重定向到客户端自动登录
 import { NextResponse } from "next/server"
 import crypto from "node:crypto"
 import { prisma } from "@/lib/prisma"
@@ -80,18 +80,10 @@ export async function GET(req: Request) {
       userId = newUser.id
     }
 
-    // Step 4: 通过 signIn 登录（获取带 session cookie 的 Response）
-    const { signIn } = await import("@/lib/auth")
-    const result = await signIn("alipay-auth", { userId, redirect: false })
-
-    // Step 5: 创建重定向响应，从 signIn 结果中复制 cookie
-    const redirectRes = NextResponse.redirect(new URL("/app/dashboard", req.url))
-    if (result instanceof Response) {
-      const setCookie = result.headers.get("set-cookie")
-      if (setCookie) redirectRes.headers.set("set-cookie", setCookie)
-    }
-    return redirectRes
-
+    // Step 4: 重定向到登录页，参数传递给前端自动登录
+    const loginUrl = new URL("/login", req.url)
+    loginUrl.searchParams.set("alipay_auth", userId)
+    return NextResponse.redirect(loginUrl)
   } catch (err: any) {
     console.error("[Alipay Callback] Error:", err.message || err)
     return NextResponse.redirect(new URL("/login?error=alipay_error", req.url))
