@@ -19,6 +19,7 @@ export default function BillingPage() {
   const [message, setMessage] = useState("")
   const [showPaymentModal, setShowPaymentModal] = useState<"wechat" | "alipay" | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [paying, setPaying] = useState(false)
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -203,8 +204,24 @@ export default function BillingPage() {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
-                onClick={() => setShowPaymentModal("alipay")}
-                disabled={!info?.paymentConfigured || actionLoading !== null}
+                onClick={async () => {
+                  setPaying(true)
+                  setError("")
+                  try {
+                    const res = await fetch("/api/alipay/create", { method: "POST" })
+                    const data = await res.json()
+                    if (data.payUrl) {
+                      window.location.href = data.payUrl
+                    } else {
+                      setError(data.error || "创建支付失败")
+                      setPaying(false)
+                    }
+                  } catch {
+                    setError("网络错误")
+                    setPaying(false)
+                  }
+                }}
+                disabled={!info?.paymentConfigured || actionLoading !== null || paying}
                 className="flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed text-left"
               >
                 <span className="text-3xl">💙</span>
@@ -212,6 +229,7 @@ export default function BillingPage() {
                   <p className="font-semibold text-gray-900">支付宝</p>
                   <p className="text-xs text-gray-400">¥15/月</p>
                 </div>
+                {paying && <span className="ml-auto text-sm text-gray-400">跳转中...</span>}
               </button>
               <button
                 onClick={() => setShowPaymentModal("wechat")}

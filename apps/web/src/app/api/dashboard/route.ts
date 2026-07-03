@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { isPaymentConfigured } from "@/lib/payment"
+import { isAlipayConfigured } from "@/lib/alipay-pay"
 
 export async function GET() {
   try {
@@ -36,7 +37,7 @@ export async function GET() {
       todayUsage: usage?.recipeCount ?? 0,
       subscriptionTier: user?.subscriptionTier ?? "FREE",
       stripeConfigured: !!(process.env.STRIPE_SECRET_KEY && process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY),
-      paymentConfigured: isPaymentConfigured(),
+      paymentConfigured: isPaymentConfigured() || isAlipayConfigured(),
     })
   } catch (error) {
     console.error("Dashboard GET:", error)
