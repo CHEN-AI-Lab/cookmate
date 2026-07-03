@@ -171,7 +171,7 @@ export default function BillingPage() {
             features={["每天 1 次 AI 推荐", "无限食材位", "AI 菜谱生成"]}
             highlighted={false}
             isCurrent={isFree}
-            ctaLabel="当前计划"
+            ctaLabel={isFree ? "当前计划" : "免费版"}
             onCta={() => {}}
             disabled={true}
             loading={false}
