@@ -53,7 +53,6 @@ export async function GET() {
       mealPlanCount,
       todayUsage: usage?.recipeCount ?? 0,
       subscriptionTier: tier,
-      subscriptionExpiryDate: user?.subscriptionExpiryDate?.toISOString() ?? null,
       stripeConfigured: !!(process.env.STRIPE_SECRET_KEY && process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY),
       paymentConfigured: isPaymentConfigured() || isAlipayConfigured(),
     })
