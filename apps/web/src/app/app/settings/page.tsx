@@ -20,7 +20,7 @@ export default function SettingsPage() {
   const [bindCode, setBindCode] = useState("")
   const [showBindEmail, setShowBindEmail] = useState(false)
   const [bindEmail, setBindEmail] = useState("")
-  const [bindEmailPwd, setBindEmailPwd] = useState("")
+  const [bindEmailCode, setBindEmailCode] = useState("")
   const [bindCodeSent, setBindCodeSent] = useState(false)
   const [bindLoading, setBindLoading] = useState(false)
   const [bindCountdown, setBindCountdown] = useState(0)
@@ -74,6 +74,30 @@ export default function SettingsPage() {
       setAccountMsg("网络错误")
       setTimeout(() => setAccountMsg(""), 3000)
     }
+  }
+
+  const sendBindEmailCode = async () => {
+    if (!bindEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(bindEmail)) { setAccountMsg("请输入正确邮箱"); setTimeout(() => setAccountMsg(""), 3000); return }
+    setBindLoading(true)
+    try {
+      const r = await fetch("/api/user/bind-email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: bindEmail }) })
+      const d = await r.json()
+      if (r.ok) { setBindCodeSent(true); setAccountMsg("验证码已发送到 " + bindEmail); setTimeout(() => setAccountMsg(""), 3000) }
+      else { setAccountMsg(d.error || "发送失败"); setTimeout(() => setAccountMsg(""), 3000) }
+    } catch { setAccountMsg("网络错误"); setTimeout(() => setAccountMsg(""), 3000) }
+    finally { setBindLoading(false) }
+  }
+
+  const confirmBindEmail = async () => {
+    if (!bindEmailCode || bindEmailCode.length < 6) { setAccountMsg("请输入6位验证码"); setTimeout(() => setAccountMsg(""), 3000); return }
+    setBindLoading(true)
+    try {
+      const r = await fetch("/api/user/bind-email", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: bindEmail, code: bindEmailCode }) })
+      const d = await r.json()
+      if (r.ok) { setProfile((p) => p ? { ...p, email: bindEmail } : p); setShowBindEmail(false); setBindCodeSent(false); setBindEmail(""); setBindEmailCode(""); setAccountMsg("✅ 邮箱绑定成功"); setTimeout(() => setAccountMsg(""), 3000) }
+      else { setAccountMsg(d.error || "绑定失败"); setTimeout(() => setAccountMsg(""), 3000) }
+    } catch { setAccountMsg("网络错误"); setTimeout(() => setAccountMsg(""), 3000) }
+    finally { setBindLoading(false) }
   }
 
 const save = async () => {
@@ -176,35 +200,29 @@ const save = async () => {
                       onChange={(e) => setBindPhone(e.target.value.replace(/\D/g, ""))}
                       className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
                     />
-                    {profile?.hasPassword && (
                     <input
                       type="password" placeholder="输入当前密码验证身份"
                       value={bindCode}
                       onChange={(e) => setBindCode(e.target.value)}
                       className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
                     />
-                    )}
                     <button
                       onClick={async () => {
                         if (!/^1[3-9]\d{9}$/.test(bindPhone)) { setBindError("请输入正确的11位手机号"); return }
                         if (bindPhone === '11111111111' || bindPhone === '00000000000' || bindPhone === '12345678901' || /^1(\d)\1{9}$/.test(bindPhone)) { setBindError("请输入真实的手机号码"); return }
-                        if (profile?.hasPassword && (!bindCode || bindCode.length < 8)) { setBindError("请输入正确的密码（至少 8 位）"); return }
-                        if (profile?.hasPassword) {
-                          let pwdTypes = 0;
-                          if (/[a-z]/.test(bindCode)) pwdTypes++;
-                          if (/[A-Z]/.test(bindCode)) pwdTypes++;
-                          if (/[0-9]/.test(bindCode)) pwdTypes++;
-                          if (/[^a-zA-Z0-9]/.test(bindCode)) pwdTypes++;
-                          if (pwdTypes < 2) { setBindError("密码需包含至少两种字符（大小写字母、数字、符号）"); return }
-                        }
+                        if (!bindCode || bindCode.length < 8) { setBindError("请输入正确的密码（至少 8 位）"); return }
+                        let pwdTypes = 0;
+                        if (/[a-z]/.test(bindCode)) pwdTypes++;
+                        if (/[A-Z]/.test(bindCode)) pwdTypes++;
+                        if (/[0-9]/.test(bindCode)) pwdTypes++;
+                        if (/[^a-zA-Z0-9]/.test(bindCode)) pwdTypes++;
+                        if (pwdTypes < 2) { setBindError("密码需包含至少两种字符（大小写字母、数字、符号）"); return }
                         setBindLoading(true)
                         setBindError("")
                         try {
-                          const body: any = { phone: bindPhone }
-                          if (bindCode) body.password = bindCode
                           const r = await fetch("/api/user/profile", {
                             method: "PUT", headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(body),
+                            body: JSON.stringify({ phone: bindPhone, password: bindCode }),
                           })
                           const d = await r.json()
                           if (r.ok) {
@@ -218,7 +236,7 @@ const save = async () => {
                         } catch { setBindError("网络错误") }
                         finally { setBindLoading(false) }
                       }}
-                      disabled={bindLoading || !bindPhone || (profile?.hasPassword && !bindCode)}
+                      disabled={bindLoading || !bindPhone || !bindCode}
                       className="w-full bg-[#FF6B35] text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
                     >
                       {bindLoading ? "绑定中..." : "确认绑定"}
@@ -236,28 +254,28 @@ const save = async () => {
                                   </span>
                                 </div>
                                 {showBindEmail && (
-                                  <div className="py-3 border-b border-gray-50 space-y-3">
-                                    <input type="email" placeholder="输入新邮箱" value={bindEmail} onChange={(e) => setBindEmail(e.target.value)} className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]" />
-                                    <input type="password" placeholder="输入当前密码验证身份" value={bindEmailPwd} onChange={(e) => setBindEmailPwd(e.target.value)} className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]" />
-                                    <button
-                                      onClick={async () => {
-                                        if (!bindEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(bindEmail)) { setAccountMsg("请输入正确邮箱"); setTimeout(() => setAccountMsg(""), 3000); return }
-                                        if (!bindEmailPwd || bindEmailPwd.length < 8) { setAccountMsg("请输入正确的密码（至少 8 位）"); setTimeout(() => setAccountMsg(""), 3000); return }
-                                        setBindLoading(true)
-                                        try {
-                                          const r = await fetch("/api/user/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: bindEmail, password: bindEmailPwd }) })
-                                          const d = await r.json()
-                                          if (r.ok) { setProfile((p) => p ? { ...p, email: bindEmail } : p); setShowBindEmail(false); setAccountMsg("✅ 邮箱绑定成功"); setTimeout(() => setAccountMsg(""), 3000) }
-                                          else { setAccountMsg(d.error || "绑定失败"); setTimeout(() => setAccountMsg(""), 3000) }
-                                        } catch { setAccountMsg("网络错误"); setTimeout(() => setAccountMsg(""), 3000) }
-                                        finally { setBindLoading(false) }
-                                      }}
-                                      disabled={bindLoading || !bindEmail || !bindEmailPwd}
-                                      className="w-full bg-[#FF6B35] text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
-                                    >{bindLoading ? "绑定中..." : "确认绑定"}</button>
-                                    {accountMsg && <p className="text-xs text-red-500">{accountMsg}</p>}
-                                  </div>
-                                )}
+                                                  <div className="py-3 border-b border-gray-50 space-y-3">
+                                                    <div className="flex gap-2">
+                                                      <input type="email" placeholder="输入新邮箱" value={bindEmail} onChange={(e) => setBindEmail(e.target.value)} className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]" />
+                                                      <button onClick={sendBindEmailCode} disabled={bindCodeSent || !bindEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(bindEmail)}
+                                                        className="px-3 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap"
+                                                      >{bindCodeSent ? "已发送" : "获取验证码"}</button>
+                                                    </div>
+                                                    {bindCodeSent && (
+                                                      <>
+                                                        <input type="text" maxLength={6} placeholder="输入6位验证码" value={bindEmailCode} onChange={(e) => setBindEmailCode(e.target.value.replace(/\D/g, ""))} className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]" />
+                                                        <div className="flex gap-2">
+                                                          <button onClick={confirmBindEmail}
+                                                            disabled={bindLoading || !bindEmailCode || bindEmailCode.length < 6}
+                                                            className="flex-1 bg-[#FF6B35] text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
+                                                          >{bindLoading ? "绑定中..." : "确认绑定"}</button>
+                                                          <button onClick={() => { setShowBindEmail(false); setBindCodeSent(false); setBindEmail(""); setBindEmailCode("") }} className="text-sm text-gray-400 hover:text-gray-600 px-3">取消</button>
+                                                        </div>
+                                                        {accountMsg && <p className={`text-xs ${accountMsg.startsWith("✅") ? "text-green-600" : "text-red-500"}`}>{accountMsg}</p>}
+                                                      </>
+                                                    )}
+                                                  </div>
+                                                )}
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
                   <span className="text-sm text-gray-500">密码</span>
                   <span className="text-sm font-medium text-[#2D3436]">
