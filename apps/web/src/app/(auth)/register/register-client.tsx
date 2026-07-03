@@ -2,10 +2,11 @@
 import { signIn, signOut } from "next-auth/react"
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
+import PasswordInput from "@/app/components/password-input"
 import OAuthLoadingOverlay from "@/components/ui/OAuthLoadingOverlay"
 
 export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: boolean; userName?: string }) {
-  const [tab, setTab] = useState<"phone" | "email">("phone")
+  const [tab, setTab] = useState<"email">("email")
   const [phone, setPhone] = useState("")
   const [code, setCode] = useState("")
   const [email, setEmail] = useState("")
@@ -206,70 +207,6 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
           </div>
         )}
 
-        {/* 注册方式切换标签 */}
-        <div className="flex mb-6 bg-gray-100 rounded-xl p-1">
-          <button
-            onClick={() => setTab("phone")}
-            className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
-              tab === "phone" ? "bg-white text-[#2D3436] shadow-sm" : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            📱 手机号
-          </button>
-          <button
-            onClick={() => setTab("email")}
-            className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
-              tab === "email" ? "bg-white text-[#2D3436] shadow-sm" : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            📧 邮箱
-          </button>
-        </div>
-
-        {/* 手机号注册 */}
-        {tab === "phone" && (
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm text-gray-600 font-medium">手机号</label>
-              <div className="flex gap-2 mt-1.5">
-                <input
-                  type="tel"
-                  maxLength={11}
-                  placeholder="请输入手机号"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                  className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white"
-                />
-                <button
-                  onClick={sendCode}
-                  disabled={loading === "send" || countdown > 0}
-                  className="px-4 py-3 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap transition-colors"
-                >
-                  {countdown > 0 ? `${countdown}s` : loading === "send" ? "发送中..." : "获取验证码"}
-                </button>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 font-medium">验证码</label>
-              <input
-                type="text"
-                maxLength={6}
-                placeholder="请输入6位验证码"
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
-              />
-            </div>
-            <button
-              onClick={handlePhoneRegister}
-              disabled={loading === "phone" || !phone || !code}
-              className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
-            >
-              {loading === "phone" ? "注册中..." : "注册"}
-            </button>
-          </div>
-        )}
-
         {/* 邮箱注册 */}
         {tab === "email" && (
           <div className="space-y-4">
@@ -350,38 +287,36 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
           <div className="flex-1 h-px bg-gray-200" />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="my-6 flex items-center gap-4">
+          <div className="flex-1 h-px bg-gray-200" />
+          <span className="text-sm text-gray-400">社交账号</span>
+          <div className="flex-1 h-px bg-gray-200" />
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
           <button
             onClick={() => handleOAuth("google")}
             disabled={loading !== null}
-            className="flex items-center justify-center gap-2 border border-gray-200 rounded-xl py-3 hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="flex items-center justify-center gap-1.5 border border-gray-200 rounded-xl py-2.5 hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm"
           >
-            <span className="text-lg">G</span>
-            <span className="text-sm font-medium text-gray-700">Google</span>
+            <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            <span className="font-medium text-gray-700">Google</span>
           </button>
           <button
             onClick={() => handleOAuth("github")}
             disabled={loading !== null}
-            className="flex items-center justify-center gap-2 border border-gray-200 rounded-xl py-3 hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="flex items-center justify-center gap-1.5 border border-gray-200 rounded-xl py-2.5 hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm"
           >
-            <span className="text-lg">🐙</span>
-            <span className="text-sm font-medium text-gray-700">GitHub</span>
-          </button>
-          <button
-            onClick={() => handleOAuth("wechat")}
-            disabled={loading !== null}
-            className="flex items-center justify-center gap-2 border border-gray-200 rounded-xl py-3 hover:bg-gray-50 transition-colors disabled:opacity-50"
-          >
-            <span className="text-lg">💚</span>
-            <span className="text-sm font-medium text-gray-700">微信</span>
+            <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="#24292F"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            <span className="font-medium text-gray-700">GitHub</span>
           </button>
           <button
             onClick={() => handleOAuth("alipay")}
             disabled={loading !== null}
-            className="flex items-center justify-center gap-2 border border-gray-200 rounded-xl py-3 hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="flex items-center justify-center gap-1.5 border border-gray-200 rounded-xl py-2.5 hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm"
           >
-            <span className="text-lg">💙</span>
-            <span className="text-sm font-medium text-gray-700">支付宝</span>
+            <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0"><rect width="24" height="24" rx="5" fill="#1677FF"/><text x="12" y="17" textAnchor="middle" fill="#fff" fontSize="15" fontFamily="sans-serif" fontWeight="bold">支</text></svg>
+            <span className="font-medium text-gray-700">支付宝</span>
           </button>
         </div>
 
