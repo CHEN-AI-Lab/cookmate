@@ -9,7 +9,7 @@ export async function GET() {
 
 const user = await prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { id: true, name: true, email: true, phone: true, createdAt: true, subscriptionTier: true, passwordHash: true },
+        select: { id: true, name: true, email: true, phone: true, createdAt: true, subscriptionTier: true, passwordHash: true, subscriptionExpiryDate: true },
       }).catch(() => null)
 
     if (!user) return NextResponse.json({ error: "用户不存在" }, { status: 404 })
@@ -41,6 +41,7 @@ const user = await prisma.user.findUnique({
       createdAt: user.createdAt.toISOString(),
       subscriptionTier: user.subscriptionTier,
       hasPassword: !!user.passwordHash,
+      subscriptionExpiryDate: user.subscriptionExpiryDate?.toISOString() || null,
     })
   } catch (error) {
     console.error("Profile GET:", error)

@@ -42,10 +42,14 @@ export async function POST(req: Request) {
         data: { status: "PAID", payjsOrderId },
       })
 
-      // 升级用户
+      // 升级用户（30 天订阅）
+      const now = new Date()
       await prisma.user.update({
         where: { id: order.userId },
-        data: { subscriptionTier: "PRO" },
+        data: {
+          subscriptionTier: "PRO",
+          subscriptionExpiryDate: new Date(now.getTime() + 30 * 24 * 3600 * 1000),
+        },
       })
     }
 

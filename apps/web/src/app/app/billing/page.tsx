@@ -9,6 +9,7 @@ interface BillingInfo {
   subscriptionTier: string
   stripeConfigured: boolean
   paymentConfigured: boolean
+  subscriptionExpiryDate?: string | null
 }
 
 export default function BillingPage() {
@@ -29,6 +30,7 @@ export default function BillingPage() {
           subscriptionTier: data.subscriptionTier || "FREE",
           stripeConfigured: !!data.stripeConfigured,
           paymentConfigured: !!data.paymentConfigured,
+          subscriptionExpiryDate: data.subscriptionExpiryDate,
         })
       })
       .catch(() => setError("加载失败"))
@@ -152,6 +154,11 @@ export default function BillingPage() {
             {isFree ? "🆓 免费版" : "🌟 Pro"}
           </span>
         </div>
+        {!isFree && info?.subscriptionExpiryDate && (
+          <p className="text-xs text-gray-400 mt-2">
+            到期时间：{new Date(info.subscriptionExpiryDate).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}
+          </p>
+        )}
       </div>
 
       {/* Not configured warning */}

@@ -17,6 +17,7 @@ model User {
   image          String?
   passwordHash   String?
   subscriptionTier String @default("FREE")
+  subscriptionExpiryDate DateTime?
   stripeCustomerId String? @unique
   stripeSubscriptionId String?
   dietType       String?  @default("不限")
