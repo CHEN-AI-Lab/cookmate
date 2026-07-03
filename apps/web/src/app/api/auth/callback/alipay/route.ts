@@ -68,47 +68,69 @@ export async function GET(req: Request) {
       return NextResponse.redirect(new URL("/login?error=userinfo_failed&detail=" + encodeURIComponent(errMsg), req.url))
     }
 
-    // Step 3: 查找或创建用户（用支付宝 userId 作为标识）
+    // Step 3: 查找或创建用户
     const alipayNick = profile.nickName || "支付宝用户"
-
-    // 先在 Account 表找是否已有绑定
     const existingAccount = await prisma.account.findFirst({
       where: { provider: "alipay", providerAccountId: alipayUserId },
     })
 
     let userId: string
+    let userName: string | null
+    let userEmail: string | null
+    let userImage: string | null
+
     if (existingAccount) {
+      const user = await prisma.user.findUnique({ where: { id: existingAccount.userId } })
       userId = existingAccount.userId
+      userName = user?.name || null
+      userEmail = user?.email || null
+      userImage = user?.image || null
     } else {
-      // 创建新用户
       const newUser = await prisma.user.create({
         data: { name: alipayNick },
       })
-      userId = newUser.id
-      // 绑定 Account 记录
       await prisma.account.create({
         data: {
-          userId,
-          type: "oauth",
-          provider: "alipay",
+          userId: newUser.id, type: "oauth", provider: "alipay",
           providerAccountId: alipayUserId,
         },
       })
+      userId = newUser.id
+      userName = newUser.name
+      userEmail = null
+      userImage = null
     }
 
-    // Step 4: 通过 credential provider 登录并重定向
-    const { signIn } = await import("@/lib/auth")
-    const signInResult = await signIn("alipay-auth", {
-      userId,
-      redirect: false,
+    // Step 4: 直接用 JWT 创建 session（替代 signIn，因为 signIn 有时返回 Response 有时不返回）
+    // 用 jose (Next.js 已依赖) 签发一个 JWT
+    const { SignJWT } = await import("jose")
+    const secret = process.env.AUTH_SECRET
+    if (!secret) return NextResponse.redirect(new URL("/login?error=alipay_error", req.url))
+
+    const now = Math.floor(Date.now() / 1000)
+    const token = await new SignJWT({
+      sub: userId,
+      name: userName,
+      email: userEmail,
+      picture: userImage,
+      iat: now,
+      exp: now + 30 * 24 * 3600, // 30 天
     })
-    // signIn 返回的响应里已经有 session cookie，用它来重定向
-    if (signInResult instanceof Response) {
-      const headers = new Headers(signInResult.headers)
-      const location = new URL("/app/dashboard", req.url).href
-      return new Response(null, { status: 302, headers: { ...Object.fromEntries(headers), location } })
-    }
-    return NextResponse.redirect(new URL("/app/dashboard", req.url))
+      .setProtectedHeader({ alg: "HS256" })
+      .sign(new TextEncoder().encode(secret))
+
+    // Step 5: 重定向并设置 session cookie
+    const dashboard = new URL("/app/dashboard", req.url)
+    const response = NextResponse.redirect(dashboard)
+    response.cookies.set("authjs.session-token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 30 * 24 * 3600,
+    })
+
+    return response
   } catch (err: any) {
     console.error("[Alipay Callback] Error:", err)
     return NextResponse.redirect(new URL("/login?error=alipay_error", req.url))
