@@ -240,8 +240,8 @@ export default function BillingPage() {
               </button>
               <button
                 onClick={() => setShowPaymentModal("wechat")}
-                disabled={!info?.paymentConfigured || actionLoading !== null}
-                className="flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-green-200 hover:bg-green-50/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed text-left"
+                disabled={true}
+                className="hidden"
               >
                 <span className="text-3xl">💚</span>
                 <div>
