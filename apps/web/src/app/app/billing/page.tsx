@@ -154,9 +154,11 @@ export default function BillingPage() {
             {isFree ? "🆓 免费版" : "🌟 Pro"}
           </span>
         </div>
-        {!isFree && info?.subscriptionExpiryDate && (
+        {!isFree && (
           <p className="text-xs text-gray-400 mt-2">
-            到期时间：{new Date(info.subscriptionExpiryDate).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}
+            {info?.subscriptionExpiryDate
+              ? `到期时间：${new Date(info.subscriptionExpiryDate).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}`
+              : "到期时间：永久有效"}
           </p>
         )}
       </div>
