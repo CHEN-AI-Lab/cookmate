@@ -154,13 +154,6 @@ export default function BillingPage() {
             {isFree ? "🆓 免费版" : "🌟 Pro"}
           </span>
         </div>
-        {!isFree && (
-          <p className="text-xs text-gray-400 mt-2">
-            {info?.subscriptionExpiryDate
-              ? `到期时间：${new Date(info.subscriptionExpiryDate).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}`
-              : "到期时间：永久有效"}
-          </p>
-        )}
       </div>
 
       {/* Not configured warning */}
@@ -193,11 +186,16 @@ export default function BillingPage() {
             features={["无限 AI 生成", "智能周计划", "购物清单", "饮食定制"]}
             highlighted={true}
             isCurrent={!isFree}
-            ctaLabel={isFree ? "升级到 Pro" : "使用中"}
+            ctaLabel={isFree ? "升级到 Pro" : "当前方案"}
             onCta={() => {}}
             disabled={true}
             loading={false}
           />
+          {!isFree && info?.subscriptionExpiryDate && (
+            <p className="text-xs text-gray-400 col-span-full text-center -mt-2">
+              到期时间：{new Date(info.subscriptionExpiryDate).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}
+            </p>
+          )}
         </div>
       </div>
 
