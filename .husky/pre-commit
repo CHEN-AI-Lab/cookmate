@@ -1,0 +1,10 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Run structure check if exists
+if [ -f scripts/check-structure.sh ]; then
+  bash scripts/check-structure.sh
+fi
+
+# Run tests
+pnpm test
