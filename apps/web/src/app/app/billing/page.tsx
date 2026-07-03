@@ -171,7 +171,7 @@ export default function BillingPage() {
             features={["每天 1 次 AI 推荐", "无限食材位", "AI 菜谱生成"]}
             highlighted={false}
             isCurrent={isFree}
-            ctaLabel={isFree ? "当前计划" : "免费版"}
+            ctaLabel={isFree ? "使用中" : "免费版"}
             onCta={() => {}}
             disabled={true}
             loading={false}
@@ -183,7 +183,7 @@ export default function BillingPage() {
             features={["无限 AI 生成", "智能周计划", "购物清单", "饮食定制"]}
             highlighted={true}
             isCurrent={!isFree}
-            ctaLabel={isFree ? "升级到 Pro" : "当前方案"}
+            ctaLabel={isFree ? "升级到 Pro" : "使用中"}
             onCta={() => {}}
             disabled={true}
             loading={false}

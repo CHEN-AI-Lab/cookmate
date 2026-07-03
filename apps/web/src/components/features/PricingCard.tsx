@@ -87,7 +87,7 @@ export function PricingCard({
         {loading ? "处理中..." : ctaLabel}
       </button>
       {isCurrent && (
-        <div className="mt-3 text-sm opacity-80">当前计划</div>
+        <div className="mt-3 text-sm text-gray-400">当前计划</div>
       )}
     </div>
   )
