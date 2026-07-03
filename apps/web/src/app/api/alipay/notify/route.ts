@@ -44,7 +44,10 @@ export async function POST(req: Request) {
         if (order) {
           await prisma.user.update({
             where: { id: order.userId },
-            data: { subscriptionTier: "PRO" },
+            data: {
+              subscriptionTier: "PRO",
+              subscriptionExpiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            },
           })
         }
       }
