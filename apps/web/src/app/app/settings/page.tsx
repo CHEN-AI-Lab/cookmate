@@ -173,29 +173,35 @@ const save = async () => {
                       onChange={(e) => setBindPhone(e.target.value.replace(/\D/g, ""))}
                       className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
                     />
+                    {profile?.hasPassword && (
                     <input
                       type="password" placeholder="输入当前密码验证身份"
                       value={bindCode}
                       onChange={(e) => setBindCode(e.target.value)}
                       className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
                     />
+                    )}
                     <button
                       onClick={async () => {
                         if (!/^1[3-9]\d{9}$/.test(bindPhone)) { setBindError("请输入正确的11位手机号"); return }
                         if (bindPhone === '11111111111' || bindPhone === '00000000000' || bindPhone === '12345678901' || /^1(\d)\1{9}$/.test(bindPhone)) { setBindError("请输入真实的手机号码"); return }
-                        if (!bindCode || bindCode.length < 8) { setBindError("请输入正确的密码（至少 8 位）"); return }
-                        let pwdTypes = 0;
-                        if (/[a-z]/.test(bindCode)) pwdTypes++;
-                        if (/[A-Z]/.test(bindCode)) pwdTypes++;
-                        if (/[0-9]/.test(bindCode)) pwdTypes++;
-                        if (/[^a-zA-Z0-9]/.test(bindCode)) pwdTypes++;
-                        if (pwdTypes < 2) { setBindError("密码需包含至少两种字符（大小写字母、数字、符号）"); return }
+                        if (profile?.hasPassword && (!bindCode || bindCode.length < 8)) { setBindError("请输入正确的密码（至少 8 位）"); return }
+                        if (profile?.hasPassword) {
+                          let pwdTypes = 0;
+                          if (/[a-z]/.test(bindCode)) pwdTypes++;
+                          if (/[A-Z]/.test(bindCode)) pwdTypes++;
+                          if (/[0-9]/.test(bindCode)) pwdTypes++;
+                          if (/[^a-zA-Z0-9]/.test(bindCode)) pwdTypes++;
+                          if (pwdTypes < 2) { setBindError("密码需包含至少两种字符（大小写字母、数字、符号）"); return }
+                        }
                         setBindLoading(true)
                         setBindError("")
                         try {
+                          const body: any = { phone: bindPhone }
+                          if (bindCode) body.password = bindCode
                           const r = await fetch("/api/user/profile", {
                             method: "PUT", headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ phone: bindPhone, password: bindCode }),
+                            body: JSON.stringify(body),
                           })
                           const d = await r.json()
                           if (r.ok) {
@@ -209,7 +215,7 @@ const save = async () => {
                         } catch { setBindError("网络错误") }
                         finally { setBindLoading(false) }
                       }}
-                      disabled={bindLoading || !bindPhone || !bindCode}
+                      disabled={bindLoading || !bindPhone || (profile?.hasPassword && !bindCode)}
                       className="w-full bg-[#FF6B35] text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
                     >
                       {bindLoading ? "绑定中..." : "确认绑定"}

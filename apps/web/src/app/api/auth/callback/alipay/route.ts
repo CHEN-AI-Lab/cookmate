@@ -96,14 +96,18 @@ export async function GET(req: Request) {
       })
     }
 
-    // Step 4: 通过 credential provider 登录
+    // Step 4: 通过 credential provider 登录并重定向
     const { signIn } = await import("@/lib/auth")
-    await signIn("alipay-auth", {
+    const signInResult = await signIn("alipay-auth", {
       userId,
       redirect: false,
     })
-
-    // Step 5: 重定向到仪表盘
+    // signIn 返回的响应里已经有 session cookie，用它来重定向
+    if (signInResult instanceof Response) {
+      const headers = new Headers(signInResult.headers)
+      const location = new URL("/app/dashboard", req.url).href
+      return new Response(null, { status: 302, headers: { ...Object.fromEntries(headers), location } })
+    }
     return NextResponse.redirect(new URL("/app/dashboard", req.url))
   } catch (err: any) {
     console.error("[Alipay Callback] Error:", err)
