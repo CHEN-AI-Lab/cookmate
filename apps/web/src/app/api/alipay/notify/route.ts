@@ -17,12 +17,12 @@ export async function POST(req: Request) {
     const appId = params.app_id
 
     // 验证 app_id
-    if (appId !== process.env.ALIPAY_APP_ID) {
+    if (appId !== process.env.AUTH_ALIPAY_ID) {
       return new NextResponse("failure", { status: 400 })
     }
 
     // 验证签名
-    const publicKey = process.env.ALIPAY_PUBLIC_KEY || ""
+    const publicKey = process.env.AUTH_ALIPAY_PUBLIC_KEY || ""
     if (publicKey && !verifyNotify(params, publicKey)) {
       console.error("Alipay notify: signature verification failed")
       return new NextResponse("failure", { status: 400 })

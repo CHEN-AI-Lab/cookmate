@@ -41,10 +41,10 @@ export async function createPagePay(
   notifyUrl: string,
   returnUrl: string,
 ): Promise<string> {
-  const appId = process.env.ALIPAY_APP_ID
-  const privateKey = process.env.ALIPAY_PRIVATE_KEY || ""
+  const appId = process.env.AUTH_ALIPAY_ID
+  const privateKey = process.env.AUTH_ALIPAY_SECRET || ""
 
-  if (!appId) throw new Error("ALIPAY_APP_ID 未配置")
+  if (!appId) throw new Error("AUTH_ALIPAY_ID 未配置")
 
   const bizContent = JSON.stringify({
     out_trade_no: orderId,
@@ -75,10 +75,10 @@ export async function createPagePay(
 
 // 查询订单状态
 export async function queryOrder(outTradeNo: string): Promise<{ paid: boolean; tradeNo?: string }> {
-  const appId = process.env.ALIPAY_APP_ID
-  const privateKey = process.env.ALIPAY_PRIVATE_KEY || ""
+  const appId = process.env.AUTH_ALIPAY_ID
+  const privateKey = process.env.AUTH_ALIPAY_SECRET || ""
 
-  if (!appId) throw new Error("ALIPAY_APP_ID 未配置")
+  if (!appId) throw new Error("AUTH_ALIPAY_ID 未配置")
 
   const bizContent = JSON.stringify({
     out_trade_no: outTradeNo,
@@ -118,5 +118,5 @@ export async function queryOrder(outTradeNo: string): Promise<{ paid: boolean; t
 
 // 检查支付配置是否完整
 export function isAlipayConfigured(): boolean {
-  return !!(process.env.ALIPAY_APP_ID && process.env.ALIPAY_PRIVATE_KEY)
+  return !!(process.env.AUTH_ALIPAY_ID && process.env.AUTH_ALIPAY_SECRET)
 }
