@@ -189,61 +189,64 @@ const save = async () => {
                   </span>
                 </div>
                 {showBindPhone && (
-                                  <div className="py-3 border-b border-gray-50 space-y-3">
-                                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                      <p className="text-xs text-amber-700 font-medium">⚠️ 重要提醒</p>
-                      <p className="text-xs text-amber-600 mt-1">手机号一旦绑定，后续不可修改或解绑。请务必输入您本人正在使用的手机号码。</p>
-                    </div>
-                    <input
-                      type="tel" maxLength={11} placeholder="输入手机号"
-                      value={bindPhone}
-                      onChange={(e) => setBindPhone(e.target.value.replace(/\D/g, ""))}
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
-                    />
-                    <input
-                      type="password" placeholder="输入当前密码验证身份"
-                      value={bindCode}
-                      onChange={(e) => setBindCode(e.target.value)}
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
-                    />
-                    <button
-                      onClick={async () => {
-                        if (!/^1[3-9]\d{9}$/.test(bindPhone)) { setBindError("请输入正确的11位手机号"); return }
-                        if (bindPhone === '11111111111' || bindPhone === '00000000000' || bindPhone === '12345678901' || /^1(\d)\1{9}$/.test(bindPhone)) { setBindError("请输入真实的手机号码"); return }
-                        if (!bindCode || bindCode.length < 8) { setBindError("请输入正确的密码（至少 8 位）"); return }
-                        let pwdTypes = 0;
-                        if (/[a-z]/.test(bindCode)) pwdTypes++;
-                        if (/[A-Z]/.test(bindCode)) pwdTypes++;
-                        if (/[0-9]/.test(bindCode)) pwdTypes++;
-                        if (/[^a-zA-Z0-9]/.test(bindCode)) pwdTypes++;
-                        if (pwdTypes < 2) { setBindError("密码需包含至少两种字符（大小写字母、数字、符号）"); return }
-                        setBindLoading(true)
-                        setBindError("")
-                        try {
-                          const r = await fetch("/api/user/profile", {
-                            method: "PUT", headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ phone: bindPhone, password: bindCode }),
-                          })
-                          const d = await r.json()
-                          if (r.ok) {
-                            setProfile((p) => p ? { ...p, phone: bindPhone } : p)
-                            setShowBindPhone(false)
-                            setAccountMsg("✅ 手机号绑定成功")
-                            setTimeout(() => setAccountMsg(""), 3000)
-                          } else {
-                            setBindError(d.error || "绑定失败")
-                          }
-                        } catch { setBindError("网络错误") }
-                        finally { setBindLoading(false) }
-                      }}
-                      disabled={bindLoading || !bindPhone || !bindCode}
-                      className="w-full bg-[#FF6B35] text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
-                    >
-                      {bindLoading ? "绑定中..." : "确认绑定"}
-                    </button>
-                    {bindError && <p className="text-xs text-red-500">{bindError}</p>}
-                  </div>
-                )}
+                                <div className="py-3 border-b border-gray-50 space-y-3">
+                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                                      <p className="text-xs text-amber-700 font-medium">⚠️ 重要提醒</p>
+                                      <p className="text-xs text-amber-600 mt-1">手机号一旦绑定，后续不可修改或解绑。请务必输入您本人正在使用的手机号码。</p>
+                                    </div>
+                                    <input
+                                      type="tel" maxLength={11} placeholder="输入手机号"
+                                      value={bindPhone}
+                                      onChange={(e) => setBindPhone(e.target.value.replace(/\D/g, ""))}
+                                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
+                                    />
+                                    <input
+                                      type="password" placeholder="输入当前密码验证身份"
+                                      value={bindCode}
+                                      onChange={(e) => setBindCode(e.target.value)}
+                                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
+                                    />
+                                    <div className="flex gap-2">
+                                      <button
+                                      onClick={async () => {
+                                        if (!/^1[3-9]\d{9}$/.test(bindPhone)) { setBindError("请输入正确的11位手机号"); return }
+                                        if (bindPhone === '11111111111' || bindPhone === '00000000000' || bindPhone === '12345678901' || /^1(\d)\1{9}$/.test(bindPhone)) { setBindError("请输入真实的手机号码"); return }
+                                        if (!bindCode || bindCode.length < 8) { setBindError("请输入正确的密码（至少 8 位）"); return }
+                                        let pwdTypes = 0;
+                                        if (/[a-z]/.test(bindCode)) pwdTypes++;
+                                        if (/[A-Z]/.test(bindCode)) pwdTypes++;
+                                        if (/[0-9]/.test(bindCode)) pwdTypes++;
+                                        if (/[^a-zA-Z0-9]/.test(bindCode)) pwdTypes++;
+                                        if (pwdTypes < 2) { setBindError("密码需包含至少两种字符（大小写字母、数字、符号）"); return }
+                                        setBindLoading(true)
+                                        setBindError("")
+                                        try {
+                                          const r = await fetch("/api/user/profile", {
+                                            method: "PUT", headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({ phone: bindPhone, password: bindCode }),
+                                          })
+                                          const d = await r.json()
+                                          if (r.ok) {
+                                            setProfile((p) => p ? { ...p, phone: bindPhone } : p)
+                                            setShowBindPhone(false)
+                                            setAccountMsg("✅ 手机号绑定成功")
+                                            setTimeout(() => setAccountMsg(""), 3000)
+                                          } else {
+                                            setBindError(d.error || "绑定失败")
+                                          }
+                                        } catch { setBindError("网络错误") }
+                                        finally { setBindLoading(false) }
+                                      }}
+                                      disabled={bindLoading || !bindPhone || !bindCode}
+                                      className="flex-1 bg-[#FF6B35] text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
+                                    >
+                                      {bindLoading ? "绑定中..." : "确认绑定"}
+                                    </button>
+                                    <button onClick={() => { setShowBindPhone(false); setBindPhone(""); setBindCode(""); setBindError("") }} className="text-sm text-gray-400 hover:text-gray-600 px-3">取消</button>
+                                    </div>
+                                    {bindError && <p className="text-xs text-red-500">{bindError}</p>}
+                                  </div>
+                                )}
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
                                   <span className="text-sm text-gray-500">邮箱</span>
                                   <span className="text-sm font-medium text-[#2D3436]">
@@ -260,17 +263,15 @@ const save = async () => {
                                                       <button onClick={sendBindEmailCode} disabled={bindCodeSent || !bindEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(bindEmail)}
                                                         className="px-3 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap"
                                                       >{bindCodeSent ? "已发送" : "获取验证码"}</button>
+                                                      <button onClick={() => { setShowBindEmail(false); setBindCodeSent(false); setBindEmail(""); setBindEmailCode("") }} className="text-sm text-gray-400 hover:text-gray-600 px-2">取消</button>
                                                     </div>
                                                     {bindCodeSent && (
                                                       <>
                                                         <input type="text" maxLength={6} placeholder="输入6位验证码" value={bindEmailCode} onChange={(e) => setBindEmailCode(e.target.value.replace(/\D/g, ""))} className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]" />
-                                                        <div className="flex gap-2">
-                                                          <button onClick={confirmBindEmail}
-                                                            disabled={bindLoading || !bindEmailCode || bindEmailCode.length < 6}
-                                                            className="flex-1 bg-[#FF6B35] text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
-                                                          >{bindLoading ? "绑定中..." : "确认绑定"}</button>
-                                                          <button onClick={() => { setShowBindEmail(false); setBindCodeSent(false); setBindEmail(""); setBindEmailCode("") }} className="text-sm text-gray-400 hover:text-gray-600 px-3">取消</button>
-                                                        </div>
+                                                        <button onClick={confirmBindEmail}
+                                                          disabled={bindLoading || !bindEmailCode || bindEmailCode.length < 6}
+                                                          className="w-full bg-[#FF6B35] text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
+                                                        >{bindLoading ? "绑定中..." : "确认绑定"}</button>
                                                         {accountMsg && <p className={`text-xs ${accountMsg.startsWith("✅") ? "text-green-600" : "text-red-500"}`}>{accountMsg}</p>}
                                                       </>
                                                     )}

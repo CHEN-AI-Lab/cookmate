@@ -55,43 +55,31 @@ export async function PUT(req: Request) {
 
     const { name, phone, email, password } = await req.json()
 
-    // 获取当前用户
+    // 密码验证：绑定手机号/邮箱必须验证密码
     const currentUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { passwordHash: true } })
-
-    // 密码辅助验证：有密码时必须验证密码，无密码时跳过（支付宝/其他OAuth用户）
-    async function verifyPassword(): Promise<string | null> {
-      if (!currentUser?.passwordHash) return null // 无密码用户跳过
-      if (!password) return "请输入密码验证身份"
-      const bcrypt = await import("bcryptjs")
-      const valid = await bcrypt.compare(password, currentUser.passwordHash)
-      if (!valid) return "密码错误"
-      return null
+    if (!currentUser?.passwordHash) {
+      return NextResponse.json({ error: "请先设置密码后再绑定" }, { status: 400 })
+    }
+    if (!password) return NextResponse.json({ error: "请输入密码验证身份" }, { status: 400 })
+    const bcrypt = await import("bcryptjs")
+    if (!await bcrypt.compare(password, currentUser.passwordHash)) {
+      return NextResponse.json({ error: "密码错误" }, { status: 401 })
     }
 
     // 绑定手机号
     if (phone) {
-      const pwdErr = await verifyPassword()
-      if (pwdErr) return NextResponse.json({ error: pwdErr }, { status: 400 })
       if (!/^1\d{10}$/.test(phone)) return NextResponse.json({ error: "请输入正确的手机号" }, { status: 400 })
-
       const existing = await prisma.user.findUnique({ where: { phone } })
-      if (existing && existing.id !== session.user.id) {
-        return NextResponse.json({ error: "该手机号已被其他账号绑定" }, { status: 409 })
-      }
-
+      if (existing && existing.id !== session.user.id) return NextResponse.json({ error: "该手机号已被其他账号绑定" }, { status: 409 })
       await prisma.user.update({ where: { id: session.user.id }, data: { phone } })
       return NextResponse.json({ success: true, phone })
     }
 
-    // 绑定邮箱
+    // 绑定邮箱（密码验证在上面已处理）
     if (email) {
-      const pwdErr = await verifyPassword()
-      if (pwdErr) return NextResponse.json({ error: pwdErr }, { status: 400 })
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ error: "请输入正确的邮箱" }, { status: 400 })
-
       const existing = await prisma.user.findUnique({ where: { email } })
       if (existing && existing.id !== session.user.id) return NextResponse.json({ error: "该邮箱已被其他账号绑定" }, { status: 409 })
-
       await prisma.user.update({ where: { id: session.user.id }, data: { email } })
       return NextResponse.json({ success: true, email })
     }
