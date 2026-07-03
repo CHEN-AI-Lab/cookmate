@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import PasswordInput from "@/app/components/password-input"
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from "@cookmate/shared/constants"
 
 export default function SettingsPage() {
@@ -200,12 +201,12 @@ const save = async () => {
                                       onChange={(e) => setBindPhone(e.target.value.replace(/\D/g, ""))}
                                       className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
                                     />
-                                    <input
-                                      type="password" placeholder="输入当前密码验证身份"
-                                      value={bindCode}
-                                      onChange={(e) => setBindCode(e.target.value)}
-                                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
-                                    />
+                                    <PasswordInput
+                                                          placeholder="输入当前密码验证身份"
+                                                          value={bindCode}
+                                                          onChange={setBindCode}
+                                                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
+                                                        />
                                     <div className="flex gap-2">
                                       <button
                                       onClick={async () => {
@@ -460,21 +461,19 @@ function PasswordForm({ hasPassword, onClose }: { hasPassword: boolean; onClose:
     <div className="space-y-3">
       <div>
         <label className="text-xs text-gray-500">新密码</label>
-        <input
-          type="password"
+        <PasswordInput
           placeholder="至少 8 位，需含 2 种以上字符"
           value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
+          onChange={setNewPassword}
           className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35] mt-1"
         />
       </div>
       <div>
         <label className="text-xs text-gray-500">确认新密码</label>
-        <input
-          type="password"
+        <PasswordInput
           placeholder="再次输入新密码"
           value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
+          onChange={setConfirm}
           className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35] mt-1"
         />
       </div>

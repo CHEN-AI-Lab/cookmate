@@ -2,6 +2,7 @@
 
 import { signIn, signOut } from "next-auth/react"
 import { useState, useEffect, useRef } from "react"
+import PasswordInput from "@/app/components/password-input"
 import Link from "next/link"
 import OAuthLoadingOverlay from "@/components/ui/OAuthLoadingOverlay"
 
@@ -404,13 +405,16 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
               />
-            </div>            <div>              <label className="text-sm text-gray-600 font-medium">密码</label>              <input
-                type="password"
+            </div>
+            <div>
+              <label className="text-sm text-gray-600 font-medium">密码</label>
+              <PasswordInput
                 placeholder="请输入密码"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={setPassword}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
-              />            </div>            <button
+              />
+            </div>            <button
               onClick={handlePasswordLogin}
               disabled={loading === "password" || !email || !password}
               className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
@@ -456,21 +460,19 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
             </div>
             <div>
               <label className="text-sm text-gray-600 font-medium">新密码</label>
-              <input
-                type="password"
+              <PasswordInput
                 placeholder="至少 8 位，需含 2 种以上字符"
                 value={setupNewPassword}
-                onChange={(e) => setSetupNewPassword(e.target.value)}
+                onChange={setSetupNewPassword}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
               />
             </div>
             <div>
               <label className="text-sm text-gray-600 font-medium">确认密码</label>
-              <input
-                type="password"
+              <PasswordInput
                 placeholder="再次输入新密码"
                 value={setupConfirmPassword}
-                onChange={(e) => setSetupConfirmPassword(e.target.value)}
+                onChange={setSetupConfirmPassword}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
               />
             </div>
