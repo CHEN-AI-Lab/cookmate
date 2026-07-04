@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL
 
     // 获取或创建 Stripe Customer
     const user = await prisma.user.findUnique({
