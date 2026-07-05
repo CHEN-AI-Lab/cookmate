@@ -66,7 +66,7 @@ export async function createPaymentOrder(
 ): Promise<{ codeUrl: string; payjsOrderId: string }> {
   const mchid = process.env.PAYJS_MCHID
   const key = process.env.PAYJS_KEY
-  const notifyUrl = process.env.PAYJS_NOTIFY_URL || (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001") + "/api/payment/notify"
+  const notifyUrl = (process.env.PAYJS_NOTIFY_URL || process.env.NEXT_PUBLIC_APP_URL) + "/api/payment/notify"
 
   if (!mchid || !key) {
     throw new Error("支付系统未配置")

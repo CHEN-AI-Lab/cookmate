@@ -15,7 +15,7 @@ export async function POST(req: Request) {
 
   try {
     const orderId = generateOrderId()
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://cook-pre.aaigc.online"
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL
 
     const payUrl = await createPagePay(
       orderId,
