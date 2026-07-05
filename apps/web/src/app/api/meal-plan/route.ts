@@ -54,7 +54,7 @@ export async function POST() {
     if (!isDev) {
       const isMock = !(process.env.AI_API_KEY || process.env.OPENAI_API_KEY)
       if (!isMock) {
-        const canGenerate = await checkUsageLimit(userId).catch(() => true)
+        const canGenerate = await checkUsageLimit(userId).catch((err: unknown) => { console.error("check usage limit error:", err); return true })
         if (!canGenerate) {
           return NextResponse.json({ error: "今日次数已用完，明天再来吧" }, { status: 429 })
         }

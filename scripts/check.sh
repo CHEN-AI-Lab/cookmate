@@ -27,7 +27,7 @@ check() {
 
 check "Structure check" "bash scripts/check-structure.sh"
 check "TypeScript compile" "cd apps/web && npx tsc --noEmit"
-check "Tests" "cd apps/web && npx vitest run --reporter=verbose"
+check "Tests" "pnpm test"
 
 echo ""
 echo "═══════════════════════════════════════════"

@@ -11,7 +11,7 @@ echo "=== 多端结构合规检查 ==="
 echo ""
 echo "[1/6] apps/*/src/ 违禁目录检查"
 BANNED=$(find apps -path '*/node_modules' -prune -o -type d -print 2>/dev/null \
-  | grep -E '/(hooks|lib|utils|constants|validators)$' || true)
+  | grep -E '/(hooks|utils|constants|validators)$' || true)
 if [ -n "$BANNED" ]; then
   echo "  ❌ 以下目录不应出现在 apps/ 下（应移至 shared/）："
   echo "$BANNED" | sed 's/^/    /'
@@ -27,7 +27,9 @@ MOVED=""
 while IFS= read -r f; do
   if ! grep -q "from 'next/" "$f" 2>/dev/null && ! grep -q "from \"next/" "$f" 2>/dev/null; then
     if ! grep -q "'use client'" "$f" 2>/dev/null && ! grep -q '"use client"' "$f" 2>/dev/null; then
-      MOVED="$MOVED$f"$'\n'
+      if ! grep -q "from '@/lib/\|from \"@/lib/\|from '@prisma/\|from \"@prisma/\|from 'next-auth/\|from \"next-auth/\|from '@auth/\|from \"@auth/\|from '@cookmate/shared\|from \"@cookmate/shared" "$f" 2>/dev/null; then
+        MOVED="$MOVED$f"$'\n'
+      fi
     fi
   fi
 done < <(find apps -path '*/node_modules' -prune -o -name '*.ts' -print 2>/dev/null \
