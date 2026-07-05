@@ -14,7 +14,8 @@
     "./utils/grocery-categories": "./utils/grocery-categories.ts",
     "./api": "./api/index.ts",
     "./hooks": "./hooks/index.ts",
-    "./messages": "./messages/index.ts"
+    "./messages": "./messages/index.ts",
+    "./*": "./*"
   },
   "scripts": {
     "test": "vitest run",

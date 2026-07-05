@@ -2,4 +2,4 @@
 # Structure check - verify project layout
 set -euo pipefail
 
-echo "✅ Structure check passed"
+echo "✅ Structure check — delegated to root scripts/check-structure.sh"
