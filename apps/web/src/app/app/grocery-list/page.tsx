@@ -185,10 +185,11 @@ export default function GroceryListPage() {
       .then((r) => r.json())
       .then((data) => {
         if (data.categories) {
+          const categories = data.categories as Record<string, IngredientItem[]>
           setCategories(
-            Object.entries(data.categories)
-              .filter(([, items]) => (items as { name: string }[]).length > 0)
-              .map(([name, items]) => ({ name, items: items as IngredientItem[] }))
+            Object.entries(categories)
+              .filter(([, items]) => items.length > 0)
+              .map(([name, items]) => ({ name, items }))
           )
           setTotal(data.total || 0)
           setInPantryCount(data.inPantryCount || 0)
@@ -198,7 +199,7 @@ export default function GroceryListPage() {
 // 同步勾选状态：从食材库删除了的，自动取消勾选
           setChecked((prev) => {
             const next = new Set(prev)
-            const allItems = (Object.values(data.categories) as { name: string; inPantry?: boolean; checked?: boolean; category?: string }[]).flat()
+            const allItems = Object.values(categories).flat()
             const checkedButGone = new Set<string>()
             
             // 清理 checked 中已不在食材库的
