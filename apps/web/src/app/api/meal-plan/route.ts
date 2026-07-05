@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { generateWeeklyPlan, normalizeIngredients } from "@cookmate/shared/api/openai"
 import { checkUsageLimit, incrementUsage } from "@/lib/auth-helpers"
+import type { User } from "@prisma/client"
 
 export async function GET() {
   try {
@@ -38,10 +39,17 @@ export async function POST() {
     const userId = session.user.id
 
     // 用户数据 - 无数据库时使用默认值
-    let user: any = null
+    interface MealPlanUser {
+      subscriptionTier: string
+      subscriptionExpiryDate: Date | null
+      dietType: string | null
+      cuisinePref: string | null
+      servingSize: number | null
+    }
+    let user: MealPlanUser | null = null
     let pantryNames: string[] = []
     try {
-      user = await prisma.user.findUnique({ where: { id: userId } })
+      user = await prisma.user.findUnique({ where: { id: userId } }) as MealPlanUser | null
       const pantryItems = await prisma.pantryItem.findMany({ where: { userId }, select: { name: true } })
       pantryNames = pantryItems.map((i) => i.name)
     } catch (err) {
@@ -76,7 +84,7 @@ export async function POST() {
     monday.setHours(0, 0, 0, 0)
 
     // 保存到数据库（失败不影响返回结果）
-    let mealPlan = null
+    let mealPlan: Record<string, unknown> | null = null
     try {
       await prisma.mealSlot.deleteMany({ where: { mealPlan: { userId: userId, weekStart: monday } } })
 
@@ -112,8 +120,9 @@ export async function POST() {
             },
           })
           recipeId = created.id
-        } catch (err: any) {
-          if (err?.code === "P2002") {
+        } catch (err: unknown) {
+          const prismaErr = err as { code?: string }
+          if (prismaErr.code === "P2002") {
             const existing = await prisma.recipe.findFirst({ where: { userId, title: recipe.title } })
             if (existing) { recipeId = existing.id } else { throw err }
           } else { throw err }
@@ -151,7 +160,7 @@ export async function POST() {
           } : null,
         }))
       )
-      mealPlan = { id: "demo-plan", weekStart: monday.toISOString(), slots } as any
+      mealPlan = { id: "demo-plan", weekStart: monday.toISOString(), slots }
     }
 
     return NextResponse.json({ plan: mealPlan, generated: weekPlan })

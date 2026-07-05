@@ -92,9 +92,10 @@ export async function POST(req: Request) {
           },
         })
         return NextResponse.json({ recipe: saved })
-      } catch (err: any) {
+      } catch (err: unknown) {
         // P2002 = 同名菜谱已存在，切换收藏
-        if (err?.code === "P2002") {
+        const prismaErr = err as { code?: string; message?: string }
+        if (prismaErr.code === "P2002") {
           const existing = await prisma.recipe.findFirst({
             where: { userId: session.user.id, title: normalizedName },
           })
@@ -170,9 +171,10 @@ export async function POST(req: Request) {
           },
         })
         savedRecipes.push({ ...recipe, id: saved.id })
-      } catch (err: any) {
+      } catch (err: unknown) {
         // P2002 = unique constraint violation（同名菜谱已存在）
-        if (err?.code === "P2002") continue
+        const prismaErr = err as { code?: string }
+        if (prismaErr.code === "P2002") continue
         throw err
       }
     }

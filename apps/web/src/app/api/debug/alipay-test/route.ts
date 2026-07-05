@@ -9,7 +9,9 @@ export async function GET(req: Request) {
   const privateKey = process.env.AUTH_ALIPAY_SECRET || ""
   const publicKey = process.env.ALIPAY_PUBLIC_KEY || ""
 
-  const result: any = {
+  // Debug endpoint — 为了处理支付宝动态响应结构，使用宽松类型
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result: Record<string, any> = {
     private_key_ok: privateKey.includes("[REDACTED PRIVATE KEY]"),
     app_id: appId ? appId.substring(0, 8) + "..." : "未配置",
   }
@@ -58,7 +60,7 @@ export async function GET(req: Request) {
     const text = await res.text()
     result.alipay_response = (() => { try { return JSON.parse(text) } catch (err) { console.error("parse alipay response error:", err); return { raw: text } } })()
 
-    const resp = result.alipay_response
+    const resp = result.alipay_response as any
     if (resp?.alipay_system_oauth_token_response?.access_token) {
       result.status = "✅ Token 获取成功！"
       // 继续调 userinfo
@@ -90,8 +92,9 @@ export async function GET(req: Request) {
     } else {
       result.status = "❌ 未知响应"
     }
-  } catch (e: any) {
-    result.network_error = e.message
+  } catch (e: unknown) {
+      const errorMsg = e instanceof Error ? e.message : String(e)
+      result.error = errorMsg
   }
 
   return NextResponse.json(result)

@@ -33,7 +33,7 @@ export async function GET(req: Request) {
       headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
       body: new URLSearchParams(p).toString(),
     })
-    const tokenData = JSON.parse(await res.text())
+    const tokenData: any = JSON.parse(await res.text())
     const accessToken = tokenData.alipay_system_oauth_token_response?.access_token
     if (!accessToken) {
       const errMsg = tokenData.error_response?.sub_msg || tokenData.error_response?.msg || JSON.stringify(tokenData).substring(0, 200)
@@ -55,7 +55,7 @@ export async function GET(req: Request) {
       headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
       body: new URLSearchParams(up).toString(),
     })
-    const userData = JSON.parse(await uRes.text())
+    const userData: any = JSON.parse(await uRes.text())
     const profile = userData.alipay_user_info_share_response
     const alipayUserId = profile?.open_id || profile?.userId || profile?.user_id
     if (!alipayUserId) {
@@ -84,8 +84,9 @@ export async function GET(req: Request) {
     const loginUrl = new URL("/login", req.url)
     loginUrl.searchParams.set("alipay_auth", userId)
     return NextResponse.redirect(loginUrl)
-  } catch (err: any) {
-    console.error("[Alipay Callback] Error:", err.message || err)
+  } catch (err: unknown) {
+    console.error("[Alipay Callback] Error:", err)
+    if (err instanceof Error) console.error("[Alipay Callback]", err.message || err)
     return NextResponse.redirect(new URL("/login?error=alipay_error", req.url))
   }
 }

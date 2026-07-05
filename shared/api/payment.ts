@@ -88,7 +88,7 @@ export async function createPaymentOrder(
   const res = await fetch(`${PAYJS_API}${endpoint}`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(params as any).toString(),
+    body: new URLSearchParams(params as Record<string, string>).toString(),
   })
 
   const data: PayJSResponse = await res.json()
@@ -118,7 +118,7 @@ export async function queryPaymentOrder(payjsOrderId: string): Promise<{ paid: b
   const res = await fetch(`${PAYJS_API}/check`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(params as any).toString(),
+    body: new URLSearchParams(params as Record<string, string>).toString(),
   })
 
   const data: PayJSQueryResponse = await res.json()

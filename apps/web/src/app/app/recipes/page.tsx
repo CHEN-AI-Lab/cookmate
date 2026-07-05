@@ -53,7 +53,7 @@ export default function RecipesPage() {
     fetch("/api/recipes/star")
       .then((r) => r.json())
       .then((data) => {
-        if (data.recipes) setStarredIds(new Set(data.recipes.map((r: any) => r.id)))
+        if (data.recipes) setStarredIds(new Set(data.recipes.map((r: { id: string }) => r.id)))
       })
       .catch((err) => console.error("load starred recipes error:", err))
   }, [])

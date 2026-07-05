@@ -187,7 +187,7 @@ export default function GroceryListPage() {
         if (data.categories) {
           setCategories(
             Object.entries(data.categories)
-              .filter(([, items]) => (items as any[]).length > 0)
+              .filter(([, items]) => (items as { name: string }[]).length > 0)
               .map(([name, items]) => ({ name, items: items as IngredientItem[] }))
           )
           setTotal(data.total || 0)
@@ -198,19 +198,19 @@ export default function GroceryListPage() {
 // 同步勾选状态：从食材库删除了的，自动取消勾选
           setChecked((prev) => {
             const next = new Set(prev)
-            const allItems: any[] = Object.values(data.categories).flat()
+            const allItems = (Object.values(data.categories) as { name: string; inPantry?: boolean; checked?: boolean; category?: string }[]).flat()
             const checkedButGone = new Set<string>()
             
             // 清理 checked 中已不在食材库的
             for (const name of next) {
               if (manualItems.includes(name)) continue
-              const inData = allItems.find((i: any) => i.name === name) as any
+              const inData = allItems.find((i) => i.name === name)
               if (!inData || !inData.inPantry) checkedButGone.add(name)
             }
             
             // 清理 syncedRef 中已不在食材库的（即使没勾选，防止残留阻塞重新勾选）
             for (const name of syncedRef.current) {
-              const inData = allItems.find((i: any) => i.name === name) as any
+              const inData = allItems.find((i) => i.name === name)
               if (!inData || !inData.inPantry) {
                 next.delete(name)
                 checkedButGone.add(name)
