@@ -48,7 +48,7 @@ export default function MealPlanPage() {
       const res = await fetch("/api/meal-plan")
       const data = await res.json()
       if (data.plans?.length > 0) setPlan(data.plans[0])
-    } catch {} finally {
+    } catch (err) { console.error("load meal plan error:", err) } finally {
       setLoading(false)
     }
   }, [])
@@ -66,7 +66,8 @@ export default function MealPlanPage() {
       } else {
         setError(data.error || "生成失败")
       }
-    } catch {
+    } catch (err) {
+      console.error("generate plan error:", err)
       setError("网络错误")
     } finally {
       setGenerating(false)
@@ -92,7 +93,8 @@ export default function MealPlanPage() {
         }),
       })
       if (!res.ok) throw new Error("删除失败")
-    } catch {
+    } catch (err) {
+      console.error("delete slot error:", err)
       return
     }
 

@@ -53,7 +53,7 @@ export default function GroceryListPage() {
       if (synced) syncedRef.current = new Set(JSON.parse(synced))
       const added = localStorage.getItem("cookmate_grocery_newly_added")
       if (added) newlyAddedRef.current = new Map(Object.entries(JSON.parse(added)))
-    } catch {}
+    } catch (err) { console.error("load grocery checkout state error:", err) }
   }, [])
 
   // 同步单个物品到食材库
@@ -76,7 +76,8 @@ export default function GroceryListPage() {
         setPurchaseNotify({ name, success: true, existing: !!data.alreadyExists })
         setTimeout(() => setPurchaseNotify(null), 2500)
       }
-    } catch {
+    } catch (err) {
+      console.error("sync to pantry error:", err)
       // 失败则恢复标记，允许重试
       syncedRef.current.delete(name)
       newlyAddedRef.current.delete(name)
@@ -93,7 +94,8 @@ export default function GroceryListPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
       })
-    } catch {
+    } catch (err) {
+      console.error("remove from pantry error:", err)
       // 静默
     }
     // 清理标记
@@ -154,10 +156,11 @@ export default function GroceryListPage() {
             setDupDialog(`${trimmed} (${data.error})`)
             setTimeout(() => setDupDialog(null), 3000)
           }
-        }).catch(() => {})
+        }).catch((err) => console.error("parse grocery response error:", err))
       }
     })
-    .catch(() => {
+    .catch((err) => {
+      console.error("add manual item error:", err)
       // 网络失败时用一个简单提示（不阻塞用户）
     })
     setNewItem("")
@@ -174,7 +177,7 @@ export default function GroceryListPage() {
         setManualItems((prev) => prev.filter((i) => i !== name))
       }
     })
-    .catch(() => {})
+    .catch((err) => console.error("remove manual item error:", err))
   }
 
   const loadData = useCallback(() => {
@@ -228,7 +231,7 @@ export default function GroceryListPage() {
           })
         }
       })
-      .catch(() => {})
+      .catch((err) => console.error("load grocery list error:", err))
       .finally(() => setLoading(false))
   }, [days])
 

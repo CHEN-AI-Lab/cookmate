@@ -83,7 +83,7 @@ export async function GET(req: Request) {
         body: ub.toString(),
       })
       const utxt = await ur.text()
-      result.userinfo_response = (() => { try { return JSON.parse(utxt) } catch { return { raw: utxt } } })()
+      result.userinfo_response = (() => { try { return JSON.parse(utxt) } catch (err) { console.error("parse alipay userinfo response error:", err); return { raw: utxt } } })()
     } else if (resp?.error_response) {
       const e = resp.error_response
       result.status = `❌ 支付宝返回错误: ${e.msg} (${e.code})${e.sub_msg ? " - " + e.sub_msg : ""}`

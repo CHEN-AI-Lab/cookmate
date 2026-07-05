@@ -49,7 +49,7 @@ export default function MyRecipesPage() {
         })
         setRecipes(sorted)
       }
-    } catch {} finally {
+    } catch (err) { console.error("load recipes error:", err) } finally {
       setLoading(false)
     }
   }

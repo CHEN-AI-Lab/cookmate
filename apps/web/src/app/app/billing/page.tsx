@@ -33,7 +33,7 @@ export default function BillingPage() {
           subscriptionExpiryDate: data.subscriptionExpiryDate,
         })
       })
-      .catch(() => setError("加载失败"))
+      .catch((err) => { console.error("load billing info error:", err); setError("加载失败"); })
       .finally(() => setLoading(false))
 
     // 检测 URL 参数
@@ -69,7 +69,8 @@ export default function BillingPage() {
       if (data.url) {
         window.location.href = data.url
       }
-    } catch {
+    } catch (err) {
+      console.error("stripe upgrade error:", err)
       setError("网络错误，请稍后重试")
     } finally {
       setActionLoading(null)
@@ -89,7 +90,8 @@ export default function BillingPage() {
       if (data.url) {
         window.location.href = data.url
       }
-    } catch {
+    } catch (err) {
+      console.error("manage subscription error:", err)
       setError("网络错误，请稍后重试")
     } finally {
       setActionLoading(null)
@@ -223,7 +225,8 @@ export default function BillingPage() {
                       setError(data.error || "创建支付失败")
                       setPaying(false)
                     }
-                  } catch {
+                  } catch (err) {
+                    console.error("alipay create error:", err)
                     setError("网络错误")
                     setPaying(false)
                   }
