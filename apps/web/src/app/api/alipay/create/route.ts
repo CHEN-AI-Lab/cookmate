@@ -37,8 +37,8 @@ export async function POST(req: Request) {
     })
 
     return NextResponse.json({ orderId, payUrl })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Alipay create error:", error)
-    return NextResponse.json({ error: error?.message || "创建支付失败" }, { status: 500 })
+    return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) || "创建支付失败" }, { status: 500 })
   }
 }

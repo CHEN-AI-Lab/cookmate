@@ -36,10 +36,10 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ paid: result.paid })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Payment verify error:", error)
     return NextResponse.json(
-      { error: error?.message || "查询订单失败" },
+      { error: (error instanceof Error ? error.message : String(error)) || "查询订单失败" },
       { status: 500 }
     )
   }

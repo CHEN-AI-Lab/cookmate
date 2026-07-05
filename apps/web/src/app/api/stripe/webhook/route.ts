@@ -93,10 +93,10 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ received: true })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Stripe webhook error:", error)
     return NextResponse.json(
-      { error: error?.message || "Webhook processing failed" },
+      { error: (error instanceof Error ? error.message : String(error)) || "Webhook processing failed" },
       { status: 400 }
     )
   }

@@ -49,10 +49,10 @@ export async function POST(req: Request) {
       codeUrl: result.codeUrl,
       channel,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Payment create error:", error)
     return NextResponse.json(
-      { error: error?.message || "创建支付订单失败" },
+      { error: (error instanceof Error ? error.message : String(error)) || "创建支付订单失败" },
       { status: 500 }
     )
   }

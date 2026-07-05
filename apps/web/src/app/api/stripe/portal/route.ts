@@ -36,10 +36,10 @@ export async function POST() {
     })
 
     return NextResponse.json({ url: portal.url })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Stripe portal error:", error)
     return NextResponse.json(
-      { error: error?.message || "创建管理页面失败" },
+      { error: (error instanceof Error ? error.message : String(error)) || "创建管理页面失败" },
       { status: 500 }
     )
   }

@@ -71,10 +71,10 @@ export async function POST(req: Request) {
     })
 
     return NextResponse.json({ url: checkout.url })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Stripe checkout error:", error)
     return NextResponse.json(
-      { error: error?.message || "创建支付会话失败" },
+      { error: (error instanceof Error ? error.message : String(error)) || "创建支付会话失败" },
       { status: 500 }
     )
   }
