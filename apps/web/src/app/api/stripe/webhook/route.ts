@@ -37,8 +37,7 @@ export async function POST(req: Request) {
               stripeSubscriptionId: session.subscription as string || null,
               stripeCustomerId: session.customer as string || undefined,
             },
-          })
-          console.log(`User ${userId} upgraded to ${tier}`)
+          })\n          console.error(`User ${userId} upgraded to ${tier}`)
         }
         break
       }
@@ -75,13 +74,12 @@ export async function POST(req: Request) {
             stripeSubscriptionId: null,
           },
         })
-        console.log(`User (customer ${customerId}) reverted to FREE`)
+        console.error(`User (customer ${customerId}) reverted to FREE`)
         break
       }
 
       case "invoice.paid": {
         // 支付成功 — 可额外记录
-        console.log("Invoice paid:", event.data.object.id)
         break
       }
 

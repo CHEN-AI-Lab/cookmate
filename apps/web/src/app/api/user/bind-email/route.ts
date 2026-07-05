@@ -60,8 +60,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "邮件发送失败，请检查 RESEND_API_KEY 配置" }, { status: 500 })
     }
 
-    console.log(`[DEV] 邮箱绑定验证码 for ${email}: ${code}`)
-
     return NextResponse.json({
       success: true,
       ...(isDev ? { devCode: code } : {}),

@@ -108,15 +108,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "手机号登录暂未开放，请使用邮箱或密码登录" }, { status: 400 })
     }
 
-    console.log(`[DEV] 验证码 for ${phone || email}: ${code}`)
-
-    if (isDev) {
-      return NextResponse.json({
-        success: true,
-        devCode: code,
-      })
-    }
-
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Send code error:", error)
