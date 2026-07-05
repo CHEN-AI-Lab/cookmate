@@ -1,6 +1,8 @@
 // 支付抽象层 — 支持 PayJS 等国内支付网关
 // 配置见 .env: PAYJS_MCHID, PAYJS_KEY, PAYJS_NOTIFY_URL
 
+import crypto from "node:crypto"
+
 const PAYJS_API = "https://payjs.cn/api"
 
 interface PayJSCreateParams {
@@ -45,7 +47,6 @@ export function sign(params: Record<string, string | number>, key: string): stri
     .map((k) => `${k}=${params[k]}`)
     .join("&") + `&key=${key}`
   // Node.js crypto MD5
-  const crypto = require("crypto")
   return crypto.createHash("md5").update(sorted).digest("hex").toUpperCase()
 }
 

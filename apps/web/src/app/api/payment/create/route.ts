@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { createPaymentOrder, isPaymentConfigured, generateOrderId } from "@/lib/payment"
+import { createPaymentOrder, isPaymentConfigured, generateOrderId } from "@cookmate/shared/api/payment"
 
 export async function POST(req: Request) {
   const session = await auth()

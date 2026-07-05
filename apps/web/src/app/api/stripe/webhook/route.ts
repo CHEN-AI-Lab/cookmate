@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getStripe } from "@/lib/stripe"
+import { getStripe } from "@cookmate/shared/api/stripe"
 import { prisma } from "@/lib/prisma"
 
 export async function POST(req: Request) {
@@ -37,7 +37,8 @@ export async function POST(req: Request) {
               stripeSubscriptionId: session.subscription as string || null,
               stripeCustomerId: session.customer as string || undefined,
             },
-          })\n          console.error(`User ${userId} upgraded to ${tier}`)
+          })
+          console.error(`User ${userId} upgraded to ${tier}`)
         }
         break
       }

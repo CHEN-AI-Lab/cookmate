@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { getStripe } from "@/lib/stripe"
+import { getStripe } from "@cookmate/shared/api/stripe"
 import { prisma } from "@/lib/prisma"
 
 export async function POST(req: Request) {

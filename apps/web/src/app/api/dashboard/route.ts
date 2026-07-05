@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { isPaymentConfigured } from "@/lib/payment"
-import { isAlipayConfigured } from "@/lib/alipay-pay"
+import { isPaymentConfigured } from "@cookmate/shared/api/payment"
+import { isAlipayConfigured } from "@cookmate/shared/api/alipay-pay"
 
 // 检查订阅是否过期，过期自动降级
 async function checkSubscription(userId: string, user: { subscriptionTier: string; subscriptionExpiryDate: Date | null } | null): Promise<string> {
