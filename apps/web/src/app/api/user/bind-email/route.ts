@@ -51,7 +51,9 @@ export async function POST(req: Request) {
           }),
         })
         sent = res.ok
-      } catch {}
+      } catch (err) {
+      console.error("send email error:", err)
+    }
     }
 
     const isDev = process.env.NODE_ENV === "development"

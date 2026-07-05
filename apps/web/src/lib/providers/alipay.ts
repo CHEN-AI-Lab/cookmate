@@ -66,7 +66,7 @@ export default function AlipayProvider<P extends AlipayProfile>(
     token: {
       url: apiBase,
       params: { grant_type: "authorization_code" },
-      async request(ctx: any) {
+      async request(ctx: { clientId: string; clientSecret?: string; params?: Record<string, string> }) {
           const { clientId, params } = ctx
           const receivedParams = JSON.stringify(Object.keys(params || {}))
 
@@ -88,7 +88,7 @@ export default function AlipayProvider<P extends AlipayProfile>(
 
     userinfo: {
       url: apiBase,
-      async request(ctx: any) {
+      async request(ctx: { clientId: string; tokens: { access_token?: string; openid?: string } }) {
           // Mock：返回固定用户信息
           return {
             userId: "alipay_test_user",

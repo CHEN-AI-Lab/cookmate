@@ -12,14 +12,14 @@ export async function PATCH(
   const { id } = await params
 
   try {
-    const recipe = await prisma.recipe.findUnique({ where: { id } }).catch(() => null)
+    const recipe = await prisma.recipe.findUnique({ where: { id } }).catch((err: unknown) => { console.error("findUnique recipe error:", err); return null })
     if (!recipe) return NextResponse.json({ error: "菜谱不存在" }, { status: 404 })
     if (recipe.userId !== session.user.id) return NextResponse.json({ error: "无权限" }, { status: 403 })
 
     const updated = await prisma.recipe.update({
       where: { id },
       data: { starred: !recipe.starred },
-    }).catch(() => null)
+    }).catch((err: unknown) => { console.error("update recipe error:", err); return null })
 
     return NextResponse.json({ starred: updated?.starred ?? false })
   } catch (error) {

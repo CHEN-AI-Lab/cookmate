@@ -21,7 +21,7 @@ export async function GET() {
       where: { userId: session.user.id, weekStart: { gte: monday, lte: sunday } },
       include: { slots: { include: { recipe: true } } },
       orderBy: { weekStart: "asc" },
-    }).catch(() => [])
+    }).catch((err: unknown) => { console.error("findMany meal plans error:", err); return [] })
 
     return NextResponse.json({ plans, weekStart: monday.toISOString() })
   } catch (error) {
@@ -44,7 +44,8 @@ export async function POST() {
       user = await prisma.user.findUnique({ where: { id: userId } })
       const pantryItems = await prisma.pantryItem.findMany({ where: { userId }, select: { name: true } })
       pantryNames = pantryItems.map((i) => i.name)
-    } catch {
+    } catch (err) {
+      console.error("fetch user/pantry data error:", err)
       // 无数据库 - 使用默认值
     }
 
@@ -126,7 +127,7 @@ export async function POST() {
       })
 
       // 消耗一次使用次数
-      if (!isDev) { await incrementUsage(userId).catch(() => {}) }
+      if (!isDev) { await incrementUsage(userId).catch((err: unknown) => { console.error("increment usage error:", err) }) }
     } catch (err) {
       console.error("Failed to save meal plan to DB (returning generated data only):", err)
       // 把 weekPlan 转成前端可展示的格式

@@ -142,7 +142,7 @@ export async function POST(req: Request) {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { dietType: true, cuisinePref: true, servingSize: true },
-    }).catch(() => null)
+    }).catch((err: unknown) => { console.error("findUnique user error:", err); return null })
 
     const recipes = await generateRecipes(ingredients, {
       dietType: user?.dietType || undefined,

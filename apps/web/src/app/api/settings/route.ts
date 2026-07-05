@@ -10,7 +10,7 @@ export async function GET() {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { dietType: true, cuisinePref: true, servingSize: true, subscriptionTier: true },
-    }).catch(() => null)
+    }).catch((err: unknown) => { console.error("findUnique user error:", err); return null })
 
     // 返回默认值，避免前端显示为空（但cuisinePref为空表示没选）
     return NextResponse.json({
@@ -44,7 +44,7 @@ export async function PUT(req: Request) {
         cuisinePref: cuisinePref ?? undefined,
         servingSize: validatedServingSize,
       },
-    }).catch(() => null)
+    }).catch((err: unknown) => { console.error("update user error:", err); return null })
 
     return NextResponse.json({
       settings: { dietType: user?.dietType, cuisinePref: user?.cuisinePref, servingSize: user?.servingSize ?? 2 },

@@ -16,7 +16,7 @@ export async function PATCH(req: Request) {
     const slot = await prisma.mealSlot.findFirst({
       where: { id: slotId, mealPlan: { userId: session.user.id } },
       include: { recipe: true },
-    }).catch(() => null)
+    }).catch((err: unknown) => { console.error("findFirst slot error:", err); return null })
     if (!slot) return NextResponse.json({ error: "未找到该餐次" }, { status: 404 })
 
     // 如果 title 为空字符串，表示删除操作
@@ -27,9 +27,9 @@ export async function PATCH(req: Request) {
         await prisma.mealSlot.update({
           where: { id: slotId },
           data: { recipeId: null, note: "" },
-        }).catch(() => {})
+        }).catch((err: unknown) => { console.error("update slot error:", err) })
         // 清理孤儿 Recipe 记录
-        await prisma.recipe.delete({ where: { id: recipeId } }).catch(() => {})
+        await prisma.recipe.delete({ where: { id: recipeId } }).catch((err: unknown) => { console.error("delete recipe error:", err) })
       }
       return NextResponse.json({ success: true })
     }
@@ -39,22 +39,22 @@ export async function PATCH(req: Request) {
       await prisma.recipe.update({
         where: { id: slot.recipe.id },
         data: { title, ...(description !== undefined && { description }), ingredients, steps, cookingTime, calories, cuisineType },
-      }).catch(() => {})
+      }).catch((err: unknown) => { console.error("update recipe error:", err) })
       // 同步更新 MealSlot.note
       await prisma.mealSlot.update({
         where: { id: slotId },
         data: { note: title },
-      }).catch(() => {})
+      }).catch((err: unknown) => { console.error("update slot note error:", err) })
     } else {
       // 没有 Recipe 则创建
       const recipe = await prisma.recipe.create({
         data: { userId: session.user.id, title, ingredients: ingredients || "", steps: steps || "", cookingTime, calories, cuisineType, isGenerated: false },
-      }).catch(() => null)
+      }).catch((err: unknown) => { console.error("create recipe error:", err); return null })
       if (recipe) {
         await prisma.mealSlot.update({
           where: { id: slotId },
           data: { recipeId: recipe.id },
-        }).catch(() => {})
+        }).catch((err: unknown) => { console.error("update slot recipe error:", err) })
       }
     }
 

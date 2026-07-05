@@ -56,7 +56,7 @@ export async function GET(req: Request) {
       body: body.toString(),
     })
     const text = await res.text()
-    result.alipay_response = (() => { try { return JSON.parse(text) } catch { return { raw: text } } })()
+    result.alipay_response = (() => { try { return JSON.parse(text) } catch (err) { console.error("parse alipay response error:", err); return { raw: text } } })()
 
     const resp = result.alipay_response
     if (resp?.alipay_system_oauth_token_response?.access_token) {

@@ -14,11 +14,11 @@ export async function POST(req: Request) {
     if (isStaple(normalizedName)) return NextResponse.json({ error: "该物品不需要购买" }, { status: 400 })
     const existing = await prisma.groceryItem.findFirst({
       where: { userId: session.user.id, name: normalizedName },
-    }).catch(() => null)
+    }).catch((err: unknown) => { console.error("findFirst grocery item error:", err); return null })
     if (existing) return NextResponse.json({ error: "该物品已存在" }, { status: 400 })
     const item = await prisma.groceryItem.create({
       data: { userId: session.user.id, name: normalizedName },
-    }).catch(() => null)
+    }).catch((err: unknown) => { console.error("create grocery item error:", err); return null })
     return NextResponse.json({ success: true, item })
   } catch (error) {
     console.error("Add grocery item error:", error)

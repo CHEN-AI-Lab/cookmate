@@ -134,12 +134,12 @@ export async function GET(req: Request) {
     const plans = await prisma.mealPlan.findMany({
       where: { userId: session.user.id, weekStart: { gte: monday, lte: sunday } },
       include: { slots: { include: { recipe: true } } },
-    }).catch(() => [])
+    }).catch((err: unknown) => { console.error("findMany meal plans error:", err); return [] })
 
     // 获取食材库
     const pantryItems = await prisma.pantryItem.findMany({
       where: { userId: session.user.id },
-    }).catch(() => [])
+    }).catch((err: unknown) => { console.error("findMany pantry items error:", err); return [] })
     const pantryNames: string[] = pantryItems.map((i) => i.name)
 
     // 将食材库名称也归一化，用于精确匹配（必须在 ingredientsWithStatus 之前定义）
@@ -250,7 +250,7 @@ export async function GET(req: Request) {
     const manualDbItems = await prisma.groceryItem.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: "asc" },
-    }).catch(() => [])
+    }).catch((err: unknown) => { console.error("findMany meal plans error:", err); return [] })
     const manualNames = manualDbItems.map((i) => i.name)
 
     return NextResponse.json({

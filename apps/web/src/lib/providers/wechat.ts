@@ -34,7 +34,7 @@ export default function WeChatProvider<P extends WeChatProfile>(
     token: {
       url: "https://api.weixin.qq.com/sns/oauth2/access_token",
       params: { grant_type: "authorization_code" },
-      async request(ctx: any) {
+      async request(ctx: { clientId: string; clientSecret: string; params: Record<string, string> }) {
         const { clientId, clientSecret, params } = ctx
         const code = params.code
         if (!code) throw new Error("Missing authorization code")
@@ -66,7 +66,7 @@ export default function WeChatProvider<P extends WeChatProfile>(
 
     userinfo: {
       url: "https://api.weixin.qq.com/sns/userinfo",
-      async request(ctx: any) {
+      async request(ctx: { tokens: { access_token?: string; openid?: string } }) {
         const userinfoUrl =
           "https://api.weixin.qq.com/sns/userinfo" +
           "?access_token=" + ctx.tokens.access_token +

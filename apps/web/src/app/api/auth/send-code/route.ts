@@ -35,7 +35,8 @@ async function sendEmailViaResend(to: string, code: string) {
       }),
     })
     return res.ok
-  } catch {
+  } catch (err) {
+    console.error("send email error:", err)
     return false
   }
 }
