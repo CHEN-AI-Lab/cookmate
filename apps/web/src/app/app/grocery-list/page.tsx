@@ -197,6 +197,7 @@ export default function GroceryListPage() {
     fetch(`/api/grocery-list?days=${days}`)
       .then((r) => r.json())
       .then((data) => {
+        if (demoRef.current) return
         if (data.categories) {
           const categories = data.categories as Record<string, IngredientItem[]>
           setCategories(
@@ -272,7 +273,7 @@ export default function GroceryListPage() {
 
   // 页面获得焦点时刷新数据（从食材库删除食材后切回来更新已有状态）
   useEffect(() => {
-    const onFocus = () => loadData()
+    const onFocus = () => { if (!demoRef.current) loadData() }
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
   }, [loadData])

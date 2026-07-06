@@ -63,10 +63,8 @@ export default function MealPlanPage() {
       .then((data) => {
         if (data.isDemoUser) {
           setIsDemoUser(true)
-          // If no real plan loaded yet, set demo data after a short delay
-          setTimeout(() => {
-            setPlan((prev) => prev || getDemoMealPlan())
-          }, 500)
+          // If no real plan loaded yet, set demo data
+          setPlan((prev) => prev || getDemoMealPlan())
         }
       })
       .catch((err) => console.error("load profile error:", err))

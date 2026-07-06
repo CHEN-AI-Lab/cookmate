@@ -65,9 +65,7 @@ export default function MyRecipesPage() {
       .then((data) => {
         if (data.isDemoUser) {
           setIsDemoUser(true)
-          setTimeout(() => {
-            setRecipes((prev) => prev.length > 0 ? prev : getDemoRecipes())
-          }, 500)
+          setRecipes((prev) => prev.length > 0 ? prev : getDemoRecipes())
         }
       })
       .catch((err) => console.error("load profile error:", err))
@@ -247,14 +245,18 @@ export default function MyRecipesPage() {
             </>
           ) : (
             <>
-              {!isDemoUser && (
               <button
-                onClick={() => setIsSelectMode(true)}
+                onClick={() => {
+                  if (isDemoUser) {
+                    showToast("🔒 体验用户无法删除，请注册后使用")
+                    return
+                  }
+                  setIsSelectMode(true)
+                }}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
               >
                 多选
               </button>
-              )}
               <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
                 <button
                   onClick={() => setFilter("all")}

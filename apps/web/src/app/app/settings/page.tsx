@@ -27,6 +27,7 @@ export default function SettingsPage() {
   const [bindCountdown, setBindCountdown] = useState(0)
   const [bindError, setBindError] = useState("")
   const [accountMsg, setAccountMsg] = useState("")
+  const [globalToast, setGlobalToast] = useState("")
 
   useEffect(() => {
     Promise.all([
@@ -422,8 +423,8 @@ const save = async () => {
             <button
               onClick={() => {
                 if (profile?.isDemoUser) {
-                  setAccountMsg("🔒 体验用户无法保存设置，请注册后使用")
-                  setTimeout(() => setAccountMsg(""), 3000)
+                  setGlobalToast("🔒 体验用户无法保存设置，请注册后使用")
+                  setTimeout(() => setGlobalToast(""), 3000)
                   return
                 }
                 save()
@@ -448,6 +449,13 @@ const save = async () => {
       {/* 密码设置 - 已整合到账号信息中 */}
     </div>
   )
+
+  {/* Global toast */}
+  {globalToast && (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#2D3436] text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+      {globalToast}
+    </div>
+  )}
 }
 
 function PasswordForm({ hasPassword, onClose }: { hasPassword: boolean; onClose: () => void }) {

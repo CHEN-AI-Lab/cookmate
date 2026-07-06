@@ -74,9 +74,7 @@ export default function PantryPage() {
       .then((data) => {
         if (data.isDemoUser) {
           setIsDemoUser(true)
-          setTimeout(() => {
-            setItems((prev) => prev.length > 0 ? prev : getDemoPantryItems())
-          }, 500)
+          setItems((prev) => prev.length > 0 ? prev : getDemoPantryItems())
         }
       })
       .catch((err) => console.error("load profile error:", err))
@@ -238,9 +236,12 @@ export default function PantryPage() {
                     return (
                       <button
                         key={item}
-                        disabled={isDemoUser}
                         onClick={async () => {
-                          if (isDemoUser) return
+                          if (isDemoUser) {
+                            setDemoToast("🔒 体验用户无法使用，请注册后使用")
+                            setTimeout(() => setDemoToast(""), 3000)
+                            return
+                          }
                           if (alreadyAdded) {
                             // 已添加则删除
                             const toRemove = items.find((i) => i.name === item)
