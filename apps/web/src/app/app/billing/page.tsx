@@ -9,6 +9,7 @@ interface BillingInfo {
   stripeConfigured: boolean
   subscriptionExpiryDate?: string | null
   isDemoUser: boolean
+  creemConfigured: boolean
 }
 
 export default function BillingPage() {
@@ -29,6 +30,7 @@ export default function BillingPage() {
           stripeConfigured: !!data.stripeConfigured,
           subscriptionExpiryDate: data.subscriptionExpiryDate,
           isDemoUser: !!data.isDemoUser,
+          creemConfigured: !!data.creemConfigured,
         })
       })
       .catch((err) => { console.error("load billing info error:", err); setError("加载失败"); })
@@ -68,6 +70,27 @@ export default function BillingPage() {
       }
     } catch (err) {
       console.error("stripe upgrade error:", err)
+      setError("网络错误，请稍后重试")
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleCreemUpgrade = async () => {
+    setActionLoading("creem")
+    setError("")
+    try {
+      const res = await fetch("/api/creem/create-checkout", { method: "POST" })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || "创建支付失败")
+        return
+      }
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch (err) {
+      console.error("creem upgrade error:", err)
       setError("网络错误，请稍后重试")
     } finally {
       setActionLoading(null)
@@ -255,6 +278,27 @@ export default function BillingPage() {
                   <p className="text-xs text-gray-400">支持国际信用卡，$5/月</p>
                 </div>
                 {actionLoading === "pro" && (
+                  <span className="ml-auto text-sm text-gray-400">跳转中...</span>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Creem 支付 */}
+          {info?.creemConfigured && (
+            <div className="border-t border-gray-50 pt-4">
+              <p className="text-sm text-gray-500 mb-3">其他支付</p>
+              <button
+                onClick={handleCreemUpgrade}
+                disabled={actionLoading !== null}
+                className="flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-green-400 hover:bg-green-50/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed text-left w-full"
+              >
+                <span className="text-2xl">💚</span>
+                <div>
+                  <p className="font-semibold text-gray-900">Creem 支付</p>
+                  <p className="text-xs text-gray-400">支持信用卡及多种支付方式</p>
+                </div>
+                {actionLoading === "creem" && (
                   <span className="ml-auto text-sm text-gray-400">跳转中...</span>
                 )}
               </button>

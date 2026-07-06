@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { isAlipayConfigured } from "@cookmate/shared/api/alipay-pay"
+import { isCreemConfigured } from "@cookmate/shared/api/creem"
 import { isDemoUser } from "@/lib/auth-helpers"
 
 // 检查订阅是否过期，过期自动降级
@@ -56,6 +57,7 @@ export async function GET() {
       subscriptionExpiryDate: user?.subscriptionExpiryDate?.toISOString() ?? null,
       stripeConfigured: !!(process.env.STRIPE_SECRET_KEY && process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY),
       paymentConfigured: isAlipayConfigured(),
+      creemConfigured: isCreemConfigured(),
       isDemoUser: isDemoUser(session),
     })
   } catch (error) {
