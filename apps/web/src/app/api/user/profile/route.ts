@@ -14,15 +14,16 @@ const user = await prisma.user.findUnique({
 
     if (!user) return NextResponse.json({ error: "用户不存在" }, { status: 404 })
 
-    // 判断登录方式 — 从 session 里取当前登录用的 provider
+    // 判断登录方式 — 从 session 取当前登录的 provider
     let loginMethod: string
     if (user.email === "demo@cookmate.local") {
       loginMethod = "体验演示"
     } else if (session.user.provider) {
       const providerMap: Record<string, string> = {
         google: "Google", github: "GitHub", alipay: "支付宝",
-        "alipay-auth": "支付宝扫码", wechat: "微信",
-        email: "邮箱", phone: "手机号", credentials: "邮箱/手机号",
+        "alipay-auth": "支付宝", wechat: "微信",
+        email: "邮箱验证码", phone: "手机号验证码",
+        password: "邮箱/手机号+密码",
       }
       loginMethod = providerMap[session.user.provider] || session.user.provider
     } else if (user.phone) {
