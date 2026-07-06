@@ -26,9 +26,8 @@ export default function SettingsPage() {
   const [bindLoading, setBindLoading] = useState(false)
   const [bindCountdown, setBindCountdown] = useState(0)
   const [bindError, setBindError] = useState("")
-  const [accountMsg, setAccountMsg] = useState("")
-  const [globalToast, setGlobalToast] = useState("")
-
+    const [accountMsg, setAccountMsg] = useState("")
+    const [globalToast, setGlobalToast] = useState("")
   useEffect(() => {
     Promise.all([
       fetch("/api/settings").then((r) => r.json()),
@@ -278,8 +277,8 @@ const save = async () => {
                                   <span className="text-sm font-medium text-[#2D3436]">
                                     {profile.email || "未绑定"}
                                     {!profile.email && !showBindEmail && (
-                                                          <button onClick={() => { if (profile?.isDemoUser) { setGlobalToast("🔒 体验用户无法绑定，请注册后使用"); setTimeout(() => setGlobalToast(""), 3000); return } setShowBindEmail(true) }} className="text-[#FF6B35] text-xs hover:underline">绑定</button>
-                                    )}
+                                                                                              <button onClick={() => { if (profile?.isDemoUser) { setGlobalToast("🔒 体验用户无法绑定邮箱，请注册后使用"); setTimeout(() => setGlobalToast(""), 3000); return } setShowBindEmail(true) }} className="text-[#FF6B35] text-xs hover:underline">绑定</button>
+                                                                        )}
                                   </span>
                                 </div>
                                 {showBindEmail && (
@@ -456,18 +455,18 @@ const save = async () => {
         </div>
       </div>
 
+      {/* Global toast */}
+      {globalToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#2D3436] text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+          {globalToast}
+        </div>
+      )}
+
       {/* 密码设置 - 已整合到账号信息中 */}
 
       {/* 密码设置 - 已整合到账号信息中 */}
     </div>
   )
-
-  {/* Global toast */}
-  {globalToast && (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#2D3436] text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
-      {globalToast}
-    </div>
-  )}
 }
 
 function PasswordForm({ hasPassword, onClose }: { hasPassword: boolean; onClose: () => void }) {

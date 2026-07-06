@@ -40,6 +40,15 @@ export default function MyRecipesPage() {
 
   const loadRecipes = async () => {
     try {
+      // Check if demo user first — serve hardcoded data immediately
+      const profileRes = await fetch("/api/user/profile")
+      const profile = await profileRes.json()
+      if (profile.isDemoUser) {
+        setIsDemoUser(true)
+        setRecipes(getDemoRecipes())
+        setLoading(false)
+        return
+      }
       const res = await fetch("/api/recipes")
       const data = await res.json()
       if (data.recipes) {
