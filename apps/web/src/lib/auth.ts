@@ -9,6 +9,7 @@ declare module "next-auth" {
       phone: string
       onboardingCompleted: boolean
       provider?: string
+      loginMethod?: string
     } & DefaultSession["user"]
   }
 
@@ -17,6 +18,7 @@ declare module "next-auth" {
     phone: string
     onboardingCompleted: boolean
     provider?: string
+    loginMethod?: string
   }
 }
 
@@ -151,7 +153,7 @@ providers.push(
       const valid = await bcrypt.compare(password, user.passwordHash)
       if (!valid) return null
 
-      return { id: user.id, name: user.name, email: user.email! }
+      return { id: user.id, name: user.name, email: user.email!, loginMethod: isPhone ? "phone" : "email" }
     },
   })
 )
@@ -247,12 +249,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.phone = token.phone as string
         session.user.onboardingCompleted = token.onboardingCompleted as boolean
         session.user.provider = token.provider as string
+        session.user.loginMethod = token.loginMethod as string
       }
       return session
     },
-    async jwt({ token, account }) {
+    async jwt({ token, account, user }) {
       if (account) {
         token.provider = account.provider
+      }
+      if (user) {
+        token.loginMethod = (user as any).loginMethod
       }
       if (token.sub) {
         try {
