@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   // Debug endpoint — 为了处理支付宝动态响应结构，使用宽松类型
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result: Record<string, any> = {
-    private_key_ok: privateKey.includes("[REDACTED PRIVATE KEY]"),
+    private_key_ok: privateKey.includes("BEGIN"),
     app_id: appId ? appId.substring(0, 8) + "..." : "未配置",
   }
 
