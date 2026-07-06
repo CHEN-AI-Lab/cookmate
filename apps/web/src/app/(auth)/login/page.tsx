@@ -1,6 +1,10 @@
+import { auth } from "@/lib/auth"
 import LoginClient from "./login-client"
 
 export default async function LoginPage() {
-  // 不自动跳转，让用户自己选择登录方式
-  return <LoginClient isLoggedIn={false} />
+  const session = await auth()
+  const isLoggedIn = !!session?.user
+  const userName = session?.user?.name || ""
+
+  return <LoginClient isLoggedIn={isLoggedIn} userName={userName} />
 }
