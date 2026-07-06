@@ -43,7 +43,7 @@ export async function GET(req: Request) {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
         body: new URLSearchParams(p).toString(),
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(30000),
       })
     } catch (fetchErr) {
       const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr)
@@ -71,6 +71,7 @@ export async function GET(req: Request) {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
       body: new URLSearchParams(up).toString(),
+      signal: AbortSignal.timeout(30000),
     })
     const userData: AlipayUserInfoResponse = JSON.parse(await uRes.text())
     const profile = userData.alipay_user_info_share_response
