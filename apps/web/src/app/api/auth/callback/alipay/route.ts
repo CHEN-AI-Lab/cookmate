@@ -37,7 +37,7 @@ export async function GET(req: Request) {
       grant_type: "authorization_code", code: authCode,
     }
     p.sign = signParams(p, privateKey)
-    let res: Response
+    let res: Response | null = null
     const maxRetries = 2
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
@@ -58,6 +58,9 @@ export async function GET(req: Request) {
         console.error("[Alipay Callback] Fetch failed after retries:", msg)
         return NextResponse.redirect(new URL("/login?error=alipay_network&detail=" + encodeURIComponent(msg), req.url))
       }
+    }
+    if (!res) {
+      return NextResponse.redirect(new URL("/login?error=alipay_network", req.url))
     }
     const tokenData: AlipayTokenResponse = JSON.parse(await res.text())
     const accessToken = tokenData.alipay_system_oauth_token_response?.access_token
