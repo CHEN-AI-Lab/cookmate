@@ -3,6 +3,15 @@ import { NextResponse } from "next/server"
 import crypto from "node:crypto"
 import { prisma } from "@/lib/prisma"
 
+interface AlipayTokenResponse {
+  alipay_system_oauth_token_response?: { access_token: string; user_id: string }
+  error_response?: { msg: string; sub_msg?: string; code: string }
+}
+interface AlipayUserInfoResponse {
+  alipay_user_info_share_response?: { user_id: string; open_id?: string; userId?: string; nick_name: string; nickName?: string; avatar: string }
+  error_response?: { msg: string; sub_msg?: string }
+}
+
 function signParams(params: Record<string, string>, key: string): string {
   const sorted = Object.keys(params).sort().map(k => k + "=" + params[k]).join("&")
   return crypto.createSign("RSA-SHA256").update(sorted, "utf8").sign(key.replace(/\\n/g, "\n"), "base64")
@@ -33,7 +42,7 @@ export async function GET(req: Request) {
       headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
       body: new URLSearchParams(p).toString(),
     })
-    const tokenData = JSON.parse(await res.text())
+    const tokenData: AlipayTokenResponse = JSON.parse(await res.text())
     const accessToken = tokenData.alipay_system_oauth_token_response?.access_token
     if (!accessToken) {
       const errMsg = tokenData.error_response?.sub_msg || tokenData.error_response?.msg || JSON.stringify(tokenData).substring(0, 200)
@@ -55,7 +64,7 @@ export async function GET(req: Request) {
       headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
       body: new URLSearchParams(up).toString(),
     })
-    const userData = JSON.parse(await uRes.text())
+    const userData: AlipayUserInfoResponse = JSON.parse(await uRes.text())
     const profile = userData.alipay_user_info_share_response
     const alipayUserId = profile?.open_id || profile?.userId || profile?.user_id
     if (!alipayUserId) {
@@ -84,8 +93,9 @@ export async function GET(req: Request) {
     const loginUrl = new URL("/login", req.url)
     loginUrl.searchParams.set("alipay_auth", userId)
     return NextResponse.redirect(loginUrl)
-  } catch (err: any) {
-    console.error("[Alipay Callback] Error:", err.message || err)
+  } catch (err: unknown) {
+    console.error("[Alipay Callback] Error:", err)
+    if (err instanceof Error) console.error("[Alipay Callback]", err.message || err)
     return NextResponse.redirect(new URL("/login?error=alipay_error", req.url))
   }
 }

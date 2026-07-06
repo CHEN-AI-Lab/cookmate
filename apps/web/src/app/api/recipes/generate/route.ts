@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { generateRecipes, normalizeIngredients } from "@/lib/openai"
+import { generateRecipes, normalizeIngredients } from "@cookmate/shared/api/openai"
 import { checkUsageLimit, incrementUsage } from "@/lib/auth-helpers"
 
 // ====== 食材风险管控清单 ======
@@ -92,9 +92,10 @@ export async function POST(req: Request) {
           },
         })
         return NextResponse.json({ recipe: saved })
-      } catch (err: any) {
+      } catch (err: unknown) {
         // P2002 = 同名菜谱已存在，切换收藏
-        if (err?.code === "P2002") {
+        const prismaErr = err as { code?: string; message?: string }
+        if (prismaErr.code === "P2002") {
           const existing = await prisma.recipe.findFirst({
             where: { userId: session.user.id, title: normalizedName },
           })
@@ -142,7 +143,7 @@ export async function POST(req: Request) {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { dietType: true, cuisinePref: true, servingSize: true },
-    }).catch(() => null)
+    }).catch((err: unknown) => { console.error("findUnique user error:", err); return null })
 
     const recipes = await generateRecipes(ingredients, {
       dietType: user?.dietType || undefined,
@@ -170,9 +171,10 @@ export async function POST(req: Request) {
           },
         })
         savedRecipes.push({ ...recipe, id: saved.id })
-      } catch (err: any) {
+      } catch (err: unknown) {
         // P2002 = unique constraint violation（同名菜谱已存在）
-        if (err?.code === "P2002") continue
+        const prismaErr = err as { code?: string }
+        if (prismaErr.code === "P2002") continue
         throw err
       }
     }

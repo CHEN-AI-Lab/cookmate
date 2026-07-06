@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { sign } from "@/lib/payment"
+import { sign } from "@cookmate/shared/api/payment"
 
 // PayJS 支付回调
 // PayJS POST 到 notify_url，返回格式：{return_code: 1, out_trade_no: "...", payjs_order_id: "...", transaction_id: "...", total_fee: 1500, paid_ok: true, sign: "..."}

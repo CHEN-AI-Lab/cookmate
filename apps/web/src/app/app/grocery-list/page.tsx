@@ -53,7 +53,7 @@ export default function GroceryListPage() {
       if (synced) syncedRef.current = new Set(JSON.parse(synced))
       const added = localStorage.getItem("cookmate_grocery_newly_added")
       if (added) newlyAddedRef.current = new Map(Object.entries(JSON.parse(added)))
-    } catch {}
+    } catch (err) { console.error("load grocery checkout state error:", err) }
   }, [])
 
   // 同步单个物品到食材库
@@ -76,7 +76,8 @@ export default function GroceryListPage() {
         setPurchaseNotify({ name, success: true, existing: !!data.alreadyExists })
         setTimeout(() => setPurchaseNotify(null), 2500)
       }
-    } catch {
+    } catch (err) {
+      console.error("sync to pantry error:", err)
       // 失败则恢复标记，允许重试
       syncedRef.current.delete(name)
       newlyAddedRef.current.delete(name)
@@ -93,7 +94,8 @@ export default function GroceryListPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
       })
-    } catch {
+    } catch (err) {
+      console.error("remove from pantry error:", err)
       // 静默
     }
     // 清理标记
@@ -154,10 +156,11 @@ export default function GroceryListPage() {
             setDupDialog(`${trimmed} (${data.error})`)
             setTimeout(() => setDupDialog(null), 3000)
           }
-        }).catch(() => {})
+        }).catch((err) => console.error("parse grocery response error:", err))
       }
     })
-    .catch(() => {
+    .catch((err) => {
+      console.error("add manual item error:", err)
       // 网络失败时用一个简单提示（不阻塞用户）
     })
     setNewItem("")
@@ -174,7 +177,7 @@ export default function GroceryListPage() {
         setManualItems((prev) => prev.filter((i) => i !== name))
       }
     })
-    .catch(() => {})
+    .catch((err) => console.error("remove manual item error:", err))
   }
 
   const loadData = useCallback(() => {
@@ -182,10 +185,11 @@ export default function GroceryListPage() {
       .then((r) => r.json())
       .then((data) => {
         if (data.categories) {
+          const categories = data.categories as Record<string, IngredientItem[]>
           setCategories(
-            Object.entries(data.categories)
-              .filter(([, items]) => (items as any[]).length > 0)
-              .map(([name, items]) => ({ name, items: items as IngredientItem[] }))
+            Object.entries(categories)
+              .filter(([, items]) => items.length > 0)
+              .map(([name, items]) => ({ name, items }))
           )
           setTotal(data.total || 0)
           setInPantryCount(data.inPantryCount || 0)
@@ -195,19 +199,19 @@ export default function GroceryListPage() {
 // 同步勾选状态：从食材库删除了的，自动取消勾选
           setChecked((prev) => {
             const next = new Set(prev)
-            const allItems: any[] = Object.values(data.categories).flat()
+            const allItems = Object.values(categories).flat()
             const checkedButGone = new Set<string>()
             
             // 清理 checked 中已不在食材库的
             for (const name of next) {
               if (manualItems.includes(name)) continue
-              const inData = allItems.find((i: any) => i.name === name) as any
+              const inData = allItems.find((i) => i.name === name)
               if (!inData || !inData.inPantry) checkedButGone.add(name)
             }
             
             // 清理 syncedRef 中已不在食材库的（即使没勾选，防止残留阻塞重新勾选）
             for (const name of syncedRef.current) {
-              const inData = allItems.find((i: any) => i.name === name) as any
+              const inData = allItems.find((i) => i.name === name)
               if (!inData || !inData.inPantry) {
                 next.delete(name)
                 checkedButGone.add(name)
@@ -228,7 +232,7 @@ export default function GroceryListPage() {
           })
         }
       })
-      .catch(() => {})
+      .catch((err) => console.error("load grocery list error:", err))
       .finally(() => setLoading(false))
   }, [days])
 

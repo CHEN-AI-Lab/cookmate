@@ -56,7 +56,7 @@ export default function PantryPage() {
       const res = await fetch("/api/pantry")
       const data = await res.json()
       if (data.items) setItems(data.items)
-    } catch {} finally {
+    } catch (err) { console.error("load items error:", err) } finally {
       setLoading(false)
     }
   }, [])
@@ -85,7 +85,7 @@ export default function PantryPage() {
         const data = await res.json()
         setItems((prev) => [data.item, ...prev])
       } else {
-        const data = await res.json().catch(() => ({}))
+        const data = await res.json().catch((err) => { console.error("parse pantry response error:", err); return {} })
         if (data.error?.includes("已存在")) {
           setDupDialog(trimmed)
           setTimeout(() => setDupDialog(null), 2500)
@@ -94,7 +94,8 @@ export default function PantryPage() {
           setTimeout(() => setError(null), 2500)
         }
       }
-    } catch {
+    } catch (err) {
+      console.error("add item error:", err)
       setError("网络错误，请稍后重试")
       setTimeout(() => setError(null), 2500)
     }
@@ -111,7 +112,7 @@ export default function PantryPage() {
         next.delete(id)
         return next
       })
-    } catch {}
+    } catch (err) { console.error("remove item error:", err) }
   }
 
   const filtered = items.filter((i) => !search || i.name.includes(search))

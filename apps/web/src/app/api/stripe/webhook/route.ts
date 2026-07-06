@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getStripe } from "@/lib/stripe"
+import { getStripe } from "@cookmate/shared/api/stripe"
 import { prisma } from "@/lib/prisma"
 
 export async function POST(req: Request) {
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
               stripeCustomerId: session.customer as string || undefined,
             },
           })
-          console.log(`User ${userId} upgraded to ${tier}`)
+          console.error(`User ${userId} upgraded to ${tier}`)
         }
         break
       }
@@ -75,13 +75,12 @@ export async function POST(req: Request) {
             stripeSubscriptionId: null,
           },
         })
-        console.log(`User (customer ${customerId}) reverted to FREE`)
+        console.error(`User (customer ${customerId}) reverted to FREE`)
         break
       }
 
       case "invoice.paid": {
         // 支付成功 — 可额外记录
-        console.log("Invoice paid:", event.data.object.id)
         break
       }
 
@@ -94,10 +93,10 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ received: true })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Stripe webhook error:", error)
     return NextResponse.json(
-      { error: error?.message || "Webhook processing failed" },
+      { error: (error instanceof Error ? error.message : String(error)) || "Webhook processing failed" },
       { status: 400 }
     )
   }

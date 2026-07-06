@@ -31,8 +31,8 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * pageSize,
         take: pageSize,
-      }).catch(() => []),
-      prisma.recipe.count({ where }).catch(() => 0),
+      }).catch((err: unknown) => { console.error("findMany recipes error:", err); return [] }),
+      prisma.recipe.count({ where }).catch((err: unknown) => { console.error("count recipes error:", err); return 0 }),
     ])
 
     return NextResponse.json({ recipes, total, page, pageSize })
@@ -49,7 +49,8 @@ export async function DELETE(req: NextRequest) {
     let body: { ids?: string[] } = {}
     try {
       body = await req.json()
-    } catch {
+    } catch (err) {
+      console.error("parse request body error:", err)
       return NextResponse.json({ error: "请提供要删除的菜谱 ID 列表" }, { status: 400 })
     }
 

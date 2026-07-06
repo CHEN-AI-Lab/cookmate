@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { getStripe } from "@/lib/stripe"
+import { getStripe } from "@cookmate/shared/api/stripe"
 import { prisma } from "@/lib/prisma"
 
 export async function POST() {
@@ -36,10 +36,10 @@ export async function POST() {
     })
 
     return NextResponse.json({ url: portal.url })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Stripe portal error:", error)
     return NextResponse.json(
-      { error: error?.message || "创建管理页面失败" },
+      { error: (error instanceof Error ? error.message : String(error)) || "创建管理页面失败" },
       { status: 500 }
     )
   }

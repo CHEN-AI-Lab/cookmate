@@ -18,7 +18,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ hasPassword: !!user.passwordHash, userExists: true })
-  } catch {
+  } catch (err) {
+    console.error("check password error:", err)
     return NextResponse.json({ error: "查询失败" }, { status: 500 })
   }
 }

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { generateWeeklyPlan, normalizeIngredients } from "@/lib/openai"
+import { generateWeeklyPlan, normalizeIngredients } from "@cookmate/shared/api/openai"
 import { checkUsageLimit, incrementUsage } from "@/lib/auth-helpers"
+import type { User } from "@prisma/client"
 
 export async function GET() {
   try {
@@ -21,7 +22,7 @@ export async function GET() {
       where: { userId: session.user.id, weekStart: { gte: monday, lte: sunday } },
       include: { slots: { include: { recipe: true } } },
       orderBy: { weekStart: "asc" },
-    }).catch(() => [])
+    }).catch((err: unknown) => { console.error("findMany meal plans error:", err); return [] })
 
     return NextResponse.json({ plans, weekStart: monday.toISOString() })
   } catch (error) {
@@ -38,13 +39,21 @@ export async function POST() {
     const userId = session.user.id
 
     // 用户数据 - 无数据库时使用默认值
-    let user: any = null
+    interface MealPlanUser {
+      subscriptionTier: string
+      subscriptionExpiryDate: Date | null
+      dietType: string | null
+      cuisinePref: string | null
+      servingSize: number | null
+    }
+    let user: MealPlanUser | null = null
     let pantryNames: string[] = []
     try {
-      user = await prisma.user.findUnique({ where: { id: userId } })
+      user = await prisma.user.findUnique({ where: { id: userId } }) as MealPlanUser | null
       const pantryItems = await prisma.pantryItem.findMany({ where: { userId }, select: { name: true } })
       pantryNames = pantryItems.map((i) => i.name)
-    } catch {
+    } catch (err) {
+      console.error("fetch user/pantry data error:", err)
       // 无数据库 - 使用默认值
     }
 
@@ -53,7 +62,7 @@ export async function POST() {
     if (!isDev) {
       const isMock = !(process.env.AI_API_KEY || process.env.OPENAI_API_KEY)
       if (!isMock) {
-        const canGenerate = await checkUsageLimit(userId).catch(() => true)
+        const canGenerate = await checkUsageLimit(userId).catch((err: unknown) => { console.error("check usage limit error:", err); return true })
         if (!canGenerate) {
           return NextResponse.json({ error: "今日次数已用完，明天再来吧" }, { status: 429 })
         }
@@ -75,7 +84,7 @@ export async function POST() {
     monday.setHours(0, 0, 0, 0)
 
     // 保存到数据库（失败不影响返回结果）
-    let mealPlan = null
+    let mealPlan: Record<string, unknown> | null = null
     try {
       await prisma.mealSlot.deleteMany({ where: { mealPlan: { userId: userId, weekStart: monday } } })
 
@@ -111,8 +120,9 @@ export async function POST() {
             },
           })
           recipeId = created.id
-        } catch (err: any) {
-          if (err?.code === "P2002") {
+        } catch (err: unknown) {
+          const prismaErr = err as { code?: string }
+          if (prismaErr.code === "P2002") {
             const existing = await prisma.recipe.findFirst({ where: { userId, title: recipe.title } })
             if (existing) { recipeId = existing.id } else { throw err }
           } else { throw err }
@@ -126,7 +136,7 @@ export async function POST() {
       })
 
       // 消耗一次使用次数
-      if (!isDev) { await incrementUsage(userId).catch(() => {}) }
+      if (!isDev) { await incrementUsage(userId).catch((err: unknown) => { console.error("increment usage error:", err) }) }
     } catch (err) {
       console.error("Failed to save meal plan to DB (returning generated data only):", err)
       // 把 weekPlan 转成前端可展示的格式
@@ -150,7 +160,7 @@ export async function POST() {
           } : null,
         }))
       )
-      mealPlan = { id: "demo-plan", weekStart: monday.toISOString(), slots } as any
+      mealPlan = { id: "demo-plan", weekStart: monday.toISOString(), slots }
     }
 
     return NextResponse.json({ plan: mealPlan, generated: weekPlan })
