@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import Link from "next/link"
+import { getDemoGroceryList } from "@cookmate/shared/demo-data"
 
 interface IngredientItem {
   name: string
@@ -41,6 +42,10 @@ export default function GroceryListPage() {
 
   // 同步状态通知
   const [purchaseNotify, setPurchaseNotify] = useState<{ name: string; success: boolean; existing: boolean } | null>(null)
+
+  // Demo user state
+  const [isDemoUser, setIsDemoUser] = useState(false)
+  const demoLoadedRef = useRef(false)
 
   // 从 localStorage 加载勾选状态
   useEffect(() => {
@@ -181,6 +186,7 @@ export default function GroceryListPage() {
   }
 
   const loadData = useCallback(() => {
+    if (demoLoadedRef.current) return
     fetch(`/api/grocery-list?days=${days}`)
       .then((r) => r.json())
       .then((data) => {
@@ -237,6 +243,27 @@ export default function GroceryListPage() {
   }, [days])
 
   useEffect(() => { loadData() }, [days])
+
+  // Check demo user status and pre-fill demo data if needed
+  useEffect(() => {
+    fetch("/api/user/profile")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.isDemoUser) {
+          setIsDemoUser(true)
+          // If no real data loaded yet, set demo data after a short delay
+          setTimeout(() => {
+            setCategories((prev) => prev.length > 0 ? prev : getDemoGroceryList().categories)
+            setTotal((prev) => prev > 0 ? prev : getDemoGroceryList().total)
+            setInPantryCount((prev) => prev > 0 ? prev : getDemoGroceryList().inPantryCount)
+            setStapleItems((prev) => prev.length > 0 ? prev : getDemoGroceryList().stapleItems)
+            setManualItems((prev) => prev.length > 0 ? prev : [])
+            demoLoadedRef.current = true
+          }, 500)
+        }
+      })
+      .catch((err) => console.error("load profile error:", err))
+  }, [])
 
   // 页面获得焦点时刷新数据（从食材库删除食材后切回来更新已有状态）
   useEffect(() => {
@@ -368,6 +395,7 @@ export default function GroceryListPage() {
       )}
 
       {/* 手动添加输入框 */}
+      {!isDemoUser && (
       <div className="mt-6 bg-white rounded-xl border border-gray-200 p-3">
         <div className="flex gap-2">
           <input
@@ -386,6 +414,7 @@ export default function GroceryListPage() {
           </button>
         </div>
       </div>
+      )}
 
       {/* 添加到食材库通知 */}
       {purchaseNotify && (

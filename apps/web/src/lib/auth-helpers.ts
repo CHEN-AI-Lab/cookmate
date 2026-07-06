@@ -1,6 +1,14 @@
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
+export function isDemoUser(session: unknown): boolean {
+  if (!session || typeof session !== "object") return false
+  const s = session as { user?: { id?: unknown; email?: unknown } }
+  const uid = s.user?.id
+  const email = s.user?.email
+  return uid === "demo-user-id" || email === "demo@cookmate.local"
+}
+
 export async function getCurrentUser() {
   const session = await auth()
   if (!session?.user?.id) return null

@@ -23,7 +23,7 @@ export async function GET(req: Request) {
   if (!authCode) return NextResponse.redirect(new URL("/login?error=no_code", req.url))
 
   const appId = process.env.AUTH_ALIPAY_ID
-  const privateKey = process.env.AUTH_ALIPAY_SECRET || ""
+  const privateKey = process.env.AUTH_ALIPAY_PRIVATE_KEY || ""
   if (!appId || !privateKey) return NextResponse.redirect(new URL("/login?error=alipay_not_configured", req.url))
 
   try {

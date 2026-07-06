@@ -181,12 +181,12 @@ if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
 }
 
 // 支付宝登录 — 仅当配置了凭证时才启用
-if (process.env.AUTH_ALIPAY_ID && process.env.AUTH_ALIPAY_SECRET) {
+if (process.env.AUTH_ALIPAY_ID && process.env.AUTH_ALIPAY_PRIVATE_KEY) {
   providers.push(
     AlipayProvider({
       clientId: process.env.AUTH_ALIPAY_ID,
-      clientSecret: process.env.AUTH_ALIPAY_SECRET,
-      alipayPublicKey: process.env.ALIPAY_PUBLIC_KEY || "",
+      clientSecret: process.env.AUTH_ALIPAY_PRIVATE_KEY,
+      alipayPublicKey: process.env.AUTH_ALIPAY_PUBLIC_KEY || "",
     })
   )
 }

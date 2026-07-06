@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { isPaymentConfigured } from "@cookmate/shared/api/payment"
 import { isAlipayConfigured } from "@cookmate/shared/api/alipay-pay"
+import { isDemoUser } from "@/lib/auth-helpers"
 
 // 检查订阅是否过期，过期自动降级
 async function checkSubscription(userId: string, user: { subscriptionTier: string; subscriptionExpiryDate: Date | null } | null): Promise<string> {
@@ -55,7 +55,8 @@ export async function GET() {
       subscriptionTier: tier,
       subscriptionExpiryDate: user?.subscriptionExpiryDate?.toISOString() ?? null,
       stripeConfigured: !!(process.env.STRIPE_SECRET_KEY && process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY),
-      paymentConfigured: isPaymentConfigured() || isAlipayConfigured(),
+      paymentConfigured: isAlipayConfigured(),
+      isDemoUser: isDemoUser(session),
     })
   } catch (error) {
     console.error("Dashboard GET:", error)

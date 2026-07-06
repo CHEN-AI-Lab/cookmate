@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { MealPlanGrid } from "@/components/features/MealPlanGrid"
 import { MealPlanDetailModal } from "@/components/features/MealPlanDetailModal"
-
+import { getDemoMealPlan } from "@cookmate/shared/demo-data"
 interface Recipe {
   id?: string
   title: string
@@ -42,6 +42,7 @@ export default function MealPlanPage() {
   const [error, setError] = useState("")
   const [detail, setDetail] = useState<{ day: number; meal: string } | null>(null)
   const [starToast, setStarToast] = useState("")
+  const [isDemoUser, setIsDemoUser] = useState(false)
 
   const loadPlan = useCallback(async () => {
     try {
@@ -54,6 +55,22 @@ export default function MealPlanPage() {
   }, [])
 
   useEffect(() => { loadPlan() }, [loadPlan])
+
+  // Check demo user status and pre-fill demo data if needed
+  useEffect(() => {
+    fetch("/api/user/profile")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.isDemoUser) {
+          setIsDemoUser(true)
+          // If no real plan loaded yet, set demo data after a short delay
+          setTimeout(() => {
+            setPlan((prev) => prev || getDemoMealPlan())
+          }, 500)
+        }
+      })
+      .catch((err) => console.error("load profile error:", err))
+  }, [])
 
   const generatePlan = async () => {
     setGenerating(true)
@@ -79,6 +96,11 @@ export default function MealPlanPage() {
 
   const deleteSlot = async () => {
     if (!detail || !plan) return
+    if (isDemoUser) {
+      setStarToast("🔒 体验用户无法删除，请注册后使用")
+      setTimeout(() => setStarToast(""), 2500)
+      return
+    }
     const slot = getSlot(detail.day, detail.meal)
     if (!slot) return
 
@@ -141,10 +163,10 @@ export default function MealPlanPage() {
         <h1 className="text-2xl font-bold text-[#2D3436]">📅 本周计划</h1>
         <button
           onClick={generatePlan}
-          disabled={generating}
+          disabled={generating || isDemoUser}
           className="bg-[#FF6B35] text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 disabled:opacity-50"
         >
-          {generating ? "🤖 生成中..." : "🤖 AI 生成整周计划"}
+          {generating ? "🤖 生成中..." : isDemoUser ? "🔒 注册后可生成" : "🤖 AI 生成整周计划"}
         </button>
       </div>
 

@@ -1,5 +1,5 @@
 // 支付宝电脑网站支付集成
-// 配置见 .env: ALIPAY_APP_ID, ALIPAY_PRIVATE_KEY, ALIPAY_PUBLIC_KEY
+// 配置见 .env: ALIPAY_APP_ID, AUTH_ALIPAY_PRIVATE_KEY, AUTH_ALIPAY_PUBLIC_KEY
 
 import crypto from "node:crypto"
 
@@ -42,7 +42,7 @@ export async function createPagePay(
   returnUrl: string,
 ): Promise<string> {
   const appId = process.env.AUTH_ALIPAY_ID
-  const privateKey = process.env.AUTH_ALIPAY_SECRET || ""
+  const privateKey = process.env.AUTH_ALIPAY_PRIVATE_KEY || ""
 
   if (!appId) throw new Error("AUTH_ALIPAY_ID 未配置")
 
@@ -76,7 +76,7 @@ export async function createPagePay(
 // 查询订单状态
 export async function queryOrder(outTradeNo: string): Promise<{ paid: boolean; tradeNo?: string }> {
   const appId = process.env.AUTH_ALIPAY_ID
-  const privateKey = process.env.AUTH_ALIPAY_SECRET || ""
+  const privateKey = process.env.AUTH_ALIPAY_PRIVATE_KEY || ""
 
   if (!appId) throw new Error("AUTH_ALIPAY_ID 未配置")
 
@@ -118,5 +118,5 @@ export async function queryOrder(outTradeNo: string): Promise<{ paid: boolean; t
 
 // 检查支付配置是否完整
 export function isAlipayConfigured(): boolean {
-  return !!(process.env.AUTH_ALIPAY_ID && process.env.AUTH_ALIPAY_SECRET)
+  return !!(process.env.AUTH_ALIPAY_ID && process.env.AUTH_ALIPAY_PRIVATE_KEY)
 }

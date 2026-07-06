@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     }
 
     // 验证签名
-    const publicKey = process.env.ALIPAY_PUBLIC_KEY || ""
+    const publicKey = process.env.AUTH_ALIPAY_PUBLIC_KEY || ""
     if (publicKey && !verifyNotify(params, publicKey)) {
       console.error("Alipay notify: signature verification failed")
       return new NextResponse("failure", { status: 400 })

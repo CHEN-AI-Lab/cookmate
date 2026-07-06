@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { isDemoUser } from "@/lib/auth-helpers"
 
 export async function GET() {
   try {
@@ -47,6 +48,7 @@ const user = await prisma.user.findUnique({
       subscriptionTier: user.subscriptionTier,
       hasPassword: !!user.passwordHash,
       subscriptionExpiryDate: user.subscriptionExpiryDate?.toISOString() || null,
+      isDemoUser: isDemoUser(session),
     })
   } catch (error) {
     console.error("Profile GET:", error)
@@ -58,6 +60,7 @@ export async function PUT(req: Request) {
   try {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+    if (isDemoUser(session)) return NextResponse.json({ error: "体验用户不支持修改资料，请注册后使用" }, { status: 403 })
 
     const { name, phone, email, password } = await req.json()
 

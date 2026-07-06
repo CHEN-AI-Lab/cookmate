@@ -2,12 +2,14 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { getStripe } from "@cookmate/shared/api/stripe"
 import { prisma } from "@/lib/prisma"
+import { isDemoUser } from "@/lib/auth-helpers"
 
 export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 })
   }
+  if (isDemoUser(session)) return NextResponse.json({ error: "体验用户不支持付费，请注册后使用" }, { status: 403 })
 
   const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY
   const STRIPE_PRO_PRICE_ID = process.env.STRIPE_PRO_PRICE_ID

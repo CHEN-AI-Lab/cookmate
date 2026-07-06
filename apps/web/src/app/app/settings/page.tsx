@@ -7,7 +7,7 @@ import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from "@cookmate/s
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState({ dietType: "不限", cuisinePref: [] as string[], servingSize: 2, subscriptionTier: "FREE" })
-  const [profile, setProfile] = useState<{ name: string; phone: string; email: string; loginMethod: string; createdAt: string; hasPassword?: boolean } | null>(null)
+  const [profile, setProfile] = useState<{ name: string; phone: string; email: string; loginMethod: string; createdAt: string; hasPassword?: boolean; isDemoUser?: boolean } | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [showSaved, setShowSaved] = useState(false)
@@ -43,7 +43,7 @@ export default function SettingsPage() {
           })
         }
         if (profileData.name !== undefined) {
-          setProfile({ ...profileData, hasPassword: profileData.hasPassword })
+          setProfile({ ...profileData, hasPassword: profileData.hasPassword, isDemoUser: !!profileData.isDemoUser })
         }
       })
       .catch((err) => console.error("load settings error:", err))
@@ -140,6 +140,22 @@ const save = async () => {
     <div>
       <h1 className="text-2xl font-bold text-[#2D3436] mb-6">⚙️ 设置</h1>
 
+      {profile?.isDemoUser && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 text-center">
+          <p className="font-semibold text-amber-800 mb-1">🔒 体验模式</p>
+          <p className="text-sm text-amber-700 mb-3">
+            体验用户无法修改个人资料和设置。<br />
+            注册账号后即可自定义用户名、绑定手机/邮箱、设置密码。
+          </p>
+          <Link
+            href="/register"
+            className="inline-block bg-[#FF6B35] text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-all"
+          >
+            免费注册
+          </Link>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {/* 左栏：账号信息 + 套餐 */}
         <div className="h-full">
@@ -167,7 +183,7 @@ const save = async () => {
                                 ) : (
                                   <>
                                     {profile.name || "未设置"}
-                                    <button onClick={() => { setEditNameValue(profile.name || ""); setEditingName(true) }} className="ml-2 text-[#FF6B35] text-xs hover:underline">修改</button>
+                                    <button onClick={() => { setEditNameValue(profile.name || ""); setEditingName(true) }} disabled={profile?.isDemoUser} className="ml-2 text-[#FF6B35] text-xs hover:underline disabled:text-gray-300 disabled:cursor-not-allowed">修改</button>
                                   </>
                                 )}
                               </span>
@@ -183,7 +199,8 @@ const save = async () => {
                     {!profile.phone && (
                       <button
                         onClick={() => setShowBindPhone(!showBindPhone)}
-                        className="ml-2 text-[#FF6B35] text-xs hover:underline"
+                        disabled={profile?.isDemoUser}
+                        className="ml-2 text-[#FF6B35] text-xs hover:underline disabled:text-gray-300 disabled:cursor-not-allowed"
                       >
                         绑定
                       </button>
@@ -254,7 +271,7 @@ const save = async () => {
                                   <span className="text-sm font-medium text-[#2D3436]">
                                     {profile.email || "未绑定"}
                                     {!profile.email && !showBindEmail && (
-                                      <button onClick={() => setShowBindEmail(true)} className="ml-2 text-[#FF6B35] text-xs hover:underline">绑定</button>
+                                                          <button onClick={() => setShowBindEmail(true)} disabled={profile?.isDemoUser} className="text-[#FF6B35] text-xs hover:underline disabled:text-gray-300 disabled:cursor-not-allowed">绑定</button>
                                     )}
                                   </span>
                                 </div>
@@ -284,8 +301,9 @@ const save = async () => {
                   <span className="text-sm font-medium text-[#2D3436]">
                     {profile.hasPassword ? "已设置" : "未设置"}
                     <button
-                      onClick={() => setShowPasswordForm(!showPasswordForm)}
-                      className="ml-2 text-[#FF6B35] text-xs hover:underline"
+                      onClick={() => { if (profile?.isDemoUser) return; setShowPasswordForm(!showPasswordForm) }}
+                      className="ml-2 text-[#FF6B35] text-xs hover:underline disabled:text-gray-300"
+                      disabled={profile?.isDemoUser}
                     >
                       {profile.hasPassword ? "修改" : "设置"}
                     </button>
@@ -403,7 +421,7 @@ const save = async () => {
           <div className="flex items-center gap-3 mt-6">
             <button
               onClick={save}
-              disabled={saving || settings.cuisinePref.length === 0}
+              disabled={saving || settings.cuisinePref.length === 0 || profile?.isDemoUser}
               className="bg-[#FF6B35] text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all"
             >
               {saving ? "保存中..." : "保存设置"}

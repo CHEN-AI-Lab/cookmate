@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { isDemoUser } from "@/lib/auth-helpers"
 
 export async function POST(req: Request) {
   try {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+    if (isDemoUser(session)) return NextResponse.json({ error: "体验用户不支持绑定邮箱，请注册后使用" }, { status: 403 })
 
     const { email } = await req.json()
 
@@ -76,6 +78,7 @@ export async function PUT(req: Request) {
   try {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+    if (isDemoUser(session)) return NextResponse.json({ error: "体验用户不支持绑定邮箱，请注册后使用" }, { status: 403 })
 
     const { email, code } = await req.json()
     if (!email || !code) return NextResponse.json({ error: "参数不完整" }, { status: 400 })
