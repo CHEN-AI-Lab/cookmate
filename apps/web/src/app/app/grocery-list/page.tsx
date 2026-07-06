@@ -45,7 +45,9 @@ export default function GroceryListPage() {
 
   // Demo user state
   const [isDemoUser, setIsDemoUser] = useState(false)
-  const demoLoadedRef = useRef(false)
+  const demoRef = useRef(false)
+  // Demo toast notification
+  const [demoToast, setDemoToast] = useState("")
 
   // 从 localStorage 加载勾选状态
   useEffect(() => {
@@ -111,6 +113,11 @@ export default function GroceryListPage() {
   }
 
   const toggleCheck = (name: string) => {
+    if (isDemoUser) {
+      setDemoToast("🔒 体验用户无法操作，请注册后使用")
+      setTimeout(() => setDemoToast(""), 3000)
+      return
+    }
     setChecked((prev) => {
       const next = new Set(prev)
       if (next.has(name)) {
@@ -186,7 +193,7 @@ export default function GroceryListPage() {
   }
 
   const loadData = useCallback(() => {
-    if (demoLoadedRef.current) return
+    if (demoRef.current) return
     fetch(`/api/grocery-list?days=${days}`)
       .then((r) => r.json())
       .then((data) => {
@@ -251,15 +258,13 @@ export default function GroceryListPage() {
       .then((data) => {
         if (data.isDemoUser) {
           setIsDemoUser(true)
-          // If no real data loaded yet, set demo data after a short delay
-          setTimeout(() => {
-            setCategories((prev) => prev.length > 0 ? prev : getDemoGroceryList().categories)
-            setTotal((prev) => prev > 0 ? prev : getDemoGroceryList().total)
-            setInPantryCount((prev) => prev > 0 ? prev : getDemoGroceryList().inPantryCount)
-            setStapleItems((prev) => prev.length > 0 ? prev : getDemoGroceryList().stapleItems)
-            setManualItems((prev) => prev.length > 0 ? prev : [])
-            demoLoadedRef.current = true
-          }, 500)
+          // If no real data loaded yet, set demo data
+          setCategories((prev) => prev.length > 0 ? prev : getDemoGroceryList().categories)
+          setTotal((prev) => prev > 0 ? prev : getDemoGroceryList().total)
+          setInPantryCount((prev) => prev > 0 ? prev : getDemoGroceryList().inPantryCount)
+          setStapleItems((prev) => prev.length > 0 ? prev : getDemoGroceryList().stapleItems)
+          setManualItems((prev) => prev.length > 0 ? prev : [])
+          demoRef.current = true
         }
       })
       .catch((err) => console.error("load profile error:", err))
@@ -475,6 +480,13 @@ export default function GroceryListPage() {
             <span className="text-amber-500 text-base shrink-0">⚠️</span>
             <span className="text-gray-700">「{dupDialog}」已在购物清单中</span>
           </div>
+        </div>
+      )}
+
+      {/* Demo user toast */}
+      {demoToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#2D3436] text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+          {demoToast}
         </div>
       )}
     </div>

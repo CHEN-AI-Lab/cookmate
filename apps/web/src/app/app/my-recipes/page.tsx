@@ -337,7 +337,7 @@ export default function MyRecipesPage() {
                     >
                       {recipe.starred ? "⭐" : "☆"}
                     </button>
-                    {!isSelectMode && !isDemoUser && (
+                    {!isSelectMode && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setDeleteDialog([recipe]) }}
                         className="text-gray-300 hover:text-red-500 transition-colors"

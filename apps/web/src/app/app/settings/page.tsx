@@ -420,8 +420,15 @@ const save = async () => {
           </div>
           <div className="flex items-center gap-3 mt-6">
             <button
-              onClick={save}
-              disabled={saving || settings.cuisinePref.length === 0 || profile?.isDemoUser}
+              onClick={() => {
+                if (profile?.isDemoUser) {
+                  setAccountMsg("🔒 体验用户无法保存设置，请注册后使用")
+                  setTimeout(() => setAccountMsg(""), 3000)
+                  return
+                }
+                save()
+              }}
+              disabled={saving || settings.cuisinePref.length === 0}
               className="bg-[#FF6B35] text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all"
             >
               {saving ? "保存中..." : "保存设置"}

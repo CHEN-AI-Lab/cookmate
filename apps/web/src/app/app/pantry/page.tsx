@@ -47,6 +47,7 @@ export default function PantryPage() {
   const [error, setError] = useState<string | null>(null)
   const [dupDialog, setDupDialog] = useState<string | null>(null)
   const [isDemoUser, setIsDemoUser] = useState(false)
+  const [demoToast, setDemoToast] = useState("")
 
   const toggleSelect = (id: string) => {
     const next = new Set(selected)
@@ -192,6 +193,11 @@ export default function PantryPage() {
         <div className="mb-4 flex items-center justify-between bg-gradient-to-r from-orange-400 to-amber-400 text-white px-4 py-2.5 rounded-xl">
           <button
             onClick={() => {
+              if (isDemoUser) {
+                setDemoToast("🔒 体验用户无法使用，请注册后使用")
+                setTimeout(() => setDemoToast(""), 3000)
+                return
+              }
               const names = [...selected].map((id) => items.find((i) => i.id === id)?.name).filter(Boolean).join(",")
               router.push(`/app/recipes?ingredients=${encodeURIComponent(names)}`)
             }}
@@ -314,6 +320,13 @@ export default function PantryPage() {
             <span className="text-amber-500 text-base shrink-0">⚠️</span>
             <span className="text-gray-700">「{dupDialog}」已在食材库中</span>
           </div>
+        </div>
+      )}
+
+      {/* Demo user toast */}
+      {demoToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#2D3436] text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+          {demoToast}
         </div>
       )}
     </div>

@@ -47,6 +47,9 @@ export default function RecipesPage() {
   // 食材库相关
   const [pantryItems, setPantryItems] = useState<PantryItem[]>([])
   const [pantryLoaded, setPantryLoaded] = useState(false)
+  // Demo user
+  const [isDemoUser, setIsDemoUser] = useState(false)
+  const [demoToast, setDemoToast] = useState("")
 
   // 加载已收藏的菜谱
   useEffect(() => {
@@ -105,6 +108,16 @@ export default function RecipesPage() {
       })
       .catch((err) => console.error("load pantry error:", err))
       .finally(() => setPantryLoaded(true))
+  }, [])
+
+  // Demo user detection
+  useEffect(() => {
+    fetch("/api/user/profile")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.isDemoUser) setIsDemoUser(true)
+      })
+      .catch((err) => console.error("load profile error:", err))
   }, [])
 
   const addToPlan = async (recipe: Recipe) => {
@@ -218,6 +231,11 @@ export default function RecipesPage() {
   const isFromPantry = (name: string) => pantryItems.some((i) => i.name.toLowerCase() === name.toLowerCase())
 
   const generateRecipes = async () => {
+    if (isDemoUser) {
+      setDemoToast("🔒 体验用户无法生成菜谱，请注册后使用")
+      setTimeout(() => setDemoToast(""), 3000)
+      return
+    }
     if (ingredients.length === 0) {
       setError("请至少添加一种食材")
       return
@@ -498,6 +516,13 @@ export default function RecipesPage() {
       {starToast && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-[#2D3436] text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
           {starToast}
+        </div>
+      )}
+
+      {/* Demo user toast */}
+      {demoToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#2D3436] text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+          {demoToast}
         </div>
       )}
     </div>
