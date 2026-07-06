@@ -37,11 +37,19 @@ export async function GET(req: Request) {
       grant_type: "authorization_code", code: authCode,
     }
     p.sign = signParams(p, privateKey)
-    const res = await fetch("https://openapi.alipay.com/gateway.do", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
-      body: new URLSearchParams(p).toString(),
-    })
+    let res: Response
+    try {
+      res = await fetch("https://openapi.alipay.com/gateway.do", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
+        body: new URLSearchParams(p).toString(),
+        signal: AbortSignal.timeout(10000),
+      })
+    } catch (fetchErr) {
+      const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr)
+      console.error("[Alipay Callback] Fetch failed:", msg)
+      return NextResponse.redirect(new URL("/login?error=alipay_network&detail=" + encodeURIComponent(msg), req.url))
+    }
     const tokenData: AlipayTokenResponse = JSON.parse(await res.text())
     const accessToken = tokenData.alipay_system_oauth_token_response?.access_token
     if (!accessToken) {
