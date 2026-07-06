@@ -2,7 +2,9 @@
 // 文档: https://docs.creem.io
 // 环境变量: CREEM_API_KEY, CREEM_PRODUCT_ID, CREEM_WEBHOOK_SECRET
 
-import crypto from "node:crypto"
+import type crypto from "node:crypto"
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const nodeCrypto = require("node:crypto") as typeof crypto
 
 const CREEM_API = "https://api.creem.io/v1"
 
@@ -12,7 +14,7 @@ function getHeaders(): Record<string, string> {
   return {
     "Content-Type": "application/json",
     "Accept": "application/json",
-    "Authorization": `Bearer ${apiKey}`,
+    "x-api-key": apiKey,
   }
 }
 
@@ -26,14 +28,17 @@ export async function createCheckout(params: {
   const productId = params.productId || process.env.CREEM_PRODUCT_ID
   if (!productId) throw new Error("CREEM_PRODUCT_ID 未配置")
 
-  const body = {
+  const body: Record<string, unknown> = {
     product_id: productId,
     success_url: params.successUrl,
     cancel_url: params.cancelUrl,
-    metadata: params.metadata || {},
   }
 
-  const res = await fetch(`${CREEM_API}/checkout`, {
+  if (params.metadata && Object.keys(params.metadata).length > 0) {
+    body.request_metadata = params.metadata
+  }
+
+  const res = await fetch(`${CREEM_API}/checkouts`, {
     method: "POST",
     headers: getHeaders(),
     body: JSON.stringify(body),
@@ -56,12 +61,12 @@ export function verifyWebhook(payload: string, signature: string): boolean {
   const secret = process.env.CREEM_WEBHOOK_SECRET
   if (!secret) return false
 
-  const expected = crypto
+  const expected = nodeCrypto
     .createHmac("sha256", secret)
     .update(payload)
     .digest("hex")
 
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+  return nodeCrypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
 }
 
 // 检查支付配置是否完整
