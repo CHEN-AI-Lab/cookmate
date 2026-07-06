@@ -137,11 +137,6 @@ export default function BillingPage() {
           {message}
         </div>
       )}
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
-          {error}
-        </div>
-      )}
 
       {/* Current plan card */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
@@ -225,6 +220,13 @@ export default function BillingPage() {
       {isFree && !info?.isDemoUser && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <h3 className="font-bold text-gray-900 mb-4">支付方式</h3>
+
+          {/* 错误提示 */}
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+              {error}
+            </div>
+          )}
 
           {/* 国内支付 */}
           <div className="mb-6">
