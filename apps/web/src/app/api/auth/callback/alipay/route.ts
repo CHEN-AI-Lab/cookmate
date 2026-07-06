@@ -38,17 +38,26 @@ export async function GET(req: Request) {
     }
     p.sign = signParams(p, privateKey)
     let res: Response
-    try {
-      res = await fetch("https://openapi.alipay.com/gateway.do", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
-        body: new URLSearchParams(p).toString(),
-        signal: AbortSignal.timeout(30000),
-      })
-    } catch (fetchErr) {
-      const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr)
-      console.error("[Alipay Callback] Fetch failed:", msg)
-      return NextResponse.redirect(new URL("/login?error=alipay_network&detail=" + encodeURIComponent(msg), req.url))
+    const maxRetries = 2
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        res = await fetch("https://openapi.alipay.com/gateway.do", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
+          body: new URLSearchParams(p).toString(),
+          signal: AbortSignal.timeout(30000),
+        })
+        break
+      } catch (fetchErr) {
+        if (attempt < maxRetries) {
+          console.error(`[Alipay Callback] Fetch attempt ${attempt + 1} failed, retrying...`)
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
+          continue
+        }
+        const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr)
+        console.error("[Alipay Callback] Fetch failed after retries:", msg)
+        return NextResponse.redirect(new URL("/login?error=alipay_network&detail=" + encodeURIComponent(msg), req.url))
+      }
     }
     const tokenData: AlipayTokenResponse = JSON.parse(await res.text())
     const accessToken = tokenData.alipay_system_oauth_token_response?.access_token
