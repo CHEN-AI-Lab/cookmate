@@ -20,15 +20,15 @@ const user = await prisma.user.findUnique({
       loginMethod = "体验演示"
     } else if (session.user.provider) {
       if (session.user.provider === "password" && session.user.loginMethod === "phone") {
-        loginMethod = "手机号+密码登录"
+        loginMethod = "手机号+密码"
       } else if (session.user.provider === "password" && session.user.loginMethod === "email") {
-        loginMethod = "邮箱+密码登录"
+        loginMethod = "邮箱+密码"
       } else {
         const providerMap: Record<string, string> = {
           google: "Google", github: "GitHub", alipay: "支付宝",
           "alipay-auth": "支付宝", wechat: "微信",
           email: "邮箱验证码", phone: "手机号验证码",
-          password: "邮箱/手机号+密码登录",
+          password: "邮箱/手机号+密码",
         }
         loginMethod = providerMap[session.user.provider] || session.user.provider
       }
