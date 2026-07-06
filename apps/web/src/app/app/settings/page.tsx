@@ -184,7 +184,7 @@ const save = async () => {
                                 ) : (
                                   <>
                                     {profile.name || "未设置"}
-                                    <button onClick={() => { setEditNameValue(profile.name || ""); setEditingName(true) }} disabled={profile?.isDemoUser} className="ml-2 text-[#FF6B35] text-xs hover:underline disabled:text-gray-300 disabled:cursor-not-allowed">修改</button>
+                                    <button onClick={() => { if (profile?.isDemoUser) { setGlobalToast("🔒 体验用户无法修改，请注册后使用"); setTimeout(() => setGlobalToast(""), 3000); return } setEditNameValue(profile.name || ""); setEditingName(true) }} className="ml-2 text-[#FF6B35] text-xs hover:underline disabled:text-gray-300 disabled:cursor-not-allowed">修改</button>
                                   </>
                                 )}
                               </span>
@@ -199,9 +199,15 @@ const save = async () => {
                     {profile.phone ? profile.phone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2") : "未绑定"}
                     {!profile.phone && (
                       <button
-                        onClick={() => setShowBindPhone(!showBindPhone)}
-                        disabled={profile?.isDemoUser}
-                        className="ml-2 text-[#FF6B35] text-xs hover:underline disabled:text-gray-300 disabled:cursor-not-allowed"
+                        onClick={() => {
+                          if (profile?.isDemoUser) {
+                            setGlobalToast("🔒 体验用户无法绑定，请注册后使用")
+                            setTimeout(() => setGlobalToast(""), 3000)
+                            return
+                          }
+                          setShowBindPhone(!showBindPhone)
+                        }}
+                        className="ml-2 text-[#FF6B35] text-xs hover:underline"
                       >
                         绑定
                       </button>
@@ -272,7 +278,7 @@ const save = async () => {
                                   <span className="text-sm font-medium text-[#2D3436]">
                                     {profile.email || "未绑定"}
                                     {!profile.email && !showBindEmail && (
-                                                          <button onClick={() => setShowBindEmail(true)} disabled={profile?.isDemoUser} className="text-[#FF6B35] text-xs hover:underline disabled:text-gray-300 disabled:cursor-not-allowed">绑定</button>
+                                                          <button onClick={() => { if (profile?.isDemoUser) { setGlobalToast("🔒 体验用户无法绑定，请注册后使用"); setTimeout(() => setGlobalToast(""), 3000); return } setShowBindEmail(true) }} className="text-[#FF6B35] text-xs hover:underline">绑定</button>
                                     )}
                                   </span>
                                 </div>
@@ -302,9 +308,15 @@ const save = async () => {
                   <span className="text-sm font-medium text-[#2D3436]">
                     {profile.hasPassword ? "已设置" : "未设置"}
                     <button
-                      onClick={() => { if (profile?.isDemoUser) return; setShowPasswordForm(!showPasswordForm) }}
-                      className="ml-2 text-[#FF6B35] text-xs hover:underline disabled:text-gray-300"
-                      disabled={profile?.isDemoUser}
+                      onClick={() => {
+                        if (profile?.isDemoUser) {
+                          setGlobalToast("🔒 体验用户无法设置密码，请注册后使用")
+                          setTimeout(() => setGlobalToast(""), 3000)
+                          return
+                        }
+                        setShowPasswordForm(!showPasswordForm)
+                      }}
+                      className="ml-2 text-[#FF6B35] text-xs hover:underline"
                     >
                       {profile.hasPassword ? "修改" : "设置"}
                     </button>

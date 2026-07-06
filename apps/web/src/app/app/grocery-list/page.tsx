@@ -314,7 +314,14 @@ export default function GroceryListPage() {
               {[3, 5, 7].map((n) => (
                 <button
                   key={n}
-                  onClick={() => setDays(n)}
+                  onClick={() => {
+                    if (isDemoUser) {
+                      setDemoToast("🔒 体验用户无法切换天数，请注册后使用")
+                      setTimeout(() => setDemoToast(""), 3000)
+                      return
+                    }
+                    setDays(n)
+                  }}
                   className={`px-2.5 py-1 rounded-md transition-colors ${
                     days === n ? "bg-white text-[#FF6B35] font-medium shadow-sm" : "text-gray-500 hover:text-gray-700"
                   }`}
