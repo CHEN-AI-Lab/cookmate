@@ -6,8 +6,8 @@ export async function GET(req: Request) {
   const authCode = searchParams.get("auth_code")
 
   const appId = process.env.AUTH_ALIPAY_ID
-  const privateKey = process.env.AUTH_ALIPAY_SECRET || ""
-  const publicKey = process.env.ALIPAY_PUBLIC_KEY || ""
+  const privateKey = process.env.AUTH_ALIPAY_PRIVATE_KEY || ""
+  const publicKey = process.env.AUTH_ALIPAY_PUBLIC_KEY || ""
 
   // Debug endpoint — 为了处理支付宝动态响应结构，使用宽松类型
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
