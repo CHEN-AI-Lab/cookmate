@@ -6,3 +6,5 @@ export type { DemoIngredientItem, DemoCategoryGroup } from "./grocery-list"
 
 export { getDemoPantryItems } from "./pantry"
 export type { DemoPantryItem } from "./pantry"
+
+export { getDemoRecipes } from "./recipes"

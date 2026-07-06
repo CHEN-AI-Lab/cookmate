@@ -213,7 +213,6 @@ export default function PantryPage() {
       )}
 
       {/* 5. Quick add (collapsible, default collapsed) */}
-      {!isDemoUser && (
       <div className="bg-white rounded-2xl shadow-sm border border-orange-50 overflow-hidden">
         <button
           onClick={() => setQuickAddOpen(!quickAddOpen)}
@@ -233,7 +232,9 @@ export default function PantryPage() {
                     return (
                       <button
                         key={item}
+                        disabled={isDemoUser}
                         onClick={async () => {
+                          if (isDemoUser) return
                           if (alreadyAdded) {
                             // 已添加则删除
                             const toRemove = items.find((i) => i.name === item)
@@ -255,7 +256,7 @@ export default function PantryPage() {
                           alreadyAdded
                             ? "bg-gradient-to-r from-orange-400 to-amber-400 text-white border-transparent"
                             : "bg-gray-50 text-gray-600 border-gray-200 hover:border-[#FF6B35]"
-                        }`}
+                        } ${isDemoUser ? "opacity-50 cursor-not-allowed" : ""}`}
                       >
                         {alreadyAdded ? `✓ ${item}` : item}
                       </button>
@@ -267,7 +268,6 @@ export default function PantryPage() {
           </div>
         )}
       </div>
-      )}
 
       {/* Add dialog modal */}
       {showAddDialog && (

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { getDemoRecipes } from "@cookmate/shared/demo-data"
 
 interface Recipe {
   id: string
@@ -30,6 +31,7 @@ export default function MyRecipesPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [isSelectMode, setIsSelectMode] = useState(false)
   const [deleteDialog, setDeleteDialog] = useState<Recipe[] | null>(null)
+  const [isDemoUser, setIsDemoUser] = useState(false)
 
   const showToast = useCallback((msg: string) => {
     setToast(msg)
@@ -56,7 +58,26 @@ export default function MyRecipesPage() {
 
   useEffect(() => { loadRecipes() }, [])
 
+  // Check demo user and pre-fill demo recipes
+  useEffect(() => {
+    fetch("/api/user/profile")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.isDemoUser) {
+          setIsDemoUser(true)
+          setTimeout(() => {
+            setRecipes((prev) => prev.length > 0 ? prev : getDemoRecipes())
+          }, 500)
+        }
+      })
+      .catch((err) => console.error("load profile error:", err))
+  }, [])
+
   const toggleStar = async (recipeId: string) => {
+    if (isDemoUser) {
+      showToast("🔒 体验用户无法修改，请注册后使用")
+      return
+    }
     const res = await fetch("/api/recipes/star", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -94,6 +115,11 @@ export default function MyRecipesPage() {
   }
 
   const deleteRecipes = async () => {
+    if (isDemoUser) {
+      showToast("🔒 体验用户无法删除，请注册后使用")
+      setDeleteDialog(null)
+      return
+    }
     if (!deleteDialog) return
     const toDelete = deleteDialog
     const res = await fetch("/api/recipes", {
@@ -221,12 +247,14 @@ export default function MyRecipesPage() {
             </>
           ) : (
             <>
+              {!isDemoUser && (
               <button
                 onClick={() => setIsSelectMode(true)}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
               >
                 多选
               </button>
+              )}
               <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
                 <button
                   onClick={() => setFilter("all")}
@@ -309,7 +337,7 @@ export default function MyRecipesPage() {
                     >
                       {recipe.starred ? "⭐" : "☆"}
                     </button>
-                    {!isSelectMode && (
+                    {!isSelectMode && !isDemoUser && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setDeleteDialog([recipe]) }}
                         className="text-gray-300 hover:text-red-500 transition-colors"
@@ -337,7 +365,7 @@ export default function MyRecipesPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => setAddDialog({ recipeId: recipe.id, title: recipe.title })}
+                    onClick={() => isDemoUser ? showToast("🔒 体验用户无法操作，请注册后使用") : setAddDialog({ recipeId: recipe.id, title: recipe.title })}
                     className="mt-4 bg-orange-50 text-[#FF6B35] px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-100 transition-colors"
                   >
                     📅 加入周计划

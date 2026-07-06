@@ -96,6 +96,11 @@ export default function MealPlanPage() {
 
   const deleteSlot = async () => {
     if (!detail || !plan) return
+    if (isDemoUser) {
+      setStarToast("🔒 体验用户无法删除，请注册后使用")
+      setTimeout(() => setStarToast(""), 2500)
+      return
+    }
     const slot = getSlot(detail.day, detail.meal)
     if (!slot) return
 

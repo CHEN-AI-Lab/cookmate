@@ -5,6 +5,7 @@ import OnboardingWizard from "@/components/OnboardingWizard"
 import { StatsCard } from "@/components/features/StatsCard"
 import { HeroCTA } from "@/components/features/HeroCTA"
 import { QuickActionCard } from "@/components/features/QuickActionCard"
+import Link from "next/link"
 
 interface DashboardStats {
   pantryCount: number
@@ -18,6 +19,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [isDemoUser, setIsDemoUser] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -26,6 +28,7 @@ export default function DashboardPage() {
     ])
       .then(([statsData, onboardingData]) => {
         setStats(statsData)
+        if (statsData.isDemoUser) setIsDemoUser(true)
         if (!onboardingData.onboardingCompleted) {
           setShowOnboarding(true)
         }
@@ -55,19 +58,41 @@ export default function DashboardPage() {
           </span>
         </div>
 
+        {/* ===== Demo banner ===== */}
+        {isDemoUser && (
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <p className="font-bold text-amber-800 text-sm">🔒 体验演示模式</p>
+                <p className="text-xs text-amber-600 mt-1">以下数据为示例展示，注册后可获得专属菜谱计划</p>
+              </div>
+              <Link
+                href="/register"
+                className="bg-[#FF6B35] text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-all shrink-0"
+              >
+                免费注册 →
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* ===== Hero CTA — 今日推荐 ===== */}
         <HeroCTA />
 
         {/* ===== Stats section — 3 cards ===== */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* AI生成次数 */}
-          <StatsCard label="AI 生成" value={stats?.subscriptionTier === "PRO" ? "∞" : `${stats?.todayUsage ?? 0}/1`} subtext={stats?.subscriptionTier === "PRO" ? "不限次数" : "免费版每日 1 次"} />
+          <StatsCard
+            label="AI 生成"
+            value={isDemoUser ? "3" : stats?.subscriptionTier === "PRO" ? "∞" : `${stats?.todayUsage ?? 0}/1`}
+            subtext={isDemoUser ? "示例数据 · 注册后每日 1 次" : stats?.subscriptionTier === "PRO" ? "不限次数" : "免费版每日 1 次"}
+          />
 
           {/* 食材数 */}
-          <StatsCard label="食材数" value={stats?.pantryCount ?? 0} subtext="冰箱里的食材" />
+          <StatsCard label="食材数" value={isDemoUser ? 22 : stats?.pantryCount ?? 0} subtext={isDemoUser ? "示例数据" : "冰箱里的食材"} />
 
           {/* 收藏菜谱 */}
-          <StatsCard label="收藏菜谱" value={stats?.starredCount ?? 0} subtext="你的私房菜单" />
+          <StatsCard label="收藏菜谱" value={isDemoUser ? 3 : stats?.starredCount ?? 0} subtext={isDemoUser ? "示例数据" : "你的私房菜单"} />
         </div>
 
         {/* ===== Quick access — 3 cards ===== */}

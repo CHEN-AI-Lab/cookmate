@@ -45,6 +45,7 @@ export default function GroceryListPage() {
 
   // Demo user state
   const [isDemoUser, setIsDemoUser] = useState(false)
+  const demoLoadedRef = useRef(false)
 
   // 从 localStorage 加载勾选状态
   useEffect(() => {
@@ -185,6 +186,7 @@ export default function GroceryListPage() {
   }
 
   const loadData = useCallback(() => {
+    if (demoLoadedRef.current) return
     fetch(`/api/grocery-list?days=${days}`)
       .then((r) => r.json())
       .then((data) => {
@@ -256,6 +258,7 @@ export default function GroceryListPage() {
             setInPantryCount((prev) => prev > 0 ? prev : getDemoGroceryList().inPantryCount)
             setStapleItems((prev) => prev.length > 0 ? prev : getDemoGroceryList().stapleItems)
             setManualItems((prev) => prev.length > 0 ? prev : [])
+            demoLoadedRef.current = true
           }, 500)
         }
       })
