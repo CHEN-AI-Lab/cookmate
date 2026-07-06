@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { setPasswordSchema } from "@cookmate/shared/validators"
+import { isDemoUser } from "@/lib/auth-helpers"
 
 export async function POST(req: Request) {
   try {
@@ -9,6 +10,7 @@ export async function POST(req: Request) {
     const { password, phone, email, code } = await req.json()
 
     if (session?.user?.id) {
+      if (isDemoUser(session)) return NextResponse.json({ error: "体验用户不支持设置密码，请注册后使用" }, { status: 403 })
       // 已登录用户：直接设置密码，无需验证码
       if (!password) {
         return NextResponse.json({ error: "请输入密码" }, { status: 400 })

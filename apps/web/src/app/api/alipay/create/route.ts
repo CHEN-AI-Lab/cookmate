@@ -2,12 +2,14 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { createPagePay, generateOrderId, isAlipayConfigured } from "@cookmate/shared/api/alipay-pay"
+import { isDemoUser } from "@/lib/auth-helpers"
 
 export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 })
   }
+  if (isDemoUser(session)) return NextResponse.json({ error: "体验用户不支持付费，请注册后使用" }, { status: 403 })
 
   if (!isAlipayConfigured()) {
     return NextResponse.json({ error: "支付宝支付正在配置中" }, { status: 503 })

@@ -22,13 +22,11 @@
         "AI_MODEL",
         "RESEND_API_KEY",
         "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+        "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
         "STRIPE_PRO_PRICE_ID",
         "STRIPE_FAMILY_PRICE_ID",
-        "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
-        "NEXT_PUBLIC_APP_URL",
-        "PAYJS_MCHID",
-        "PAYJS_KEY",
-        "PAYJS_NOTIFY_URL"
+        "NEXT_PUBLIC_APP_URL"
       ]
     },
     "dev": {
