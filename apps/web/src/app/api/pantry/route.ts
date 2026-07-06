@@ -10,7 +10,7 @@ export async function GET() {
     const items = await prisma.pantryItem.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: "desc" },
-    }).catch(() => [])
+    }).catch((err: unknown) => { console.error("findMany pantry items error:", err); return [] })
 
     return NextResponse.json({ items })
   } catch (error) {
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
         if (!name) continue
         const exists = await prisma.pantryItem.findFirst({
           where: { name, userId: session.user.id },
-        }).catch(() => null)
+        }).catch((err: unknown) => { console.error("findFirst pantry item error:", err); return null })
         if (exists) {
           skipped.push(item.name || "")
           continue
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
             category: item.category || null,
             quantity: item.quantity || null,
           },
-        }).catch(() => null)
+        }).catch((err: unknown) => { console.error("create pantry item error:", err); return null })
         created.push(createdItem)
       }
       return NextResponse.json({ items: created, count: created.length, skipped, skippedCount: skipped.length })
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     const normalizedName = (name || "").trim().toLowerCase()
     if (!normalizedName) return NextResponse.json({ error: "请输入食材名称" }, { status: 400 })
 
-    const existing = await prisma.pantryItem.findFirst({ where: { name: normalizedName, userId: session.user.id } }).catch(() => null)
+    const existing = await prisma.pantryItem.findFirst({ where: { name: normalizedName, userId: session.user.id } }).catch((err: unknown) => { console.error("findFirst pantry item error:", err); return null })
     if (existing) return NextResponse.json({ error: "该食材已存在" }, { status: 400 })
 
     const item = await prisma.pantryItem.create({
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
         category: category || null,
         quantity: quantity || null,
       },
-    }).catch(() => null)
+    }).catch((err: unknown) => { console.error("create pantry item error:", err); return null })
 
     return NextResponse.json({ item })
   } catch (error) {

@@ -8,6 +8,7 @@ declare module "next-auth" {
       subscriptionTier: string
       phone: string
       onboardingCompleted: boolean
+      provider?: string
     } & DefaultSession["user"]
   }
 
@@ -15,6 +16,7 @@ declare module "next-auth" {
     subscriptionTier: string
     phone: string
     onboardingCompleted: boolean
+    provider?: string
   }
 }
 
@@ -244,10 +246,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.subscriptionTier = token.subscriptionTier as string
         session.user.phone = token.phone as string
         session.user.onboardingCompleted = token.onboardingCompleted as boolean
+        session.user.provider = token.provider as string
       }
       return session
     },
-    async jwt({ token }) {
+    async jwt({ token, account }) {
+      if (account) {
+        token.provider = account.provider
+      }
       if (token.sub) {
         try {
           const user = await prisma.user.findUnique({

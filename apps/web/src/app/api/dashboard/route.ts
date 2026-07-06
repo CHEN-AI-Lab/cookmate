@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { isPaymentConfigured } from "@/lib/payment"
-import { isAlipayConfigured } from "@/lib/alipay-pay"
+import { isPaymentConfigured } from "@cookmate/shared/api/payment"
+import { isAlipayConfigured } from "@cookmate/shared/api/alipay-pay"
 
 // 检查订阅是否过期，过期自动降级
 async function checkSubscription(userId: string, user: { subscriptionTier: string; subscriptionExpiryDate: Date | null } | null): Promise<string> {
@@ -13,7 +13,7 @@ async function checkSubscription(userId: string, user: { subscriptionTier: strin
     await prisma.user.update({
       where: { id: userId },
       data: { subscriptionTier: "FREE", subscriptionExpiryDate: null },
-    }).catch(() => {})
+    }).catch((err: unknown) => { console.error("update subscription error:", err) })
     return "FREE"
   }
   return "PRO"
@@ -27,9 +27,9 @@ export async function GET() {
     const userId = session.user.id
 
     const [pantryCount, starredCount, mealPlanCount, usage] = await Promise.all([
-      prisma.pantryItem.count({ where: { userId } }).catch(() => 0),
-      prisma.recipe.count({ where: { userId, starred: true } }).catch(() => 0),
-      prisma.mealPlan.count({ where: { userId } }).catch(() => 0),
+      prisma.pantryItem.count({ where: { userId } }).catch((err: unknown) => { console.error("count pantry items error:", err); return 0 }),
+      prisma.recipe.count({ where: { userId, starred: true } }).catch((err: unknown) => { console.error("count starred recipes error:", err); return 0 }),
+      prisma.mealPlan.count({ where: { userId } }).catch((err: unknown) => { console.error("count meal plans error:", err); return 0 }),
       prisma.usageDaily.findUnique({
         where: {
           userId_date: {
@@ -37,13 +37,13 @@ export async function GET() {
             date: (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d })(),
           },
         },
-      }).catch(() => null),
+      }).catch((err: unknown) => { console.error("findUnique usage error:", err); return null }),
     ])
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { subscriptionTier: true, subscriptionExpiryDate: true },
-    }).catch(() => null)
+    }).catch((err: unknown) => { console.error("findUnique user error:", err); return null })
 
     const tier = await checkSubscription(userId, user)
 

@@ -1,37 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CookMate — AI 智能食谱 & 餐食规划平台
 
-## Getting Started
+## 概述
 
-First, run the development server:
+CookMate 是一款 AI 驱动的智能食谱推荐和餐食规划平台。用户输入冰箱里的食材，AI 自动推荐菜谱；支持周计划生成、购物清单、食材库管理等功能。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 技术栈
+
+- **框架**: Next.js 16 (App Router), TypeScript (strict mode)
+- **样式**: Tailwind CSS v4 + shadcn/ui
+- **数据库**: PostgreSQL (Neon) + Prisma ORM
+- **认证**: NextAuth.js v5 (邮箱/手机验证码 + 密码 + Google/GitHub/支付宝/微信 OAuth)
+- **AI**: OpenAI 兼容接口 (DeepSeek, SenseNova, OpenAI 等)
+- **支付**: Stripe (国际) + PayJS (国内支付宝/微信)
+- **部署**: Vercel
+- **包管理**: pnpm monorepo
+
+## 目录结构
+
+```
+cookmate/
+├── apps/web/              # Next.js Web 应用
+│   ├── src/
+│   │   ├── app/           # App Router 页面 + API 路由
+│   │   ├── components/    # UI 组件
+│   │   └── lib/           # 仅 web 专用代码 (auth, prisma, providers)
+│   ├── prisma/            # 数据库 schema
+│   └── tests/             # 单元测试 + E2E 测试
+├── shared/                # 跨平台共享代码
+│   ├── api/               # API 客户端 (openai, alipay, stripe, payment)
+│   ├── constants/         # 常量定义
+│   ├── hooks/             # React hooks
+│   ├── messages/          # 国际化翻译文件
+│   ├── types/             # TypeScript 类型定义
+│   ├── utils/             # 工具函数
+│   └── validators/        # Zod 校验 schema
+├── scripts/               # 项目脚本
+│   ├── check-structure.sh # 结构合规检查
+│   ├── check.sh           # 全量质量检查
+│   ├── setup.sh           # 项目初始化
+│   └── deploy.sh          # 部署
+└── docs/                  # 文档
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 快速开始
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# 安装依赖
+pnpm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# 生成 Prisma Client
+cd apps/web && npx prisma generate && cd ../..
 
-## Learn More
+# 复制环境变量（编辑填入实际配置）
+cp .env.example .env
 
-To learn more about Next.js, take a look at the following resources:
+# 启动开发服务器
+pnpm dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 环境变量
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+参见 `.env.example` 获取完整清单。关键配置：
+- `DATABASE_URL` — PostgreSQL 连接串（推荐 Neon）
+- `AUTH_SECRET` — NextAuth 密钥
+- `AI_API_KEY` — AI 接口密钥（不配则使用演示数据）
+- `STRIPE_SECRET_KEY` / `PAYJS_MCHID` — 支付配置
 
-## Deploy on Vercel
+## 可用命令
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| 命令 | 说明 |
+|------|------|
+| `pnpm dev` | 启动开发服务器 |
+| `pnpm build` | 生产构建 |
+| `pnpm test` | 运行测试 |
+| `bash scripts/check.sh` | 全量质量检查 |
+| `bash scripts/check-structure.sh` | 结构合规检查 |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 部署
 
+1. 推送到 `preview` 分支 → Vercel 自动部署到预览环境
+2. 测试通过后合并到 `main` → 自动部署到生产环境

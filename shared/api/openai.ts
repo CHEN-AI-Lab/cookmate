@@ -41,16 +41,16 @@ async function callAI(params: {
         { role: "system", content: systemPrompt },
         { role: "user", content: userContent },
       ],
-      response_format: { type: "json_object" } as any,
+      response_format: { type: "json_object" } as const,
       temperature: 0.7,
       max_tokens: maxTokens,
     })
     const content = response.choices[0]?.message?.content
     if (content) return cleanJSONResponse(content)
-  } catch (err: any) {
+  } catch (err: unknown) {
     // 400/403 错误（不支持 json_object）才降级重试
     // SenseNova 返回 403，OpenAI 返回 400
-    if (err?.status !== 400 && err?.status !== 403) throw err
+    if (err && typeof err === "object" && "status" in err && (err as { status: number }).status !== 400 && (err as { status: number }).status !== 403) throw err
   }
 
   // 降级：不带 response_format（商汤、部分代理中转等）
@@ -77,14 +77,15 @@ function cleanJSONResponse(content: string): string {
 }
 
 /** 规范化食材：AI 可能返回字符串数组或对象数组，统一转成字符串数组 */
-export function normalizeIngredients(ingredients: any): string[] {
+export function normalizeIngredients(ingredients: unknown): string[] {
   if (!Array.isArray(ingredients)) return []
-  return ingredients.map((ing: any) => {
+  return ingredients.map((ing: unknown) => {
     if (typeof ing === "string") return ing
     // 对象格式：{name:"牛肉", quantity:"300g"} 或 {name:"牛肉", amount:"300g"}
     if (typeof ing === "object" && ing !== null) {
-      const name = ing.name || ing.ingredient || ""
-      const qty = ing.quantity || ing.amount || ing.unit || ""
+      const obj = ing as Record<string, string>
+      const name = obj.name || obj.ingredient || ""
+      const qty = obj.quantity || obj.amount || obj.unit || ""
       return name + (qty ? ` ${qty}` : "")
     }
     return String(ing)
@@ -244,7 +245,7 @@ JSON 格式:
 
 function getMockRecipes(
   ingredients: string[],
-  _prefs?: any
+  _prefs?: Record<string, unknown>
 ): RecipeResult[] {
   const all: RecipeResult[] = [
     {
@@ -400,7 +401,7 @@ function getMockRecipes(
 }
 
 function getMockWeeklyPlan(
-  _prefs?: any
+  _prefs?: Record<string, unknown>
 ): Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }> {
   return {
     "周一": {

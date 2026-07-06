@@ -35,7 +35,8 @@ async function sendEmailViaResend(to: string, code: string) {
       }),
     })
     return res.ok
-  } catch {
+  } catch (err) {
+    console.error("send email error:", err)
     return false
   }
 }
@@ -106,15 +107,6 @@ export async function POST(req: Request) {
     if (phone && !isDev) {
       // 生产环境不支持短信验证码（未配置短信服务）
       return NextResponse.json({ error: "手机号登录暂未开放，请使用邮箱或密码登录" }, { status: 400 })
-    }
-
-    console.log(`[DEV] 验证码 for ${phone || email}: ${code}`)
-
-    if (isDev) {
-      return NextResponse.json({
-        success: true,
-        devCode: code,
-      })
     }
 
     return NextResponse.json({ success: true })

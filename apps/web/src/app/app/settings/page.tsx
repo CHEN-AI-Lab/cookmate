@@ -46,7 +46,7 @@ export default function SettingsPage() {
           setProfile({ ...profileData, hasPassword: profileData.hasPassword })
         }
       })
-      .catch(() => {})
+      .catch((err) => console.error("load settings error:", err))
       .finally(() => setLoading(false))
   }, [])
 
@@ -71,7 +71,8 @@ export default function SettingsPage() {
         setAccountMsg(d.error || "更新失败")
         setTimeout(() => setAccountMsg(""), 3000)
       }
-    } catch {
+    } catch (err) {
+      console.error("save name error:", err)
       setAccountMsg("网络错误")
       setTimeout(() => setAccountMsg(""), 3000)
     }
@@ -85,7 +86,7 @@ export default function SettingsPage() {
       const d = await r.json()
       if (r.ok) { setBindCodeSent(true); setAccountMsg("验证码已发送到 " + bindEmail); setTimeout(() => setAccountMsg(""), 3000) }
       else { setAccountMsg(d.error || "发送失败"); setTimeout(() => setAccountMsg(""), 3000) }
-    } catch { setAccountMsg("网络错误"); setTimeout(() => setAccountMsg(""), 3000) }
+    } catch (err) { console.error("send bind email code error:", err); setAccountMsg("网络错误"); setTimeout(() => setAccountMsg(""), 3000) }
     finally { setBindLoading(false) }
   }
 
@@ -97,7 +98,7 @@ export default function SettingsPage() {
       const d = await r.json()
       if (r.ok) { setProfile((p) => p ? { ...p, email: bindEmail } : p); setShowBindEmail(false); setBindCodeSent(false); setBindEmail(""); setBindEmailCode(""); setAccountMsg("✅ 邮箱绑定成功"); setTimeout(() => setAccountMsg(""), 3000) }
       else { setAccountMsg(d.error || "绑定失败"); setTimeout(() => setAccountMsg(""), 3000) }
-    } catch { setAccountMsg("网络错误"); setTimeout(() => setAccountMsg(""), 3000) }
+    } catch (err) { console.error("confirm bind email error:", err); setAccountMsg("网络错误"); setTimeout(() => setAccountMsg(""), 3000) }
     finally { setBindLoading(false) }
   }
 
@@ -128,7 +129,7 @@ const save = async () => {
           setTimeout(() => setSaved(false), 300)
         }, 2500)
       }
-    } catch {} finally {
+    } catch (err) { console.error("save settings error:", err) } finally {
       setSaving(false)
     }
   }
@@ -235,7 +236,7 @@ const save = async () => {
                                           } else {
                                             setBindError(d.error || "绑定失败")
                                           }
-                                        } catch { setBindError("网络错误") }
+                                        } catch (err) { console.error("bind phone error:", err); setBindError("网络错误") }
                                         finally { setBindLoading(false) }
                                       }}
                                       disabled={bindLoading || !bindPhone || !bindCode}
@@ -450,7 +451,8 @@ function PasswordForm({ hasPassword, onClose }: { hasPassword: boolean; onClose:
       } else {
         setMsg(`❌ ${data.error || "操作失败"}`)
       }
-    } catch {
+    } catch (err) {
+      console.error("set password error:", err)
       setMsg("❌ 网络错误")
     } finally {
       setSaving(false)

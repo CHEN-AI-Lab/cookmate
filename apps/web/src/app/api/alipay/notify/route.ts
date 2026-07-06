@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { verifyNotify } from "@/lib/alipay-pay"
+import { verifyNotify } from "@cookmate/shared/api/alipay-pay"
 
 export async function POST(req: Request) {
   try {

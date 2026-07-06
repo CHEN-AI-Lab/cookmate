@@ -13,7 +13,8 @@ export async function GET() {
     })
 
     return NextResponse.json({ onboardingCompleted: user?.onboardingCompleted ?? false })
-  } catch {
+  } catch (err) {
+    console.error("onboarding GET error:", err)
     return NextResponse.json({ onboardingCompleted: false })
   }
 }

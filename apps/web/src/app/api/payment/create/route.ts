@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { createPaymentOrder, isPaymentConfigured, generateOrderId } from "@/lib/payment"
+import { createPaymentOrder, isPaymentConfigured, generateOrderId } from "@cookmate/shared/api/payment"
 
 export async function POST(req: Request) {
   const session = await auth()
@@ -49,10 +49,10 @@ export async function POST(req: Request) {
       codeUrl: result.codeUrl,
       channel,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Payment create error:", error)
     return NextResponse.json(
-      { error: error?.message || "创建支付订单失败" },
+      { error: (error instanceof Error ? error.message : String(error)) || "创建支付订单失败" },
       { status: 500 }
     )
   }

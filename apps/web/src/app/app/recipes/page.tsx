@@ -53,9 +53,9 @@ export default function RecipesPage() {
     fetch("/api/recipes/star")
       .then((r) => r.json())
       .then((data) => {
-        if (data.recipes) setStarredIds(new Set(data.recipes.map((r: any) => r.id)))
+        if (data.recipes) setStarredIds(new Set(data.recipes.map((r: { id: string }) => r.id)))
       })
-      .catch(() => {})
+      .catch((err) => console.error("load starred recipes error:", err))
   }, [])
 
   const toggleStar = async (recipe: Recipe) => {
@@ -103,7 +103,7 @@ export default function RecipesPage() {
           setPantryItems(data.items)
         }
       })
-      .catch(() => {})
+      .catch((err) => console.error("load pantry error:", err))
       .finally(() => setPantryLoaded(true))
   }, [])
 
@@ -244,7 +244,8 @@ export default function RecipesPage() {
         setRecipes(data.recipes || [])
         setGenerated(true)
       }
-    } catch {
+    } catch (err) {
+      console.error("generate recipes error:", err)
       setError("网络错误，请稍后重试")
     } finally {
       setLoading(false)

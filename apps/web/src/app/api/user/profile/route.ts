@@ -10,27 +10,26 @@ export async function GET() {
 const user = await prisma.user.findUnique({
         where: { id: session.user.id },
         select: { id: true, name: true, email: true, phone: true, createdAt: true, subscriptionTier: true, passwordHash: true, subscriptionExpiryDate: true },
-      }).catch(() => null)
+      }).catch((err: unknown) => { console.error("findUnique user error:", err); return null })
 
     if (!user) return NextResponse.json({ error: "用户不存在" }, { status: 404 })
 
-    // 判断登录方式 — 优先从 Account 表看实际用哪个 OAuth 登录的
+    // 判断登录方式 — 从 session 里取当前登录用的 provider
     let loginMethod: string
     if (user.email === "demo@cookmate.local") {
       loginMethod = "体验演示"
+    } else if (session.user.provider) {
+      const providerMap: Record<string, string> = {
+        google: "Google", github: "GitHub", alipay: "支付宝",
+        wechat: "微信", email: "邮箱", phone: "手机号", credentials: "邮箱/手机号",
+      }
+      loginMethod = providerMap[session.user.provider] || session.user.provider
+    } else if (user.phone) {
+      loginMethod = "手机号"
+    } else if (user.email) {
+      loginMethod = "邮箱"
     } else {
-      const accounts = await prisma.account.findMany({
-        where: { userId: user.id },
-        select: { provider: true },
-      })
-      // 按优先级判断
-      if (accounts.some(a => a.provider === "wechat")) loginMethod = "微信"
-      else if (accounts.some(a => a.provider === "alipay")) loginMethod = "支付宝"
-      else if (accounts.some(a => a.provider === "google")) loginMethod = "Google"
-      else if (accounts.some(a => a.provider === "github")) loginMethod = "GitHub"
-      else if (user.phone) loginMethod = "手机号"
-      else if (user.email) loginMethod = "邮箱"
-      else loginMethod = "其他"
+      loginMethod = "其他"
     }
 
     return NextResponse.json({

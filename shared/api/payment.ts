@@ -1,6 +1,8 @@
 // 支付抽象层 — 支持 PayJS 等国内支付网关
 // 配置见 .env: PAYJS_MCHID, PAYJS_KEY, PAYJS_NOTIFY_URL
 
+import crypto from "node:crypto"
+
 const PAYJS_API = "https://payjs.cn/api"
 
 interface PayJSCreateParams {
@@ -45,7 +47,6 @@ export function sign(params: Record<string, string | number>, key: string): stri
     .map((k) => `${k}=${params[k]}`)
     .join("&") + `&key=${key}`
   // Node.js crypto MD5
-  const crypto = require("crypto")
   return crypto.createHash("md5").update(sorted).digest("hex").toUpperCase()
 }
 
@@ -87,7 +88,7 @@ export async function createPaymentOrder(
   const res = await fetch(`${PAYJS_API}${endpoint}`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(params as any).toString(),
+    body: new URLSearchParams(params as Record<string, string>).toString(),
   })
 
   const data: PayJSResponse = await res.json()
@@ -117,7 +118,7 @@ export async function queryPaymentOrder(payjsOrderId: string): Promise<{ paid: b
   const res = await fetch(`${PAYJS_API}/check`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(params as any).toString(),
+    body: new URLSearchParams(params as Record<string, string>).toString(),
   })
 
   const data: PayJSQueryResponse = await res.json()

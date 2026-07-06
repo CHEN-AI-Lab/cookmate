@@ -98,6 +98,12 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      openai:
+        specifier: ^6.38.0
+        version: 6.41.0(zod@3.25.76)
+      stripe:
+        specifier: ^22.1.1
+        version: 22.2.0(@types/node@20.19.41)
       tailwind-merge:
         specifier: ^3.6.0
         version: 3.6.0
@@ -105,6 +111,15 @@ importers:
         specifier: ^3.23.0
         version: 3.25.76
     devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.16
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
       typescript:
         specifier: ^5.0.0
         version: 5.9.3
@@ -5080,6 +5095,10 @@ snapshots:
   onetime@6.0.0:
     dependencies:
       mimic-fn: 4.0.0
+
+  openai@6.41.0(zod@3.25.76):
+    optionalDependencies:
+      zod: 3.25.76
 
   openai@6.41.0(zod@4.4.3):
     optionalDependencies:
