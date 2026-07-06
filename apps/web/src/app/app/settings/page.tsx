@@ -199,7 +199,8 @@ const save = async () => {
                     {!profile.phone && (
                       <button
                         onClick={() => setShowBindPhone(!showBindPhone)}
-                        className="ml-2 text-[#FF6B35] text-xs hover:underline"
+                        disabled={profile?.isDemoUser}
+                        className="ml-2 text-[#FF6B35] text-xs hover:underline disabled:text-gray-300 disabled:cursor-not-allowed"
                       >
                         绑定
                       </button>

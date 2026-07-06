@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { getDemoPantryItems } from "@cookmate/shared/demo-data"
 
 const QUICK_ADD = [
   {
@@ -44,6 +45,8 @@ export default function PantryPage() {
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [dupDialog, setDupDialog] = useState<string | null>(null)
+  const [isDemoUser, setIsDemoUser] = useState(false)
 
   const toggleSelect = (id: string) => {
     const next = new Set(selected)
@@ -63,7 +66,20 @@ export default function PantryPage() {
 
   useEffect(() => { loadItems() }, [loadItems])
 
-  const [dupDialog, setDupDialog] = useState<string | null>(null)
+  // Check demo user status and pre-fill demo data if needed
+  useEffect(() => {
+    fetch("/api/user/profile")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.isDemoUser) {
+          setIsDemoUser(true)
+          setTimeout(() => {
+            setItems((prev) => prev.length > 0 ? prev : getDemoPantryItems())
+          }, 500)
+        }
+      })
+      .catch((err) => console.error("load profile error:", err))
+  }, [])
 
   const addItem = async (name: string, category?: string) => {
     const trimmed = name.trim()
@@ -138,9 +154,10 @@ export default function PantryPage() {
           </div>
           <button
             onClick={() => setShowAddDialog(true)}
-            className="shrink-0 bg-gradient-to-r from-orange-400 to-amber-400 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-sm flex items-center gap-1"
+            disabled={isDemoUser}
+            className="shrink-0 bg-gradient-to-r from-orange-400 to-amber-400 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity shadow-sm flex items-center gap-1"
           >
-            ＋ 添加
+            {isDemoUser ? "🔒 注册后可添加" : "＋ 添加"}
           </button>
         </div>
       </div>
@@ -163,7 +180,7 @@ export default function PantryPage() {
                 }`}
               >
                 {item.name}
-                <button onClick={(e) => { e.stopPropagation(); removeItem(item.id) }} className="ml-1 hover:text-red-500">×</button>
+                <button onClick={(e) => { e.stopPropagation(); removeItem(item.id) }} className="ml-1 hover:text-red-500">{isDemoUser ? "" : "×"}</button>
               </span>
             ))}
           </div>
@@ -196,6 +213,7 @@ export default function PantryPage() {
       )}
 
       {/* 5. Quick add (collapsible, default collapsed) */}
+      {!isDemoUser && (
       <div className="bg-white rounded-2xl shadow-sm border border-orange-50 overflow-hidden">
         <button
           onClick={() => setQuickAddOpen(!quickAddOpen)}
@@ -249,6 +267,7 @@ export default function PantryPage() {
           </div>
         )}
       </div>
+      )}
 
       {/* Add dialog modal */}
       {showAddDialog && (

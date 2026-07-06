@@ -151,13 +151,6 @@ export default function BillingPage() {
         )}
       </div>
 
-      {/* Not configured warning */}
-      {!hasAnyPayment && (
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700">
-          🔧 支付正在配置中，上线后即可使用支付宝/微信/国际信用卡支付。
-        </div>
-      )}
-
       {/* Plan comparison */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <h3 className="font-bold text-gray-900 mb-4">选择计划</h3>
