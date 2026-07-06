@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { isDemoUser } from "@/lib/auth-helpers"
 
 export async function GET() {
   try {
@@ -31,6 +32,7 @@ export async function PUT(req: Request) {
   try {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+    if (isDemoUser(session)) return NextResponse.json({ error: "体验用户不支持修改设置，请注册后使用" }, { status: 403 })
 
     const { dietType, cuisinePref, servingSize } = await req.json()
 

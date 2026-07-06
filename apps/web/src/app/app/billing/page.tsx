@@ -3,12 +3,10 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { PricingCard } from "@/components/features/PricingCard"
-import { PaymentModal } from "@/components/features/PaymentModal"
 
 interface BillingInfo {
   subscriptionTier: string
   stripeConfigured: boolean
-  paymentConfigured: boolean
   subscriptionExpiryDate?: string | null
 }
 
@@ -18,7 +16,6 @@ export default function BillingPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [error, setError] = useState("")
   const [message, setMessage] = useState("")
-  const [showPaymentModal, setShowPaymentModal] = useState<"wechat" | "alipay" | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [paying, setPaying] = useState(false)
 
@@ -29,7 +26,6 @@ export default function BillingPage() {
         setInfo({
           subscriptionTier: data.subscriptionTier || "FREE",
           stripeConfigured: !!data.stripeConfigured,
-          paymentConfigured: !!data.paymentConfigured,
           subscriptionExpiryDate: data.subscriptionExpiryDate,
         })
       })
@@ -47,7 +43,6 @@ export default function BillingPage() {
 
   // 支付成功后刷新
   const handlePaymentSuccess = () => {
-    setShowPaymentModal(null)
     setRefreshKey((k) => k + 1)
     setMessage("🎉 支付成功！已升级到 Pro。")
   }
@@ -101,19 +96,10 @@ export default function BillingPage() {
   if (loading) return <div className="text-center py-16 text-gray-400">加载中...</div>
 
   const isFree = info?.subscriptionTier === "FREE"
-  const hasAnyPayment = info?.stripeConfigured || info?.paymentConfigured
+  const hasAnyPayment = info?.stripeConfigured
 
   return (
     <div className="space-y-8">
-      {/* Payment Modal */}
-      {showPaymentModal && (
-        <PaymentModal
-          channel={showPaymentModal}
-          onClose={() => setShowPaymentModal(null)}
-          onSuccess={handlePaymentSuccess}
-        />
-      )}
-
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">💳 账单与订阅</h1>
@@ -225,13 +211,12 @@ export default function BillingPage() {
                       setError(data.error || "创建支付失败")
                       setPaying(false)
                     }
-                  } catch (err) {
-                    console.error("alipay create error:", err)
+                  } catch {
                     setError("网络错误")
                     setPaying(false)
                   }
                 }}
-                disabled={!info?.paymentConfigured || actionLoading !== null || paying}
+                disabled={actionLoading !== null || paying}
                 className="flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed text-left"
               >
                 <span className="text-3xl">💙</span>
@@ -241,21 +226,7 @@ export default function BillingPage() {
                 </div>
                 {paying && <span className="ml-auto text-sm text-gray-400">跳转中...</span>}
               </button>
-              <button
-                onClick={() => setShowPaymentModal("wechat")}
-                disabled={true}
-                className="hidden"
-              >
-                <span className="text-3xl">💚</span>
-                <div>
-                  <p className="font-semibold text-gray-900">微信支付</p>
-                  <p className="text-xs text-gray-400">¥15/月</p>
-                </div>
-              </button>
             </div>
-            {!info?.paymentConfigured && (
-              <p className="text-xs text-gray-400 mt-2">支付宝/微信支付正在配置中</p>
-            )}
           </div>
 
           {/* Stripe 国际支付 */}
