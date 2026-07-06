@@ -8,6 +8,7 @@ interface BillingInfo {
   subscriptionTier: string
   stripeConfigured: boolean
   subscriptionExpiryDate?: string | null
+  isDemoUser: boolean
 }
 
 export default function BillingPage() {
@@ -27,6 +28,7 @@ export default function BillingPage() {
           subscriptionTier: data.subscriptionTier || "FREE",
           stripeConfigured: !!data.stripeConfigured,
           subscriptionExpiryDate: data.subscriptionExpiryDate,
+          isDemoUser: !!data.isDemoUser,
         })
       })
       .catch((err) => { console.error("load billing info error:", err); setError("加载失败"); })
@@ -188,7 +190,23 @@ export default function BillingPage() {
       </div>
 
       {/* Payment methods */}
-      {isFree && (
+      {isFree && info?.isDemoUser && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center">
+          <p className="text-lg mb-2">🔒 体验模式</p>
+          <p className="text-sm text-amber-700 mb-4">
+            体验用户无法使用支付功能。<br />
+            注册账号后可升级到 Pro，解锁无限 AI 生成和周计划功能。
+          </p>
+          <Link
+            href="/register"
+            className="inline-block bg-[#FF6B35] text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-orange-600 transition-all"
+          >
+            免费注册
+          </Link>
+        </div>
+      )}
+
+      {isFree && !info?.isDemoUser && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <h3 className="font-bold text-gray-900 mb-4">支付方式</h3>
 

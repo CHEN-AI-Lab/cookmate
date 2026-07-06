@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-export function isDemoUser(session: { user?: { id?: string; email?: string | null } } | null): boolean {
+export function isDemoUser(session: { user?: { id?: string; email?: string; [key: string]: unknown } } | null): boolean {
   return !!session && (session.user?.id === "demo-user-id" || session.user?.email === "demo@cookmate.local")
 }
 
