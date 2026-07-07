@@ -186,7 +186,6 @@ if (process.env.AUTH_ALIPAY_ID && process.env.AUTH_ALIPAY_PRIVATE_KEY) {
     AlipayProvider({
       clientId: process.env.AUTH_ALIPAY_ID,
       clientSecret: process.env.AUTH_ALIPAY_PRIVATE_KEY,
-      alipayPublicKey: process.env.AUTH_ALIPAY_PUBLIC_KEY || "",
     })
   )
 }
