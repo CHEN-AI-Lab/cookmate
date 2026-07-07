@@ -78,7 +78,7 @@ export async function POST(req: Request) {
     const event = JSON.parse(body)
 
     // checkout.completed — 订单完成
-    if (event.eventType === "checkout.completed") {
+    if (event.type === "checkout.completed") {
       const userId = extractUserId(event)
       const orderId = extractOrderId(event) || ""
       if (orderId) {
@@ -92,7 +92,7 @@ export async function POST(req: Request) {
     }
 
     // subscription.active / subscription.paid — 订阅激活/续费
-    if (event.eventType === "subscription.active" || event.eventType === "subscription.paid") {
+    if (event.type === "subscription.active" || event.type === "subscription.paid") {
       const userId = extractUserId(event)
       if (!userId) {
         return NextResponse.json({ error: "Missing userId in metadata" }, { status: 400 })
