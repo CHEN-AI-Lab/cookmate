@@ -6,7 +6,14 @@ import type crypto from "node:crypto"
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const nodeCrypto = require("node:crypto") as typeof crypto
 
-const CREEM_API = "https://api.creem.io/v1"
+// 测试 key 前缀 creem_test_，测试环境 API URL 不同
+function getBaseUrl(): string {
+  const apiKey = process.env.CREEM_API_KEY
+  if (apiKey?.startsWith("creem_test_")) {
+    return "https://test-api.creem.io/v1"
+  }
+  return "https://api.creem.io/v1"
+}
 
 function getHeaders(): Record<string, string> {
   const apiKey = process.env.CREEM_API_KEY
@@ -35,10 +42,10 @@ export async function createCheckout(params: {
   }
 
   if (params.metadata && Object.keys(params.metadata).length > 0) {
-    body.request_metadata = params.metadata
+    body.metadata = params.metadata
   }
 
-  const res = await fetch(`${CREEM_API}/checkouts`, {
+  const res = await fetch(`${getBaseUrl()}/checkouts`, {
     method: "POST",
     headers: getHeaders(),
     body: JSON.stringify(body),
