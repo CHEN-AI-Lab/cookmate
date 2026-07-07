@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 
 export async function POST(req: Request) {
   try {
-    const signature = req.headers.get("x-creem-signature") || ""
+    const signature = req.headers.get("creem-signature") || ""
     const body = await req.text()
 
     // 验证签名
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     const event = JSON.parse(body)
 
     // 处理支付成功事件
-    if (event.type === "checkout.completed" || event.type === "payment.succeeded") {
+    if (event.eventType === "checkout.completed") {
       const data = event.data || event
       const userId = data.metadata?.userId
       const creemOrderId = data.id || data.order_id

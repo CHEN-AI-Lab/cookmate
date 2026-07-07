@@ -36,12 +36,18 @@ export default function BillingPage() {
       .catch((err) => { console.error("load billing info error:", err); setError("加载失败"); })
       .finally(() => setLoading(false))
 
-    // 检测 URL 参数
+    // 检测 URL 参数，清除后自动消失
     const params = new URLSearchParams(window.location.search)
     if (params.get("success") === "true") {
       setMessage("🎉 订阅成功！感谢你的支持。")
+      // 清除 URL 参数，防止刷新后重复显示
+      window.history.replaceState({}, "", window.location.pathname)
+      // 3 秒后自动消失
+      const timer = setTimeout(() => setMessage(""), 3000)
+      return () => clearTimeout(timer)
     } else if (params.get("canceled") === "true") {
       setMessage("")
+      window.history.replaceState({}, "", window.location.pathname)
     }
   }, [refreshKey])
 
@@ -219,93 +225,80 @@ export default function BillingPage() {
 
       {isFree && !info?.isDemoUser && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-bold text-gray-900 mb-4">支付方式</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-gray-900">支付方式</h3>
+            <span className="text-xs text-gray-400">扫码即付 · 安全快捷</span>
+          </div>
 
-          {/* 错误提示 */}
           {error && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
               {error}
             </div>
           )}
 
-          {/* 国内支付 */}
-          <div className="mb-6">
-            <p className="text-sm text-gray-500 mb-3">
-              支持国内主流支付方式，扫码即付
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                onClick={async () => {
-                  setPaying(true)
-                  setError("")
-                  try {
-                    const res = await fetch("/api/alipay/create", { method: "POST" })
-                    const data = await res.json()
-                    if (data.payUrl) {
-                      window.location.href = data.payUrl
-                    } else {
-                      setError(data.error || "创建支付失败")
-                      setPaying(false)
-                    }
-                  } catch {
-                    setError("网络错误")
+          <div className="flex flex-wrap gap-3">
+            {/* 支付宝 */}
+            <button
+              onClick={async () => {
+                setPaying(true)
+                setError("")
+                try {
+                  const res = await fetch("/api/alipay/create", { method: "POST" })
+                  const data = await res.json()
+                  if (data.payUrl) {
+                    window.location.href = data.payUrl
+                  } else {
+                    setError(data.error || "创建支付失败")
                     setPaying(false)
                   }
-                }}
-                disabled={actionLoading !== null || paying}
-                className="flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed text-left"
-              >
-                <span className="text-3xl">💙</span>
-                <div>
-                  <p className="font-semibold text-gray-900">支付宝</p>
-                  <p className="text-xs text-gray-400">¥15/月</p>
-                </div>
-                {paying && <span className="ml-auto text-sm text-gray-400">跳转中...</span>}
-              </button>
-            </div>
-          </div>
+                } catch {
+                  setError("网络错误")
+                  setPaying(false)
+                }
+              }}
+              disabled={actionLoading !== null || paying}
+              className="flex-1 min-w-[160px] flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-blue-300 hover:bg-blue-50/50 hover:shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
+            >
+              <span className="text-2xl shrink-0">💙</span>
+              <div className="min-w-0">
+                <p className="font-semibold text-gray-900 text-sm">支付宝</p>
+                <p className="text-xs text-gray-400">¥15/月</p>
+              </div>
+              {paying && <span className="ml-auto text-xs text-gray-400 shrink-0">跳转中...</span>}
+            </button>
 
-          {/* Stripe 国际支付 */}
-          {info?.stripeConfigured && (
-            <div className="border-t border-gray-50 pt-4">
-              <p className="text-sm text-gray-500 mb-3">国际支付</p>
+            {/* Stripe 国际支付 */}
+            {info?.stripeConfigured && (
               <button
                 onClick={() => handleStripeUpgrade("pro")}
                 disabled={actionLoading !== null}
-                className="flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-[#FF6B35] hover:bg-orange-50/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed text-left w-full"
+                className="flex-1 min-w-[160px] flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-[#FF6B35] hover:bg-orange-50/50 hover:shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
               >
-                <span className="text-2xl">💳</span>
-                <div>
-                  <p className="font-semibold text-gray-900">信用卡 / Stripe</p>
-                  <p className="text-xs text-gray-400">支持国际信用卡，$5/月</p>
+                <span className="text-2xl shrink-0">💳</span>
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-900 text-sm">信用卡</p>
+                  <p className="text-xs text-gray-400">$5/月 · Stripe</p>
                 </div>
-                {actionLoading === "pro" && (
-                  <span className="ml-auto text-sm text-gray-400">跳转中...</span>
-                )}
+                {actionLoading === "pro" && <span className="ml-auto text-xs text-gray-400 shrink-0">跳转中...</span>}
               </button>
-            </div>
-          )}
+            )}
 
-          {/* Creem 支付 */}
-          {info?.creemConfigured && (
-            <div className="border-t border-gray-50 pt-4">
-              <p className="text-sm text-gray-500 mb-3">其他支付</p>
+            {/* Creem 支付 */}
+            {info?.creemConfigured && (
               <button
                 onClick={handleCreemUpgrade}
                 disabled={actionLoading !== null}
-                className="flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-green-400 hover:bg-green-50/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed text-left w-full"
+                className="flex-1 min-w-[160px] flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-green-400 hover:bg-green-50/50 hover:shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
               >
-                <span className="text-2xl">💚</span>
-                <div>
-                  <p className="font-semibold text-gray-900">Creem 支付</p>
-                  <p className="text-xs text-gray-400">支持信用卡及多种支付方式</p>
+                <span className="text-2xl shrink-0">💚</span>
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-900 text-sm">Creem</p>
+                  <p className="text-xs text-gray-400">信用卡 · 多种支付</p>
                 </div>
-                {actionLoading === "creem" && (
-                  <span className="ml-auto text-sm text-gray-400">跳转中...</span>
-                )}
+                {actionLoading === "creem" && <span className="ml-auto text-xs text-gray-400 shrink-0">跳转中...</span>}
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
