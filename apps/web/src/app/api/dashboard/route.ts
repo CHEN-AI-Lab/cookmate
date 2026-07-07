@@ -5,11 +5,19 @@ import { isAlipayConfigured } from "@cookmate/shared/api/alipay-pay"
 import { isCreemConfigured } from "@cookmate/shared/api/creem"
 import { isDemoUser } from "@/lib/auth-helpers"
 
-// 检查订阅是否过期，过期自动降级
+// 检查订阅是否过期，过期自动降级（按日期比较，忽略时分秒）
+function isExpired(expiryDate: Date): boolean {
+  const now = new Date()
+  now.setUTCHours(0, 0, 0, 0)
+  const expiry = new Date(expiryDate)
+  expiry.setUTCHours(0, 0, 0, 0)
+  return now > expiry
+}
+
 async function checkSubscription(userId: string, user: { subscriptionTier: string; subscriptionExpiryDate: Date | null } | null): Promise<string> {
   if (!user || user.subscriptionTier?.toUpperCase() !== "PRO") return "FREE"
   if (!user.subscriptionExpiryDate) return "PRO" // 无到期日的视为永久
-  if (new Date() > user.subscriptionExpiryDate) {
+  if (isExpired(user.subscriptionExpiryDate)) {
     // 已过期，自动降级
     await prisma.user.update({
       where: { id: userId },

@@ -46,7 +46,7 @@ export async function POST(req: Request) {
             where: { id: order.userId },
             data: {
               subscriptionTier: "PRO",
-              subscriptionExpiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+              subscriptionExpiryDate: (() => { const d = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); d.setUTCHours(23, 59, 59, 999); return d })(),
             },
           })
         }
