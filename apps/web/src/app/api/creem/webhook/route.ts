@@ -1,30 +1,47 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
-// 从事件中提取 userId（metadata 在不同事件类型中位置不同）
+// 从事件中提取 userId
+// Creem webhook payload 结构：
+// { "eventType": "xxx", "object": { "metadata": { "userId": "..." }, ... } }
 function extractUserId(event: Record<string, unknown>): string | null {
-  // subscription.active — metadata 在顶层
-  if (event.metadata && typeof event.metadata === "object") {
-    const meta = event.metadata as Record<string, unknown>
-    if (typeof meta.userId === "string") return meta.userId
-  }
-  // checkout.completed — 可能在 event.data 里
-  if (event.data && typeof event.data === "object") {
-    const d = event.data as Record<string, unknown>
-    if (d.metadata && typeof d.metadata === "object") {
-      const meta = d.metadata as Record<string, unknown>
+  // checkout.completed — metadata 在 event.object.metadata
+  if (event.object && typeof event.object === "object") {
+    const obj = event.object as Record<string, unknown>
+    if (obj.metadata && typeof obj.metadata === "object") {
+      const meta = obj.metadata as Record<string, string>
       if (typeof meta.userId === "string") return meta.userId
     }
+    // subscription.active — 订阅对象里也有 metadata
+    if (obj.subscription && typeof obj.subscription === "object") {
+      const sub = obj.subscription as Record<string, unknown>
+      if (sub.metadata && typeof sub.metadata === "object") {
+        const meta = sub.metadata as Record<string, string>
+        if (typeof meta.userId === "string") return meta.userId
+      }
+    }
+  }
+  // 旧格式兜底
+  if (event.metadata && typeof event.metadata === "object") {
+    const meta = event.metadata as Record<string, string>
+    if (typeof meta.userId === "string") return meta.userId
   }
   return null
 }
 
 function extractOrderId(event: Record<string, unknown>): string | null {
-  if (typeof event.id === "string") return event.id
-  if (event.data && typeof event.data === "object") {
-    const d = event.data as Record<string, unknown>
-    if (typeof d.id === "string") return d.id
+  // checkout.completed — event.object.id 是 checkout ID
+  if (event.object && typeof event.object === "object") {
+    const obj = event.object as Record<string, unknown>
+    if (typeof obj.id === "string") return obj.id
+    // 也可取 order.id
+    if (obj.order && typeof obj.order === "object") {
+      const o = obj.order as Record<string, unknown>
+      if (typeof o.id === "string") return o.id
+    }
   }
+  // 兜底：event 本身的 id
+  if (typeof event.id === "string") return event.id
   return null
 }
 
@@ -78,7 +95,7 @@ export async function POST(req: Request) {
     const event = JSON.parse(body)
 
     // checkout.completed — 订单完成
-    if (event.type === "checkout.completed") {
+    if (event.eventType === "checkout.completed") {
       const userId = extractUserId(event)
       const orderId = extractOrderId(event) || ""
       if (orderId) {
@@ -92,7 +109,7 @@ export async function POST(req: Request) {
     }
 
     // subscription.active / subscription.paid — 订阅激活/续费
-    if (event.type === "subscription.active" || event.type === "subscription.paid") {
+    if (event.eventType === "subscription.active" || event.eventType === "subscription.paid") {
       const userId = extractUserId(event)
       if (!userId) {
         return NextResponse.json({ error: "Missing userId in metadata" }, { status: 400 })
