@@ -39,14 +39,16 @@ export default function BillingPage() {
     // 检测 URL 参数，清除后自动消失
     const params = new URLSearchParams(window.location.search)
     if (params.get("success") === "true") {
-      setMessage("🎉 订阅成功！感谢你的支持。")
+      const timer = setTimeout(() => {
+        setMessage("🎉 订阅成功！感谢你的支持。")
+        // 3 秒后自动消失
+        setTimeout(() => setMessage(""), 3000)
+      }, 0)
       // 清除 URL 参数，防止刷新后重复显示
       window.history.replaceState({}, "", window.location.pathname)
-      // 3 秒后自动消失
-      const timer = setTimeout(() => setMessage(""), 3000)
       return () => clearTimeout(timer)
     } else if (params.get("canceled") === "true") {
-      setMessage("")
+      // 取消支付，不显示消息
       window.history.replaceState({}, "", window.location.pathname)
     }
   }, [refreshKey])
