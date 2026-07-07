@@ -39,8 +39,7 @@ export default function BillingPage() {
     // 检测 URL 参数，清除后自动消失
     const params = new URLSearchParams(window.location.search)
     if (params.get("success") === "true") {
-      setMessage("⏳ 正在确认支付结果...")
-      // 自动查询 Creem 支付状态
+      // 自动查询 Creem 支付结果，无感处理
       fetch("/api/creem/create-checkout")
         .then((r) => r.json())
         .then((data) => {
@@ -50,20 +49,13 @@ export default function BillingPage() {
           return null
         })
         .then((result) => {
-          if (result?.paid) {
-            setMessage("🎉 " + result.message)
+          if (result?.paid || result?.message?.includes("没有待处理")) {
+            // 成功了，刷新页面状态
             setRefreshKey((k) => k + 1)
-          } else if (result?.message?.includes("没有待处理")) {
-            setMessage("🎉 订阅成功！感谢你的支持。")
-            setRefreshKey((k) => k + 1)
-          } else {
-            setMessage("🎉 支付成功！点击「检测付款状态」确认升级。")
           }
+          // 没成功也不提示，用户看到还是 FREE 自然会继续点
         })
-        .catch(() => {
-          setMessage("🎉 已跳转回账单页面，点击「检测付款状态」确认升级。")
-        })
-      // 清除 URL 参数
+        .catch(() => { /* 静默 */ })
       window.history.replaceState({}, "", window.location.pathname)
     } else if (params.get("canceled") === "true") {
       window.history.replaceState({}, "", window.location.pathname)
