@@ -279,7 +279,10 @@ export default function BillingPage() {
                 disabled={actionLoading !== null}
                 className="flex-1 min-w-[160px] flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-[#FF6B35] hover:bg-orange-50/50 hover:shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
               >
-                <span className="text-2xl shrink-0">💳</span>
+                <svg className="w-7 h-7 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="24" height="24" rx="4" fill="#635BFF"/>
+                  <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z" fill="white"/>
+                </svg>
                 <div className="min-w-0">
                   <p className="font-semibold text-gray-900 text-sm">信用卡</p>
                   <p className="text-xs text-gray-400">$5/月 · Stripe</p>
@@ -295,7 +298,10 @@ export default function BillingPage() {
                 disabled={actionLoading !== null}
                 className="flex-1 min-w-[160px] flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-green-400 hover:bg-green-50/50 hover:shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
               >
-                <span className="text-2xl shrink-0">💚</span>
+                <svg className="w-7 h-7 shrink-0" viewBox="0 0 121 121" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="121" height="121" rx="16" fill="#151617"/>
+                  <path d="M22.1102 11C24.1187 11.0001 25.9669 12.0982 26.9281 13.8619L51.2059 58.4106C52.5699 60.9134 55.7048 61.8368 58.2077 60.473C60.7108 59.109 61.6342 55.9742 60.2701 53.4712L41.5466 19.113C39.554 15.4566 42.2004 11 46.3645 11H103.806C107.885 11 110.539 15.2933 108.715 18.9416L65.0579 106.254C63.0356 110.298 57.2654 110.298 55.2431 106.254L11.5863 18.9416C9.76212 15.2933 12.4156 11 15.4946 11H22.1102Z" fill="white"/>
+                </svg>
                 <div className="min-w-0">
                   <p className="font-semibold text-gray-900 text-sm">Creem</p>
                   <p className="text-xs text-gray-400">信用卡 · 多种支付</p>

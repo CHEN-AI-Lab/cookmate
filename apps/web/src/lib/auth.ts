@@ -239,7 +239,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   providers,
   callbacks: {
-    async signIn({ account }) {
+    async signIn() {
       return true
     },
     async session({ session, token }) {
@@ -258,7 +258,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.provider = account.provider
       }
       if (user) {
-        token.loginMethod = (user as any).loginMethod
+        token.loginMethod = (user as Record<string, unknown>).loginMethod as string | undefined
       }
       if (token.sub) {
         try {
