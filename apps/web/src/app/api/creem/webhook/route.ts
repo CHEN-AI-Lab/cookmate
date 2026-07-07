@@ -48,7 +48,6 @@ export async function POST(req: Request) {
 
       // 更新用户订阅
       const expiryDate = new Date()
-      expiryDate.setUTCHours(23, 59, 59, 999)
       expiryDate.setUTCMonth(expiryDate.getUTCMonth() + 1)
 
       await prisma.user.update({
