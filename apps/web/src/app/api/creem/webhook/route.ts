@@ -81,18 +81,35 @@ async function recordOrder(userId: string, orderId: string) {
   }
 }
 
+async function logWebhook(source: string, eventType: string | null, status: string, rawBody?: string) {
+  try {
+    await prisma.webhookLog.create({
+      data: { source, eventType, status, rawBody },
+    })
+  } catch {
+    // 日志不要影响主流程
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const signature = req.headers.get("creem-signature") || ""
     const body = await req.text()
 
+    // 先记录日志（异步，不阻塞）
+    let parsedEvent: Record<string, unknown> = {}
+    try { parsedEvent = JSON.parse(body) } catch { /* skip */ }
+    const rawEventType = (parsedEvent?.eventType as string) || null
+    logWebhook("creem", rawEventType, "received", body)
+
     // 验证签名
     const { verifyWebhook } = await import("@cookmate/shared/api/creem")
     if (!verifyWebhook(body, signature)) {
+      logWebhook("creem", rawEventType, "failed:signature")
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
     }
 
-    const event = JSON.parse(body)
+    const event = parsedEvent
 
     // checkout.completed — 订单完成
     if (event.eventType === "checkout.completed") {
@@ -101,27 +118,28 @@ export async function POST(req: Request) {
       if (orderId) {
         await recordOrder(userId || "unknown", orderId)
       }
-      // 如果有 userId，立即升级（某些场景只有 checkout.completed 没有 subscription.active）
       if (userId) {
         await upgradeUser(userId)
       }
+      logWebhook("creem", "checkout.completed", "success")
       return NextResponse.json({ success: true })
     }
 
-    // subscription.active / subscription.paid — 订阅激活/续费
-    // 注意：Creem 的 subscription.active 事件 payload 中没有 metadata
-    // 升级已经由 checkout.completed 完成，这里只是兜底
+    // subscription.active / subscription.paid
     if (event.eventType === "subscription.active" || event.eventType === "subscription.paid") {
       const userId = extractUserId(event)
       if (userId) {
         await upgradeUser(userId)
       }
+      logWebhook("creem", event.eventType as string, "success")
       return NextResponse.json({ success: true })
     }
 
+    logWebhook("creem", rawEventType, "ignored")
     return NextResponse.json({ received: true })
   } catch (error: unknown) {
     console.error("Creem webhook error:", error)
+    logWebhook("creem", null, "failed:error")
     return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 })
   }
 }

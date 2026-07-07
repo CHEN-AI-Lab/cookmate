@@ -175,11 +175,20 @@ model UsageDaily {
 model PaymentOrder {
   id         String   @id @default(cuid())
   orderId    String   @unique               // 业务订单号
-  channel    String                        // 支付渠道: alipay
+  channel    String                        // 支付渠道: alipay, creem, stripe
   amount     Int                           // 金额（分）
   status     String   @default("PENDING")  // PENDING / PAID / EXPIRED
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   userId     String
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WebhookLog {
+  id        String   @id @default(cuid())
+  source    String                        // creem / alipay / stripe
+  eventType String?
+  status    String   @default("received") // received / processed / failed
+  rawBody   String?
+  createdAt DateTime @default(now())
 }

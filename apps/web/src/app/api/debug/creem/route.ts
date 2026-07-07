@@ -22,6 +22,19 @@ export async function GET() {
     webhook_secret_set: !!process.env.CREEM_WEBHOOK_SECRET,
   }
 
+  // 最新的 webhook 日志
+  const webhookLogs = await prisma.webhookLog.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 20,
+  })
+  result.webhook_logs = webhookLogs.map((l) => ({
+    id: l.id,
+    source: l.source,
+    eventType: l.eventType,
+    status: l.status,
+    createdAt: l.createdAt.toISOString(),
+  }))
+
   // 当前用户
   if (session?.user?.id) {
     const user = await prisma.user.findUnique({
