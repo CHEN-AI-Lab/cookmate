@@ -77,19 +77,22 @@ export async function POST(req: Request) {
 
     const event = JSON.parse(body)
 
-    // checkout.completed — 订单完成，不一定有 metadata
+    // checkout.completed — 订单完成
     if (event.eventType === "checkout.completed") {
       const userId = extractUserId(event)
       const orderId = extractOrderId(event) || ""
-      if (userId && orderId) {
-        await recordOrder(userId, orderId)
+      if (orderId) {
+        await recordOrder(userId || "unknown", orderId)
       }
-      // 不在此处升级用户，等 subscription.active 事件
+      // 如果有 userId，立即升级（某些场景只有 checkout.completed 没有 subscription.active）
+      if (userId) {
+        await upgradeUser(userId)
+      }
       return NextResponse.json({ success: true })
     }
 
-    // subscription.active — 订阅激活，此时 metadata 可用
-    if (event.eventType === "subscription.active") {
+    // subscription.active / subscription.paid — 订阅激活/续费
+    if (event.eventType === "subscription.active" || event.eventType === "subscription.paid") {
       const userId = extractUserId(event)
       if (!userId) {
         return NextResponse.json({ error: "Missing userId in metadata" }, { status: 400 })
