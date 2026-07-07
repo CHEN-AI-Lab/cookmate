@@ -25,7 +25,6 @@ export default function BillingPage() {
     fetch("/api/dashboard")
       .then((r) => r.json())
       .then((data) => {
-        console.log("Dashboard API response:", data)
         setInfo({
           subscriptionTier: data.subscriptionTier || "FREE",
           stripeConfigured: !!data.stripeConfigured,

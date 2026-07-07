@@ -7,7 +7,7 @@ import { isDemoUser } from "@/lib/auth-helpers"
 
 // 检查订阅是否过期，过期自动降级
 async function checkSubscription(userId: string, user: { subscriptionTier: string; subscriptionExpiryDate: Date | null } | null): Promise<string> {
-  if (!user || user.subscriptionTier !== "PRO") return "FREE"
+  if (!user || user.subscriptionTier?.toUpperCase() !== "PRO") return "FREE"
   if (!user.subscriptionExpiryDate) return "PRO" // 无到期日的视为永久
   if (new Date() > user.subscriptionExpiryDate) {
     // 已过期，自动降级
@@ -45,8 +45,6 @@ export async function GET() {
       where: { id: userId },
       select: { subscriptionTier: true, subscriptionExpiryDate: true },
     }).catch((err: unknown) => { console.error("findUnique user error:", err); return null })
-
-    console.log("Dashboard user from DB:", user, "userId:", userId)
 
     const tier = await checkSubscription(userId, user)
 
