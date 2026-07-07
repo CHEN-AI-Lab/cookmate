@@ -56,6 +56,13 @@ export async function GET() {
 
     const tier = await checkSubscription(userId, user)
 
+    // 最近订单
+    const orders = await prisma.paymentOrder.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    })
+
     return NextResponse.json({
       pantryCount,
       starredCount,
@@ -66,6 +73,14 @@ export async function GET() {
       stripeConfigured: !!(process.env.STRIPE_SECRET_KEY && process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY),
       paymentConfigured: isAlipayConfigured(),
       creemConfigured: isCreemConfigured(),
+      orders: orders.map((o) => ({
+        id: o.id,
+        orderId: o.orderId,
+        channel: o.channel,
+        amount: o.amount,
+        status: o.status,
+        createdAt: o.createdAt.toISOString(),
+      })),
       isDemoUser: isDemoUser(session),
     })
   } catch (error) {

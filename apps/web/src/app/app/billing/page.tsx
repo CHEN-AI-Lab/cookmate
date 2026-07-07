@@ -10,6 +10,14 @@ interface BillingInfo {
   subscriptionExpiryDate?: string | null
   isDemoUser: boolean
   creemConfigured: boolean
+  orders?: Array<{
+    id: string
+    orderId: string
+    channel: string
+    amount: number
+    status: string
+    createdAt: string
+  }>
 }
 
 export default function BillingPage() {
@@ -31,6 +39,7 @@ export default function BillingPage() {
           subscriptionExpiryDate: data.subscriptionExpiryDate,
           isDemoUser: !!data.isDemoUser,
           creemConfigured: !!data.creemConfigured,
+          orders: data.orders || [],
         })
       })
       .catch((err) => { console.error("load billing info error:", err); setError("加载失败"); })
@@ -367,6 +376,55 @@ export default function BillingPage() {
           </p>
         </div>
       )}
+
+      {/* Order history */}
+      {(() => {
+        const orders = info?.orders
+        if (!orders || orders.length === 0) return null
+        return (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <h3 className="font-bold text-gray-900 mb-4">📋 订单记录</h3>
+          <div className="space-y-2">
+            {orders.map((order) => {
+              const channelLabel: Record<string, string> = { alipay: "支付宝", creem: "Creem", stripe: "Stripe" }
+              const channelEmoji: Record<string, string> = { alipay: "💙", creem: "💚", stripe: "💳" }
+              const statusLabel: Record<string, string> = { PAID: "已支付", PENDING: "待支付", EXPIRED: "已过期" }
+              const statusColor: Record<string, string> = {
+                PAID: "text-green-600 bg-green-50",
+                PENDING: "text-amber-600 bg-amber-50",
+                EXPIRED: "text-gray-500 bg-gray-50",
+              }
+              const date = new Date(order.createdAt)
+              return (
+                <div key={order.id} className="flex items-center justify-between py-3 px-4 rounded-xl bg-gray-50/50 hover:bg-gray-100/50 transition-colors">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-lg shrink-0">{channelEmoji[order.channel] || "💳"}</span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900">
+                        {channelLabel[order.channel] || order.channel}
+                      </p>
+                      <p className="text-xs text-gray-400 font-mono truncate">
+                        {order.orderId}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0 ml-4">
+                    <p className="text-sm font-semibold text-gray-900">
+                      ¥{(order.amount / 100).toFixed(2)}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {date.toLocaleDateString("zh-CN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
+                  <span className={`ml-3 px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[order.status] || "text-gray-500 bg-gray-50"}`}>
+                    {statusLabel[order.status] || order.status}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+        )})()}
 
       {/* Back to dashboard */}
       <div className="text-center">
