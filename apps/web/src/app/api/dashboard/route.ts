@@ -46,6 +46,8 @@ export async function GET() {
       select: { subscriptionTier: true, subscriptionExpiryDate: true },
     }).catch((err: unknown) => { console.error("findUnique user error:", err); return null })
 
+    console.log("Dashboard user from DB:", user, "userId:", userId)
+
     const tier = await checkSubscription(userId, user)
 
     return NextResponse.json({
