@@ -1,12 +1,13 @@
 "use client"
 
 export default function AppError({
-  error,
+  _error,
   reset,
 }: {
-  error: Error & { digest?: string }
+  _error: Error & { digest?: string }
   reset: () => void
 }) {
+  void _error
   return (
     <div className="min-h-[50vh] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-sm border border-orange-50 p-8 max-w-md w-full text-center">

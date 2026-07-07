@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { createPagePay, generateOrderId, isAlipayConfigured } from "@cookmate/shared/api/alipay-pay"
 import { isDemoUser } from "@/lib/auth-helpers"
 
-export async function POST(req: Request) {
+export async function POST(_req: Request) {
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 })

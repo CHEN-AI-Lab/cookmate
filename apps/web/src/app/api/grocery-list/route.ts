@@ -16,7 +16,7 @@ function parseIngredient(raw: string): { name: string; quantity: string } {
   if (!trimmed) return { name: "", quantity: "" }
 
   // 预清理：去掉末尾括号里的克数/重量（"鲈鱼 1条(300g)" → "鲈鱼 1条"）
-  let bare = trimmed.replace(/\s*\([^)]*[\d.][^)]*\)\s*$/, '').trim()
+  const bare = trimmed.replace(/\s*\([^)]*[\d.][^)]*\)\s*$/, '').trim()
 
   // 额外处理"中文数字+量词+数字+单位"的情况，如"一块100g"、"两块500g"
   // 把"一块100g"转成"100g"以便后续正则提取
