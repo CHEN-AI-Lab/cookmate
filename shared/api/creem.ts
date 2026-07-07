@@ -29,7 +29,6 @@ function getHeaders(): Record<string, string> {
 export async function createCheckout(params: {
   productId?: string
   successUrl: string
-  cancelUrl: string
   metadata?: Record<string, string>
 }): Promise<{ checkoutUrl: string; sessionId: string }> {
   const productId = params.productId || process.env.CREEM_PRODUCT_ID
@@ -38,7 +37,6 @@ export async function createCheckout(params: {
   const body: Record<string, unknown> = {
     product_id: productId,
     success_url: params.successUrl,
-    cancel_url: params.cancelUrl,
   }
 
   if (params.metadata && Object.keys(params.metadata).length > 0) {

@@ -17,7 +17,6 @@ export async function POST() {
 
     const { checkoutUrl } = await createCheckout({
       successUrl: `${baseUrl}/app/billing?success=true`,
-      cancelUrl: `${baseUrl}/app/billing?canceled=true`,
       metadata: { userId: session.user.id },
     })
 
