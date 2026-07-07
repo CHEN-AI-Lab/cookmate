@@ -109,12 +109,13 @@ export async function POST(req: Request) {
     }
 
     // subscription.active / subscription.paid — 订阅激活/续费
+    // 注意：Creem 的 subscription.active 事件 payload 中没有 metadata
+    // 升级已经由 checkout.completed 完成，这里只是兜底
     if (event.eventType === "subscription.active" || event.eventType === "subscription.paid") {
       const userId = extractUserId(event)
-      if (!userId) {
-        return NextResponse.json({ error: "Missing userId in metadata" }, { status: 400 })
+      if (userId) {
+        await upgradeUser(userId)
       }
-      await upgradeUser(userId)
       return NextResponse.json({ success: true })
     }
 
