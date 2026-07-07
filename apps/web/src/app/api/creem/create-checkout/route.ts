@@ -70,7 +70,14 @@ export async function GET(req: Request) {
 
   try {
     const checkout = await retrieveCheckout(checkoutId)
-    const isPaid = checkout.status === "completed" || checkout.status === "paid"
+    const checkoutMeta = checkout.metadata as Record<string, string> | undefined
+
+    // 安全检查：这个 checkout 必须是当前用户的
+    if (checkoutMeta?.userId && checkoutMeta.userId !== session.user.id) {
+      return NextResponse.json({ paid: false, error: "订单不属于当前用户" }, { status: 403 })
+    }
+
+    const isPaid = checkout.status === "completed"
 
     if (isPaid) {
       // 更新订单状态

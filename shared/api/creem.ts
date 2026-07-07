@@ -80,7 +80,7 @@ export function isCreemConfigured(): boolean {
 }
 
 // 查询 checkout 状态
-export async function retrieveCheckout(checkoutId: string): Promise<{ status: string }> {
+export async function retrieveCheckout(checkoutId: string): Promise<{ status: string; metadata?: Record<string, unknown> }> {
   const res = await fetch(`${getBaseUrl()}/checkouts/${checkoutId}`, {
     method: "GET",
     headers: getHeaders(),
