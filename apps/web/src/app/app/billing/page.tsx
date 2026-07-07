@@ -39,16 +39,33 @@ export default function BillingPage() {
     // 检测 URL 参数，清除后自动消失
     const params = new URLSearchParams(window.location.search)
     if (params.get("success") === "true") {
-      const timer = setTimeout(() => {
-        setMessage("🎉 订阅成功！感谢你的支持。")
-        // 3 秒后自动消失
-        setTimeout(() => setMessage(""), 3000)
-      }, 0)
-      // 清除 URL 参数，防止刷新后重复显示
+      setMessage("⏳ 正在确认支付结果...")
+      // 自动查询 Creem 支付状态
+      fetch("/api/creem/create-checkout")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.checkoutId) {
+            return fetch(`/api/creem/create-checkout?checkoutId=${data.checkoutId}`).then((r) => r.json())
+          }
+          return null
+        })
+        .then((result) => {
+          if (result?.paid) {
+            setMessage("🎉 " + result.message)
+            setRefreshKey((k) => k + 1)
+          } else if (result?.message?.includes("没有待处理")) {
+            setMessage("🎉 订阅成功！感谢你的支持。")
+            setRefreshKey((k) => k + 1)
+          } else {
+            setMessage("🎉 支付成功！点击「检测付款状态」确认升级。")
+          }
+        })
+        .catch(() => {
+          setMessage("🎉 已跳转回账单页面，点击「检测付款状态」确认升级。")
+        })
+      // 清除 URL 参数
       window.history.replaceState({}, "", window.location.pathname)
-      return () => clearTimeout(timer)
     } else if (params.get("canceled") === "true") {
-      // 取消支付，不显示消息
       window.history.replaceState({}, "", window.location.pathname)
     }
   }, [refreshKey])
@@ -309,6 +326,42 @@ export default function BillingPage() {
                 {actionLoading === "creem" && <span className="ml-auto text-xs text-gray-400 shrink-0">跳转中...</span>}
               </button>
             )}
+
+            {/* 检测 Creem 付款状态 */}
+            <button
+              onClick={async () => {
+                setActionLoading("check")
+                setError("")
+                try {
+                  const res = await fetch("/api/creem/create-checkout")
+                  const data = await res.json()
+                  if (!data.checkoutId) {
+                    setError("没有待处理的 Creem 订单，请先付款")
+                    return
+                  }
+                  const result = await fetch(`/api/creem/create-checkout?checkoutId=${data.checkoutId}`).then((r) => r.json())
+                  if (result.paid) {
+                    setMessage("🎉 " + result.message)
+                    setRefreshKey((k) => k + 1)
+                  } else {
+                    setError(result.message || "未检测到支付")
+                  }
+                } catch (err) {
+                  setError("查询失败，请稍后重试")
+                } finally {
+                  setActionLoading(null)
+                }
+              }}
+              disabled={actionLoading !== null}
+              className="flex-1 min-w-[160px] flex items-center gap-3 p-4 rounded-xl border border-dashed border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
+            >
+              <span className="text-lg shrink-0">🔍</span>
+              <div className="min-w-0">
+                <p className="font-semibold text-gray-900 text-sm">检测付款状态</p>
+                <p className="text-xs text-gray-400">付完款后点击确认</p>
+              </div>
+              {actionLoading === "check" && <span className="ml-auto text-xs text-gray-400 shrink-0">查询中...</span>}
+            </button>
           </div>
         </div>
       )}

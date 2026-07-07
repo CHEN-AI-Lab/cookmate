@@ -78,3 +78,18 @@ export function verifyWebhook(payload: string, signature: string): boolean {
 export function isCreemConfigured(): boolean {
   return !!(process.env.CREEM_API_KEY && process.env.CREEM_PRODUCT_ID)
 }
+
+// 查询 checkout 状态
+export async function retrieveCheckout(checkoutId: string): Promise<{ status: string }> {
+  const res = await fetch(`${getBaseUrl()}/checkouts/${checkoutId}`, {
+    method: "GET",
+    headers: getHeaders(),
+  })
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Creem retrieve checkout failed: ${res.status} ${text.substring(0, 200)}`)
+  }
+
+  return res.json()
+}
