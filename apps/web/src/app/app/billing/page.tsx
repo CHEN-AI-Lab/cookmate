@@ -28,7 +28,6 @@ export default function BillingPage() {
   const [message, setMessage] = useState("")
   const [refreshKey, setRefreshKey] = useState(0)
   const [paying, setPaying] = useState(false)
-  const [showOrders, setShowOrders] = useState(false)
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -378,64 +377,17 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* Order history - collapsible */}
-      {(() => {
-        const orders = info?.orders
-        if (!orders || orders.length === 0) return null
-        return (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <button
-            onClick={() => setShowOrders(!showOrders)}
-            className="w-full flex items-center justify-between"
+      {/* Order history link - separate page */}
+      {(info?.orders?.length ?? 0) > 0 && (
+        <div className="text-center">
+          <Link
+            href="/app/orders"
+            className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-[#FF6B35] transition-colors"
           >
-            <h3 className="font-bold text-gray-900">📋 订单记录</h3>
-            <span className={`text-sm text-gray-400 transition-transform ${showOrders ? "rotate-180" : ""}`}>
-              ▾
-            </span>
-          </button>
-          {showOrders && (
-          <div className="space-y-2 mt-4">
-            {orders.map((order) => {
-              const channelLabel: Record<string, string> = { alipay: "支付宝", creem: "Creem", stripe: "Stripe" }
-              const channelEmoji: Record<string, string> = { alipay: "💙", creem: "💚", stripe: "💳" }
-              const statusLabel: Record<string, string> = { PAID: "已支付", PENDING: "待支付", EXPIRED: "已过期" }
-              const statusColor: Record<string, string> = {
-                PAID: "text-green-600 bg-green-50",
-                PENDING: "text-amber-600 bg-amber-50",
-                EXPIRED: "text-gray-500 bg-gray-50",
-              }
-              const date = new Date(order.createdAt)
-              return (
-                <div key={order.id} className="flex items-center justify-between py-3 px-4 rounded-xl bg-gray-50/50 hover:bg-gray-100/50 transition-colors">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-lg shrink-0">{channelEmoji[order.channel] || "💳"}</span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900">
-                        {channelLabel[order.channel] || order.channel}
-                      </p>
-                      <p className="text-xs text-gray-400 font-mono truncate">
-                        {order.orderId}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0 ml-4">
-                    <p className="text-sm font-semibold text-gray-900">
-                      ¥{(order.amount / 100).toFixed(2)}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {date.toLocaleDateString("zh-CN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                    </p>
-                  </div>
-                  <span className={`ml-3 px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[order.status] || "text-gray-500 bg-gray-50"}`}>
-                    {statusLabel[order.status] || order.status}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-          )}
+            📋 查看订单记录 →
+          </Link>
         </div>
-        )})()}
+      )}
 
       {/* Back to dashboard */}
       <div className="text-center">
