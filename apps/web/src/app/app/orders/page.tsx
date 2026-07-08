@@ -85,16 +85,9 @@ export default function OrdersPage() {
                     <p className="text-sm font-medium text-gray-900">
                       {channelLabel[order.channel] || order.channel}
                     </p>
-                    <p className="text-xs text-gray-400 font-mono">
+                    <p className="text-xs text-gray-400 font-mono truncate max-w-[160px]">
                       {order.orderId}
                     </p>
-                    {order.status === "PAID" ? (
-                      <p className="text-xs text-green-600 font-medium">付款成功</p>
-                    ) : order.status === "PENDING" ? (
-                      <p className="text-xs text-amber-600 font-medium">等待付款</p>
-                    ) : (
-                      <p className="text-xs text-gray-400">已过期</p>
-                    )}
                   </div>
                 </div>
 
@@ -102,7 +95,7 @@ export default function OrdersPage() {
                   <p className="text-sm font-semibold text-gray-900">
                     ¥{(order.amount / 100).toFixed(2)}
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-400 whitespace-nowrap">
                     {date.toLocaleDateString("zh-CN", {
                       year: "numeric", month: "2-digit", day: "2-digit",
                       hour: "2-digit", minute: "2-digit",
@@ -110,7 +103,7 @@ export default function OrdersPage() {
                   </p>
                 </div>
 
-                <span className={`ml-3 px-2.5 py-1 rounded-full text-xs font-medium ${statusColor[order.status] || "text-gray-500 bg-gray-50"}`}>
+                <span className={`ml-3 px-2.5 py-1 rounded-full text-xs font-medium shrink-0 ${statusColor[order.status] || "text-gray-500 bg-gray-50"}`}>
                   {statusLabel[order.status] || order.status}
                 </span>
               </div>
