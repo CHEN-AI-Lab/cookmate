@@ -5,8 +5,11 @@ import { useState, useEffect, useRef } from "react"
 import PasswordInput from "@/components/ui/PasswordInput"
 import Link from "next/link"
 import OAuthLoadingOverlay from "@/components/ui/OAuthLoadingOverlay"
+import { useTranslations } from "next-intl"
 
 export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boolean; userName?: string }) {
+  const t = useTranslations('auth')
+  const tv = useTranslations('validation')
   const [tab, setTab] = useState<"email" | "password">("email")
   const [phone, setPhone] = useState("")
   const [code, setCode] = useState("")
@@ -52,7 +55,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
 
   const sendCode = async () => {
     if (!/^1\d{10}$/.test(phone)) {
-      setError("请输入正确的11位手机号")
+      setError(tv('invalidPhone'))
       return
     }
     setLoading("send")
@@ -65,19 +68,19 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || "发送失败")
+        setError(data.error || tv('sendFailed'))
         return
       }
       setCountdown(60)
       if (data.devCode) {
         setCode(data.devCode)
-        setError(`⚠️ 开发模式：验证码已自动填入 ${data.devCode}`)
+        setError(tv('devCodeAutoFill', { code: data.devCode }))
       } else {
-        setError("验证码已发送，请查收手机短信")
+        setError(tv('codeSent'))
         setTimeout(() => setError(""), 3000)
       }
     } catch {
-      setError("网络错误，请稍后重试")
+      setError(tv('networkError'))
     } finally {
       setLoading(null)
     }
@@ -85,7 +88,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
 
   const handlePhoneLogin = async () => {
     if (!phone || !code) {
-      setError("请输入手机号和验证码")
+      setError(tv('emptyPhoneAndCode'))
       return
     }
     setLoading("phone")
@@ -98,12 +101,12 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || "验证失败")
+        setError(data.error || tv('verifyFailed'))
         return
       }
       window.location.href = "/app/dashboard"
     } catch {
-      setError("网络错误，请稍后重试")
+      setError(tv('networkError'))
     } finally {
       setLoading(null)
     }
@@ -111,7 +114,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
 
   const handleEmailLogin = async () => {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError("请输入正确的邮箱地址")
+      setError(tv('invalidEmail'))
       return
     }
     setLoading("email")
@@ -124,20 +127,20 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || "发送失败")
+        setError(data.error || tv('sendFailed'))
         return
       }
       if (data.devCode) {
         setEmailCode(data.devCode)
         setEmailCodeSent(true)
-        setError(`⚠️ 开发模式：验证码 ${data.devCode}`)
+        setError(tv('devCodePrefix') + ' ' + data.devCode)
       } else {
         setEmailCodeSent(true)
-        setError("验证码已发送到您的邮箱，请查收")
+        setError(tv('codeSentEmail'))
       }
       setCountdown(60)
     } catch {
-      setError("发送失败，请稍后重试")
+      setError(tv('sendFailedRetry'))
     } finally {
       setLoading(null)
     }
@@ -145,7 +148,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
 
   const handleEmailVerify = async () => {
     if (!email || !emailCode) {
-      setError("请输入邮箱和验证码")
+      setError(tv('emptyEmailAndCode'))
       return
     }
     setLoading("email_login")
@@ -158,12 +161,12 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || "验证失败")
+        setError(data.error || tv('verifyFailed'))
         return
       }
       window.location.href = "/app/dashboard"
     } catch {
-      setError("网络错误，请稍后重试")
+      setError(tv('networkError'))
     } finally {
       setLoading(null)
     }
@@ -171,15 +174,15 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
 
   const handlePasswordLogin = async () => {
     if (!email || (!/^1\d{10}$/.test(email) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
-      setError("请输入正确的邮箱或手机号")
+      setError(tv('invalidAccount'))
       return
     }
     if (!password) {
-      setError("请输入密码")
+      setError(tv('emptyPassword'))
       return
     }
     if (password.length < 8) {
-      setError("密码至少 8 位")
+      setError(tv('passwordTooShort'))
       return
     }
     setLoading("password")
@@ -193,13 +196,13 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       })
       const checkData = await checkRes.json()
       if (!checkData.userExists) {
-        setError("该账号不存在，请先注册")
+        setError(tv('accountNotFound'))
         setLoading(null)
         return
       }
       if (!checkData.hasPassword) {
         setPasswordSetupMode(true)
-        setError("该账号未设置密码，请先验证后再设置")
+        setError(tv('noPasswordSet'))
         setLoading(null)
         return
       }
@@ -210,12 +213,12 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         redirect: false,
       })
       if (result?.error) {
-        setError("邮箱/手机号或密码错误")
+        setError(tv('wrongPassword'))
       } else {
         window.location.href = result?.url || "/app/dashboard"
       }
     } catch {
-      setError("邮箱/手机号或密码错误")
+      setError(tv('wrongPassword'))
     } finally {
       setLoading(null)
     }
@@ -234,14 +237,14 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || "发送失败")
+        setError(data.error || tv('sendFailed'))
         return
       }
       setSetupCodeSent(true)
       setSetupCountdown(60)
       if (data.devCode) {
         setSetupCode(data.devCode)
-        setError(`⚠️ 开发模式：验证码 ${data.devCode}`)
+        setError(tv('devCodePrefix') + ' ' + data.devCode)
       } else {
         setError(`验证码已发送到您的${isPhone ? "手机" : "邮箱"}`)
         setTimeout(() => setError(""), 3000)
@@ -255,15 +258,15 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
 
   const handleSetupPassword = async () => {
     if (!setupCode) {
-      setError("请输入验证码")
+      setError(tv('emptyCode'))
       return
     }
     if (setupNewPassword.length < 8) {
-      setError("密码至少 8 位")
+      setError(tv('passwordTooShort'))
       return
     }
     if (setupNewPassword !== setupConfirmPassword) {
-      setError("两次密码不一致")
+      setError(tv('passwordMismatch'))
       return
     }
     setLoading("setup_submit")
@@ -282,7 +285,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       })
       if (!setRes.ok) {
         const setData = await setRes.json()
-        setError(setData.error || "设置密码失败")
+        setError(setData.error || tv('setPasswordFailed'))
         return
       }
 
@@ -293,7 +296,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         callbackUrl: "/app/dashboard",
       })
     } catch {
-      setError("设置失败，请重试")
+      setError(tv('setupFailed'))
     } finally {
       setLoading(null)
     }
@@ -305,7 +308,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     try {
       await signIn(provider, { callbackUrl: "/app/dashboard" })
     } catch {
-      setError("该登录方式尚未配置，上线后即可使用")
+      setError(tv('oauthNotConfigured'))
       setOauthProvider(null)
     }
   }
