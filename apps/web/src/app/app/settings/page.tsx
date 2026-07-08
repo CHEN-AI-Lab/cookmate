@@ -16,7 +16,6 @@ export default function SettingsPage() {
   const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [editNameValue, setEditNameValue] = useState("")
-  const { update: updateSession } = useSession()
   const [showBindPhone, setShowBindPhone] = useState(false)
   const [bindPhone, setBindPhone] = useState("")
   const [bindCode, setBindCode] = useState("")
