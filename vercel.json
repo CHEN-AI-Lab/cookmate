@@ -1,8 +1,6 @@
 {
-  "git": {
-    "deploymentEnabled": {
-      "main": true,
-      "preview": true
-    }
-  }
+  "buildCommand": "cd apps/web && npx prisma db push --accept-data-loss 2>/dev/null; npx next build --webpack",
+  "outputDirectory": "apps/web/.next",
+  "installCommand": "pnpm install",
+  "framework": "nextjs"
 }
