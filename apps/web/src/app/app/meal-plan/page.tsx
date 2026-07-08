@@ -133,6 +133,8 @@ export default function MealPlanPage() {
     })
     setPlan({ ...plan, slots: updatedSlots })
     setDetail(null)
+    setStarToast("✅ 菜谱已删除")
+    setTimeout(() => setStarToast(""), 2500)
   }
 
   const toggleStar = async (recipeId: string) => {
