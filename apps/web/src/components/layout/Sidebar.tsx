@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { signOut, useSession } from "next-auth/react"
+import { signOut } from "next-auth/react"
 
 const navItems = [
   { href: "/app/dashboard", icon: "📊", label: "仪表盘" },
@@ -15,10 +15,12 @@ const navItems = [
   { href: "/app/billing", icon: "💳", label: "账单" },
 ]
 
-export function Sidebar() {
+export function Sidebar({
+  name,
+}: {
+  name?: string | undefined | null
+}) {
   const pathname = usePathname()
-  const { data: session } = useSession()
-  const name = session?.user?.name
   const initial = name?.charAt(0)?.toUpperCase() || "?"
 
   return (

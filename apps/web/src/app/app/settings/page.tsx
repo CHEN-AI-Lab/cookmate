@@ -2,12 +2,10 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useSession } from "next-auth/react"
 import PasswordInput from "@/app/components/password-input"
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from "@cookmate/shared/constants"
 
 export default function SettingsPage() {
-  const { update: updateSession } = useSession()
   const [settings, setSettings] = useState({ dietType: "不限", cuisinePref: [] as string[], servingSize: 2, subscriptionTier: "FREE" })
   const [profile, setProfile] = useState<{ name: string; phone: string; email: string; loginMethod: string; createdAt: string; hasPassword?: boolean; isDemoUser?: boolean } | null>(null)
   const [saving, setSaving] = useState(false)
