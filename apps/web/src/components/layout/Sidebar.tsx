@@ -56,22 +56,30 @@ export function Sidebar({
       </nav>
 
       {/* Bottom: user info + logout */}
-      <div className="px-3 py-3 border-t border-orange-100 space-y-1">
-        {name && (
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700">
+      <div className="px-3 py-3 border-t border-orange-100">
+        {name ? (
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 group">
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-orange-100 text-[#FF6B35] text-xs font-bold shrink-0">
               {initial}
             </span>
-            <span className="truncate">{name}</span>
+            <span className="truncate flex-1">{name}</span>
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="flex items-center justify-center w-7 h-7 rounded-lg text-gray-400 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors shrink-0"
+              title="退出登录"
+            >
+              <span className="text-base">🚪</span>
+            </button>
           </div>
+        ) : (
+          <button
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors w-full text-left font-medium"
+          >
+            <span className="flex items-center justify-center w-7 h-7 shrink-0 text-base">🚪</span>
+            <span>退出登录</span>
+          </button>
         )}
-        <button
-          onClick={() => signOut({ callbackUrl: "/" })}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors w-full text-left font-medium"
-        >
-          <span className="flex items-center justify-center w-7 h-7 shrink-0 text-base">🚪</span>
-          <span>退出登录</span>
-        </button>
       </div>
     </aside>
   )

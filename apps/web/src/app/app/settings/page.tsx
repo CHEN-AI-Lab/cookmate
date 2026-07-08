@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useSession } from "next-auth/react"
 import PasswordInput from "@/app/components/password-input"
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from "@cookmate/shared/constants"
 
@@ -16,6 +17,7 @@ export default function SettingsPage() {
   const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [editNameValue, setEditNameValue] = useState("")
+  const { update: updateSession } = useSession()
   const [showBindPhone, setShowBindPhone] = useState(false)
   const [bindPhone, setBindPhone] = useState("")
   const [bindCode, setBindCode] = useState("")
