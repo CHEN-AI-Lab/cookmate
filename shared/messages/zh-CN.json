@@ -21,6 +21,8 @@
     "sendCode": "获取验证码",
     "sending": "发送中...",
     "seconds": "秒",
+    "showPassword": "显示密码",
+    "hidePassword": "隐藏密码",
     "login": "登录",
     "register": "注册",
     "logout": "退出登录",
@@ -117,7 +119,8 @@
     "oauthGithub": "GitHub 登录",
     "oauthWechatSetup": "该登录方式尚未配置，上线后即可使用",
     "demoLogin": "体验登录",
-    "demoLoginDesc": "无需注册，立即体验"
+    "demoLoginDesc": "无需注册，立即体验",
+    "redirectingTo": "正在跳转到 {provider} 登录..."
   },
   "validation": {
     "invalidPhone": "请输入正确的11位手机号",
@@ -160,7 +163,8 @@
     "mealPlanTitle": "周计划",
     "mealPlanDesc": "规划这一周吃什么",
     "groceryTitle": "购物清单",
-    "groceryDesc": "出门买菜不遗漏"
+    "groceryDesc": "出门买菜不遗漏",
+    "recommendDesc": "输入食材或让 AI 推荐，3 秒决定今晚吃什么"
   },
   "mealPlan": {
     "title": "周计划",
@@ -287,7 +291,9 @@
     "reload": "重新加载",
     "notFound": "页面不存在",
     "notFoundDesc": "你访问的页面不存在或已被移除",
-    "backHome": "返回首页"
+    "backHome": "返回首页",
+    "loadFailed": "加载失败",
+    "loadFailedDesc": "该区域遇到了错误，请刷新重试"
   },
   "footer": {
     "copyright": "© 2026 CookMate. All rights reserved."

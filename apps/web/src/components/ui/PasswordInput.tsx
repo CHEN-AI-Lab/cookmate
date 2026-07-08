@@ -1,5 +1,6 @@
 "use client"
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 
 interface Props {
   value: string
@@ -11,6 +12,7 @@ interface Props {
 
 export default function PasswordInput({ value, onChange, placeholder, className = "", disabled = false }: Props) {
   const [show, setShow] = useState(false)
+  const t = useTranslations("common")
   return (
     <div className="relative">
       <input
@@ -26,7 +28,7 @@ export default function PasswordInput({ value, onChange, placeholder, className 
         onClick={() => setShow(!show)}
         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-0.5"
         tabIndex={-1}
-        aria-label={show ? "隐藏密码" : "显示密码"}
+        aria-label={show ? t("hidePassword") : t("showPassword")}
       >
         {show ? (
           <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

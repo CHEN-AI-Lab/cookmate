@@ -2,20 +2,22 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 
 const navItems = [
-  { href: "/app/dashboard", icon: "📊", label: "仪表盘" },
-  { href: "/app/recipes", icon: "🍳", label: "AI菜谱" },
-  { href: "/app/my-recipes", icon: "📚", label: "我的菜谱" },
-  { href: "/app/meal-plan", icon: "📅", label: "周计划" },
-  { href: "/app/grocery-list", icon: "🛒", label: "购物清单" },
-  { href: "/app/pantry", icon: "🥦", label: "食材库" },
-  { href: "/app/settings", icon: "⚙️", label: "设置" },
-  { href: "/app/billing", icon: "💳", label: "账单" },
+  { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
+  { href: "/app/recipes", icon: "🍳", labelKey: "aiRecipes" },
+  { href: "/app/my-recipes", icon: "📚", labelKey: "myRecipes" },
+  { href: "/app/meal-plan", icon: "📅", labelKey: "mealPlan" },
+  { href: "/app/grocery-list", icon: "🛒", labelKey: "groceryList" },
+  { href: "/app/pantry", icon: "🥦", labelKey: "pantry" },
+  { href: "/app/settings", icon: "⚙️", labelKey: "settings" },
+  { href: "/app/billing", icon: "💳", labelKey: "billing" },
 ]
 
 export function MobileNav() {
   const pathname = usePathname()
+  const t = useTranslations("nav")
 
   return (
     <header className="fixed top-0 left-0 right-0 md:hidden bg-white border-b border-orange-100 h-16 z-50 flex items-center justify-between px-4">
@@ -33,12 +35,14 @@ export function MobileNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`text-lg transition-colors ${
-                isActive ? "text-[#FF6B35]" : "text-gray-500 hover:text-[#FF6B35]"
+              className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg transition-colors ${
+                isActive
+                  ? "text-[#FF6B35]"
+                  : "text-gray-400 hover:text-[#FF6B35]"
               }`}
-              title={item.label}
             >
-              {item.icon}
+              <span className="text-lg">{item.icon}</span>
+              <span className="text-[10px] font-medium leading-tight">{t(item.labelKey)}</span>
             </Link>
           )
         })}

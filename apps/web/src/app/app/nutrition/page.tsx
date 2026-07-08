@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server'
+
 // TODO: Phase 2 - 营养追踪功能
 // 功能：每日热量+蛋白质统计
 // 状态：后期实现

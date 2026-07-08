@@ -21,6 +21,8 @@
     "sendCode": "Get Code",
     "sending": "Sending...",
     "seconds": "s",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "login": "Log In",
     "register": "Sign Up",
     "logout": "Log Out",
@@ -117,7 +119,8 @@
     "oauthGithub": "GitHub Login",
     "oauthWechatSetup": "This login method is not yet configured",
     "demoLogin": "Demo Login",
-    "demoLoginDesc": "No registration needed, try it now"
+    "demoLoginDesc": "No registration needed, try it now",
+    "redirectingTo": "Redirecting to {provider} login..."
   },
   "validation": {
     "invalidPhone": "Please enter a valid 11-digit phone number",
@@ -160,7 +163,8 @@
     "mealPlanTitle": "Meal Plan",
     "mealPlanDesc": "Plan your week's meals",
     "groceryTitle": "Grocery List",
-    "groceryDesc": "Never forget items again"
+    "groceryDesc": "Never forget items again",
+    "recommendDesc": "Enter ingredients or let AI recommend — decide dinner in 3 seconds"
   },
   "mealPlan": {
     "title": "Meal Plan",
@@ -287,7 +291,9 @@
     "reload": "Reload",
     "notFound": "Page Not Found",
     "notFoundDesc": "The page you're looking for doesn't exist or has been removed",
-    "backHome": "Go Home"
+    "backHome": "Go Home",
+    "loadFailed": "Failed to load",
+    "loadFailedDesc": "This section encountered an error. Please refresh and try again."
   },
   "footer": {
     "copyright": "© 2026 CookMate. All rights reserved."
