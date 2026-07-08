@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 
 interface Order {
   id: string
@@ -13,6 +14,7 @@ interface Order {
 }
 
 export default function OrdersPage() {
+  const t = useTranslations("orders")
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -26,8 +28,8 @@ export default function OrdersPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const channelLabel: Record<string, string> = { alipay: "支付宝", creem: "Creem", stripe: "Stripe" }
-  const statusLabel: Record<string, string> = { PAID: "已支付", PENDING: "待支付", EXPIRED: "已过期" }
+  const channelLabel: Record<string, string> = { alipay: t("channelAlipay"), creem: t("channelCreem"), stripe: t("channelStripe") }
+  const statusLabel: Record<string, string> = { PAID: t("completed"), PENDING: t("pending"), EXPIRED: t("expired") }
   const statusColor: Record<string, string> = {
     PAID: "text-green-600 bg-green-50",
     PENDING: "text-amber-600 bg-amber-50",
@@ -37,16 +39,16 @@ export default function OrdersPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">📋 订单记录</h1>
-        <p className="text-gray-500 mt-1 text-sm">查看你的付款历史</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
+        <p className="text-gray-500 mt-1 text-sm">{t("subtitle")}</p>
       </div>
 
       {loading ? (
-        <div className="text-center py-16 text-gray-400">加载中...</div>
+        <div className="text-center py-16 text-gray-400">{t("loading")}</div>
       ) : orders.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-          <p className="text-gray-400 text-lg mb-2">暂无订单记录</p>
-          <p className="text-gray-400 text-sm">完成支付后，订单会显示在这里</p>
+          <p className="text-gray-400 text-lg mb-2">{t("noOrders")}</p>
+          <p className="text-gray-400 text-sm">{t("noOrdersHint")}</p>
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -96,7 +98,7 @@ export default function OrdersPage() {
                     ¥{(order.amount / 100).toFixed(2)}
                   </p>
                   <p className="text-xs text-gray-400 whitespace-nowrap">
-                    {date.toLocaleDateString("zh-CN", {
+                    {date.toLocaleDateString(undefined, {
                       year: "numeric", month: "2-digit", day: "2-digit",
                       hour: "2-digit", minute: "2-digit",
                     })}
@@ -118,7 +120,7 @@ export default function OrdersPage() {
           href="/app/billing"
           className="text-sm text-gray-400 hover:text-[#FF6B35] transition-colors"
         >
-          ← 返回账单
+          {t("backToBilling")}
         </Link>
       </div>
     </div>
