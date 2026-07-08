@@ -56,12 +56,15 @@ export function Sidebar({
         })}
       </nav>
 
-      {/* Bottom: email + logout */}
+      {/* Bottom: user info + logout */}
       <div className="px-4 py-4 border-t border-orange-100">
-        {email ? (
-          <p className="text-xs text-gray-400 truncate mb-2" title={email}>{email}</p>
-        ) : name ? (
-          <p className="text-xs text-gray-400 truncate mb-2">👤 {name}</p>
+        {name ? (
+          <div className="mb-2">
+            <p className="text-sm font-medium text-gray-800 truncate">{name}</p>
+            {email && <p className="text-xs text-gray-400 truncate">{email}</p>}
+          </div>
+        ) : email ? (
+          <p className="text-xs text-gray-400 truncate mb-2">{email}</p>
         ) : null}
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
