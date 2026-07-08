@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 import { getDemoGroceryList } from "@cookmate/shared/demo-data"
 
 interface IngredientItem {
@@ -17,6 +18,8 @@ interface CategoryGroup {
 }
 
 export default function GroceryListPage() {
+  const tg = useTranslations("grocery")
+  const tc = useTranslations("common")
   const [categories, setCategories] = useState<CategoryGroup[]>([])
   const [loading, setLoading] = useState(true)
   const [total, setTotal] = useState(0)
@@ -284,7 +287,7 @@ export default function GroceryListPage() {
     }
   }
 
-  if (loading) return <div className="text-center py-16 text-gray-400">加载中...</div>
+  if (loading) return <div className="text-center py-16 text-gray-400">{tg("loading")}</div>
 
   return (
     <div>

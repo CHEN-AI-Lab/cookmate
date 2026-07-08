@@ -1,4 +1,5 @@
 "use client"
+import { useTranslations } from "next-intl"
 
 interface Recipe {
   id: string
@@ -37,13 +38,6 @@ function diffColor(d: string) {
   }
 }
 
-function difficultyLabel(d: string) {
-  const lower = d?.toLowerCase() ?? ""
-  if (["easy", "简单"].includes(lower)) return "简单"
-  if (["medium", "中等"].includes(lower)) return "中等"
-  return d || "中等"
-}
-
 export function RecipeCard({
   recipe,
   index,
@@ -55,6 +49,17 @@ export function RecipeCard({
   expanded,
   onToggleExpand,
 }: RecipeCardProps) {
+  const t = useTranslations("recipes")
+  const tc = useTranslations("common")
+
+  function difficultyLabel(d: string) {
+    const lower = d?.toLowerCase() ?? ""
+    if (["easy"].includes(lower)) return t("easy")
+    if (["medium"].includes(lower)) return t("medium")
+    if (["hard"].includes(lower)) return t("hard")
+    return d || t("medium")
+  }
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-orange-50 overflow-hidden transition-all">
       <div
@@ -74,7 +79,7 @@ export function RecipeCard({
                 className={`transition-colors ${
                   isStarred ? "text-amber-400" : "text-gray-300 hover:text-amber-400"
                 }`}
-                title={isStarred ? "取消收藏" : "收藏菜谱"}
+                title={isStarred ? t("unstar") : t("star")}
               >
                 {isStarred ? "⭐" : "☆"}
               </button>
@@ -84,15 +89,15 @@ export function RecipeCard({
                   onDelete(recipe)
                 }}
                 className="ml-1 text-gray-400 hover:text-red-500 transition-colors"
-                title="删除菜谱"
+                title={tc("delete")}
               >
                 🗑️
               </button>
             </div>
             <p className="text-sm text-gray-500 mt-1">{recipe.description}</p>
             <div className="flex flex-wrap gap-3 mt-2 text-xs">
-              <span>⏱ {recipe.cookingTime}分钟</span>
-              <span>🔥 {recipe.calories}卡</span>
+              <span>⏱ {recipe.cookingTime}{t("minutes")}</span>
+              <span>🔥 {recipe.calories}{t("caloriesShort")}</span>
               <span>{recipe.cuisineType}</span>
               <span className={`px-2 py-0.5 rounded-full ${diffColor(recipe.difficulty)}`}>
                 {difficultyLabel(recipe.difficulty)}
@@ -106,7 +111,7 @@ export function RecipeCard({
       {expanded && (
         <div className="px-6 pb-6 border-t border-gray-100">
           <div className="mt-4">
-            <p className="text-sm font-medium text-[#2D3436] mb-2">🥄 食材</p>
+            <p className="text-sm font-medium text-[#2D3436] mb-2">{t("ingredients")}</p>
             <ul className="space-y-1">
               {recipe.ingredients.map((ing, i) => (
                 <li key={i} className="text-sm text-gray-600 flex items-center gap-2">
@@ -114,7 +119,7 @@ export function RecipeCard({
                   {ing}
                   {isFromPantry(ing.split(" ")[0]) && (
                     <span className="text-[10px] text-green-500 bg-green-50 px-1 rounded">
-                      食材库有
+                      {t("inPantry")}
                     </span>
                   )}
                 </li>
@@ -122,7 +127,7 @@ export function RecipeCard({
             </ul>
           </div>
           <div className="mt-4">
-            <p className="text-sm font-medium text-[#2D3436] mb-2">👨‍🍳 步骤</p>
+            <p className="text-sm font-medium text-[#2D3436] mb-2">{t("instructions")}</p>
             <ol className="space-y-2">
               {recipe.steps.map((step, i) => (
                 <li key={i} className="text-sm text-gray-600 flex gap-2">
@@ -136,7 +141,7 @@ export function RecipeCard({
             onClick={() => onAddToPlan(recipe)}
             className="mt-4 bg-orange-50 text-[#FF6B35] px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-100 transition-colors"
           >
-            📅 加入周计划
+            {t("addToPlan")}
           </button>
         </div>
       )}

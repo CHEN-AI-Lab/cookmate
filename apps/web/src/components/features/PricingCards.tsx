@@ -1,4 +1,5 @@
 "use client"
+import { useTranslations } from "next-intl"
 
 import { PricingCard } from "./PricingCard"
 
@@ -38,20 +39,22 @@ const PRO_TIERS = [
 ]
 
 export function PricingCards() {
+  const t = useTranslations("billing")
+  const tc = useTranslations("common")
   return (
     <section id="pricing" className="py-16 bg-white">
       <div className="max-w-[1400px] mx-auto px-8">
-        <h2 className="text-3xl font-bold text-center text-[#2D3436]">选择你的计划</h2>
+        <h2 className="text-3xl font-bold text-center text-[#2D3436]">{t("selectPlan")}</h2>
         <div className="mt-12 grid grid-cols-1 md:grid-cols-5 gap-4 max-w-5xl mx-auto">
           <PricingCard
             name="Free"
             price="0"
             periodLabel=""
-            period="免费使用"
-            features={["每天 1 次 AI 推荐", "无限食材位", "AI 菜谱生成"]}
+            period={t("freeTier")}
+            features={t.raw("freePlanFeatures") as string[]}
             highlighted={false}
             isCurrent={false}
-            ctaLabel="免费开始"
+            ctaLabel={tc("freeStart")}
             onCta={() => (window.location.href = "/register")}
           />
           {PRO_TIERS.map((tier) => (
@@ -62,10 +65,10 @@ export function PricingCards() {
               periodLabel=""
               period={tier.period}
               saving={tier.saving}
-              features={["无限 AI 生成", "智能周计划", "购物清单", "饮食定制"]}
+              features={t.raw("proPlanFeatures") as string[]}
               highlighted={true}
               isCurrent={false}
-              ctaLabel="订阅 Pro"
+              ctaLabel={t("subscribePro")}
               onCta={() => (window.location.href = "/register")}
             />
           ))}

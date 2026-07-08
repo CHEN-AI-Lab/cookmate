@@ -88,14 +88,14 @@ export default function DashboardPage() {
           <StatsCard
             label={td("aiGenerate")}
             value={isDemoUser ? "3" : stats?.subscriptionTier === "PRO" ? "∞" : `${stats?.todayUsage ?? 0}/1`}
-            subtext={isDemoUser ? "示例数据 · 注册后每日 1 次" : stats?.subscriptionTier === "PRO" ? "不限次数" : "免费版每日 1 次"}
+            subtext={isDemoUser ? td("subtextAiGenerateDemo") : stats?.subscriptionTier === "PRO" ? td("subtextAiGeneratePro") : td("subtextAiGenerateFree")}
           />
 
           {/* 食材数 */}
-          <StatsCard label={td("pantryCount")} value={isDemoUser ? 22 : stats?.pantryCount ?? 0} subtext={isDemoUser ? "示例数据" : "冰箱里的食材"} />
+          <StatsCard label={td("pantryCount")} value={isDemoUser ? 22 : stats?.pantryCount ?? 0} subtext={isDemoUser ? td("subtextPantryDemo") : td("subtextPantry")} />
 
           {/* 收藏菜谱 */}
-          <StatsCard label={td("starredCount")} value={isDemoUser ? 3 : stats?.starredCount ?? 0} subtext={isDemoUser ? "示例数据" : "你的私房菜单"} />
+          <StatsCard label={td("starredCount")} value={isDemoUser ? 3 : stats?.starredCount ?? 0} subtext={isDemoUser ? td("subtextStarredDemo") : td("subtextStarred")} />
         </div>
 
         {/* ===== Quick access — 3 cards ===== */}
