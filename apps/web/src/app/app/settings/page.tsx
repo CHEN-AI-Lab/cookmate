@@ -62,10 +62,8 @@ export default function SettingsPage() {
         body: JSON.stringify({ name: editNameValue.trim() }),
       })
       if (r.ok) {
-        setProfile((p) => p ? { ...p, name: editNameValue.trim() } : p)
-        setEditingName(false)
-        setAccountMsg("✅ 用户名已更新")
-        setTimeout(() => setAccountMsg(""), 3000)
+        // 更新本地状态 + 刷新页面同步侧边栏
+        window.location.reload()
       } else {
         const d = await r.json()
         setAccountMsg(d.error || "更新失败")

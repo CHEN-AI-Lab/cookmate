@@ -16,13 +16,12 @@ const navItems = [
 ]
 
 export function Sidebar({
-  email,
   name,
 }: {
-  email: string | undefined | null
   name?: string | undefined | null
 }) {
   const pathname = usePathname()
+  const initial = name?.charAt(0)?.toUpperCase() || "?"
 
   return (
     <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-orange-100 h-screen sticky top-0">
@@ -57,20 +56,20 @@ export function Sidebar({
       </nav>
 
       {/* Bottom: user info + logout */}
-      <div className="px-4 py-4 border-t border-orange-100">
-        {name ? (
-          <div className="mb-2">
-            <p className="text-sm font-medium text-gray-800 truncate">{name}</p>
-            {email && <p className="text-xs text-gray-400 truncate">{email}</p>}
+      <div className="px-3 py-3 border-t border-orange-100 space-y-1">
+        {name && (
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700">
+            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-orange-100 text-[#FF6B35] text-xs font-bold shrink-0">
+              {initial}
+            </span>
+            <span className="truncate">{name}</span>
           </div>
-        ) : email ? (
-          <p className="text-xs text-gray-400 truncate mb-2">{email}</p>
-        ) : null}
+        )}
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors w-full text-left"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors w-full text-left font-medium"
         >
-          <span>🚪</span>
+          <span className="flex items-center justify-center w-7 h-7 shrink-0 text-base">🚪</span>
           <span>退出登录</span>
         </button>
       </div>
