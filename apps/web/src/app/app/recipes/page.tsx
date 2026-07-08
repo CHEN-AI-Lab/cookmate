@@ -136,8 +136,8 @@ export default function RecipesPage() {
 
   const addToPlan = async (recipe: Recipe) => {
     const dialogSnapshot = addDialog
-    const day = dialogSnapshot?.day || t("monday")
-    const meal = dialogSnapshot?.meal || t("lunch")
+    const day = dialogSnapshot?.day || DAY_VALUES[0]
+    const meal = dialogSnapshot?.meal || MEAL_VALUES[0]
     setAddDialog(null)
     const res = await fetch("/api/meal-plan/add", {
       method: "POST",
@@ -411,7 +411,7 @@ export default function RecipesPage() {
               index={idx}
               isStarred={starredIds.has(recipe.id?.toString() || "")}
               onToggleStar={toggleStar}
-              onAddToPlan={(r) => setAddDialog({ recipe: r, day: t("monday"), meal: t("lunch") })}
+              onAddToPlan={(r) => setAddDialog({ recipe: r, day: DAY_VALUES[0], meal: MEAL_VALUES[0] })}
               onDelete={(r) => setDeleteDialog(r)}
               isFromPantry={isFromPantry}
               expanded={expanded === `${idx}`}

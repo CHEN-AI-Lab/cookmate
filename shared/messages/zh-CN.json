@@ -131,7 +131,8 @@
     "oauthWechatSetup": "该登录方式尚未配置，上线后即可使用",
     "demoLogin": "体验登录",
     "demoLoginDesc": "无需注册，立即体验",
-    "redirectingTo": "正在跳转到 {provider} 登录..."
+    "redirectingTo": "正在跳转到 {provider} 登录...",
+    "demoVersion": "体验演示版"
   },
   "validation": {
     "invalidPhone": "请输入正确的11位手机号",
