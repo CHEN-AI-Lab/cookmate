@@ -66,8 +66,6 @@ export default function SettingsPage() {
         setEditingName(false)
         setAccountMsg("✅ 用户名已更新")
         setTimeout(() => setAccountMsg(""), 3000)
-        // 刷新会话，侧边栏自动同步
-        updateSession()
       } else {
         const d = await r.json()
         setAccountMsg(d.error || "更新失败")
