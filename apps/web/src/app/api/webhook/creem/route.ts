@@ -58,25 +58,29 @@ async function upgradeUser(userId: string) {
   })
 }
 
-async function recordOrder(userId: string, orderId: string) {
+async function recordOrder(userId: string, _orderId: string) {
+  // 查找这个用户的 PENDING Creem 订单，更新为已支付
+  // 不直接用 orderId 查，因为我们的订单号是 CKCR 格式，webhook 拿到的是 ch_xxx
   const existing = await prisma.paymentOrder.findFirst({
-    where: { orderId },
+    where: { userId, channel: "creem", status: "PENDING" },
+    orderBy: { createdAt: "desc" },
   })
 
-  if (!existing) {
+  if (existing) {
+    await prisma.paymentOrder.update({
+      where: { id: existing.id },
+      data: { status: "PAID" },
+    })
+  } else {
+    // 兜底：找不到就新建
     await prisma.paymentOrder.create({
       data: {
         userId,
-        orderId,
+        orderId: _orderId,
         channel: "creem",
         amount: 1500,
         status: "PAID",
       },
-    })
-  } else if (existing.status !== "PAID") {
-    await prisma.paymentOrder.update({
-      where: { id: existing.id },
-      data: { status: "PAID" },
     })
   }
 }
