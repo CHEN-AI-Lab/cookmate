@@ -10,7 +10,7 @@ export default function SettingsPage() {
   const ts = useTranslations("settings")
   const tc = useTranslations("common")
   const tv = useTranslations("validation")
-  const [settings, setSettings] = useState({ dietType: "不限", cuisinePref: [] as string[], servingSize: 2, subscriptionTier: "FREE" })
+  const [settings, setSettings] = useState<{ dietType: string; cuisinePref: string[]; servingSize: number; subscriptionTier: string }>({ dietType: DIET_OPTIONS[0], cuisinePref: [] as string[], servingSize: 2, subscriptionTier: "FREE" })
   const [profile, setProfile] = useState<{ name: string; phone: string; email: string; loginMethod: string; createdAt: string; hasPassword?: boolean; isDemoUser?: boolean } | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -40,7 +40,7 @@ export default function SettingsPage() {
       .then(([settingsData, profileData]) => {
         if (settingsData.settings) {
           setSettings({
-            dietType: settingsData.settings.dietType ?? "不限",
+            dietType: settingsData.settings.dietType ?? DIET_OPTIONS[0],
             cuisinePref: settingsData.settings.cuisinePref ? settingsData.settings.cuisinePref.split(",").filter(Boolean) : [],
             servingSize: settingsData.settings.servingSize ?? 2,
             subscriptionTier: settingsData.settings.subscriptionTier ?? "FREE",
@@ -68,48 +68,47 @@ export default function SettingsPage() {
       if (r.ok) {
         setProfile((p) => p ? { ...p, name: editNameValue.trim() } : p)
         setEditingName(false)
-        setAccountMsg("✅ 用户名已更新（左下角名称将在下次登录后同步）")
+        setAccountMsg(ts("nameUpdated"))
         setTimeout(() => setAccountMsg(""), 3000)
       } else {
         const d = await r.json()
-        setAccountMsg(d.error || "更新失败")
+        setAccountMsg(d.error || ts("updateFailed"))
         setTimeout(() => setAccountMsg(""), 3000)
       }
     } catch (err) {
       console.error("save name error:", err)
-      setAccountMsg("网络错误")
+      setAccountMsg(tv("networkError"))
       setTimeout(() => setAccountMsg(""), 3000)
     }
   }
 
   const sendBindEmailCode = async () => {
-    if (!bindEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(bindEmail)) { setAccountMsg("请输入正确邮箱"); setTimeout(() => setAccountMsg(""), 3000); return }
+    if (!bindEmail || !/^[^\s]+@[^\s]+\.[^\s]+$/.test(bindEmail)) { setAccountMsg(tv("invalidEmail")); setTimeout(() => setAccountMsg(""), 3000); return }
     setBindLoading(true)
     try {
       const r = await fetch("/api/user/bind-email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: bindEmail }) })
       const d = await r.json()
-      if (r.ok) { setBindCodeSent(true); setAccountMsg("验证码已发送到 " + bindEmail); setTimeout(() => setAccountMsg(""), 3000) }
-      else { setAccountMsg(d.error || "发送失败"); setTimeout(() => setAccountMsg(""), 3000) }
-    } catch (err) { console.error("send bind email code error:", err); setAccountMsg("网络错误"); setTimeout(() => setAccountMsg(""), 3000) }
+      if (r.ok) { setBindCodeSent(true); setAccountMsg(ts("codeSentToEmail", { email: bindEmail })); setTimeout(() => setAccountMsg(""), 3000) }
+      else { setAccountMsg(d.error || tv("sendFailed")); setTimeout(() => setAccountMsg(""), 3000) }
+    } catch (err) { console.error("send bind email code error:", err); setAccountMsg(tv("networkError")); setTimeout(() => setAccountMsg(""), 3000) }
     finally { setBindLoading(false) }
   }
 
   const confirmBindEmail = async () => {
-    if (!bindEmailCode || bindEmailCode.length < 6) { setAccountMsg("请输入6位验证码"); setTimeout(() => setAccountMsg(""), 3000); return }
+    if (!bindEmailCode || bindEmailCode.length < 6) { setAccountMsg(tv("emptyCode")); setTimeout(() => setAccountMsg(""), 3000); return }
     setBindLoading(true)
     try {
       const r = await fetch("/api/user/bind-email", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: bindEmail, code: bindEmailCode }) })
       const d = await r.json()
-      if (r.ok) { setProfile((p) => p ? { ...p, email: bindEmail } : p); setShowBindEmail(false); setBindCodeSent(false); setBindEmail(""); setBindEmailCode(""); setAccountMsg("✅ 邮箱绑定成功"); setTimeout(() => setAccountMsg(""), 3000) }
-      else { setAccountMsg(d.error || "绑定失败"); setTimeout(() => setAccountMsg(""), 3000) }
-    } catch (err) { console.error("confirm bind email error:", err); setAccountMsg("网络错误"); setTimeout(() => setAccountMsg(""), 3000) }
+      if (r.ok) { setProfile((p) => p ? { ...p, email: bindEmail } : p); setShowBindEmail(false); setBindCodeSent(false); setBindEmail(""); setBindEmailCode(""); setAccountMsg(ts("bindSuccessEmail")); setTimeout(() => setAccountMsg(""), 3000) }
+      else { setAccountMsg(d.error || ts("bindFailed")); setTimeout(() => setAccountMsg(""), 3000) }
+    } catch (err) { console.error("confirm bind email error:", err); setAccountMsg(tv("networkError")); setTimeout(() => setAccountMsg(""), 3000) }
     finally { setBindLoading(false) }
   }
 
 const save = async () => {
-    // 至少选择一个菜系
     if (settings.cuisinePref.length === 0) {
-      setError("请至少选择一个菜系")
+      setError(ts("selectCuisineFirst"))
       setTimeout(() => setError(""), 3000)
       return
     }
@@ -126,10 +125,8 @@ const save = async () => {
       if (res.ok) {
         setSaved(true)
         setShowSaved(true)
-        // 2.5秒后开始淡出
         setTimeout(() => {
           setShowSaved(false)
-          // 淡出动画300ms后真正隐藏
           setTimeout(() => setSaved(false), 300)
         }, 2500)
       }
@@ -161,14 +158,14 @@ const save = async () => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-        {/* 左栏：账号信息 + 套餐 */}
+        {/* Left column: Account info + Plan */}
         <div className="h-full">
           <div className="bg-white rounded-2xl shadow-sm border border-orange-50 p-6 h-full">
-            <h2 className="font-bold text-[#2D3436] mb-4">👤 账号信息</h2>
+            <h2 className="font-bold text-[#2D3436] mb-4">{ts("profile")}</h2>
             {profile ? (
                           <div className="space-y-3">
                             <div className="flex items-center justify-between py-2 border-b border-gray-50">
-                              <span className="text-sm text-gray-500">用户名</span>
+                              <span className="text-sm text-gray-500">{ts("username")}</span>
                               <span className="text-sm font-medium text-[#2D3436]">
                                 {editingName ? (
                                   <div className="flex items-center gap-2">
@@ -181,30 +178,30 @@ const save = async () => {
                                       autoFocus
                                       onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setEditingName(false) }}
                                     />
-                                    <button onClick={saveName} className="text-xs text-[#FF6B35] hover:underline">保存</button>
-                                    <button onClick={() => setEditingName(false)} className="text-xs text-gray-400 hover:text-gray-600">取消</button>
+                                    <button onClick={saveName} className="text-xs text-[#FF6B35] hover:underline">{ts("saveName")}</button>
+                                    <button onClick={() => setEditingName(false)} className="text-xs text-gray-400 hover:text-gray-600">{ts("cancelName")}</button>
                                   </div>
                                 ) : (
                                   <>
-                                    {profile.name || "未设置"}
-                                    <button onClick={() => { if (profile?.isDemoUser) { setGlobalToast("🔒 体验用户无法修改，请注册后使用"); setTimeout(() => setGlobalToast(""), 3000); return } setEditNameValue(profile.name || ""); setEditingName(true) }} className="ml-2 text-[#FF6B35] text-xs hover:underline disabled:text-gray-300 disabled:cursor-not-allowed">修改</button>
+                                    {profile.name || ts("notSet")}
+                                    <button onClick={() => { if (profile?.isDemoUser) { setGlobalToast(ts("demoToast")); setTimeout(() => setGlobalToast(""), 3000); return } setEditNameValue(profile.name || ""); setEditingName(true) }} className="ml-2 text-[#FF6B35] text-xs hover:underline disabled:text-gray-300 disabled:cursor-not-allowed">{ts("editName")}</button>
                                   </>
                                 )}
                               </span>
                             </div>
                             <div className="flex items-center justify-between py-2 border-b border-gray-50">
-                              <span className="text-sm text-gray-500">登录方式</span>
+                              <span className="text-sm text-gray-500">{ts("loginMethod")}</span>
                   <span className="text-sm font-medium text-[#2D3436]">{profile.loginMethod}</span>
                 </div>
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
-                  <span className="text-sm text-gray-500">手机号</span>
+                  <span className="text-sm text-gray-500">{ts("phone")}</span>
                   <span className="text-sm font-medium text-[#2D3436]">
-                    {profile.phone ? profile.phone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2") : "未绑定"}
+                    {profile.phone ? profile.phone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2") : ts("notBound")}
                     {!profile.phone && (
                       <button
                         onClick={() => {
                           if (profile?.isDemoUser) {
-                            setGlobalToast("🔒 体验用户无法绑定，请注册后使用")
+                            setGlobalToast(ts("demoToast"))
                             setTimeout(() => setGlobalToast(""), 3000)
                             return
                           }
@@ -212,7 +209,7 @@ const save = async () => {
                         }}
                         className="ml-2 text-[#FF6B35] text-xs hover:underline"
                       >
-                        绑定
+                        {ts("bindAction")}
                       </button>
                     )}
                   </span>
@@ -220,17 +217,17 @@ const save = async () => {
                 {showBindPhone && (
                                 <div className="py-3 border-b border-gray-50 space-y-3">
                                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                                      <p className="text-xs text-amber-700 font-medium">⚠️ 重要提醒</p>
-                                      <p className="text-xs text-amber-600 mt-1">手机号一旦绑定，后续不可修改或解绑。请务必输入您本人正在使用的手机号码。</p>
+                                      <p className="text-xs text-amber-700 font-medium">{ts("bindWarningTitle")}</p>
+                                      <p className="text-xs text-amber-600 mt-1">{ts("bindWarning")}</p>
                                     </div>
                                     <input
-                                      type="tel" maxLength={11} placeholder="输入手机号"
+                                      type="tel" maxLength={11} placeholder={ts("bindPhonePlaceholder")}
                                       value={bindPhone}
                                       onChange={(e) => setBindPhone(e.target.value.replace(/\D/g, ""))}
                                       className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
                                     />
                                     <PasswordInput
-                                                          placeholder="输入当前密码验证身份"
+                                                          placeholder={ts("bindPasswordPlaceholder")}
                                                           value={bindCode}
                                                           onChange={setBindCode}
                                                           className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
@@ -238,15 +235,15 @@ const save = async () => {
                                     <div className="flex gap-2">
                                       <button
                                       onClick={async () => {
-                                        if (!/^1[3-9]\d{9}$/.test(bindPhone)) { setBindError("请输入正确的11位手机号"); return }
-                                        if (bindPhone === '11111111111' || bindPhone === '00000000000' || bindPhone === '12345678901' || /^1(\d)\1{9}$/.test(bindPhone)) { setBindError("请输入真实的手机号码"); return }
-                                        if (!bindCode || bindCode.length < 8) { setBindError("请输入正确的密码（至少 8 位）"); return }
+                                        if (!/^1[3-9]\d{9}$/.test(bindPhone)) { setBindError(ts("bindErrorInvalidPhone")); return }
+                                        if (bindPhone === '11111111111' || bindPhone === '00000000000' || bindPhone === '12345678901' || /^1(\d)\1{9}$/.test(bindPhone)) { setBindError(ts("bindErrorRealPhone")); return }
+                                        if (!bindCode || bindCode.length < 8) { setBindError(ts("bindErrorPasswordTooShort")); return }
                                         let pwdTypes = 0;
                                         if (/[a-z]/.test(bindCode)) pwdTypes++;
                                         if (/[A-Z]/.test(bindCode)) pwdTypes++;
                                         if (/[0-9]/.test(bindCode)) pwdTypes++;
                                         if (/[^a-zA-Z0-9]/.test(bindCode)) pwdTypes++;
-                                        if (pwdTypes < 2) { setBindError("密码需包含至少两种字符（大小写字母、数字、符号）"); return }
+                                        if (pwdTypes < 2) { setBindError(ts("bindErrorPasswordTypes")); return }
                                         setBindLoading(true)
                                         setBindError("")
                                         try {
@@ -258,62 +255,62 @@ const save = async () => {
                                           if (r.ok) {
                                             setProfile((p) => p ? { ...p, phone: bindPhone } : p)
                                             setShowBindPhone(false)
-                                            setAccountMsg("✅ 手机号绑定成功")
+                                            setAccountMsg(ts("bindSuccessPhone"))
                                             setTimeout(() => setAccountMsg(""), 3000)
                                           } else {
-                                            setBindError(d.error || "绑定失败")
+                                            setBindError(d.error || ts("bindFailed"))
                                           }
-                                        } catch (err) { console.error("bind phone error:", err); setBindError("网络错误") }
+                                        } catch (err) { console.error("bind phone error:", err); setBindError(tv("networkError")) }
                                         finally { setBindLoading(false) }
                                       }}
                                       disabled={bindLoading || !bindPhone || !bindCode}
                                       className="flex-1 bg-[#FF6B35] text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
                                     >
-                                      {bindLoading ? "绑定中..." : "确认绑定"}
+                                      {bindLoading ? ts("bindLoading") : ts("bindConfirm")}
                                     </button>
-                                    <button onClick={() => { setShowBindPhone(false); setBindPhone(""); setBindCode(""); setBindError("") }} className="text-sm text-gray-400 hover:text-gray-600 px-3">取消</button>
+                                    <button onClick={() => { setShowBindPhone(false); setBindPhone(""); setBindCode(""); setBindError("") }} className="text-sm text-gray-400 hover:text-gray-600 px-3">{ts("bindCancel")}</button>
                                     </div>
                                     {bindError && <p className="text-xs text-red-500">{bindError}</p>}
                                   </div>
                                 )}
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
-                                  <span className="text-sm text-gray-500">邮箱</span>
+                                  <span className="text-sm text-gray-500">{ts("email")}</span>
                                   <span className="text-sm font-medium text-[#2D3436]">
-                                    {profile.email || "未绑定"}
+                                    {profile.email || ts("notBound")}
                                     {!profile.email && !showBindEmail && (
-                                                                                              <button onClick={() => { if (profile?.isDemoUser) { setGlobalToast("🔒 体验用户无法绑定邮箱，请注册后使用"); setTimeout(() => setGlobalToast(""), 3000); return } setShowBindEmail(true) }} className="text-[#FF6B35] text-xs hover:underline">绑定</button>
+                                                                                              <button onClick={() => { if (profile?.isDemoUser) { setGlobalToast(ts("demoToast")); setTimeout(() => setGlobalToast(""), 3000); return } setShowBindEmail(true) }} className="text-[#FF6B35] text-xs hover:underline">{ts("bindAction")}</button>
                                                                         )}
                                   </span>
                                 </div>
                                 {showBindEmail && (
                                                   <div className="py-3 border-b border-gray-50 space-y-3">
                                                     <div className="flex gap-2">
-                                                      <input type="email" placeholder="输入新邮箱" value={bindEmail} onChange={(e) => setBindEmail(e.target.value)} className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]" />
-                                                      <button onClick={sendBindEmailCode} disabled={bindCodeSent || !bindEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(bindEmail)}
+                                                      <input type="email" placeholder={ts("bindEmailPlaceholder")} value={bindEmail} onChange={(e) => setBindEmail(e.target.value)} className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]" />
+                                                      <button onClick={sendBindEmailCode} disabled={bindCodeSent || !bindEmail || !/^[^\s]+@[^\s]+\.[^\s]+$/.test(bindEmail)}
                                                         className="px-3 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap"
-                                                      >{bindCodeSent ? "已发送" : "获取验证码"}</button>
-                                                      <button onClick={() => { setShowBindEmail(false); setBindCodeSent(false); setBindEmail(""); setBindEmailCode("") }} className="text-sm text-gray-400 hover:text-gray-600 px-2">取消</button>
+                                                      >{bindCodeSent ? ts("codeSent") : ts("getCode")}</button>
+                                                      <button onClick={() => { setShowBindEmail(false); setBindCodeSent(false); setBindEmail(""); setBindEmailCode("") }} className="text-sm text-gray-400 hover:text-gray-600 px-2">{ts("bindCancel")}</button>
                                                     </div>
                                                     {bindCodeSent && (
                                                       <>
-                                                        <input type="text" maxLength={6} placeholder="输入6位验证码" value={bindEmailCode} onChange={(e) => setBindEmailCode(e.target.value.replace(/\D/g, ""))} className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]" />
+                                                        <input type="text" maxLength={6} placeholder={ts("bindCodePlaceholder")} value={bindEmailCode} onChange={(e) => setBindEmailCode(e.target.value.replace(/\D/g, ""))} className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]" />
                                                         <button onClick={confirmBindEmail}
                                                           disabled={bindLoading || !bindEmailCode || bindEmailCode.length < 6}
                                                           className="w-full bg-[#FF6B35] text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
-                                                        >{bindLoading ? "绑定中..." : "确认绑定"}</button>
+                                                        >{bindLoading ? ts("bindLoading") : ts("bindConfirm")}</button>
                                                         {accountMsg && <p className={`text-xs ${accountMsg.startsWith("✅") ? "text-green-600" : "text-red-500"}`}>{accountMsg}</p>}
                                                       </>
                                                     )}
                                                   </div>
                                                 )}
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
-                  <span className="text-sm text-gray-500">密码</span>
+                  <span className="text-sm text-gray-500">{ts("password")}</span>
                   <span className="text-sm font-medium text-[#2D3436]">
-                    {profile.hasPassword ? "已设置" : "未设置"}
+                    {profile.hasPassword ? ts("hasPassword") : ts("noPassword")}
                     <button
                       onClick={() => {
                         if (profile?.isDemoUser) {
-                          setGlobalToast("🔒 体验用户无法设置密码，请注册后使用")
+                          setGlobalToast(ts("demoToast"))
                           setTimeout(() => setGlobalToast(""), 3000)
                           return
                         }
@@ -321,7 +318,7 @@ const save = async () => {
                       }}
                       className="ml-2 text-[#FF6B35] text-xs hover:underline"
                     >
-                      {profile.hasPassword ? "修改" : "设置"}
+                      {profile.hasPassword ? ts("modify") : ts("set")}
                     </button>
                   </span>
                 </div>
@@ -330,6 +327,8 @@ const save = async () => {
                     <PasswordForm
                       hasPassword={profile.hasPassword ?? false}
                       onClose={() => setShowPasswordForm(false)}
+                      ts={ts}
+                      tv={tv}
                     />
                   </div>
                 )}
@@ -339,33 +338,33 @@ const save = async () => {
                   </div>
                 )}
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
-                  <span className="text-sm text-gray-500">注册时间</span>
-                  <span className="text-sm font-medium text-[#2D3436]">{new Date(profile.createdAt).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" })}</span>
+                  <span className="text-sm text-gray-500">{ts("registerDate")}</span>
+                  <span className="text-sm font-medium text-[#2D3436]">{new Date(profile.createdAt).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
-                  <span className="text-sm text-gray-500">当前计划</span>
+                  <span className="text-sm text-gray-500">{ts("currentPlan")}</span>
                   <span className={`text-sm font-medium px-2.5 py-0.5 rounded-full ${
                     settings.subscriptionTier === "PRO" ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-600"
                   }`}>
-                    {settings.subscriptionTier === "PRO" ? "专业版" : "免费版"}
+                    {settings.subscriptionTier === "PRO" ? ts("proPlan") : ts("freePlan")}
                   </span>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-gray-400">加载中...</p>
+              <p className="text-sm text-gray-400">{ts("profileLoading")}</p>
             )}
             <Link href="/app/billing" className="inline-block mt-4 bg-gradient-to-r from-[#FF6B35] to-orange-400 text-white px-6 py-2.5 rounded-full text-sm font-medium hover:opacity-90">
-              {settings.subscriptionTier === "PRO" ? "💳 管理订阅" : "⬆️ 升级专业版"}
+              {settings.subscriptionTier === "PRO" ? ts("manageSubscription") : ts("upgradePlan")}
             </Link>
           </div>
         </div>
 
-        {/* 右栏：饮食偏好 */}
+        {/* Right column: Diet preferences */}
         <div className="bg-white rounded-2xl shadow-sm border border-orange-50 p-6 h-full">
-          <h2 className="font-bold text-[#2D3436] mb-4">🥗 饮食偏好</h2>
+          <h2 className="font-bold text-[#2D3436] mb-4">{ts("dietPreferences")}</h2>
           <div className="space-y-5">
             <div>
-              <label className="text-sm text-gray-600 font-medium">饮食类型</label>
+              <label className="text-sm text-gray-600 font-medium">{ts("dietType")}</label>
               <div className="flex flex-wrap gap-2 mt-2">
                 {DIET_OPTIONS.map((opt) => (
                   <button
@@ -383,7 +382,7 @@ const save = async () => {
               </div>
             </div>
             <div>
-              <label className="text-sm text-gray-600 font-medium">菜系偏好（可多选）</label>
+              <label className="text-sm text-gray-600 font-medium">{ts("cuisinePref")}</label>
               <div className="flex flex-wrap gap-2 mt-2">
                 {CUISINE_OPTIONS.map((opt) => {
                   const selected = settings.cuisinePref.includes(opt)
@@ -411,12 +410,12 @@ const save = async () => {
               </div>
               {settings.cuisinePref.length >= 1 && (
                 <p className="text-xs text-gray-400 mt-1.5">
-                  已选 {settings.cuisinePref.length} 种菜系
+                  {ts("selectedCuisines", { count: settings.cuisinePref.length })}
                 </p>
               )}
             </div>
             <div>
-              <label className="text-sm text-gray-600">份量（人数）</label>
+              <label className="text-sm text-gray-600">{ts("servingSizeLabel")}</label>
               <div className="flex items-center gap-2 mt-1.5">
                 {SERVING_SIZE_OPTIONS.map((n) => (
                   <button
@@ -438,7 +437,7 @@ const save = async () => {
             <button
               onClick={() => {
                 if (profile?.isDemoUser) {
-                  setGlobalToast("🔒 体验用户无法保存设置，请注册后使用")
+                  setGlobalToast(ts("demoToast"))
                   setTimeout(() => setGlobalToast(""), 3000)
                   return
                 }
@@ -447,11 +446,11 @@ const save = async () => {
               disabled={saving || settings.cuisinePref.length === 0}
               className="bg-[#FF6B35] text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all"
             >
-              {saving ? "保存中..." : "保存设置"}
+              {saving ? ts("saving") : ts("saveSettings")}
             </button>
             {saved && (
               <span className={`text-sm text-green-600 transition-opacity duration-300 ${showSaved ? 'opacity-100' : 'opacity-0'}`}>
-                ✅ 已保存
+                {ts("saved")}
               </span>
             )}
           </div>
@@ -465,23 +464,19 @@ const save = async () => {
           {globalToast}
         </div>
       )}
-
-      {/* 密码设置 - 已整合到账号信息中 */}
-
-      {/* 密码设置 - 已整合到账号信息中 */}
     </div>
   )
 }
 
-function PasswordForm({ hasPassword, onClose }: { hasPassword: boolean; onClose: () => void }) {
+function PasswordForm({ hasPassword, onClose, ts, tv }: { hasPassword: boolean; onClose: () => void; ts: any; tv: any }) {
   const [newPassword, setNewPassword] = useState("")
   const [confirm, setConfirm] = useState("")
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState("")
 
   const handleSubmit = async () => {
-    if (newPassword.length < 8) { setMsg("密码至少 8 位"); return }
-    if (newPassword !== confirm) { setMsg("两次密码不一致"); return }
+    if (newPassword.length < 8) { setMsg(tv("passwordTooShort")); return }
+    if (newPassword !== confirm) { setMsg(tv("passwordMismatch")); return }
     setSaving(true)
     setMsg("")
     try {
@@ -492,16 +487,16 @@ function PasswordForm({ hasPassword, onClose }: { hasPassword: boolean; onClose:
       })
       const data = await res.json()
       if (res.ok) {
-        setMsg("✅ 密码已" + (hasPassword ? "修改" : "设置"))
+        setMsg(ts("passwordUpdated") + (hasPassword ? ts("passwordFormModify") : ts("passwordFormSet")))
         setNewPassword("")
         setConfirm("")
         setTimeout(onClose, 1500)
       } else {
-        setMsg(`❌ ${data.error || "操作失败"}`)
+        setMsg(`❌ ${data.error || ts("operationFailed")}`)
       }
     } catch (err) {
       console.error("set password error:", err)
-      setMsg("❌ 网络错误")
+      setMsg(`❌ ${tv("networkError")}`)
     } finally {
       setSaving(false)
     }
@@ -510,18 +505,18 @@ function PasswordForm({ hasPassword, onClose }: { hasPassword: boolean; onClose:
   return (
     <div className="space-y-3">
       <div>
-        <label className="text-xs text-gray-500">新密码</label>
+        <label className="text-xs text-gray-500">{ts("passwordFormNewPassword")}</label>
         <PasswordInput
-          placeholder="至少 8 位，需含 2 种以上字符"
+          placeholder={ts("passwordFormPlaceholder")}
           value={newPassword}
           onChange={setNewPassword}
           className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35] mt-1"
         />
       </div>
       <div>
-        <label className="text-xs text-gray-500">确认新密码</label>
+        <label className="text-xs text-gray-500">{ts("passwordFormConfirm")}</label>
         <PasswordInput
-          placeholder="再次输入新密码"
+          placeholder={ts("passwordFormConfirmPlaceholder")}
           value={confirm}
           onChange={setConfirm}
           className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35] mt-1"
@@ -533,9 +528,9 @@ function PasswordForm({ hasPassword, onClose }: { hasPassword: boolean; onClose:
           disabled={saving || !newPassword || !confirm}
           className="bg-[#FF6B35] text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300 transition-all whitespace-nowrap"
         >
-          {saving ? "保存中..." : hasPassword ? "修改密码" : "设置密码"}
+          {saving ? ts("passwordFormSaving") : (hasPassword ? ts("passwordFormModify") : ts("passwordFormSet"))}
         </button>
-        <button onClick={onClose} className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap">取消</button>
+        <button onClick={onClose} className="text-sm text-gray-400 hover:text-gray-600 whitespace-nowrap">{ts("passwordFormCancel")}</button>
       </div>
       {msg && (
         <p className={`text-xs ${msg.startsWith("✅") ? "text-green-600" : "text-red-500"}`}>{msg}</p>
