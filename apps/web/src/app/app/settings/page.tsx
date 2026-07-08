@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useSession } from "next-auth/react"
 import PasswordInput from "@/app/components/password-input"
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from "@cookmate/shared/constants"
 
 export default function SettingsPage() {
+  const { update: updateSession } = useSession()
   const [settings, setSettings] = useState({ dietType: "不限", cuisinePref: [] as string[], servingSize: 2, subscriptionTier: "FREE" })
   const [profile, setProfile] = useState<{ name: string; phone: string; email: string; loginMethod: string; createdAt: string; hasPassword?: boolean; isDemoUser?: boolean } | null>(null)
   const [saving, setSaving] = useState(false)
@@ -62,8 +64,12 @@ export default function SettingsPage() {
         body: JSON.stringify({ name: editNameValue.trim() }),
       })
       if (r.ok) {
-        // 更新本地状态 + 刷新页面同步侧边栏
-        window.location.reload()
+        setProfile((p) => p ? { ...p, name: editNameValue.trim() } : p)
+        setEditingName(false)
+        setAccountMsg("✅ 用户名已更新")
+        setTimeout(() => setAccountMsg(""), 3000)
+        // 刷新会话，侧边栏自动同步
+        updateSession()
       } else {
         const d = await r.json()
         setAccountMsg(d.error || "更新失败")
