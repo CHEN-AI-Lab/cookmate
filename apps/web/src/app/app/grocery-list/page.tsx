@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useTranslations } from "next-intl"
+import { GroceryCategoryList } from "@/components/features/GroceryCategoryList"
 import { getDemoGroceryList } from "@cookmate/shared/demo-data"
 
 interface IngredientItem {

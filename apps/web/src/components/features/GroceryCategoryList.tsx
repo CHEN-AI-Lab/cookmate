@@ -1,4 +1,5 @@
 "use client"
+import { useTranslations } from "next-intl"
 
 interface GroceryItem {
   name: string
@@ -70,15 +71,17 @@ export function GroceryCategoryList({
   inPantryCount,
   total,
 }: GroceryCategoryListProps) {
+  const t = useTranslations("grocery")
+  const catLabels = t.raw("catLabels") as Record<string, string>
   return (
     <div>
       {/* Summary */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3 text-sm">
-          <span className="text-gray-400">共 {total} 种食材</span>
+          <span className="text-gray-400">{t("totalItems", { count: total })}</span>
           {inPantryCount > 0 && (
             <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded-full text-xs">
-              食材库已有 {inPantryCount} 种 ✅
+              {t("inPantryCount", { count: inPantryCount })}
             </span>
           )}
         </div>
@@ -87,7 +90,7 @@ export function GroceryCategoryList({
       {categories.length === 0 ? (
         <div className="text-center py-16">
           <span className="text-5xl">📋</span>
-          <p className="mt-4 text-gray-500">暂无购物清单</p>
+          <p className="mt-4 text-gray-500">{t("empty")}</p>
         </div>
       ) : (
         <div className="space-y-0">
@@ -99,7 +102,7 @@ export function GroceryCategoryList({
               <h3
                 className={`text-xs font-semibold uppercase tracking-wider mb-1 px-1.5 py-0.5 rounded-md inline-block ${getCategoryHeaderColor(cat.name)}`}
               >
-                {cat.name}
+                {catLabels[cat.name] || cat.name}
               </h3>
               <div className="flex flex-wrap gap-x-6 gap-y-1 mt-2">
                 {cat.items.map((item, i) => (
@@ -142,7 +145,7 @@ export function GroceryCategoryList({
                     </span>
                     {item.inPantry && (
                       <span className="text-[10px] text-green-500 bg-green-50 px-1 rounded shrink-0">
-                        已有
+                        {t("inPantry")}
                       </span>
                     )}
                     {item.sources && item.sources.length > 0 && (

@@ -622,7 +622,40 @@
     "ctaDesc": "免费注册，立即体验 AI 智能食谱推荐",
     "ctaButton": "免费开始使用"
   },
+  "stats": {
+    "title": "数据",
+    "users": "10,000+",
+    "usersLabel": "注册用户",
+    "recipes": "50,000+",
+    "recipesLabel": "菜谱生成",
+    "meals": "200,000+",
+    "mealsLabel": "餐食规划",
+    "satisfaction": "98%",
+    "satisfactionLabel": "用户满意度"
+  },
+  "testimonials": {
+    "title": "用户怎么说",
+    "item1Name": "王小美",
+    "item1Role": "上班族 · 北京",
+    "item1Content": "以前每天下班最烦的就是想吃什么。现在打开 CookMate 输入冰箱里的食材，3 秒就有答案，太方便了！",
+    "item2Name": "张大力",
+    "item2Role": "健身教练 · 上海",
+    "item2Content": "减脂期需要精确控制卡路里和营养比例，CookMate 的 AI 推荐帮了大忙，每周计划一键搞定。",
+    "item3Name": "李阿姨",
+    "item3Role": "家庭主妇 · 广州",
+    "item3Content": "家里人多口味杂，CookMate 的周计划功能让我们家再也不用为做饭吵架了，购物清单也省心。"
+  },
+  "ctaBanner": {
+    "title": "准备好告别选择困难了吗？",
+    "subtitle": "免费注册，3 秒开启智能餐食规划 👇",
+    "button": "免费开始使用 →"
+  },
   "footer": {
+    "features": "AI 菜谱",
+    "pricing": "定价",
+    "about": "关于我们",
+    "contact": "联系我们",
+    "email": "phoebe.yanxi@gmail.com",
     "copyright": "© 2026 CookMate. 保留所有权利。"
   }
 }

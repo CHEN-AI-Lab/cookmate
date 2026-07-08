@@ -621,7 +621,40 @@
     "ctaDesc": "Sign up for free and experience AI-powered smart recipe recommendations",
     "ctaButton": "Get Started Free"
   },
+  "stats": {
+    "title": "By the Numbers",
+    "users": "10,000+",
+    "usersLabel": "Registered Users",
+    "recipes": "50,000+",
+    "recipesLabel": "Recipes Generated",
+    "meals": "200,000+",
+    "mealsLabel": "Meals Planned",
+    "satisfaction": "98%",
+    "satisfactionLabel": "User Satisfaction"
+  },
+  "testimonials": {
+    "title": "What Users Say",
+    "item1Name": "Xiaomei Wang",
+    "item1Role": "Office Worker · Beijing",
+    "item1Content": "After work, the last thing I want is to figure out dinner. Now I open CookMate, type in what's in my fridge, and get an answer in 3 seconds. So convenient!",
+    "item2Name": "Dali Zhang",
+    "item2Role": "Fitness Coach · Shanghai",
+    "item2Content": "Tracking calories during my cutting phase used to be a pain. CookMate's AI recommendations handle the nutrition breakdown for me — one click and my weekly plan is ready.",
+    "item3Name": "Aunt Li",
+    "item3Role": "Homemaker · Guangzhou",
+    "item3Content": "With a big family and different tastes, CookMate's meal plan saved us from dinner arguments. The shopping list is a lifesaver too."
+  },
+  "ctaBanner": {
+    "title": "Ready to stop wondering what to cook?",
+    "subtitle": "Sign up free and start smart meal planning in 3 seconds 👇",
+    "button": "Get Started Free →"
+  },
   "footer": {
+    "features": "AI Recipes",
+    "pricing": "Pricing",
+    "about": "About",
+    "contact": "Contact",
+    "email": "phoebe.yanxi@gmail.com",
     "copyright": "© 2026 CookMate. All rights reserved."
   }
 }

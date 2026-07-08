@@ -10,6 +10,9 @@ export default async function HomePage() {
   const thero = await getTranslations("hero")
   const thow = await getTranslations("howItWorks")
   const tfeatures = await getTranslations("features")
+  const tstats = await getTranslations("stats")
+  const ttestimonials = await getTranslations("testimonials")
+  const tcta = await getTranslations("ctaBanner")
 
   return (
     <div className="min-h-screen bg-[#FFF8F0]">
@@ -111,6 +114,69 @@ export default async function HomePage() {
               )
             })}
           </div>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="py-14 bg-white">
+        <div className="max-w-[1400px] mx-auto px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            {[
+              { value: "stats.users", label: "stats.usersLabel" },
+              { value: "stats.recipes", label: "stats.recipesLabel" },
+              { value: "stats.meals", label: "stats.mealsLabel" },
+              { value: "stats.satisfaction", label: "stats.satisfactionLabel" },
+            ].map((s) => (
+              <div key={s.label}>
+                <p className="text-3xl md:text-4xl font-bold text-[#FF6B35]">
+                  {tstats(s.value)}
+                </p>
+                <p className="mt-1 text-sm text-gray-500">{tstats(s.label)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-16 bg-[#FFF8F0]">
+        <div className="max-w-[1400px] mx-auto px-8">
+          <h2 className="text-3xl font-bold text-center text-[#2D3436]">{ttestimonials("title")}</h2>
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl p-6 shadow-sm border border-orange-50 flex flex-col"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-[#FF6B35]/10 flex items-center justify-center text-lg font-bold text-[#FF6B35]">
+                    {ttestimonials(`item${i}Name`).charAt(0)}
+                  </div>
+                  <div>
+                    <p className="font-medium text-[#2D3436] text-sm">{ttestimonials(`item${i}Name`)}</p>
+                    <p className="text-xs text-gray-400">{ttestimonials(`item${i}Role`)}</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 leading-relaxed flex-1">
+                  &ldquo;{ttestimonials(`item${i}Content`)}&rdquo;
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Banner */}
+      <section className="py-20 bg-[#2D3436]">
+        <div className="max-w-[1400px] mx-auto px-8 text-center">
+          <h2 className="text-3xl font-bold text-white">{tcta("title")}</h2>
+          <p className="mt-3 text-gray-400 text-lg">{tcta("subtitle")}</p>
+          <Link
+            href={ctaHref}
+            className="mt-8 inline-block bg-[#FF6B35] text-white px-10 py-3.5 rounded-full text-lg font-medium hover:bg-orange-600 transition-colors shadow-lg shadow-orange-800/30"
+          >
+            {tcta("button")}
+          </Link>
         </div>
       </section>
 
