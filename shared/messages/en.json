@@ -302,7 +302,10 @@
     "slotConflictDesc": "{day}{meal} already has 「{title}」",
     "slotConflictReplace": "Replace with 「{title}」?",
     "replace": "Replace",
-    "networkError": "Network error"
+    "networkError": "Network error",
+    "monday": "Mon", "tuesday": "Tue", "wednesday": "Wed", "thursday": "Thu",
+    "friday": "Fri", "saturday": "Sat", "sunday": "Sun",
+    "breakfast": "Breakfast", "lunch": "Lunch", "dinner": "Dinner"
   },
   "settings": {
     "title": "Settings",
