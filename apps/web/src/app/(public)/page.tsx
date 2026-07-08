@@ -122,10 +122,10 @@ export default async function HomePage() {
         <div className="max-w-[1400px] mx-auto px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
-              { value: "stats.users", label: "stats.usersLabel" },
-              { value: "stats.recipes", label: "stats.recipesLabel" },
-              { value: "stats.meals", label: "stats.mealsLabel" },
-              { value: "stats.satisfaction", label: "stats.satisfactionLabel" },
+              { value: "users", label: "usersLabel" },
+              { value: "recipes", label: "recipesLabel" },
+              { value: "meals", label: "mealsLabel" },
+              { value: "satisfaction", label: "satisfactionLabel" },
             ].map((s) => (
               <div key={s.label}>
                 <p className="text-3xl md:text-4xl font-bold text-[#FF6B35]">
