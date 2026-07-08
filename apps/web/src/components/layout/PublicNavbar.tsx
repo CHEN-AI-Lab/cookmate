@@ -12,7 +12,6 @@ export default function PublicNavbar({
   session?: boolean
 }) {
   const tnav = useTranslations("nav")
-  const tcommon = useTranslations("common")
   const link = ctaHref || (session ? "/app/dashboard" : "/register")
 
   return (
@@ -33,21 +32,15 @@ export default function PublicNavbar({
           <Link href="/about" className="hover:text-[#FF6B35]">
             {tnav("about")}
           </Link>
-        </nav>
-
-        <div className="flex items-center gap-3">
           <Link
             href="/login"
-            className="text-sm text-[#FF6B35] font-medium hover:text-orange-600"
+            className="text-[#FF6B35] font-medium hover:text-orange-600"
           >
             {tnav("login")}
           </Link>
-          <Link
-            href={link}
-            className="bg-[#FF6B35] text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-colors"
-          >
-            {tcommon("freeStart")}
-          </Link>
+        </nav>
+
+        <div className="flex items-center gap-3">
           <LanguageSwitcher />
         </div>
       </div>
