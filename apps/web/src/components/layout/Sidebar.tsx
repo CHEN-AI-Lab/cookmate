@@ -25,7 +25,7 @@ export function Sidebar({
   const pathname = usePathname()
 
   return (
-    <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-orange-100 min-h-screen">
+    <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-orange-100 h-screen sticky top-0">
       {/* Logo */}
       <Link
         href="/app/dashboard"
@@ -36,7 +36,7 @@ export function Sidebar({
       </Link>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
