@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { PricingCard } from "@/components/features/PricingCard"
 
@@ -28,6 +28,12 @@ export default function BillingPage() {
   const [message, setMessage] = useState("")
   const [refreshKey, setRefreshKey] = useState(0)
   const [paying, setPaying] = useState(false)
+  const yearlyRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // 进入页面时滚动到年付计划
+    yearlyRef.current?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" })
+  }, [])
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -198,7 +204,8 @@ export default function BillingPage() {
       {/* Plan comparison */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <h3 className="font-bold text-gray-900 mb-4">选择计划</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="flex overflow-x-auto gap-3 pb-2 scroll-smooth snap-x snap-mandatory -mx-1 px-1">
+          <div className="snap-start shrink-0 w-[200px] md:w-[220px]">
           <PricingCard
             name="Free"
             price="0"
@@ -212,6 +219,8 @@ export default function BillingPage() {
             disabled={true}
             loading={false}
           />
+          </div>
+          <div className="snap-start shrink-0 w-[200px] md:w-[220px]">
           <PricingCard
             name="Pro 月付"
             price="20"
@@ -219,12 +228,14 @@ export default function BillingPage() {
             period="≈ ¥20/月"
             features={["无限 AI 生成", "智能周计划", "购物清单", "饮食定制"]}
             highlighted={false}
-            isCurrent={!isFree}
+            isCurrent={false}
             ctaLabel={isFree ? "订阅" : "使用中"}
             onCta={() => {}}
             disabled={true}
             loading={false}
           />
+          </div>
+          <div className="snap-start shrink-0 w-[200px] md:w-[220px]">
           <PricingCard
             name="Pro 季付"
             price="51"
@@ -239,6 +250,8 @@ export default function BillingPage() {
             disabled={true}
             loading={false}
           />
+          </div>
+          <div className="snap-start shrink-0 w-[200px] md:w-[220px]">
           <PricingCard
             name="Pro 半年"
             price="90"
@@ -253,6 +266,8 @@ export default function BillingPage() {
             disabled={true}
             loading={false}
           />
+          </div>
+          <div className="snap-start shrink-0 w-[200px] md:w-[220px]" ref={yearlyRef}>
           <PricingCard
             name="Pro 年付"
             price="119"
@@ -261,13 +276,15 @@ export default function BillingPage() {
             saving="🔥 省 ¥121"
             features={["无限 AI 生成", "智能周计划", "购物清单", "饮食定制"]}
             highlighted={true}
-            isCurrent={!isFree}
+            isCurrent={false}
             ctaLabel={isFree ? "升级到 Pro" : "使用中"}
             onCta={() => {}}
             disabled={true}
             loading={false}
           />
+          </div>
         </div>
+        <p className="text-xs text-gray-400 mt-3 text-center">← 左右滑动查看更多 →</p>
       </div>
 
       {/* Payment methods */}
