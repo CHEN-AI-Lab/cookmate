@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
 
 const navItems = [
   { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
@@ -46,6 +47,7 @@ export function MobileNav() {
             </Link>
           )
         })}
+        <LanguageSwitcher />
       </nav>
     </header>
   )

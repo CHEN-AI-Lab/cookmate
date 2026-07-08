@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useTranslations } from "next-intl"
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
 
 export default function PublicNavbar({
   ctaHref,
@@ -37,6 +38,7 @@ export default function PublicNavbar({
           >
             {tnav("login")}
           </Link>
+          <LanguageSwitcher />
         </nav>
         <Link
           href={link}

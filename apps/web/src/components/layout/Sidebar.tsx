@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { useTranslations } from "next-intl"
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
 
 const navItems = [
   { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
@@ -59,6 +60,9 @@ export function Sidebar({
 
       {/* Bottom: user info + logout */}
       <div className="px-3 py-3 border-t border-orange-100">
+        <div className="px-3 py-1.5 flex justify-end">
+          <LanguageSwitcher />
+        </div>
         {name ? (
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 group">
             <span className="flex items-center justify-center w-7 h-7 rounded-full bg-orange-100 text-[#FF6B35] text-xs font-bold shrink-0">
