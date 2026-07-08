@@ -64,25 +64,23 @@ export async function POST(req: Request) {
     }
 
     if (existing) {
-      // 更新现有 MealSlot 的 Recipe
-      if (existing.recipeId) {
-        await prisma.recipe.update({
-          where: { id: existing.recipeId },
-          data: { title: title.trim(), description: description || "", ingredients: ingredients || "", steps: steps || "", cookingTime, calories, cuisineType, starred: starred ?? false },
-        })
-      } else {
-        // Slot exists but has no recipe - find or create
-        const existingRecipe = await prisma.recipe.findFirst({
-          where: { userId: session.user.id, title: title.trim() },
-        })
-        const r = existingRecipe || await prisma.recipe.create({
-          data: { userId: session.user.id, title: title.trim(), description: description || "", ingredients: ingredients || "", steps: steps || "", cookingTime, calories, cuisineType, isGenerated: false, starred: starred ?? false },
-        })
-        await prisma.mealSlot.update({
-          where: { id: existing.id },
-          data: { recipeId: r.id, note: `${title}${description ? ` - ${description}` : ""}` },
+      // 查找或创建同名菜谱（避免 @@unique([userId, title]) 冲突）
+      let recipe = await prisma.recipe.findFirst({
+        where: { userId: session.user.id, title: title.trim() },
+      })
+      if (!recipe) {
+        recipe = await prisma.recipe.create({
+          data: {
+            userId: session.user.id, title: title.trim(),
+            description: description || "", ingredients: ingredients || "", steps: steps || "",
+            cookingTime, calories, cuisineType, isGenerated: false, starred: starred ?? false,
+          },
         })
       }
+      await prisma.mealSlot.update({
+        where: { id: existing.id },
+        data: { recipeId: recipe.id, note: `${title}${description ? ` - ${description}` : ""}` },
+      })
     } else {
       // 先查找是否已存在同名菜谱（避免 @@unique([userId, title]) 冲突）
       let recipe = await prisma.recipe.findFirst({
