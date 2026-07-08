@@ -32,16 +32,16 @@ export default function PublicNavbar({
           <Link href="/about" className="hover:text-[#FF6B35]">
             {tnav("about")}
           </Link>
-          <Link
-            href="/login"
-            className="text-[#FF6B35] font-medium hover:text-orange-600"
-          >
-            {tnav("login")}
-          </Link>
         </nav>
 
         <div className="flex items-center gap-3">
           <LanguageSwitcher />
+          <Link
+            href="/login"
+            className="text-[#FF6B35] font-medium hover:text-orange-600 text-sm"
+          >
+            {tnav("login")}
+          </Link>
         </div>
       </div>
     </header>

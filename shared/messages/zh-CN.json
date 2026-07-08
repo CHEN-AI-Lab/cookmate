@@ -206,12 +206,18 @@
     "dinner": "晚餐",
     "demoLocked": "🔒 注册后可生成",
     "starToast": "⭐ 已收藏",
-    "unstarToast": "已取消收藏",
-    "deleteSlotFailed": "删除失败",
-    "networkError": "网络错误"
-  },
-  "grocery": {
-    "title": "🛒 购物清单",
+        "unstarToast": "已取消收藏",
+        "deleteSlotFailed": "删除失败",
+        "networkError": "网络错误",
+        "generateFailed": "生成失败",
+        "deleteSlotSuccess": "✅ 菜谱已删除",
+        "confirmDeleteTitle": "确认删除",
+        "confirmDeleteDesc": "确定要删除这个菜谱吗？",
+        "irreversible": "此操作不可恢复",
+        "confirmDelete": "确认删除",
+        "loading": "加载中..."
+      },
+      "grocery": {
     "empty": "还没有购物清单",
     "emptyHint": "先到周计划 规划菜单，清单自动生成",
     "totalItems": "共 {count} 种食材",
