@@ -23,9 +23,9 @@ export default function PublicNavbar({
         </Link>
 
         <nav className="hidden sm:flex items-center gap-6 text-sm text-gray-600">
-          <Link href="/#how" className="hover:text-[#FF6B35]">
+          <a href="/#how" className="hover:text-[#FF6B35]">
             {tnav("howToUse")}
-          </Link>
+          </a>
           <Link href="/pricing" className="hover:text-[#FF6B35]">
             {tnav("pricing")}
           </Link>
