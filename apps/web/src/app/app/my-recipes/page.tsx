@@ -18,12 +18,20 @@ interface Recipe {
   createdAt: string
 }
 
-const DAY_KEYS = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"] as const
-const MEAL_KEYS = ["breakfast","lunch","dinner"] as const
+const DAY_KEYS = ["周一","周二","周三","周四","周五","周六","周日"] as const
+const MEAL_KEYS = ["早餐","午餐","晚餐"] as const
 
 export default function MyRecipesPage() {
   const tr = useTranslations("recipes")
   const tm = useTranslations("mealPlan")
+  const dayLabel: Record<string, string> = {
+    "周一": tm("monday"), "周二": tm("tuesday"), "周三": tm("wednesday"),
+    "周四": tm("thursday"), "周五": tm("friday"), "周六": tm("saturday"),
+    "周日": tm("sunday"),
+  }
+  const mealLabel: Record<string, string> = {
+    "早餐": tm("breakfast"), "午餐": tm("lunch"), "晚餐": tm("dinner"),
+  }
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -423,14 +431,14 @@ export default function MyRecipesPage() {
                 className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm"
               >
                 {DAY_KEYS.map((key) => (
-                  <option key={key} value={key}>{tm(key)}</option>
+                  <option key={key} value={key}>{dayLabel[key]}</option>
                 ))}
               </select>
               <select value={addMeal} onChange={(e) => setAddMeal(e.target.value)}
                 className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm"
               >
                 {MEAL_KEYS.map((key) => (
-                  <option key={key} value={key}>{tm(key)}</option>
+                  <option key={key} value={key}>{mealLabel[key]}</option>
                 ))}
               </select>
             </div>

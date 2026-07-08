@@ -10,6 +10,7 @@ import { useTranslations } from "next-intl"
 export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boolean; userName?: string }) {
   const t = useTranslations('auth')
   const tv = useTranslations('validation')
+  const tc = useTranslations('common')
   const [tab, setTab] = useState<"email" | "password">("email")
   const [phone, setPhone] = useState("")
   const [code, setCode] = useState("")
@@ -246,11 +247,11 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         setSetupCode(data.devCode)
         setError(tv('devCodePrefix') + ' ' + data.devCode)
       } else {
-        setError(`验证码已发送到您的${isPhone ? "手机" : "邮箱"}`)
+        setError(tv('codeSentTo', { target: isPhone ? "手机" : "邮箱" }))
         setTimeout(() => setError(""), 3000)
       }
     } catch {
-      setError("发送失败")
+      setError(tv('sendFailed'))
     } finally {
       setLoading(null)
     }
@@ -320,19 +321,19 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
         <div className="text-center mb-8">
           <Link href="/" className="text-2xl">🍳</Link>
-          <h1 className="text-2xl font-bold text-[#2D3436] mt-2">登录 CookMate</h1>
-          <p className="text-gray-500 mt-1">选择您喜欢的方式登录</p>
+          <h1 className="text-2xl font-bold text-[#2D3436] mt-2">{t('loginTitle')}</h1>
+          <p className="text-gray-500 mt-1">{t('loginSubtitle')}</p>
         </div>
 
         {isLoggedIn && (
           <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
             <p className="text-sm text-blue-700 font-medium">
-              {userName ? `👋 ${userName}` : "您已登录"}
+              {userName ? `👋 ${userName}` : t('alreadyLoggedIn')}
             </p>
-            <p className="text-xs text-blue-500 mt-1">要切换到其他账号，请先退出</p>
+            <p className="text-xs text-blue-500 mt-1">{t('switchAccount')}</p>
             <div className="mt-3 flex gap-2">
-              <Link href="/app/dashboard" className="flex-1 bg-blue-600 text-white text-center text-sm py-2 rounded-lg hover:bg-blue-700">进入仪表盘</Link>
-              <button onClick={() => signOut({ callbackUrl: "/" })} className="flex-1 bg-white text-gray-600 text-center text-sm py-2 rounded-lg border border-gray-200 hover:bg-gray-50">退出登录</button>
+              <Link href="/app/dashboard" className="flex-1 bg-blue-600 text-white text-center text-sm py-2 rounded-lg hover:bg-blue-700">{t('enterDashboard')}</Link>
+              <button onClick={() => signOut({ callbackUrl: "/" })} className="flex-1 bg-white text-gray-600 text-center text-sm py-2 rounded-lg border border-gray-200 hover:bg-gray-50">{tc('logout')}</button>
             </div>
           </div>
         )}
@@ -345,7 +346,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
               tab === "email" ? "bg-white text-[#2D3436] shadow-sm" : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            📧 邮箱
+            {t('tabEmail')}
           </button>
           <button
             onClick={() => setTab("password")}
@@ -353,7 +354,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
               tab === "password" ? "bg-white text-[#2D3436] shadow-sm" : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            🔑 密码
+            {t('tabPassword')}
           </button>
         </div>
 
@@ -361,11 +362,11 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         {tab === "email" && (
           <div className="space-y-4">
             <div>
-              <label className="text-sm text-gray-600 font-medium">邮箱地址</label>
+              <label className="text-sm text-gray-600 font-medium">{t('emailLabel')}</label>
               <div className="flex gap-2 mt-1.5">
                 <input
                   type="email"
-                  placeholder="请输入邮箱"
+                  placeholder={t('emailPlaceholder')}
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); setEmailCodeSent(false) }}
                   className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white"
@@ -375,17 +376,17 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                   disabled={loading === "email" || countdown > 0 || !email}
                   className="px-4 py-3 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap transition-colors"
                 >
-                  {countdown > 0 ? `${countdown}s` : loading === "email" ? "发送中..." : "获取验证码"}
+                  {countdown > 0 ? `${countdown}s` : loading === "email" ? tc('sending') : tc('sendCode')}
                 </button>
               </div>
             </div>
             {emailCodeSent && (
               <div>
-                <label className="text-sm text-gray-600 font-medium">验证码</label>
+                <label className="text-sm text-gray-600 font-medium">{t('codeLabel')}</label>
                 <input
                   type="text"
                   maxLength={6}
-                  placeholder="请输入6位验证码"
+                  placeholder={t('codePlaceholder')}
                   value={emailCode}
                   onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, ""))}
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
@@ -398,29 +399,29 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 disabled={loading === "email_login" || !emailCode}
                 className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
               >
-                {loading === "email_login" ? "登录中..." : "登录 / 注册"}
+                {loading === "email_login" ? t('loggingIn') : t('loginRegisterAction')}
               </button>
             ) : (
-              <p className="text-xs text-gray-400 text-center">点击"获取验证码"，验证码将发送到您的邮箱</p>
+              <p className="text-xs text-gray-400 text-center">{t('sendCodeHint')}</p>
             )}
           </div>
         )}
 
         {/* 密码登录 */}        {tab === "password" && !passwordSetupMode && (          <div className="space-y-4">
             <div>
-              <label className="text-sm text-gray-600 font-medium">邮箱 / 手机号</label>
+              <label className="text-sm text-gray-600 font-medium">{t('accountLabel')}</label>
               <input
                 type="text"
-                placeholder="请输入邮箱或手机号"
+                placeholder={t('accountPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
               />
             </div>
             <div>
-              <label className="text-sm text-gray-600 font-medium">密码</label>
+              <label className="text-sm text-gray-600 font-medium">{t('passwordLabel')}</label>
               <PasswordInput
-                placeholder="请输入密码"
+                placeholder={t('passwordPlaceholder')}
                 value={password}
                 onChange={setPassword}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
@@ -430,23 +431,23 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
               disabled={loading === "password" || !email || !password}
               className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
             >
-              {loading === "password" ? "登录中..." : "登录"}
+              {loading === "password" ? t('loggingIn') : t('loginAction')}
             </button>
             <button
               onClick={() => { setPasswordSetupMode(true); setError(""); setPassword(""); setSetupNewPassword(""); setSetupConfirmPassword(""); setSetupCode(""); setSetupCodeSent(false) }}
               className="w-full text-xs text-gray-400 hover:text-[#FF6B35] transition-colors"
             >
-              忘记密码？
+              {t('forgotPassword')}
             </button>          </div>        )}
 
         {/* 密码设置模式（没设密码时直接设） */}
         {tab === "password" && passwordSetupMode && (
           <div className="space-y-4">
             <div>
-              <label className="text-sm text-gray-600 font-medium">邮箱 / 手机号</label>
+              <label className="text-sm text-gray-600 font-medium">{t('accountLabel')}</label>
               <input
                 type="text"
-                placeholder="请输入邮箱或手机号"
+                placeholder={t('accountPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
@@ -455,7 +456,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="输入验证码"
+                placeholder={t('codePlaceholder')}
                 value={setupCode}
                 onChange={(e) => setSetupCode(e.target.value.replace(/\D/g, ""))}
                 className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white"
@@ -466,22 +467,22 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 disabled={loading === "setup_code" || setupCountdown > 0}
                 className="px-4 py-3 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap"
               >
-                {setupCountdown > 0 ? `${setupCountdown}s` : loading === "setup_code" ? "发送中..." : "获取验证码"}
+                {setupCountdown > 0 ? `${setupCountdown}s` : loading === "setup_code" ? tc('sending') : tc('sendCode')}
               </button>
             </div>
             <div>
-              <label className="text-sm text-gray-600 font-medium">新密码</label>
+              <label className="text-sm text-gray-600 font-medium">{t('passwordLabel')}</label>
               <PasswordInput
-                placeholder="至少 8 位，需含 2 种以上字符"
+                placeholder={t('passwordPlaceholderSetup')}
                 value={setupNewPassword}
                 onChange={setSetupNewPassword}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
               />
             </div>
             <div>
-              <label className="text-sm text-gray-600 font-medium">确认密码</label>
+              <label className="text-sm text-gray-600 font-medium">{t('confirmPasswordLabel')}</label>
               <PasswordInput
-                placeholder="再次输入新密码"
+                placeholder={t('confirmPasswordPlaceholder')}
                 value={setupConfirmPassword}
                 onChange={setSetupConfirmPassword}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
@@ -492,13 +493,13 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
               disabled={loading === "setup_submit" || !setupCode || !setupNewPassword || !setupConfirmPassword}
               className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
             >
-              {loading === "setup_submit" ? "设置中..." : "设置密码并登录"}
+              {loading === "setup_submit" ? t('loggingIn') : t('setupPassword')}
             </button>
             <button
               onClick={() => { setPasswordSetupMode(false); setError(""); setSetupCodeSent(false) }}
               className="w-full text-sm text-gray-400 hover:text-gray-600 transition-colors"
             >
-              ← 返回密码登录
+              {t('backToLogin')}
             </button>
           </div>
         )}
@@ -516,7 +517,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         {/* 社交账号登录 */}
         <div className="my-6 flex items-center gap-4">
           <div className="flex-1 h-px bg-gray-200" />
-          <span className="text-sm text-gray-400">社交账号</span>
+          <span className="text-sm text-gray-400">{t('socialLogin')}</span>
           <div className="flex-1 h-px bg-gray-200" />
         </div>
 
@@ -553,12 +554,12 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
             disabled={loading !== null}
             className="w-full bg-gradient-to-r from-[#FF6B35] to-orange-400 text-white rounded-xl py-3 font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            {loading === "demo" ? "登录中..." : "🚀 体验演示版"}
+            {loading === "demo" ? t('loggingIn') : t('demoVersion')}
           </button>
         </div>
 
         <p className="text-center text-sm text-gray-400 mt-6">
-          还没有账号？<Link href="/register" className="text-[#FF6B35] hover:underline">注册</Link>
+          {t('hasAccount')}<Link href="/register" className="text-[#FF6B35] hover:underline">{t('registerAction')}</Link>
         </p>
       </div>
     </div>
