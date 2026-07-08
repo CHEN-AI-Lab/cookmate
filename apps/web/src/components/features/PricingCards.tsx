@@ -3,44 +3,45 @@ import { useTranslations } from "next-intl"
 
 import { PricingCard } from "./PricingCard"
 
-const PRO_TIERS = [
-  {
-    nameKey: "proMonthly",
-    price: "20",
-    periodLabelKey: "perMonth",
-    period: "≈ ¥20/月",
-    saving: undefined,
-    ctaLabelKey: "subscribePro",
-  },
-  {
-    nameKey: "proQuarterly",
-    price: "51",
-    periodLabelKey: "per3Months",
-    period: "≈ ¥17/月 · 省15%",
-    saving: "省 15%",
-    ctaLabelKey: "subscribePro",
-  },
-  {
-    nameKey: "proHalfYear",
-    price: "90",
-    periodLabelKey: "per6Months",
-    period: "≈ ¥15/月 · 省25%",
-    saving: "省 25%",
-    ctaLabelKey: "subscribePro",
-  },
-  {
-    nameKey: "proYearly",
-    price: "119",
-    periodLabelKey: "perYear",
-    period: "≈ ¥9.92/月 · 省50%",
-    saving: "🔥 省 ¥121",
-    ctaLabelKey: "subscribePro",
-  },
-]
-
 export function PricingCards() {
   const t = useTranslations("billing")
   const tc = useTranslations("common")
+
+  const PRO_TIERS = [
+    {
+      nameKey: "proMonthly",
+      price: "20",
+      periodLabelKey: "perMonth",
+      period: t("monthlyPeriod"),
+      saving: undefined,
+      ctaLabelKey: "subscribePro",
+    },
+    {
+      nameKey: "proQuarterly",
+      price: "51",
+      periodLabelKey: "per3Months",
+      period: `≈ ¥17/${t("perMonth")} · ${t("savePercent", { percent: "15" })}`,
+      saving: t("savePercent", { percent: "15" }),
+      ctaLabelKey: "subscribePro",
+    },
+    {
+      nameKey: "proHalfYear",
+      price: "90",
+      periodLabelKey: "per6Months",
+      period: `≈ ¥15/${t("perMonth")} · ${t("savePercent", { percent: "25" })}`,
+      saving: t("savePercent", { percent: "25" }),
+      ctaLabelKey: "subscribePro",
+    },
+    {
+      nameKey: "proYearly",
+      price: "119",
+      periodLabelKey: "perYear",
+      period: `≈ ¥9.92/${t("perMonth")} · ${t("savePercent", { percent: "50" })}`,
+      saving: `🔥 ${t("saveAmount", { amount: "¥121" })}`,
+      ctaLabelKey: "subscribePro",
+    },
+  ]
+
   return (
     <section id="pricing" className="py-16 bg-white">
       <div className="max-w-[1400px] mx-auto px-8">

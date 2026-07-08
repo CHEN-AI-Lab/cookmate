@@ -411,6 +411,8 @@
     "otherPlans": "Quarterly $51/3mo · Save 15%  |  Half-year $90/6mo · Save 25%",
     "demoBillingTitle": "🔒 Demo Mode",
     "demoBillingDesc": "Demo users cannot use payment features. Sign up to upgrade to Pro for unlimited AI generation and meal plans.",
+    "savePercent": "Save {percent}%",
+    "saveAmount": "Save {amount}",
     "demoBillingRegister": "Free Sign Up",
     "alipay": "Alipay",
     "alipayDesc": "¥20/month",
@@ -513,6 +515,24 @@
     "backHome": "Go Home",
     "loadFailed": "Failed to load",
     "loadFailedDesc": "This section encountered an error. Please refresh and try again."
+  },
+  "about": {
+    "title": "About CookMate",
+    "subtitle": "Let AI solve your daily 'what to eat' dilemma",
+    "storyTitle": "📖 Our Story",
+    "storyP1": "CookMate was born from the simplest yet most annoying problem — having to think about 'what to eat' every single day. Whether it's a busy workday or a relaxing weekend, this seemingly simple question always drains our energy.",
+    "storyP2": "We thought: why not let AI make this decision for you? Tell CookMate what ingredients you have in your fridge or what flavors you crave, and get a customized recipe in 3 seconds. From weekly plans to shopping lists, it's a one-stop solution for the complete cycle of 'what to eat → what to buy → how to cook'.",
+    "missionTitle": "🎯 Our Mission",
+    "missionDesc": "Making every meal easy for everyone. No culinary skills required, no complex planning needed — just open CookMate and get it done in 3 seconds.",
+    "featureAiTitle": "🤖 AI-Powered",
+    "featureAiDesc": "Advanced AI recommends the best recipes based on your ingredients and taste preferences",
+    "featureSpeedTitle": "⚡ Recipes in 3 Seconds",
+    "featureSpeedDesc": "Enter ingredients and see what you can cook in the blink of an eye, with detailed steps and cooking times",
+    "featureFullTitle": "📋 Full-Flow Management",
+    "featureFullDesc": "From weekly planning to shopping lists — one-stop management so you never miss an ingredient",
+    "ctaTitle": "🚀 Get Started",
+    "ctaDesc": "Sign up for free and experience AI-powered smart recipe recommendations",
+    "ctaButton": "Get Started Free"
   },
   "footer": {
     "copyright": "© 2026 CookMate. All rights reserved."

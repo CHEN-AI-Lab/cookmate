@@ -412,6 +412,8 @@
     "otherPlans": "季付 ¥51/3月 · 省15%  |  半年付 ¥90/6月 · 省25%",
     "demoBillingTitle": "🔒 体验模式",
     "demoBillingDesc": "体验用户无法使用支付功能。注册账号后可升级到 Pro，解锁无限 AI 生成和周计划功能。",
+    "savePercent": "省 {percent}%",
+    "saveAmount": "省 {amount}",
     "demoBillingRegister": "免费注册",
     "alipay": "支付宝",
     "alipayDesc": "¥20/月起",
@@ -514,6 +516,24 @@
     "backHome": "返回首页",
     "loadFailed": "加载失败",
     "loadFailedDesc": "该区域遇到了错误，请刷新重试"
+  },
+  "about": {
+    "title": "关于 CookMate",
+    "subtitle": "让 AI 帮你终结「今天吃什么」的每日难题",
+    "storyTitle": "📖 我们的故事",
+    "storyP1": "CookMate 诞生于一个最简单也最烦人的问题——每天都要想「吃什么」。不管是忙碌的工作日还是悠闲的周末，这个看似简单的问题总能消耗我们大量的精力。",
+    "storyP2": "我们想：为什么不让人工智能来帮你做这个决定？告诉 CookMate 你冰箱里有什么食材，或者你想吃什么口味，3 秒内就能得到量身定制的菜谱。从周计划到购物清单，一站式解决「吃什么→买什么→怎么做」的完整闭环。",
+    "missionTitle": "🎯 我们的使命",
+    "missionDesc": "让每个人都能轻松吃好每一餐。不需要精湛的厨艺，不需要复杂的规划，只需要打开 CookMate，3 秒搞定。",
+    "featureAiTitle": "🤖 AI 驱动",
+    "featureAiDesc": "先进的 AI 技术，根据你的食材和口味偏好，智能推荐最适合你的菜谱",
+    "featureSpeedTitle": "⚡ 3 秒出菜谱",
+    "featureSpeedDesc": "输入食材，眨眼间就能看到可做的菜谱，含详细的步骤和烹饪时间",
+    "featureFullTitle": "📋 全流程管理",
+    "featureFullDesc": "从周计划到购物清单，买菜做饭一站式搞定，不再遗漏任何食材",
+    "ctaTitle": "🚀 开始使用",
+    "ctaDesc": "免费注册，立即体验 AI 智能食谱推荐",
+    "ctaButton": "免费开始使用"
   },
   "footer": {
     "copyright": "© 2026 CookMate. All rights reserved."
