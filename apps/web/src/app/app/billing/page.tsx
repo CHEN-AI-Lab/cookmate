@@ -198,54 +198,25 @@ export default function BillingPage() {
       {/* Plan comparison */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <h3 className="font-bold text-gray-900 mb-4">选择计划</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <PricingCard
-            name="Pro 月付"
-            price="20"
+            name="Free"
+            price="0"
+            periodLabel=""
+            period="/永久"
+            features={["每天 1 次 AI 推荐", "无限食材位", "AI 菜谱生成"]}
+            highlighted={false}
+            isCurrent={isFree}
+            ctaLabel={isFree ? "使用中" : "免费版"}
+            onCta={() => {}}
+            disabled={true}
+            loading={false}
+          />
+          <PricingCard
+            name="Pro"
+            price="15"
             periodLabel="/月"
-            period="≈ ¥20/月"
-            features={["无限 AI 生成", "智能周计划", "购物清单", "饮食定制"]}
-            highlighted={false}
-            isCurrent={!isFree}
-            ctaLabel={isFree ? "订阅" : "使用中"}
-            onCta={() => {}}
-            disabled={true}
-            loading={false}
-          />
-          <PricingCard
-            name="Pro 季付"
-            price="51"
-            periodLabel="/3月"
-            period="≈ ¥17/月 · 省15%"
-            saving="省 15%"
-            features={["无限 AI 生成", "智能周计划", "购物清单", "饮食定制"]}
-            highlighted={false}
-            isCurrent={false}
-            ctaLabel="订阅"
-            onCta={() => {}}
-            disabled={true}
-            loading={false}
-          />
-          <PricingCard
-            name="Pro 半年"
-            price="90"
-            periodLabel="/6月"
-            period="≈ ¥15/月 · 省25%"
-            saving="省 25%"
-            features={["无限 AI 生成", "智能周计划", "购物清单", "饮食定制"]}
-            highlighted={false}
-            isCurrent={false}
-            ctaLabel="订阅"
-            onCta={() => {}}
-            disabled={true}
-            loading={false}
-          />
-          <PricingCard
-            name="Pro 年付"
-            price="119"
-            periodLabel="/年"
-            period="≈ ¥9.92/月 · 省50%"
-            saving="🔥 省 ¥121"
+            period=""
             features={["无限 AI 生成", "智能周计划", "购物清单", "饮食定制"]}
             highlighted={true}
             isCurrent={!isFree}
