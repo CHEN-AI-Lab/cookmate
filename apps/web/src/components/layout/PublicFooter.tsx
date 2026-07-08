@@ -18,7 +18,7 @@ export default function PublicFooter() {
           {/* Quick links */}
           <div>
             <p className="text-gray-300 font-semibold mb-3 text-xs uppercase tracking-wider">
-              Links
+              {tfooter("links")}
             </p>
             <ul className="space-y-2">
               <li>

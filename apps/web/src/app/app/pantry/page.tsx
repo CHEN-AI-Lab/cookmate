@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { getDemoPantryItems } from "@cookmate/shared/demo-data"
 
 const QUICK_ADD = [
@@ -37,6 +38,8 @@ interface PantryItem {
 
 export default function PantryPage() {
   const router = useRouter()
+  const t = useTranslations("pantry")
+  const tc = useTranslations("common")
   const [items, setItems] = useState<PantryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
@@ -132,12 +135,12 @@ export default function PantryPage() {
 
   const filtered = items.filter((i) => !search || i.name.includes(search))
 
-  if (loading) return <div className="text-center py-16 text-gray-400">加载中...</div>
+  if (loading) return <div className="text-center py-16 text-gray-400">{t("loading")}</div>
 
   return (
     <div>
       {/* 1. Title */}
-      <h1 className="text-2xl font-bold text-[#2D3436] mb-4">🥦 食材库</h1>
+      <h1 className="text-2xl font-bold text-[#2D3436] mb-4">{t("title")}</h1>
 
 {/* 2. Search row */}
       <div className="mb-2">
@@ -147,7 +150,7 @@ export default function PantryPage() {
             <input
               type="text" value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="搜索食材..."
+              placeholder={t("searchPlaceholder")}
               className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-[#FF6B35]"
             />
           </div>
@@ -156,16 +159,16 @@ export default function PantryPage() {
             disabled={isDemoUser}
             className="shrink-0 bg-gradient-to-r from-orange-400 to-amber-400 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity shadow-sm flex items-center gap-1"
           >
-            {isDemoUser ? "🔒 注册后可添加" : "＋ 添加"}
+            {isDemoUser ? t("demoLockedAdd") : t("addButton")}
           </button>
         </div>
       </div>
 
       {/* 3. My ingredients */}
       <div className="mb-2">
-        <h2 className="font-bold text-[#2D3436] mb-3">📦 我的食材 ({filtered.length})</h2>
+        <h2 className="font-bold text-[#2D3436] mb-3">{t("myItems", { count: filtered.length })}</h2>
         {filtered.length === 0 ? (
-          <p className="text-gray-400 text-sm">点击上方添加食材</p>
+          <p className="text-gray-400 text-sm">{t("empty")}</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {filtered.map((item) => (
@@ -201,18 +204,18 @@ export default function PantryPage() {
             }}
             className="text-sm font-medium hover:underline"
           >
-            🍳 已选 {selected.size} 种 · 用这些食材做菜
+            {t("selectedCount", { count: selected.size })}
           </button>
           <button
             onClick={() => setSelected(new Set())}
             className="text-sm opacity-80 hover:opacity-100"
           >
-            ✕ 取消选择
+            {t("cancelSelection")}
           </button>
         </div>
       ) : (
         <div className="mb-4 flex items-center bg-gray-100 text-gray-400 px-4 py-2.5 rounded-xl">
-          <span className="text-sm">👆 点击食材选择，然后在这里做菜</span>
+          <span className="text-sm">{t("clickToSelect")}</span>
         </div>
       )}
 
@@ -222,7 +225,7 @@ export default function PantryPage() {
           onClick={() => setQuickAddOpen(!quickAddOpen)}
           className="w-full flex items-center justify-between px-5 py-3 text-left"
         >
-          <span className="font-bold text-[#2D3436] text-sm">⚡ 快速添加食材</span>
+          <span className="font-bold text-[#2D3436] text-sm">{t("quickAdd")}</span>
           <span className="text-gray-400 text-sm transition-transform">{quickAddOpen ? "▲" : "▼"}</span>
         </button>
         {quickAddOpen && (
@@ -286,13 +289,13 @@ export default function PantryPage() {
             className="bg-white rounded-2xl p-6 w-80 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-[#2D3436] mb-4">添加食材</h3>
+            <h3 className="text-lg font-bold text-[#2D3436] mb-4">{t("addDialogTitle")}</h3>
             <input
               type="text"
               value={inputName}
               onChange={(e) => setInputName(e.target.value)}
               onKeyDown={async (e) => { if (e.key === "Enter") { await addItem(inputName); setShowAddDialog(false) } }}
-              placeholder="输入食材名称..."
+              placeholder={t("addItemPlaceholder")}
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#FF6B35] mb-4"
               autoFocus
             />
@@ -301,24 +304,24 @@ export default function PantryPage() {
                 onClick={() => { setShowAddDialog(false); setInputName("") }}
                 className="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl text-sm hover:bg-gray-200"
               >
-                取消
+                {t("cancel")}
               </button>
               <button
                 onClick={async () => { await addItem(inputName); setShowAddDialog(false) }}
                 className="flex-1 bg-gradient-to-r from-orange-400 to-amber-400 text-white py-2.5 rounded-xl text-sm font-medium hover:opacity-90"
               >
-                添加
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                              {t("add")}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
-      {/* 重复添加提示 */}
-      {dupDialog && (
-        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
-          <div className="bg-white border border-gray-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
-            <span className="text-amber-500 text-base shrink-0">⚠️</span>
+                    {/* 重复添加提示 */}
+                    {dupDialog && (
+                      <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setDupDialog(null)}>
+                        <div className="bg-[#2D3436] text-white px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center" onClick={(e) => e.stopPropagation()}>
+                          <span>{t("alreadyInPantry", { name: dupDialog })}</span>
             <span className="text-gray-700">「{dupDialog}」已在食材库中</span>
           </div>
         </div>
