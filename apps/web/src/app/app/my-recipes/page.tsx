@@ -219,7 +219,7 @@ export default function MyRecipesPage() {
   if (loading) return <div className="text-center py-16 text-gray-400">加载中...</div>
 
   return (
-    <div>
+    <div className="pb-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-[#2D3436]">📚 我的菜谱</h1>
         <div className="flex gap-2 items-center">
