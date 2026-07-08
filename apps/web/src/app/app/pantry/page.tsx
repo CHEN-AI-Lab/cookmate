@@ -40,6 +40,7 @@ export default function PantryPage() {
   const router = useRouter()
   const t = useTranslations("pantry")
   const tc = useTranslations("common")
+  const catLabels = t.raw("catLabels") as Record<string, string>
   const [items, setItems] = useState<PantryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")

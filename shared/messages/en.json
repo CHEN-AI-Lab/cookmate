@@ -286,7 +286,14 @@
     "add": "Add",
     "demoLockedAdd": "🔒 Sign up to add",
     "demoLockedAction": "🔒 Demo users cannot use this. Please sign up.",
-    "searchIcon": "🔍"
+    "searchIcon": "🔍",
+    "catLabels": {
+      "🥬 蔬菜": "🥬 Vegetables",
+      "🍎 水果": "🍎 Fruits",
+      "🥩 肉禽蛋": "🥩 Meat & Eggs",
+      "🥛 乳品豆制品": "🥛 Dairy & Soy",
+      "🍚 主食粮油": "🍚 Grains & Oil"
+    }
   },
   "recipes": {
     "title": "Recipes",
