@@ -2,7 +2,6 @@ import { auth } from "@/lib/auth"
 import Link from "next/link"
 import PublicNavbar from "@/components/layout/PublicNavbar"
 import PublicFooter from "@/components/layout/PublicFooter"
-import { PricingCards } from "@/components/features/PricingCards"
 import { getTranslations } from "next-intl/server"
 
 export default async function HomePage() {
@@ -114,8 +113,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      <PricingCards />
 
       <PublicFooter />
     </div>

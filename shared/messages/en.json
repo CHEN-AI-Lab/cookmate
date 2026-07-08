@@ -214,7 +214,18 @@
         "confirmDeleteDesc": "Are you sure you want to delete this recipe?",
         "irreversible": "This action cannot be undone",
         "confirmDelete": "Confirm Delete",
-        "loading": "Loading..."
+        "loading": "Loading...",
+        "deleteSlotBtn": "✕ Remove this dish",
+        "starTooltipStarred": "Unstar",
+        "starTooltipUnstarred": "Star recipe",
+        "cookingTime": "⏱ Cooking time: {time} min",
+        "calories": "🔥 Calories: {calories} kcal",
+        "ingredients": "🥦 Ingredients",
+        "steps": "📝 Steps",
+        "emptySlot": "No dish assigned",
+        "emptySlotHint": "💡 Go to AI Recipes or My Recipes to generate dishes, then add to Meal Plan",
+        "goToAiRecipes": "🤖 AI Recipes",
+        "goToMyRecipes": "📚 My Recipes"
       },
       "grocery": {
     "empty": "No grocery list yet",

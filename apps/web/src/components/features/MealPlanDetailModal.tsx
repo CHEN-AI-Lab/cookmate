@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 interface MealPlanRecipe {
   id?: string
   title: string
@@ -40,6 +42,9 @@ export function MealPlanDetailModal({
   onDeleteSlot,
   onNavigateTo,
 }: MealPlanDetailModalProps) {
+  const t = useTranslations("mealPlan")
+  const tc = useTranslations("common")
+
   if (!open) return null
 
   const hasRecipe =
@@ -86,7 +91,11 @@ export function MealPlanDetailModal({
                       ? "text-amber-400"
                       : "text-gray-300 hover:text-amber-400"
                   }`}
-                  title={slot?.recipe?.starred ? "取消收藏" : "收藏菜谱"}
+                  title={
+                    slot?.recipe?.starred
+                      ? t("starTooltipStarred")
+                      : t("starTooltipUnstarred")
+                  }
                 >
                   {slot?.recipe?.starred ? "⭐" : "☆"}
                 </button>
@@ -96,14 +105,14 @@ export function MealPlanDetailModal({
             {/* Cooking time */}
             {slot?.recipe?.cookingTime && (
               <p className="text-sm text-gray-600">
-                ⏱ 烹饪时间：{slot.recipe.cookingTime} 分钟
+                {t("cookingTime", { time: slot.recipe.cookingTime })}
               </p>
             )}
 
             {/* Calories */}
             {slot?.recipe?.calories && (
               <p className="text-sm text-gray-600">
-                🔥 热量：{slot.recipe.calories} 千卡
+                {t("calories", { calories: slot.recipe.calories })}
               </p>
             )}
 
@@ -111,7 +120,7 @@ export function MealPlanDetailModal({
             {slot?.recipe?.ingredients && (
               <div>
                 <p className="text-sm font-semibold text-[#2D3436] mb-1">
-                  🥦 食材清单
+                  {t("ingredients")}
                 </p>
                 <p className="text-sm text-gray-600">
                   {slot.recipe.ingredients.split(", ").join("、")}
@@ -123,7 +132,7 @@ export function MealPlanDetailModal({
             {slot?.recipe?.steps && (
               <div>
                 <p className="text-sm font-semibold text-[#2D3436] mb-1">
-                  📝 做法步骤
+                  {t("steps")}
                 </p>
                 <div className="text-sm text-gray-600 space-y-1">
                   {slot.recipe.steps.split("\n").map((step, idx) => (
@@ -142,28 +151,28 @@ export function MealPlanDetailModal({
               onClick={onDeleteSlot}
               className="w-full py-2 rounded-xl text-sm border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
             >
-              ✕ 删掉这个菜
+              {t("deleteSlotBtn")}
             </button>
           </div>
         ) : (
           /* Empty state */
           <div className="py-6 text-center space-y-4">
-            <p className="text-gray-500 text-sm">未安排菜品</p>
+            <p className="text-gray-500 text-sm">{t("emptySlot")}</p>
             <p className="text-sm text-gray-400 leading-relaxed">
-              💡 去 🤖 AI 菜谱 或 📚 我的菜谱 生成菜谱后，再添加到周计划
+              {t("emptySlotHint")}
             </p>
             <div className="flex gap-3 justify-center pt-2">
               <button
                 onClick={() => onNavigateTo("/app/recipes")}
                 className="flex-1 py-2.5 rounded-xl text-sm bg-gradient-to-r from-purple-400 to-pink-400 text-white hover:opacity-90 transition-opacity"
               >
-                🤖 去 AI 菜谱
+                {t("goToAiRecipes")}
               </button>
               <button
                 onClick={() => onNavigateTo("/app/my-recipes")}
                 className="flex-1 py-2.5 rounded-xl text-sm bg-gradient-to-r from-orange-400 to-amber-400 text-white hover:opacity-90 transition-opacity"
               >
-                📚 去我的菜谱
+                {t("goToMyRecipes")}
               </button>
             </div>
           </div>
