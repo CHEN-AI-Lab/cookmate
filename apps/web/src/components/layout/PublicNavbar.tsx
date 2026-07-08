@@ -23,6 +23,7 @@ export default function PublicNavbar({
         </Link>
 
         <nav className="hidden sm:flex items-center gap-6 text-sm text-gray-600">
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/#how" className="hover:text-[#FF6B35]">
             {tnav("howToUse")}
           </a>
