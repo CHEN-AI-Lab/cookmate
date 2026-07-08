@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { getDemoGroceryList } from "@cookmate/shared/demo-data"
 
@@ -20,6 +19,14 @@ interface CategoryGroup {
 export default function GroceryListPage() {
   const tg = useTranslations("grocery")
   const tc = useTranslations("common")
+  // Category name translation lookup (API returns Chinese names)
+  const getCatLabel = useCallback((name: string): string => {
+    try {
+      return tg(`catLabels.${name}`)
+    } catch {
+      return name
+    }
+  }, [tg])
   const [categories, setCategories] = useState<CategoryGroup[]>([])
   const [loading, setLoading] = useState(true)
   const [total, setTotal] = useState(0)
@@ -117,7 +124,7 @@ export default function GroceryListPage() {
 
   const toggleCheck = (name: string) => {
     if (isDemoUser) {
-      setDemoToast("🔒 体验用户无法操作，请注册后使用")
+      setDemoToast(tg("demoLockedAction"))
       setTimeout(() => setDemoToast(""), 3000)
       return
     }
@@ -291,24 +298,22 @@ export default function GroceryListPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-[#2D3436] mb-6">🛒 购物清单</h1>
+      <h1 className="text-2xl font-bold text-[#2D3436] mb-6">{tg("title")}</h1>
 
       {categories.length === 0 && manualItems.length === 0 ? (
         <div className="text-center py-16">
           <span className="text-5xl">📋</span>
-          <p className="mt-4 text-gray-500">还没有购物清单</p>
-          <p className="text-sm text-gray-400 mt-1">
-            先到 <Link href="/app/meal-plan" className="text-[#FF6B35] hover:underline">周计划</Link> 规划菜单，清单自动生成
-          </p>
+          <p className="mt-4 text-gray-500">{tg("empty")}</p>
+          <p className="text-sm text-gray-400 mt-1">{tg("emptyHint")}</p>
         </div>
       ) : (
         <>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3 text-sm">
-              <span className="text-gray-400">共 {total + manualItems.length} 种食材</span>
+              <span className="text-gray-400">{tg("totalItems", { count: total + manualItems.length })}</span>
               {inPantryCount > 0 && (
                 <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded-full">
-                  食材库已有 {inPantryCount} 种 ✅
+                  {tg("inPantryCount", { count: inPantryCount })}
                 </span>
               )}
             </div>
@@ -319,7 +324,7 @@ export default function GroceryListPage() {
                   key={n}
                   onClick={() => {
                     if (isDemoUser) {
-                      setDemoToast("🔒 体验用户无法切换天数，请注册后使用")
+                      setDemoToast(tg("demoLockedAction"))
                       setTimeout(() => setDemoToast(""), 3000)
                       return
                     }
@@ -329,7 +334,7 @@ export default function GroceryListPage() {
                     days === n ? "bg-white text-[#FF6B35] font-medium shadow-sm" : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
-                  前{n}天
+                  {tg("lastNDays", { n })}
                 </button>
               ))}
             </div>
@@ -357,7 +362,7 @@ export default function GroceryListPage() {
                         {item.quantity && <span className="text-gray-400 font-normal"> ({item.quantity})</span>}
                       </span>
                       {item.inPantry && (
-                        <span className="text-[10px] text-green-500 bg-green-50 px-1 rounded shrink-0">已有</span>
+                        <span className="text-[10px] text-green-500 bg-green-50 px-1 rounded shrink-0">{tg("inPantry")}</span>
                       )}
                       {item.sources && item.sources.length > 0 && (
                         <span className="text-[10px] text-[#FF6B35] opacity-0 group-hover:opacity-100 transition-opacity shrink-0">🔍</span>
@@ -370,7 +375,7 @@ export default function GroceryListPage() {
             {/* 手动添加的食材 */}
             {manualItems.length > 0 && (
               <div className="border-b border-gray-100 py-2 last:border-b-0">
-                <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">📝 手动添加</h3>
+                <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">{tg("manualAdd")}</h3>
                 <div className="flex flex-wrap gap-x-6 gap-y-1">
                   {manualItems.map((name, i) => (
                     <label key={i} className="text-sm flex items-center gap-1.5 cursor-pointer hover:text-[#FF6B35] transition-colors">
@@ -394,7 +399,7 @@ export default function GroceryListPage() {
                 className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <span className={`transition-transform ${stapleOpen ? "rotate-90" : ""}`}>▶</span>
-                常备品（{stapleItems.length}种）
+                {tg("stapleItems", { count: stapleItems.length })}
               </button>
               {stapleOpen && (
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-gray-400">
@@ -403,7 +408,7 @@ export default function GroceryListPage() {
                   ))}
                 </div>
               )}
-              <p className="text-[10px] text-gray-300 mt-1">这些是家中常备的调味料，未计入购物清单，用完记得补货</p>
+              <p className="text-[10px] text-gray-300 mt-1">{tg("stapleDesc")}</p>
             </div>
           )}
 
@@ -419,14 +424,14 @@ export default function GroceryListPage() {
             value={newItem}
             onChange={(e) => setNewItem(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addManualItem() } }}
-            placeholder="手动添加物品..."
+            placeholder={tg("addPlaceholder")}
             className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
           />
           <button
             onClick={addManualItem}
             className="bg-[#FF6B35] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors shrink-0"
           >
-            添加
+            {tg("addButton")}
           </button>
         </div>
       </div>
@@ -437,9 +442,9 @@ export default function GroceryListPage() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-bounce-in">
           <div className="bg-green-600 text-white px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2">
             {purchaseNotify.existing ? (
-              <>🍳 "{purchaseNotify.name}" 已在食材库中</>
+              <>{tg("alreadyInPantry", { name: purchaseNotify.name })}</>
             ) : (
-              <>📦 "{purchaseNotify.name}" 已添加到食材库</>
+              <>{tg("addedToPantry", { name: purchaseNotify.name })}</>
             )}
           </div>
         </div>
@@ -457,7 +462,7 @@ export default function GroceryListPage() {
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-[#2D3436]">
-                🥘 "{sourceDialog.name}" 的来源
+                {tg("sourceOf", { name: sourceDialog.name })}
               </h3>
               <button
                 onClick={() => setSourceDialog(null)}
@@ -478,7 +483,7 @@ export default function GroceryListPage() {
               onClick={() => setSourceDialog(null)}
               className="w-full mt-4 bg-gray-100 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
             >
-              关闭
+              {tg("closeButton")}
             </button>
           </div>
         </div>
@@ -489,7 +494,7 @@ export default function GroceryListPage() {
         <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
           <div className="bg-white border border-gray-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
             <span className="text-amber-500 text-base shrink-0">⚠️</span>
-            <span className="text-gray-700">「{dupDialog}」已在购物清单中</span>
+            <span className="text-gray-700">{tg("alreadyInList", { name: dupDialog })}</span>
           </div>
         </div>
       )}

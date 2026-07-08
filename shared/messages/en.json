@@ -228,6 +228,7 @@
         "goToMyRecipes": "📚 My Recipes"
       },
       "grocery": {
+    "title": "🛒 Grocery List",
     "empty": "No grocery list yet",
     "emptyHint": "Go to Meal Plan first to plan your menu — the list auto-generates",
     "totalItems": "{count} items total",
@@ -245,7 +246,26 @@
     "alreadyInPantry": "🍳 \"{name}\" is already in your pantry",
     "addedToPantry": "📦 \"{name}\" added to pantry",
     "loading": "Loading...",
-    "sourceDialogClose": "Close"
+    "sourceDialogClose": "Close",
+    "demoLockedAction": "🔒 Demo users cannot do this. Please sign up.",
+    "catLabels": {
+      "🥬 蔬菜水果": "🥬 Vegetables & Fruits",
+      "🥩 肉禽蛋": "🥩 Meat, Poultry & Eggs",
+      "🦐 海鲜水产": "🦐 Seafood",
+      "🥛 乳品豆制品": "🥛 Dairy & Tofu",
+      "🍚 粮油米面": "🍚 Grains & Oils",
+      "🧂 调味佐料": "🧂 Seasonings",
+      "❄️ 冷冻速食": "❄️ Frozen & Instant",
+      "🍪 零食饮料": "🍪 Snacks & Drinks",
+      "🍺 酒类": "🍺 Alcoholic Drinks",
+      "🧴 日用品": "🧴 Daily Supplies",
+      "🥩 肉类": "🥩 Meat",
+      "🥬 蔬菜": "🥬 Vegetables",
+      "🥚 蛋奶": "🥚 Eggs & Dairy",
+      "🍚 主食粮油": "🍚 Grains & Oils",
+      "🧂 调味料": "🧂 Seasonings",
+      "其他": "Other"
+    }
   },
   "pantry": {
     "title": "🥦 Pantry",

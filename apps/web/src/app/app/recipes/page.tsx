@@ -53,19 +53,19 @@ export default function RecipesPage() {
   const [demoToast, setDemoToast] = useState("")
 
   const dayLabel: Record<string, string> = {
-    "周一": t("monday"),
-    "周二": t("tuesday"),
-    "周三": t("wednesday"),
-    "周四": t("thursday"),
-    "周五": t("friday"),
-    "周六": t("saturday"),
-    "周日": t("sunday"),
+    "周一": "周一",
+    "周二": "周二",
+    "周三": "周三",
+    "周四": "周四",
+    "周五": "周五",
+    "周六": "周六",
+    "周日": "周日",
   }
 
   const mealLabel: Record<string, string> = {
-    "早餐": t("breakfast"),
-    "午餐": t("lunch"),
-    "晚餐": t("dinner"),
+    "早餐": "早餐",
+    "午餐": "午餐",
+    "晚餐": "晚餐",
   }
 
   useEffect(() => {
