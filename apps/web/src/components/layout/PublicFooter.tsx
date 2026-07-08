@@ -22,9 +22,9 @@ export default function PublicFooter() {
             </p>
             <ul className="space-y-2">
               <li>
-                <a href="/#how" className="hover:text-[#FF6B35] transition-colors">
+                <Link href="/app/recipes" className="hover:text-[#FF6B35] transition-colors">
                   {tfooter("features")}
-                </a>
+                </Link>
               </li>
               <li>
                 <Link href="/pricing" className="hover:text-[#FF6B35] transition-colors">
