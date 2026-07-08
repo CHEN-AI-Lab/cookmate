@@ -28,6 +28,7 @@ export default function BillingPage() {
   const [message, setMessage] = useState("")
   const [refreshKey, setRefreshKey] = useState(0)
   const [paying, setPaying] = useState(false)
+  const [showOrders, setShowOrders] = useState(false)
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -377,14 +378,23 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* Order history */}
+      {/* Order history - collapsible */}
       {(() => {
         const orders = info?.orders
         if (!orders || orders.length === 0) return null
         return (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-bold text-gray-900 mb-4">📋 订单记录</h3>
-          <div className="space-y-2">
+          <button
+            onClick={() => setShowOrders(!showOrders)}
+            className="w-full flex items-center justify-between"
+          >
+            <h3 className="font-bold text-gray-900">📋 订单记录</h3>
+            <span className={`text-sm text-gray-400 transition-transform ${showOrders ? "rotate-180" : ""}`}>
+              ▾
+            </span>
+          </button>
+          {showOrders && (
+          <div className="space-y-2 mt-4">
             {orders.map((order) => {
               const channelLabel: Record<string, string> = { alipay: "支付宝", creem: "Creem", stripe: "Stripe" }
               const channelEmoji: Record<string, string> = { alipay: "💙", creem: "💚", stripe: "💳" }
@@ -423,6 +433,7 @@ export default function BillingPage() {
               )
             })}
           </div>
+          )}
         </div>
         )})()}
 
