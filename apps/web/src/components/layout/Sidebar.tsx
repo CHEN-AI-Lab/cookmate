@@ -16,7 +16,6 @@ const navItems = [
   { href: "/app/meal-plan", icon: "📅", labelKey: "mealPlan" },
   { href: "/app/grocery-list", icon: "🛒", labelKey: "groceryList" },
   { href: "/app/pantry", icon: "🥦", labelKey: "pantry" },
-  { href: "/app/settings", icon: "⚙️", labelKey: "settings" },
   { href: "/app/billing", icon: "💳", labelKey: "billing" },
 ]
 
