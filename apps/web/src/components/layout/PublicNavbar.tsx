@@ -18,10 +18,11 @@ export default function PublicNavbar({
   return (
     <header className="border-b border-orange-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-[1400px] mx-auto px-8 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2 shrink-0">
           <span className="text-2xl">🍳</span>
           <span className="text-xl font-bold text-[#2D3436]">CookMate</span>
         </Link>
+
         <nav className="hidden sm:flex items-center gap-6 text-sm text-gray-600">
           <Link href="/#how" className="hover:text-[#FF6B35]">
             {tnav("howToUse")}
@@ -32,20 +33,23 @@ export default function PublicNavbar({
           <Link href="/about" className="hover:text-[#FF6B35]">
             {tnav("about")}
           </Link>
+        </nav>
+
+        <div className="flex items-center gap-3">
           <Link
             href="/login"
-            className="text-[#FF6B35] font-medium hover:text-orange-600"
+            className="text-sm text-[#FF6B35] font-medium hover:text-orange-600"
           >
             {tnav("login")}
           </Link>
+          <Link
+            href={link}
+            className="bg-[#FF6B35] text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-colors"
+          >
+            {tcommon("freeStart")}
+          </Link>
           <LanguageSwitcher />
-        </nav>
-        <Link
-          href={link}
-          className="bg-[#FF6B35] text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-colors"
-        >
-          {tcommon("freeStart")}
-        </Link>
+        </div>
       </div>
     </header>
   )
