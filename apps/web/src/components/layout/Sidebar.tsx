@@ -68,7 +68,11 @@ export function Sidebar({
               className="flex items-center justify-center w-7 h-7 rounded-lg text-gray-400 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors shrink-0"
               title="退出登录"
             >
-              <span className="text-base">🚪</span>
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
             </button>
           </div>
         ) : (
@@ -76,7 +80,13 @@ export function Sidebar({
             onClick={() => signOut({ callbackUrl: "/" })}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors w-full text-left font-medium"
           >
-            <span className="flex items-center justify-center w-7 h-7 shrink-0 text-base">🚪</span>
+            <span className="flex items-center justify-center w-7 h-7 shrink-0">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </span>
             <span>退出登录</span>
           </button>
         )}
