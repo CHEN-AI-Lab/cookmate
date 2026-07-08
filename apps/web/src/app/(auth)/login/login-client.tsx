@@ -247,7 +247,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         setSetupCode(data.devCode)
         setError(tv('devCodePrefix') + ' ' + data.devCode)
       } else {
-        setError(tv('codeSentTo', { target: isPhone ? "手机" : "邮箱" }))
+        setError(tv('codeSentTo', { target: isPhone ? tv('phone') : tv('email') }))
         setTimeout(() => setError(""), 3000)
       }
     } catch {
@@ -506,8 +506,8 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
 
         {error && (
           <div className={`mt-2 p-3 rounded-xl text-sm text-center ${
-            error.includes("自动填入") ? "bg-green-50 border border-green-200 text-green-600"
-            : error.includes("已发送") ? "bg-blue-50 border border-blue-200 text-blue-600"
+            error.includes("dev") ? "bg-green-50 border border-green-200 text-green-600"
+            : error.includes("sent") ? "bg-blue-50 border border-blue-200 text-blue-600"
             : "bg-red-50 border border-red-200 text-red-600"
           }`}>
             {error}
