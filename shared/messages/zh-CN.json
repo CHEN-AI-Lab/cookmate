@@ -269,6 +269,8 @@
   },
   "nutrition": {
     "title": "营养分析",
+    "placeholder_desc": "记录每日热量、蛋白质等营养数据，生成周/月统计图表",
+    "placeholder_badge": "⏸️ 此功能规划中，后期实现",
     "calories": "卡路里",
     "protein": "蛋白质",
     "carbs": "碳水化合物",

@@ -28,12 +28,6 @@ export default function BillingPage() {
   const [message, setMessage] = useState("")
   const [refreshKey, setRefreshKey] = useState(0)
   const [paying, setPaying] = useState(false)
-  const yearlyRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    // 进入页面时滚动到年付计划
-    yearlyRef.current?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" })
-  }, [])
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -204,13 +198,14 @@ export default function BillingPage() {
       {/* Plan comparison */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <h3 className="font-bold text-gray-900 mb-4">选择计划</h3>
-        <div className="flex overflow-x-auto gap-3 pb-2 scroll-smooth snap-x snap-mandatory -mx-1 px-1">
-          <div className="snap-start shrink-0 w-[200px] md:w-[220px]">
+
+        {/* 主排：3列，年付居中 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
           <PricingCard
             name="Free"
             price="0"
             periodLabel=""
-            period="/永久"
+            period="免费使用"
             features={["每天 1 次 AI 推荐", "无限食材位", "AI 菜谱生成"]}
             highlighted={false}
             isCurrent={isFree}
@@ -219,8 +214,20 @@ export default function BillingPage() {
             disabled={true}
             loading={false}
           />
-          </div>
-          <div className="snap-start shrink-0 w-[200px] md:w-[220px]">
+          <PricingCard
+            name="Pro 年付"
+            price="119"
+            periodLabel="/年"
+            period="≈ ¥9.92/月 · 省50%"
+            saving="🔥 推荐 · 省 ¥121"
+            features={["无限 AI 生成", "智能周计划", "购物清单", "饮食定制"]}
+            highlighted={true}
+            isCurrent={!isFree}
+            ctaLabel={isFree ? "升级到 Pro" : "使用中"}
+            onCta={() => {}}
+            disabled={true}
+            loading={false}
+          />
           <PricingCard
             name="Pro 月付"
             price="20"
@@ -229,62 +236,19 @@ export default function BillingPage() {
             features={["无限 AI 生成", "智能周计划", "购物清单", "饮食定制"]}
             highlighted={false}
             isCurrent={false}
-            ctaLabel={isFree ? "订阅" : "使用中"}
-            onCta={() => {}}
-            disabled={true}
-            loading={false}
-          />
-          </div>
-          <div className="snap-start shrink-0 w-[200px] md:w-[220px]">
-          <PricingCard
-            name="Pro 季付"
-            price="51"
-            periodLabel="/3月"
-            period="≈ ¥17/月 · 省15%"
-            saving="省 15%"
-            features={["无限 AI 生成", "智能周计划", "购物清单", "饮食定制"]}
-            highlighted={false}
-            isCurrent={false}
             ctaLabel="订阅"
             onCta={() => {}}
             disabled={true}
             loading={false}
           />
-          </div>
-          <div className="snap-start shrink-0 w-[200px] md:w-[220px]">
-          <PricingCard
-            name="Pro 半年"
-            price="90"
-            periodLabel="/6月"
-            period="≈ ¥15/月 · 省25%"
-            saving="省 25%"
-            features={["无限 AI 生成", "智能周计划", "购物清单", "饮食定制"]}
-            highlighted={false}
-            isCurrent={false}
-            ctaLabel="订阅"
-            onCta={() => {}}
-            disabled={true}
-            loading={false}
-          />
-          </div>
-          <div className="snap-start shrink-0 w-[200px] md:w-[220px]" ref={yearlyRef}>
-          <PricingCard
-            name="Pro 年付"
-            price="119"
-            periodLabel="/年"
-            period="≈ ¥9.92/月 · 省50%"
-            saving="🔥 省 ¥121"
-            features={["无限 AI 生成", "智能周计划", "购物清单", "饮食定制"]}
-            highlighted={true}
-            isCurrent={false}
-            ctaLabel={isFree ? "升级到 Pro" : "使用中"}
-            onCta={() => {}}
-            disabled={true}
-            loading={false}
-          />
-          </div>
         </div>
-        <p className="text-xs text-gray-400 mt-3 text-center">← 左右滑动查看更多 →</p>
+
+        {/* 其他周期：小字横排 */}
+        <div className="flex flex-wrap justify-center gap-x-6 gap-y-1 mt-5 text-sm text-gray-400">
+          <span>季付 <strong className="text-gray-600">¥51</strong>/3月 · 省15%</span>
+          <span className="hidden sm:inline">|</span>
+          <span>半年付 <strong className="text-gray-600">¥90</strong>/6月 · 省25%</span>
+        </div>
       </div>
 
       {/* Payment methods */}

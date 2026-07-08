@@ -269,6 +269,8 @@
   },
   "nutrition": {
     "title": "Nutrition Analysis",
+    "placeholder_desc": "Track daily calories, protein and other nutrition data with weekly/monthly charts",
+    "placeholder_badge": "⏸️ Coming soon — planned for later release",
     "calories": "Calories",
     "protein": "Protein",
     "carbs": "Carbs",

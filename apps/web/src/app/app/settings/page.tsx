@@ -68,7 +68,7 @@ export default function SettingsPage() {
       if (r.ok) {
         setProfile((p) => p ? { ...p, name: editNameValue.trim() } : p)
         setEditingName(false)
-        setAccountMsg("✅ 用户名已更新")
+        setAccountMsg("✅ 用户名已更新（左下角名称将在下次登录后同步）")
         setTimeout(() => setAccountMsg(""), 3000)
       } else {
         const d = await r.json()

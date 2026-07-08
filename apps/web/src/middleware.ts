@@ -4,13 +4,13 @@ import { locales, defaultLocale } from '@cookmate/shared/messages';
 export default createMiddleware({
   locales,
   defaultLocale,
-  localePrefix: 'as-needed',
+  localePrefix: 'never',
   localeDetection: false,
 });
 
 export const config = {
+  // Match all pathnames except for api, static files, _next
   matcher: [
-    // Match all pathnames except for api, static files, _next
     '/((?!api|_next|_vercel|.*\\..*).*)',
   ],
 };
