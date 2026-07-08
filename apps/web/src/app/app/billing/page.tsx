@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { PricingCard } from "@/components/features/PricingCard"
 
 interface BillingInfo {
@@ -23,6 +23,7 @@ interface BillingInfo {
 
 export default function BillingPage() {
   const t = useTranslations("billing")
+  const locale = useLocale()
   const [info, setInfo] = useState<BillingInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
@@ -182,7 +183,7 @@ export default function BillingPage() {
         </div>
         {!isFree && info?.subscriptionExpiryDate && (
           <p className="text-xs text-gray-400 mt-2">
-            {t("expiryDate", { date: new Date(info.subscriptionExpiryDate).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" }) })}
+            {t("expiryDate", { date: new Date(info.subscriptionExpiryDate).toLocaleDateString(locale === "en" ? "en-US" : "zh-CN", { year: "numeric", month: "long", day: "numeric" }) })}
           </p>
         )}
       </div>

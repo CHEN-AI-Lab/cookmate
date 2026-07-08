@@ -371,6 +371,20 @@
     "upgradePlan": "⬆️ 升级专业版",
     "manageSubscription": "💳 管理订阅",
     "dietType": "饮食类型",
+    "dietUnlimited": "不限",
+    "dietLoseFat": "减脂",
+    "dietBuildMuscle": "增肌",
+    "dietVegetarian": "素食",
+    "dietLowCarb": "低碳水",
+    "dietGlutenFree": "无麸质",
+    "cuisineChinese": "中餐",
+    "cuisineWestern": "西餐",
+    "cuisineJapanese": "日料",
+    "cuisineKorean": "韩餐",
+    "cuisineSoutheastAsian": "东南亚",
+    "cuisineIndian": "印度菜",
+    "cuisineMiddleEastern": "中东菜",
+    "cuisineMexican": "墨西哥菜",
     "cuisinePref": "菜系偏好（可多选）",
     "selectedCuisines": "已选 {count} 种菜系",
     "servingSizeLabel": "份量（人数）",
@@ -578,6 +592,6 @@
     "ctaButton": "免费开始使用"
   },
   "footer": {
-    "copyright": "© 2026 CookMate. All rights reserved."
+    "copyright": "© 2026 CookMate. 保留所有权利。"
   }
 }

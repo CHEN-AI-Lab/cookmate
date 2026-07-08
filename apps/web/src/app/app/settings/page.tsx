@@ -10,6 +10,18 @@ export default function SettingsPage() {
   const ts = useTranslations("settings")
   const tc = useTranslations("common")
   const tv = useTranslations("validation")
+
+  const dietLabel: Record<string, string> = {
+    "不限": ts("dietUnlimited"), "减脂": ts("dietLoseFat"),
+    "增肌": ts("dietBuildMuscle"), "素食": ts("dietVegetarian"),
+    "低碳水": ts("dietLowCarb"), "无麸质": ts("dietGlutenFree"),
+  }
+  const cuisineLabel: Record<string, string> = {
+    "中餐": ts("cuisineChinese"), "西餐": ts("cuisineWestern"),
+    "日料": ts("cuisineJapanese"), "韩餐": ts("cuisineKorean"),
+    "东南亚": ts("cuisineSoutheastAsian"), "印度菜": ts("cuisineIndian"),
+    "中东菜": ts("cuisineMiddleEastern"), "墨西哥菜": ts("cuisineMexican"),
+  }
   const [settings, setSettings] = useState<{ dietType: string; cuisinePref: string[]; servingSize: number; subscriptionTier: string }>({ dietType: DIET_OPTIONS[0], cuisinePref: [] as string[], servingSize: 2, subscriptionTier: "FREE" })
   const [profile, setProfile] = useState<{ name: string; phone: string; email: string; loginMethod: string; createdAt: string; hasPassword?: boolean; isDemoUser?: boolean } | null>(null)
   const [saving, setSaving] = useState(false)
@@ -376,7 +388,7 @@ const save = async () => {
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     }`}
                   >
-                    {opt}
+                    {dietLabel[opt]}
                   </button>
                 ))}
               </div>
@@ -403,7 +415,7 @@ const save = async () => {
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
-                      {selected ? "✓" : ""} {opt}
+                      {selected ? "✓" : ""} {cuisineLabel[opt]}
                     </button>
                   )
                 })}

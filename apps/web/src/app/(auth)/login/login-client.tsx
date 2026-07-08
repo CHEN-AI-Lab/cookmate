@@ -544,7 +544,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
             className="flex items-center justify-center gap-1.5 border border-gray-200 rounded-xl py-2.5 hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm"
           >
             <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0"><rect width="24" height="24" rx="5" fill="#1677FF"/><text x="12" y="17" textAnchor="middle" fill="#fff" fontSize="15" fontFamily="sans-serif" fontWeight="bold">支</text></svg>
-            <span className="font-medium text-gray-700">支付宝</span>
+            <span className="font-medium text-gray-700">{t("oauthAlipay")}</span>
           </button>
         </div>
 
