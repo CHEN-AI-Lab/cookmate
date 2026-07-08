@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { cn } from "@cookmate/shared/utils"
 
 interface PricingCardProps {
@@ -31,6 +32,7 @@ export function PricingCard({
   disabled,
   loading,
 }: PricingCardProps) {
+  const t = useTranslations("billing")
   return (
     <div className="relative">
       {saving && highlighted && (
@@ -99,10 +101,10 @@ export function PricingCard({
             (disabled || loading) && "opacity-50 cursor-not-allowed"
           )}
         >
-          {loading ? "处理中..." : ctaLabel}
+          {loading ? t("processing") : ctaLabel}
         </button>
         {isCurrent && (
-          <div className="mt-3 text-sm text-gray-400">当前计划</div>
+          <div className="mt-3 text-sm text-gray-400">{t("currentPlan")}</div>
         )}
       </div>
     </div>
