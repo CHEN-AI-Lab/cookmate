@@ -6,6 +6,22 @@ if [ -f scripts/check-structure.sh ]; then
   bash scripts/check-structure.sh
 fi
 
+# Security audit — check for hardcoded credentials and URLs
+echo "=== 安全审计 ==="
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+HARDCODED_KEYS=$(grep -rn "apiKey.*=.*['\"]sk-\|password.*=.*['\"][^'\" ]\+['\"]\|secret.*=.*['\"][^'\" ]\+['\"]\|token.*=.*['\"][^'\" ]\+['\"]" apps/ --include="*.{ts,tsx}" 2>/dev/null | grep -v ".env\|node_modules\|\.next\|process.env" | head -10)
+if [ -n "$HARDCODED_KEYS" ]; then
+  echo "❌ 发现硬编码凭据:"
+  echo "$HARDCODED_KEYS"
+  exit 1
+fi
+HARDCODED_URLS=$(grep -rn "'https\?://[^'\" ]\+'" apps/ --include="*.ts" 2>/dev/null | grep -v ".env\|node_modules\|\.next\|process.env" | head -10)
+if [ -n "$HARDCODED_URLS" ]; then
+  echo "⚠️  发现硬编码 URL（确认是否应从环境变量读取）:"
+  echo "$HARDCODED_URLS"
+fi
+echo "✅ 安全审计通过"
+
 # Run tests
 cd "$(dirname "$0")/.."
 pnpm test

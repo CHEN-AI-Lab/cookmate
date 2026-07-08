@@ -1,11 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useTranslations } from "next-intl"
 import Link from "next/link"
-import PasswordInput from "@/app/components/password-input"
+import PasswordInput from "@/components/ui/PasswordInput"
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from "@cookmate/shared/constants"
 
 export default function SettingsPage() {
+  const ts = useTranslations("settings")
+  const tc = useTranslations("common")
+  const tv = useTranslations("validation")
   const [settings, setSettings] = useState({ dietType: "不限", cuisinePref: [] as string[], servingSize: 2, subscriptionTier: "FREE" })
   const [profile, setProfile] = useState<{ name: string; phone: string; email: string; loginMethod: string; createdAt: string; hasPassword?: boolean; isDemoUser?: boolean } | null>(null)
   const [saving, setSaving] = useState(false)
@@ -134,24 +138,24 @@ const save = async () => {
     }
   }
 
-  if (loading) return <div className="text-center py-16 text-gray-400">加载中...</div>
+  if (loading) return <div className="text-center py-16 text-gray-400">{tc("loading")}</div>
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-[#2D3436] mb-6">⚙️ 设置</h1>
+      <h1 className="text-2xl font-bold text-[#2D3436] mb-6">⚙️ {ts("title")}</h1>
 
       {profile?.isDemoUser && (
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 text-center">
-          <p className="font-semibold text-amber-800 mb-1">🔒 体验模式</p>
+          <p className="font-semibold text-amber-800 mb-1">{tc("demoMode")}</p>
           <p className="text-sm text-amber-700 mb-3">
-            体验用户无法修改个人资料和设置。<br />
-            注册账号后即可自定义用户名、绑定手机/邮箱、设置密码。
+            {ts("demoDesc")}<br />
+            {ts("demoRegisterHint")}
           </p>
           <Link
             href="/register"
             className="inline-block bg-[#FF6B35] text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-all"
           >
-            免费注册
+            {tc("freeRegister")}
           </Link>
         </div>
       )}

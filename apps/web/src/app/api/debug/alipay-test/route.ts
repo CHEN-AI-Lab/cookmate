@@ -9,9 +9,7 @@ export async function GET(req: Request) {
   const privateKey = process.env.AUTH_ALIPAY_PRIVATE_KEY || ""
   const publicKey = process.env.AUTH_ALIPAY_PUBLIC_KEY || ""
 
-  // Debug endpoint — 为了处理支付宝动态响应结构，使用宽松类型
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result: Record<string, any> = {
+  const result: Record<string, unknown> = {
     private_key_ok: privateKey.includes("BEGIN"),
     app_id: appId ? appId.substring(0, 8) + "..." : "未配置",
   }
@@ -60,8 +58,8 @@ export async function GET(req: Request) {
     const text = await res.text()
     result.alipay_response = (() => { try { return JSON.parse(text) } catch (err) { console.error("parse alipay response error:", err); return { raw: text } } })()
 
-    const resp = result.alipay_response as any
-    if (resp?.alipay_system_oauth_token_response?.access_token) {
+    const alipayResponse = result.alipay_response as { alipay_system_oauth_token_response?: { access_token: string }; error_response?: { msg: string; code: string; sub_msg?: string } }
+    if (alipayResponse?.alipay_system_oauth_token_response?.access_token) {
       result.status = "✅ Token 获取成功！"
       // 继续调 userinfo
       const ut = new Date()
@@ -72,7 +70,7 @@ export async function GET(req: Request) {
         method: "alipay.user.info.share",
         format: "JSON", charset: "utf-8", sign_type: "RSA2",
         timestamp: uts, version: "1.0",
-        auth_token: resp.alipay_system_oauth_token_response.access_token,
+        auth_token: alipayResponse.alipay_system_oauth_token_response.access_token,
       }
       up.sign = crypto.createSign("RSA-SHA256")
         .update(Object.keys(up).sort().map(k => k + "=" + up[k]).join("&"), "utf8")
@@ -86,8 +84,8 @@ export async function GET(req: Request) {
       })
       const utxt = await ur.text()
       result.userinfo_response = (() => { try { return JSON.parse(utxt) } catch (err) { console.error("parse alipay userinfo response error:", err); return { raw: utxt } } })()
-    } else if (resp?.error_response) {
-      const e = resp.error_response
+    } else if (alipayResponse?.error_response) {
+      const e = alipayResponse.error_response
       result.status = `❌ 支付宝返回错误: ${e.msg} (${e.code})${e.sub_msg ? " - " + e.sub_msg : ""}`
     } else {
       result.status = "❌ 未知响应"

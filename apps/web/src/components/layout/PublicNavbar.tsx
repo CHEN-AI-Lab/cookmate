@@ -1,4 +1,7 @@
+"use client"
+
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 
 export default function PublicNavbar({
   ctaHref,
@@ -7,6 +10,8 @@ export default function PublicNavbar({
   ctaHref?: string
   session?: boolean
 }) {
+  const tnav = useTranslations("nav")
+  const tcommon = useTranslations("common")
   const link = ctaHref || (session ? "/app/dashboard" : "/register")
 
   return (
@@ -18,26 +23,26 @@ export default function PublicNavbar({
         </Link>
         <nav className="hidden sm:flex items-center gap-6 text-sm text-gray-600">
           <Link href="/#how" className="hover:text-[#FF6B35]">
-            使用流程
+            {tnav("howToUse")}
           </Link>
           <Link href="/pricing" className="hover:text-[#FF6B35]">
-            定价
+            {tnav("pricing")}
           </Link>
           <Link href="/about" className="hover:text-[#FF6B35]">
-            关于
+            {tnav("about")}
           </Link>
           <Link
             href="/login"
             className="text-[#FF6B35] font-medium hover:text-orange-600"
           >
-            登录
+            {tnav("login")}
           </Link>
         </nav>
         <Link
           href={link}
           className="bg-[#FF6B35] text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-colors"
         >
-          免费开始
+          {tcommon("freeStart")}
         </Link>
       </div>
     </header>

@@ -14,7 +14,8 @@
 - [x] User onboarding wizard
 - [x] Dashboard with nutrition charts
 - [x] Responsive mobile-first design
-- [x] Bilingual (zh-CN + en) support
+- [x] i18n infrastructure (shared messages placeholder)
+- [ ] Bilingual (zh-CN + en) support — shared/messages stubs exist, pages not translated yet
 - [x] Documentation scaffold
 - [x] Shared package structure
 

@@ -3,16 +3,17 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
+import { useTranslations } from "next-intl"
 
 const navItems = [
-  { href: "/app/dashboard", icon: "📊", label: "仪表盘" },
-  { href: "/app/recipes", icon: "🍳", label: "AI菜谱" },
-  { href: "/app/my-recipes", icon: "📚", label: "我的菜谱" },
-  { href: "/app/meal-plan", icon: "📅", label: "周计划" },
-  { href: "/app/grocery-list", icon: "🛒", label: "购物清单" },
-  { href: "/app/pantry", icon: "🥦", label: "食材库" },
-  { href: "/app/settings", icon: "⚙️", label: "设置" },
-  { href: "/app/billing", icon: "💳", label: "账单" },
+  { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
+  { href: "/app/recipes", icon: "🍳", labelKey: "aiRecipes" },
+  { href: "/app/my-recipes", icon: "📚", labelKey: "myRecipes" },
+  { href: "/app/meal-plan", icon: "📅", labelKey: "mealPlan" },
+  { href: "/app/grocery-list", icon: "🛒", labelKey: "groceryList" },
+  { href: "/app/pantry", icon: "🥦", labelKey: "pantry" },
+  { href: "/app/settings", icon: "⚙️", labelKey: "settings" },
+  { href: "/app/billing", icon: "💳", labelKey: "billing" },
 ]
 
 export function Sidebar({
@@ -21,6 +22,7 @@ export function Sidebar({
   name?: string | undefined | null
 }) {
   const pathname = usePathname()
+  const t = useTranslations("nav")
   const initial = name?.charAt(0)?.toUpperCase() || "?"
 
   return (
@@ -49,7 +51,7 @@ export function Sidebar({
               }`}
             >
               <span className="text-lg">{item.icon}</span>
-              <span>{item.label}</span>
+              <span>{t(item.labelKey)}</span>
             </Link>
           )
         })}
@@ -66,7 +68,7 @@ export function Sidebar({
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
               className="flex items-center justify-center w-7 h-7 rounded-lg text-gray-400 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors shrink-0"
-              title="退出登录"
+              title={t("logout")}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -87,7 +89,7 @@ export function Sidebar({
                 <line x1="21" y1="12" x2="9" y2="12" />
               </svg>
             </span>
-            <span>退出登录</span>
+            <span>{t("logout")}</span>
           </button>
         )}
       </div>

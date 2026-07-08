@@ -4,41 +4,38 @@ import { PricingCard } from "./PricingCard"
 
 const PRO_TIERS = [
   {
-    name: "Pro 月付",
+    nameKey: "proMonthly",
     price: "20",
-    periodLabel: "/月",
+    periodLabelKey: "perMonth",
     period: "≈ ¥20/月",
     saving: undefined,
-    ctaLabel: "订阅 Pro",
+    ctaLabelKey: "subscribePro",
   },
   {
-    name: "Pro 季付",
+    nameKey: "proQuarterly",
     price: "51",
-    periodLabel: "/3月",
+    periodLabelKey: "per3Months",
     period: "≈ ¥17/月 · 省15%",
     saving: "省 15%",
-    ctaLabel: "订阅 Pro",
+    ctaLabelKey: "subscribePro",
   },
   {
-    name: "Pro 半年",
+    nameKey: "proHalfYear",
     price: "90",
-    periodLabel: "/6月",
+    periodLabelKey: "per6Months",
     period: "≈ ¥15/月 · 省25%",
     saving: "省 25%",
-    ctaLabel: "订阅 Pro",
+    ctaLabelKey: "subscribePro",
   },
   {
-    name: "Pro 年付",
+    nameKey: "proYearly",
     price: "119",
-    periodLabel: "/年",
+    periodLabelKey: "perYear",
     period: "≈ ¥9.92/月 · 省50%",
     saving: "🔥 省 ¥121",
-    ctaLabel: "订阅 Pro",
+    ctaLabelKey: "subscribePro",
   },
 ]
-
-const FREE_FEATURES = ["每天 1 次 AI 推荐", "无限食材位", "AI 菜谱生成"]
-const PRO_FEATURES = ["无限 AI 生成", "智能周计划", "购物清单", "饮食定制"]
 
 export function PricingCards() {
   return (
@@ -51,7 +48,7 @@ export function PricingCards() {
             price="0"
             periodLabel=""
             period="免费使用"
-            features={FREE_FEATURES}
+            features={["每天 1 次 AI 推荐", "无限食材位", "AI 菜谱生成"]}
             highlighted={false}
             isCurrent={false}
             ctaLabel="免费开始"
@@ -59,16 +56,16 @@ export function PricingCards() {
           />
           {PRO_TIERS.map((tier) => (
             <PricingCard
-              key={tier.name}
-              name={tier.name}
+              key={tier.nameKey}
+              name="Pro"
               price={tier.price}
-              periodLabel={tier.periodLabel}
+              periodLabel=""
               period={tier.period}
               saving={tier.saving}
-              features={PRO_FEATURES}
-              highlighted={tier.name === "Pro 年付"}
+              features={["无限 AI 生成", "智能周计划", "购物清单", "饮食定制"]}
+              highlighted={true}
               isCurrent={false}
-              ctaLabel={tier.ctaLabel}
+              ctaLabel="订阅 Pro"
               onCta={() => (window.location.href = "/register")}
             />
           ))}

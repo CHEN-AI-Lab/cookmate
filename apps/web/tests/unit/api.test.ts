@@ -1,15 +1,16 @@
 import { describe, it, expect } from 'vitest'
-import { generateOrderId, isAlipayConfigured } from '@cookmate/shared/api/alipay-pay'
+import { generateOrderId } from '@cookmate/shared/utils'
+import { isAlipayConfigured } from '@cookmate/shared/api/alipay-pay'
 
 describe('alipay-pay - generateOrderId', () => {
-  it('returns a non-empty string starting with CM', () => {
-    const id = generateOrderId()
+  it('returns a non-empty string starting with CK', () => {
+    const id = generateOrderId('alipay')
     expect(id).toBeTruthy()
-    expect(id.startsWith('CM')).toBe(true)
+    expect(id.startsWith('CK')).toBe(true)
   })
 
   it('generates unique IDs', () => {
-    const ids = new Set(Array.from({ length: 100 }, () => generateOrderId()))
+    const ids = new Set(Array.from({ length: 100 }, () => generateOrderId('alipay')))
     expect(ids.size).toBe(100)
   })
 })

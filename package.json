@@ -11,7 +11,10 @@
     "build": "pnpm --filter cookmate-web build",
     "test": "pnpm --filter cookmate-web test",
     "test:watch": "pnpm --filter cookmate-web test:watch",
+    "test:shared": "pnpm --filter @cookmate/shared test",
     "lint": "pnpm --filter cookmate-web lint",
+    "lint:shared": "pnpm --filter @cookmate/shared lint",
+    "check": "bash scripts/check.sh",
     "postinstall": "pnpm --filter cookmate-web postinstall"
   }
 }

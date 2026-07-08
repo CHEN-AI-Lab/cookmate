@@ -69,3 +69,27 @@
 **Decision**: Integrate both Stripe and PayJS behind a unified billing service layer.
 
 **Consequences**: More complex payment handling but covers both markets. PayJS allows personal merchants.
+
+---
+
+## ADR-007: Monorepo with shared/ Package for Cross-Platform Code
+**Date**: 2025-06-01
+**Status**: Accepted
+
+**Context**: Need to support multiple frontends (Web, potentially WeChat Mini Program, mobile app) while sharing types, constants, utils, validators, and i18n messages.
+
+**Decision**: Use pnpm workspace monorepo with a `shared/` package (`@cookmate/shared`) containing all non-UI code. Each app (`apps/web/`) only contains UI rendering code and imports from `shared/`.
+
+**Consequences**: Consistent types across platforms. Single source of truth for translations. Apps stay thin and focused on presentation.
+
+---
+
+## ADR-008: Internationalization (i18n) with next-intl
+**Date**: 2025-06-01
+**Status**: Draft
+
+**Context**: Chinese and English users need native-language interfaces. All UI text is currently hardcoded in Chinese.
+
+**Decision**: Use `next-intl` for i18n. Translation files live in `shared/messages/` (zh-CN.json, en.json). Locale routing via middleware. Language switcher in the UI header.
+
+**Consequences**: All UI text must be extracted from components into translation files. API error messages use locale-aware responses. Middleware detects browser language preference. Default locale is zh-CN.

@@ -2,7 +2,7 @@
 
 import { signIn, signOut } from "next-auth/react"
 import { useState, useEffect, useRef } from "react"
-import PasswordInput from "@/app/components/password-input"
+import PasswordInput from "@/components/ui/PasswordInput"
 import Link from "next/link"
 import OAuthLoadingOverlay from "@/components/ui/OAuthLoadingOverlay"
 
