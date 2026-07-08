@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { createPagePay, generateOrderId, isAlipayConfigured } from "@cookmate/shared/api/alipay-pay"
+import { createPagePay, isAlipayConfigured } from "@cookmate/shared/api/alipay-pay"
+import { generateOrderId } from "@cookmate/shared/utils/order-id"
 import { isDemoUser } from "@/lib/auth-helpers"
 
 export async function POST(_req: Request) {
@@ -16,7 +17,7 @@ export async function POST(_req: Request) {
   }
 
   try {
-    const orderId = generateOrderId()
+    const orderId = generateOrderId("alipay")
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL
 
     const payUrl = await createPagePay(

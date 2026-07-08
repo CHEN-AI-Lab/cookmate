@@ -368,6 +368,26 @@ export default function BillingPage() {
       )}
 
       {/* Manage subscription (for Pro users) */}
+      {!isFree && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <h3 className="font-bold text-gray-900 mb-2">订阅管理</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            管理你的订阅状态，如需取消请联系我们
+          </p>
+        </div>
+      )}
+
+      {/* Order history link */}
+      {(info?.orders?.length ?? 0) > 0 && (
+        <div className="text-center">
+          <Link
+            href="/app/orders"
+            className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-[#FF6B35] transition-colors"
+          >
+            📋 查看订单记录 →
+          </Link>
+        </div>
+      )}
     </div>
   )
 }

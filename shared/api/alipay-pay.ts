@@ -26,13 +26,6 @@ export function verifyNotify(params: Record<string, string>, publicKey: string):
   return verifier.verify(publicKey, signStr, "base64")
 }
 
-// 生成订单号
-export function generateOrderId(): string {
-  const ts = Date.now().toString(36)
-  const rand = Math.random().toString(36).substring(2, 6).toUpperCase()
-  return `CM${ts}${rand}`
-}
-
 // 创建电脑网站支付订单
 export async function createPagePay(
   orderId: string,

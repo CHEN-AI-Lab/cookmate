@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { createCheckout, retrieveCheckout, isCreemConfigured } from "@cookmate/shared/api/creem"
 import { prisma } from "@/lib/prisma"
+import { generateOrderId } from "@cookmate/shared/utils/order-id"
 
 export async function POST() {
   try {
@@ -21,14 +22,15 @@ export async function POST() {
       metadata: { userId: session.user.id },
     })
 
-    // 保存订单记录（Creem checkout ID）
+    // 保存订单记录（用统一订单号）
     if (sessionId) {
+      const orderId = generateOrderId("creem")
       await prisma.paymentOrder.upsert({
-        where: { orderId: sessionId },
+        where: { orderId },
         update: {},
         create: {
           userId: session.user.id,
-          orderId: sessionId,
+          orderId,
           channel: "creem",
           amount: 1500,
           status: "PENDING",

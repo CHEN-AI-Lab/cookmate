@@ -85,6 +85,9 @@ export default function OrdersPage() {
                     <p className="text-sm font-medium text-gray-900">
                       {channelLabel[order.channel] || order.channel}
                     </p>
+                    <p className="text-xs text-gray-400 font-mono">
+                      {order.orderId}
+                    </p>
                     {order.status === "PAID" ? (
                       <p className="text-xs text-green-600 font-medium">付款成功</p>
                     ) : order.status === "PENDING" ? (
