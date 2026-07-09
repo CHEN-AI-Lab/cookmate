@@ -41,6 +41,7 @@ export default function PantryPage() {
   const t = useTranslations("pantry")
   const tc = useTranslations("common")
   const catLabels = t.raw("catLabels") as Record<string, string>
+  const ingLabels = t.raw("ingredientLabels") as Record<string, string>
   const [items, setItems] = useState<PantryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
@@ -233,7 +234,7 @@ export default function PantryPage() {
           <div className="px-5 pb-5 space-y-4">
             {QUICK_ADD.map((group) => (
               <div key={group.category}>
-                <p className="text-sm text-gray-500 mb-2">{group.category}</p>
+                <p className="text-sm text-gray-500 mb-2">{catLabels[group.category] || group.category}</p>
                 <div className="flex flex-wrap gap-2">
                   {group.items.map((item) => {
                     const alreadyAdded = items.some((i) => i.name.toLowerCase() === item.toLowerCase())
@@ -269,7 +270,7 @@ export default function PantryPage() {
                             : "bg-gray-50 text-gray-600 border-gray-200 hover:border-[#FF6B35]"
                         } ${isDemoUser ? "opacity-50 cursor-not-allowed" : ""}`}
                       >
-                        {alreadyAdded ? `✓ ${item}` : item}
+                        {alreadyAdded ? `✓ ${ingLabels[item] || item}` : ingLabels[item] || item}
                       </button>
                     )
                   })}
