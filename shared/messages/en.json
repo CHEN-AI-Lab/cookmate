@@ -350,6 +350,8 @@
     "confirmAdd": "Confirm Add",
     "addedToPlanWithTitle": "✅ Added {title} to {day}{meal}",
     "replacedSlot": "Replaced {day}{meal}",
+    "replaced": "Replaced {day}{meal}",
+    "addedToPlan": "✅ Added to {day}{meal}",
     "starHint": "Click ☆ on AI recipes or Meal Plan to save your favorites",
     "loading": "Loading...",
     "starToast": "⭐ Starred",

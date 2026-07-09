@@ -178,7 +178,7 @@ export default function MyRecipesPage() {
     if (data.conflict) {
       setConflictData({ existingTitle: data.existingTitle, recipe })
     } else if (data.success) {
-      setAddMsg(tr("addedToPlan", { day: tm(addDay), meal: tm(addMeal) }))
+      setAddMsg(tr("addedToPlan", { day: dayLabel[addDay], meal: mealLabel[addMeal] }))
     } else {
       setAddMsg(data.error || tr("addFailed"))
     }
@@ -207,7 +207,7 @@ export default function MyRecipesPage() {
     })
     const d = await r.json()
     if (d.success) {
-      setAddMsg(tr("replaced", { day: tm(addDay), meal: tm(addMeal) }))
+      setAddMsg(tr("replaced", { day: dayLabel[addDay], meal: mealLabel[addMeal] }))
     } else {
       setAddMsg(d.error || tr("replaceFailed"))
     }
@@ -467,7 +467,7 @@ export default function MyRecipesPage() {
           <div className="bg-white rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
             <p className="text-lg mb-2">⚠️</p>
             <p className="text-sm text-[#2D3436] font-medium mb-1">{tr("slotConflict")}</p>
-            <p className="text-sm text-gray-500">{tr("slotConflictDesc", { day: tm(addDay), meal: tm(addMeal), title: conflictData.existingTitle })}</p>
+            <p className="text-sm text-gray-500">{tr("slotConflictDesc", { day: dayLabel[addDay], meal: mealLabel[addMeal], title: conflictData.existingTitle })}</p>
             <p className="text-xs text-gray-400 mt-2">{tr("slotConflictReplace", { title: conflictData.recipe.title })}</p>
             <div className="flex gap-2 mt-4">
               <button onClick={() => setConflictData(null)} className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl text-sm">{tr("cancel")}</button>
