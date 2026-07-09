@@ -5,6 +5,18 @@ import { generateWeeklyPlan, normalizeIngredients } from "@cookmate/shared/api/o
 import { checkUsageLimit, incrementUsage } from "@/lib/auth-helpers"
 import type { User } from "@prisma/client"
 
+/** 根据 locale 返回对应语言的错误消息 */
+function errMsg(locale: string, zh: string, en: string): string {
+  return locale === "en" ? en : zh
+}
+
+/** locale 感知的星期名 → 索引映射 */
+function getDayMap(locale: string): Record<string, number> {
+  return locale === "en"
+    ? { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6 }
+    : { "周一": 0, "周二": 1, "周三": 2, "周四": 3, "周五": 4, "周六": 5, "周日": 6 }
+}
+
 export async function GET() {
   try {
     const session = await auth()
@@ -27,22 +39,22 @@ export async function GET() {
     return NextResponse.json({ plans, weekStart: monday.toISOString() })
   } catch (error) {
     console.error("Meal plan GET:", error)
-    return NextResponse.json({ error: "请求失败，请稍后重试" }, { status: 500 })
+    return NextResponse.json({ error: errMsg("zh-CN", "请求失败，请稍后重试", "Request failed, please try again later") }, { status: 500 })
   }
 }
 
 export async function POST(req: Request) {
   const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+  if (!session?.user?.id) return NextResponse.json({ error: errMsg("zh-CN", "请先登录", "Please log in first") }, { status: 401 })
 
   // 读取语言偏好
   const cookieHeader = req.headers.get("cookie") || ""
   const locale = cookieHeader.match(/NEXT_LOCALE=([^;]+)/)?.[1] || "zh-CN"
+  const e = (zh: string, en: string) => errMsg(locale, zh, en)
 
   try {
     const userId = session.user.id
 
-    // 用户数据 - 无数据库时使用默认值
     interface MealPlanUser {
       subscriptionTier: string
       subscriptionExpiryDate: Date | null
@@ -58,17 +70,15 @@ export async function POST(req: Request) {
       pantryNames = pantryItems.map((i) => i.name)
     } catch (err) {
       console.error("fetch user/pantry data error:", err)
-      // 无数据库 - 使用默认值
     }
 
-    // 使用限额检查（仅在开发模式跳过）
     const isDev = process.env.NODE_ENV !== "production"
     if (!isDev) {
       const isMock = !(process.env.AI_API_KEY || process.env.OPENAI_API_KEY)
       if (!isMock) {
         const canGenerate = await checkUsageLimit(userId).catch((err: unknown) => { console.error("check usage limit error:", err); return true })
         if (!canGenerate) {
-          return NextResponse.json({ error: "今日次数已用完，明天再来吧" }, { status: 429 })
+          return NextResponse.json({ error: e("今日次数已用完，明天再来吧", "Daily limit reached, come back tomorrow") }, { status: 429 })
         }
       }
     }
@@ -87,12 +97,12 @@ export async function POST(req: Request) {
     monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7))
     monday.setHours(0, 0, 0, 0)
 
-    // 保存到数据库（失败不影响返回结果）
+    // 保存到数据库
     let mealPlan: Record<string, unknown> | null = null
+    const dayMap = getDayMap(locale)
     try {
       await prisma.mealSlot.deleteMany({ where: { mealPlan: { userId: userId, weekStart: monday } } })
 
-      // 清理孤立的旧 Recipe
       try {
         await prisma.recipe.deleteMany({
           where: { mealSlots: { none: {} }, userId, isGenerated: true, starred: false },
@@ -103,9 +113,7 @@ export async function POST(req: Request) {
 
       await prisma.mealPlan.deleteMany({ where: { userId: userId, weekStart: monday } })
 
-      // 创建菜谱并处理重复
       const slotEntries = Object.entries(weekPlan).flatMap(([dayName, meals], dayIdx) => {
-        const dayMap: Record<string, number> = { "周一": 0, "周二": 1, "周三": 2, "周四": 3, "周五": 4, "周六": 5, "周日": 6 }
         const dow = dayMap[dayName] ?? dayIdx
         return Object.entries(meals).map(([mealType, recipe]) => ({ dayOfWeek: dow, mealType, recipe }))
       })
@@ -139,12 +147,9 @@ export async function POST(req: Request) {
         include: { slots: { include: { recipe: true } } },
       })
 
-      // 消耗一次使用次数
       if (!isDev) { await incrementUsage(userId).catch((err: unknown) => { console.error("increment usage error:", err) }) }
     } catch (err) {
       console.error("Failed to save meal plan to DB (returning generated data only):", err)
-      // 把 weekPlan 转成前端可展示的格式
-      const dayMap: Record<string, number> = { "周一": 0, "周二": 1, "周三": 2, "周四": 3, "周五": 4, "周六": 5, "周日": 6 }
       const mealTypeKeys = ["breakfast", "lunch", "dinner"] as const
       const slots = Object.entries(weekPlan).flatMap(([dayName, meals]) =>
         mealTypeKeys.map((mealType, idx) => ({
@@ -170,6 +175,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ plan: mealPlan, generated: weekPlan })
   } catch (error) {
     console.error("Meal plan generation error:", error)
-    return NextResponse.json({ error: "生成失败，AI 暂时无法响应，请稍后重试" }, { status: 500 })
+    return NextResponse.json({ error: e("生成失败，AI 暂时无法响应，请稍后重试", "Generation failed. AI is temporarily unavailable, please try again later") }, { status: 500 })
   }
 }

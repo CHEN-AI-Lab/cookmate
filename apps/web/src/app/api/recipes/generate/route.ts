@@ -4,72 +4,48 @@ import { prisma } from "@/lib/prisma"
 import { generateRecipes, normalizeIngredients } from "@cookmate/shared/api/openai"
 import { checkUsageLimit, incrementUsage } from "@/lib/auth-helpers"
 
+/** 根据 locale 返回对应语言的错误消息 */
+function errMsg(locale: string, zh: string, en: string): string {
+  return locale === "en" ? en : zh
+}
+
 // ====== 食材风险管控清单 ======
 // 完整版见 docs/risk-control.md
 
-const NON_FOOD = [
-  "石头", "沙子", "泥土", "铁", "铜", "铝", "钢", "钉子", "螺丝", "水泥", "玻璃",
-  "塑料", "纸", "布", "橡胶", "胶水", "电池", "绳子", "木头", "油漆", "涂料",
-  "胶带", "铁丝", "树叶", "树皮", "树枝", "木棍",
-]
+const NON_FOOD = ["石头", "沙子", "泥土", "铁", "铜", "铝", "钢", "钉子", "螺丝", "水泥", "玻璃", "塑料", "纸", "布", "橡胶", "胶水", "电池", "绳子", "木头", "油漆", "涂料", "胶带", "铁丝", "树叶", "树皮", "树枝", "木棍"]
+const TOXIC = ["甲醇", "甲醛", "苯", "丙酮", "洗衣粉", "洗洁精", "漂白水", "洁厕灵", "消毒液", "84消毒液", "84", "农药", "杀虫剂", "除草剂", "百草枯", "敌敌畏", "毒蘑菇", "毒草", "夹竹桃", "曼陀罗", "断肠草", "乌头", "汞", "水银", "铅", "镉", "砷", "工业酒精", "乙醇"]
+const PROTECTED = ["大熊猫", "熊猫", "金丝猴", "东北虎", "老虎", "雪豹", "藏羚羊", "扬子鳄", "中华鲟", "黑熊", "熊掌", "穿山甲", "天鹅", "猫头鹰", "海龟", "鲸鱼", "鲸", "鲨鱼", "鱼翅", "海马", "珊瑚", "红豆杉", "银杏", "野生人参", "珙桐", "雪莲", "保护动物", "野生动物", "国家保护"]
+const DRUGS = ["海洛因", "冰毒", "大麻", "可卡因", "吗啡", "鸦片", "摇头丸", "K粉", "罂粟", "罂粟壳", "麻黄草", "LSD", "神仙水", "开心水"]
+const ILLEGAL = ["猫", "狗", "猫肉", "狗肉", "蝙蝠", "果子狸", "活吃", "生吃"]
+const FICTIONAL = ["恐龙", "龙肉", "凤凰", "独角兽", "麒麟", "美人鱼", "外星人", "异形", "年兽"]
+const ADDITIVES = ["苏丹红", "三聚氰胺", "吊白块", "工业明胶", "硼砂", "福尔马林", "工业盐"]
 
-const TOXIC = [
-  "甲醇", "甲醛", "苯", "丙酮", "洗衣粉", "洗洁精", "漂白水", "洁厕灵",
-  "消毒液", "84消毒液", "84", "农药", "杀虫剂", "除草剂", "百草枯", "敌敌畏",
-  "毒蘑菇", "毒草", "夹竹桃", "曼陀罗", "断肠草", "乌头",
-  "汞", "水银", "铅", "镉", "砷", "工业酒精", "乙醇",
-]
-
-const PROTECTED = [
-  "大熊猫", "熊猫", "金丝猴", "东北虎", "老虎", "雪豹", "藏羚羊", "扬子鳄",
-  "中华鲟", "黑熊", "熊掌", "穿山甲", "天鹅", "猫头鹰", "海龟", "鲸鱼", "鲸",
-  "鲨鱼", "鱼翅", "海马", "珊瑚", "红豆杉", "银杏", "野生人参", "珙桐", "雪莲",
-  "保护动物", "野生动物", "国家保护",
-]
-
-const DRUGS = [
-  "海洛因", "冰毒", "大麻", "可卡因", "吗啡", "鸦片", "摇头丸", "K粉",
-  "罂粟", "罂粟壳", "麻黄草", "LSD", "神仙水", "开心水",
-]
-
-const ILLEGAL = [
-  "猫", "狗", "猫肉", "狗肉", "蝙蝠", "果子狸", "活吃", "生吃",
-]
-
-const FICTIONAL = [
-  "恐龙", "龙肉", "凤凰", "独角兽", "麒麟", "美人鱼", "外星人", "异形", "年兽",
-]
-
-const ADDITIVES = [
-  "苏丹红", "三聚氰胺", "吊白块", "工业明胶", "硼砂", "福尔马林", "工业盐",
-]
-
-// 所有黑名单合并
 const BLACKLIST = [...NON_FOOD, ...TOXIC, ...PROTECTED, ...DRUGS, ...ILLEGAL, ...FICTIONAL, ...ADDITIVES]
 
-// 分类提示信息
-function getBlockReason(invalid: string[]): string {
+function getBlockReason(invalid: string[], locale: string): string {
+  const e = (zh: string, en: string) => errMsg(locale, zh, en)
   for (const item of invalid) {
-    if (FICTIONAL.some((w) => item.includes(w))) return `"${item}" 不是真实存在的食材`
-    if (PROTECTED.some((w) => item.includes(w))) return `"${item}" 为国家保护动植物，不可食用`
-    if (DRUGS.some((w) => item.includes(w))) return `"${item}" 为违禁品，不可食用`
-    if (TOXIC.some((w) => item.includes(w))) return `"${item}" 为有毒有害物质，不可食用`
-    if (ILLEGAL.some((w) => item.includes(w))) return `"${item}" 为不可食用食材`
-    if (NON_FOOD.some((w) => item.includes(w))) return `"${item}" 不是可食用的食材`
-    if (ADDITIVES.some((w) => item.includes(w))) return `"${item}" 为国家禁止使用的食品添加剂`
+    if (FICTIONAL.some((w) => item.includes(w))) return e(`"${item}" 不是真实存在的食材`, `"${item}" is not a real ingredient`)
+    if (PROTECTED.some((w) => item.includes(w))) return e(`"${item}" 为国家保护动植物，不可食用`, `"${item}" is a protected species and cannot be used as food`)
+    if (DRUGS.some((w) => item.includes(w))) return e(`"${item}" 为违禁品，不可食用`, `"${item}" is a prohibited substance`)
+    if (TOXIC.some((w) => item.includes(w))) return e(`"${item}" 为有毒有害物质，不可食用`, `"${item}" is toxic and cannot be used as food`)
+    if (ILLEGAL.some((w) => item.includes(w))) return e(`"${item}" 为不可食用食材`, `"${item}" is not edible`)
+    if (NON_FOOD.some((w) => item.includes(w))) return e(`"${item}" 不是可食用的食材`, `"${item}" is not edible`)
+    if (ADDITIVES.some((w) => item.includes(w))) return e(`"${item}" 为国家禁止使用的食品添加剂`, `"${item}" is a banned food additive`)
   }
-  return "请输入真实可食用的食材"
+  return e("请输入真实可食用的食材", "Please enter real edible ingredients")
 }
 
 export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "请先登录" }, { status: 401 })
+    return NextResponse.json({ error: errMsg("zh-CN", "请先登录", "Please log in first") }, { status: 401 })
   }
 
   // 读取语言偏好
   const cookieHeader = req.headers.get("cookie") || ""
   const locale = cookieHeader.match(/NEXT_LOCALE=([^;]+)/)?.[1] || "zh-CN"
+  const e = (zh: string, en: string) => errMsg(locale, zh, en)
 
   try {
     const body = await req.json()
@@ -78,7 +54,7 @@ export async function POST(req: Request) {
     // saveOnly 模式：直接保存菜谱到数据库，不调用 AI
     if (saveOnly) {
       const normalizedName = (title || "").trim().toLowerCase()
-      if (!normalizedName) return NextResponse.json({ error: "请输入菜谱名称" }, { status: 400 })
+      if (!normalizedName) return NextResponse.json({ error: e("请输入菜谱名称", "Please enter a recipe name") }, { status: 400 })
       try {
         const saved = await prisma.recipe.create({
           data: {
@@ -97,7 +73,6 @@ export async function POST(req: Request) {
         })
         return NextResponse.json({ recipe: saved })
       } catch (err: unknown) {
-        // P2002 = 同名菜谱已存在，切换收藏
         const prismaErr = err as { code?: string; message?: string }
         if (prismaErr.code === "P2002") {
           const existing = await prisma.recipe.findFirst({
@@ -116,17 +91,17 @@ export async function POST(req: Request) {
     }
 
     if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
-      return NextResponse.json({ error: "请至少提供一种食材" }, { status: 400 })
+      return NextResponse.json({ error: e("请至少提供一种食材", "Please provide at least one ingredient") }, { status: 400 })
     }
 
-    // 风险管控：逐项检查黑名单
+    // 风险管控
     const invalid = ingredients.filter((i: string) =>
       BLACKLIST.some((b) => i.includes(b))
     )
 
     if (invalid.length > 0) {
       return NextResponse.json({
-        error: getBlockReason(invalid),
+        error: getBlockReason(invalid, locale),
         invalidIngredients: invalid,
       }, { status: 400 })
     }
@@ -137,7 +112,7 @@ export async function POST(req: Request) {
       const canGenerate = await checkUsageLimit(session.user.id)
       if (!canGenerate) {
         return NextResponse.json(
-          { error: "今日免费次数已用完，升级 Pro 可无限使用" },
+          { error: e("今日免费次数已用完，升级 Pro 可无限使用", "Daily free limit reached. Upgrade to Pro for unlimited access") },
           { status: 403 }
         )
       }
@@ -176,7 +151,6 @@ export async function POST(req: Request) {
         })
         savedRecipes.push({ ...recipe, id: saved.id })
       } catch (err: unknown) {
-        // P2002 = unique constraint violation（同名菜谱已存在）
         const prismaErr = err as { code?: string }
         if (prismaErr.code === "P2002") continue
         throw err
@@ -190,6 +164,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ recipes: savedRecipes })
   } catch (error) {
     console.error("Recipe generation error:", error)
-    return NextResponse.json({ error: "生成失败，请稍后重试" }, { status: 500 })
+    return NextResponse.json({ error: e("生成失败，请稍后重试", "Generation failed, please try again later") }, { status: 500 })
   }
 }

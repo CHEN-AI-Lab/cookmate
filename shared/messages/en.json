@@ -101,6 +101,7 @@
     "passwordLabel": "Password",
     "passwordPlaceholder": "Enter your password",
     "passwordPlaceholderSetup": "At least 8 characters, 2+ character types",
+    "newPasswordLabel": "New Password",
     "confirmPasswordLabel": "Confirm Password",
     "confirmPasswordPlaceholder": "Re-enter password",
     "accountLabel": "Email / Phone",
