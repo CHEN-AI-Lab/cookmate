@@ -67,6 +67,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 })
   }
 
+  // 读取语言偏好
+  const cookieHeader = req.headers.get("cookie") || ""
+  const locale = cookieHeader.match(/NEXT_LOCALE=([^;]+)/)?.[1] || "zh-CN"
+
   try {
     const body = await req.json()
     const { ingredients, pantryContext, saveOnly, title, description, steps, cookingTime, calories, cuisineType, difficulty, starred } = body
@@ -149,7 +153,7 @@ export async function POST(req: Request) {
       dietType: user?.dietType || undefined,
       cuisinePref: user?.cuisinePref || undefined,
       servingSize: user?.servingSize || undefined,
-    }, pantryContext)
+    }, pantryContext, locale)
 
     // 保存生成的菜谱到数据库
     const savedRecipes = []

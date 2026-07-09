@@ -31,9 +31,13 @@ export async function GET() {
   }
 }
 
-export async function POST() {
+export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+
+  // 读取语言偏好
+  const cookieHeader = req.headers.get("cookie") || ""
+  const locale = cookieHeader.match(/NEXT_LOCALE=([^;]+)/)?.[1] || "zh-CN"
 
   try {
     const userId = session.user.id
@@ -74,7 +78,7 @@ export async function POST() {
       dietType: user?.dietType || undefined,
       cuisinePref: user?.cuisinePref || undefined,
       servingSize: user?.servingSize || 2,
-    }, pantryNames)
+    }, pantryNames, locale)
 
     // 获取本周一日期
     const now = new Date()
