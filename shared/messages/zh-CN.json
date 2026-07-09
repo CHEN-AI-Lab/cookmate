@@ -350,6 +350,8 @@
     "confirmAdd": "确认加入",
     "addedToPlanWithTitle": "✅ 已加入 {title} 到 {day}{meal}",
     "replacedSlot": "已替换 {day}{meal}",
+    "replaced": "已替换 {day}{meal}",
+    "addedToPlan": "✅ 已加入 {day}{meal}",
     "starHint": "在 AI 菜谱或周计划中点击 ☆ 收藏喜欢的菜谱",
     "loading": "加载中...",
     "starToast": "⭐ 已收藏",
