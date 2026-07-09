@@ -249,7 +249,7 @@ export default function PantryPage() {
                           }
                           if (alreadyAdded) {
                             // 已添加则删除
-                            const toRemove = items.find((i) => i.name === item)
+                            const toRemove = items.find((i) => i.name === (ingLabels[item] || item))
                             if (toRemove) {
                               await fetch(`/api/pantry/${toRemove.id}`, { method: "DELETE" })
                               setItems((prev) => prev.filter((i) => i.id !== toRemove.id))
@@ -261,7 +261,7 @@ export default function PantryPage() {
                             }
                           } else {
                             // 未添加则添加
-                            addItem(item, group.category)
+                            addItem(ingLabels[item] || item, group.category)
                           }
                         }}
                         className={`px-3 py-1 rounded-full text-sm border transition-colors ${
