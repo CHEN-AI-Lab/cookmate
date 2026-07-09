@@ -88,8 +88,16 @@ export default function PantryPage() {
   const addItem = async (name: string, category?: string) => {
     const trimmed = name.trim()
     if (!trimmed) return
-    // 检查本地列表（忽略大小写）
-    if (items.some((i) => i.name.toLowerCase() === trimmed.toLowerCase())) {
+    // 检查本地列表（忽略大小写 + 跨语言匹配）
+    const existingNames = new Set(items.map((i) => i.name.toLowerCase()))
+    const translatedNames = new Set(Object.entries(ingLabels).map(([zh, en]) => zh.toLowerCase()))
+    const reverseMap: Record<string, string> = {}
+    for (const [zh, en] of Object.entries(ingLabels)) {
+      reverseMap[en.toLowerCase()] = zh.toLowerCase()
+    }
+    const trimmedLower = trimmed.toLowerCase()
+    if (existingNames.has(trimmedLower) || 
+        (reverseMap[trimmedLower] && existingNames.has(reverseMap[trimmedLower]))) {
       setDupDialog(trimmed)
       setTimeout(() => setDupDialog(null), 2500)
       setInputName("")
