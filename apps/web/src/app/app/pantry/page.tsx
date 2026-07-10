@@ -191,7 +191,7 @@ export default function PantryPage() {
                     : "bg-orange-50 text-[#FF6B35] border-orange-200 hover:bg-orange-100"
                 }`}
               >
-                {item.name}
+                {ingLabels[item.name] || item.name}
                 <button onClick={(e) => { e.stopPropagation(); removeItem(item.id) }} className="ml-1 hover:text-red-500">{isDemoUser ? "" : "×"}</button>
               </span>
             ))}
