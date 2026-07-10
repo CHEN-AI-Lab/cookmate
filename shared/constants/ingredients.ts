@@ -115,68 +115,67 @@ export const INGREDIENT_LABELS: Record<string, string> = {
 // ══════════════════════════════════════════
 
 export const NON_FOOD = [
-  "石头", "stone", "rock", "沙子", "sand", "dirt", "soil",
-  "泥土", "铁", "iron", "copper", "aluminum", "steel",
-  "铜", "铝", "钢", "钉子", "nail", "screw",
-  "螺丝", "水泥", "cement", "玻璃", "glass", "plastic",
-  "塑料", "纸", "paper", "布", "cloth", "rubber",
-  "橡胶", "胶水", "glue", "电池", "battery", "绳子", "rope",
-  "木头", "wood", "油漆", "paint", "tape", "铁丝", "wire",
-  "树叶", "leaf", "bark", "树皮", "树枝", "twig", "stick", "木棍",
+  "石头", "沙子", "泥土", "铁", "铜", "铝", "钢", "钉子", "螺丝",
+  "水泥", "玻璃", "塑料", "纸", "布", "橡胶", "胶水", "电池", "绳子",
+  "木头", "油漆", "涂料", "胶带", "铁丝", "树叶", "树皮", "树枝", "木棍",
+  // English
+  "stone", "rock", "sand", "dirt", "soil", "iron", "copper", "aluminum",
+  "steel", "nail", "screw", "cement", "glass", "plastic", "paper", "cloth",
+  "rubber", "glue", "battery", "rope", "wood", "paint", "tape", "wire",
+  "leaf", "bark", "twig", "stick",
 ]
 
 export const TOXIC = [
-  "甲醇", "methanol", "甲醛", "formaldehyde", "苯", "benzene",
-  "丙酮", "acetone", "洗衣粉", "detergent", "洗洁精",
-  "漂白水", "bleach", "消毒液", "disinfectant", "pesticide",
-  "农药", "杀虫剂", "insecticide", "herbicide", "除草剂",
-  "百草枯", "敌敌畏", "毒蘑菇", "毒草",
-  "夹竹桃", "曼陀罗", "断肠草", "乌头",
-  "汞", "mercury", "水银", "铅", "lead", "cadmium", "镉",
-  "砷", "arsenic", "工业酒精", "industrial alcohol",
-  "poison", "toxic",
+  "甲醇", "甲醛", "苯", "丙酮", "洗衣粉", "洗洁精", "漂白水",
+  "消毒液", "农药", "杀虫剂", "除草剂", "百草枯", "敌敌畏",
+  "毒蘑菇", "毒草", "夹竹桃", "曼陀罗", "断肠草", "乌头",
+  "汞", "水银", "铅", "镉", "砷", "工业酒精",
+  // English
+  "methanol", "formaldehyde", "benzene", "acetone", "detergent",
+  "bleach", "disinfectant", "pesticide", "insecticide", "herbicide",
+  "poison", "toxic", "mercury", "lead", "cadmium", "arsenic",
+  "industrial alcohol",
 ]
 
 export const PROTECTED = [
-  "大熊猫", "panda", "giant panda", "熊猫",
-  "金丝猴", "golden monkey", "老虎", "tiger", "siberian tiger",
-  "东北虎", "雪豹", "snow leopard",
-  "藏羚羊", "antelope", "tibetan antelope",
-  "扬子鳄", "crocodile", "中华鲟", "sturgeon",
-  "黑熊", "black bear", "bear", "熊掌", "bear paw",
-  "穿山甲", "pangolin", "天鹅", "swan", "猫头鹰", "owl",
-  "海龟", "sea turtle", "turtle", "鲸鱼", "whale", "鲸",
-  "鲨鱼", "shark", "fin", "鱼翅", "seahorse", "海马",
-  "珊瑚", "coral", "红豆杉", "银杏",
-  "野生人参", "珙桐", "雪莲",
-  "保护动物", "protected", "endangered", "wild animal", "野生动物",
-  "国家保护",
+  "大熊猫", "熊猫", "金丝猴", "东北虎", "老虎", "雪豹",
+  "藏羚羊", "扬子鳄", "中华鲟", "黑熊", "熊掌", "穿山甲",
+  "天鹅", "猫头鹰", "海龟", "鲸鱼", "鲸", "鲨鱼", "鱼翅",
+  "海马", "珊瑚", "红豆杉", "银杏", "野生人参", "珙桐", "雪莲",
+  "保护动物", "野生动物", "国家保护",
+  // English
+  "panda", "giant panda", "golden monkey", "tiger", "siberian tiger",
+  "snow leopard", "antelope", "tibetan antelope", "crocodile",
+  "sturgeon", "black bear", "bear", "bear paw", "pangolin",
+  "swan", "owl", "sea turtle", "turtle", "whale", "shark", "fin",
+  "seahorse", "coral", "protected", "endangered", "wild animal",
 ]
 
 export const DRUGS = [
-  "海洛因", "heroin", "冰毒", "meth", "crystal meth",
-  "大麻", "cannabis", "marijuana", "weed",
-  "可卡因", "cocaine", "吗啡", "morphine", "鸦片", "opium",
-  "摇头丸", "ecstasy", "mdma", "K粉", "ketamine",
-  "罂粟", "poppy", "罂粟壳", "麻黄草",
-  "LSD", "lsd", "drug",
+  "海洛因", "冰毒", "大麻", "可卡因", "吗啡", "鸦片",
+  "摇头丸", "K粉", "罂粟", "罂粟壳", "麻黄草",
+  // English
+  "heroin", "meth", "crystal meth", "cocaine", "morphine", "opium",
+  "cannabis", "marijuana", "weed", "ecstasy", "mdma", "ketamine",
+  "poppy", "lsd", "drug",
 ]
 
 export const ILLEGAL = [
-  "猫", "cat", "狗", "dog", "bat", "蝙蝠",
-  "果子狸", "civet", "活吃", "raw", "生吃", "live",
+  "猫", "狗", "蝙蝠", "果子狸", "活吃", "生吃",
+  // English
+  "cat", "dog", "bat", "civet", "raw", "live",
 ]
 
 export const FICTIONAL = [
-  "恐龙", "dinosaur", "龙肉", "dragon", "凤凰", "phoenix",
-  "独角兽", "unicorn", "qilin", "麒麟", "mermaid", "美人鱼",
-  "alien", "外星人", "异形", "monster", "年兽",
+  "恐龙", "龙肉", "凤凰", "独角兽", "麒麟", "美人鱼", "外星人", "异形", "年兽",
+  // English
+  "dinosaur", "dragon", "phoenix", "unicorn", "qilin", "mermaid", "alien", "monster",
 ]
 
 export const ADDITIVES = [
-  "苏丹红", "sudan red", "三聚氰胺", "melamine",
-  "吊白块", "formalin", "福尔马林", "硼砂", "borax",
-  "工业盐", "industrial salt",
+  "苏丹红", "三聚氰胺", "吊白块", "工业明胶", "硼砂", "福尔马林", "工业盐",
+  // English
+  "sudan red", "melamine", "formalin", "borax", "industrial salt",
 ]
 
 export const BLACKLIST = [
