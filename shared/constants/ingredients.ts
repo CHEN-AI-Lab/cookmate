@@ -121,8 +121,8 @@ export const NON_FOOD = [
   // English
   "stone", "rock", "sand", "dirt", "soil", "iron", "copper", "aluminum",
   "steel", "nail", "screw", "cement", "glass", "plastic", "paper", "cloth",
-  "rubber", "glue", "battery", "rope", "wood", "paint", "tape", "wire",
-  "leaf", "bark", "twig", "stick",
+  "rubber", "glue", "battery", "rope", "wood", "paint", "tape",
+  "wire", "leaf", "bark", "twig",
 ]
 
 export const TOXIC = [
@@ -132,9 +132,11 @@ export const TOXIC = [
   "汞", "水银", "铅", "镉", "砷", "工业酒精",
   // English
   "methanol", "formaldehyde", "benzene", "acetone", "detergent",
-  "bleach", "disinfectant", "pesticide", "insecticide", "herbicide",
+  "cleanser", "bleach", "disinfectant", "pesticide", "insecticide",
+  "herbicide", "paraquat", "dichlorvos",
+  "poisonous mushroom", "poisonous weed", "oleander", "datura",
   "poison", "toxic", "mercury", "lead", "cadmium", "arsenic",
-  "industrial alcohol",
+  "industrial alcohol", "aconitum",
 ]
 
 export const PROTECTED = [
@@ -147,17 +149,19 @@ export const PROTECTED = [
   "panda", "giant panda", "golden monkey", "tiger", "siberian tiger",
   "snow leopard", "antelope", "tibetan antelope", "crocodile",
   "sturgeon", "black bear", "bear", "bear paw", "pangolin",
-  "swan", "owl", "sea turtle", "turtle", "whale", "shark", "fin",
-  "seahorse", "coral", "protected", "endangered", "wild animal",
+  "swan", "owl", "sea turtle", "turtle", "whale", "shark",
+  "shark fin", "seahorse", "coral", "yew", "ginkgo",
+  "wild ginseng",
+  "protected", "endangered", "wild animal",
 ]
 
 export const DRUGS = [
   "海洛因", "冰毒", "大麻", "可卡因", "吗啡", "鸦片",
   "摇头丸", "K粉", "罂粟", "罂粟壳", "麻黄草",
   // English
-  "heroin", "meth", "crystal meth", "cocaine", "morphine", "opium",
-  "cannabis", "marijuana", "weed", "ecstasy", "mdma", "ketamine",
-  "poppy", "lsd", "drug",
+  "heroin", "meth", "cocaine", "morphine", "opium",
+  "cannabis", "weed", "ecstasy", "ketamine",
+  "poppy", "lsd",
 ]
 
 export const ILLEGAL = [
@@ -169,13 +173,13 @@ export const ILLEGAL = [
 export const FICTIONAL = [
   "恐龙", "龙肉", "凤凰", "独角兽", "麒麟", "美人鱼", "外星人", "异形", "年兽",
   // English
-  "dinosaur", "dragon", "phoenix", "unicorn", "qilin", "mermaid", "alien", "monster",
+  "dinosaur", "dragon", "phoenix", "unicorn", "qilin", "mermaid", "alien", "monster", "year beast",
 ]
 
 export const ADDITIVES = [
   "苏丹红", "三聚氰胺", "吊白块", "工业明胶", "硼砂", "福尔马林", "工业盐",
   // English
-  "sudan red", "melamine", "formalin", "borax", "industrial salt",
+  "sudan red", "melamine", "rongalite", "industrial gelatin", "borax", "formalin", "industrial salt",
 ]
 
 export const BLACKLIST = [
