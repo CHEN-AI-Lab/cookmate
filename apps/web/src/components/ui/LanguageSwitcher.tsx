@@ -5,8 +5,8 @@ import { locales } from "@cookmate/shared/messages"
 import { useCallback } from "react"
 
 const labelMap: Record<string, string> = {
-  "zh-CN": "中",
-  en: "EN",
+  "zh-CN": "EN",
+  en: "中",
 }
 
 export default function LanguageSwitcher() {
