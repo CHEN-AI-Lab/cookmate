@@ -88,16 +88,24 @@ export default function PantryPage() {
   const addItem = async (name: string, category?: string) => {
     const trimmed = name.trim()
     if (!trimmed) return
-    // 检查本地列表（忽略大小写 + 跨语言匹配）
-    const existingNames = new Set(items.map((i) => i.name.toLowerCase()))
-    const translatedNames = new Set(Object.entries(ingLabels).map(([zh, en]) => zh.toLowerCase()))
-    const reverseMap: Record<string, string> = {}
-    for (const [zh, en] of Object.entries(ingLabels)) {
-      reverseMap[en.toLowerCase()] = zh.toLowerCase()
-    }
+    // 跨语言重复检测：同时检查中文名和英文翻译
     const trimmedLower = trimmed.toLowerCase()
-    if (existingNames.has(trimmedLower) || 
-        (reverseMap[trimmedLower] && existingNames.has(reverseMap[trimmedLower]))) {
+    // ingLabels: { "西红柿": "Tomato", ... }
+    // 建立 英文→中文 反向映射
+    const enToZh: Record<string, string> = {}
+    for (const [zh, en] of Object.entries(ingLabels)) {
+      enToZh[en.toLowerCase()] = zh.toLowerCase()
+    }
+    const isDuplicate = items.some((i) => {
+      const existing = i.name.toLowerCase()
+      if (existing === trimmedLower) return true
+      // 新增的是中文 → 查它的英文翻译是否匹配已有
+      if (ingLabels[trimmedLower] && ingLabels[trimmedLower].toLowerCase() === existing) return true
+      // 新增的是英文 → 查它的中文原词是否匹配已有
+      if (enToZh[trimmedLower] && enToZh[trimmedLower] === existing) return true
+      return false
+    })
+    if (isDuplicate) {
       setDupDialog(trimmed)
       setTimeout(() => setDupDialog(null), 2500)
       setInputName("")
