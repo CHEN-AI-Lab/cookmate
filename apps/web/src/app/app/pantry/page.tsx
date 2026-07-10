@@ -266,7 +266,7 @@ export default function PantryPage() {
                           }
                           if (alreadyAdded) {
                             // 已添加则删除
-                            const toRemove = items.find((i) => i.name === (ingLabels[item] || item))
+                            const toRemove = items.find((i) => i.name.toLowerCase() === (ingLabels[item] || item).toLowerCase())
                             if (toRemove) {
                               await fetch(`/api/pantry/${toRemove.id}`, { method: "DELETE" })
                               setItems((prev) => prev.filter((i) => i.id !== toRemove.id))
