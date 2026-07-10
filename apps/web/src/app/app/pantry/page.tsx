@@ -253,7 +253,8 @@ export default function PantryPage() {
                 <p className="text-sm text-gray-500 mb-2">{catLabels[group.category] || group.category}</p>
                 <div className="flex flex-wrap gap-2">
                   {group.items.map((item) => {
-                    const alreadyAdded = items.some((i) => i.name.toLowerCase() === item.toLowerCase())
+                    const checkName = (ingLabels[item] || item).toLowerCase()
+                    const alreadyAdded = items.some((i) => i.name.toLowerCase() === checkName)
                     return (
                       <button
                         key={item}
