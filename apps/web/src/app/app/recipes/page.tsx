@@ -28,6 +28,8 @@ const MEAL_VALUES = ["早餐", "午餐", "晚餐"] as const
 export default function RecipesPage() {
   const t = useTranslations("recipes")
   const tmeal = useTranslations("mealPlan")
+  const tp = useTranslations("pantry")
+  const ingLabels = tp.raw("ingredientLabels") as Record<string, string>
   const router = useRouter()
   const searchParams = useSearchParams()
   const [ingredients, setIngredients] = useState<string[]>(() => {
@@ -324,7 +326,7 @@ export default function RecipesPage() {
                         : "bg-gray-50 text-gray-500 border-gray-200 hover:border-green-300 hover:text-green-600 hover:bg-green-50/30"
                     }`}
                   >
-                    {item.name}
+                    {ingLabels[item.name] || item.name}
                     {active && (
                       <span className="ml-0.5 text-green-500">✓</span>
                     )}
@@ -364,7 +366,7 @@ export default function RecipesPage() {
                       : "bg-orange-50 text-[#FF6B35] border-orange-200"
                   }`}
                 >
-                  {item}
+                  {ingLabels[item] || item}
                   {isFromPantry(item) && <span className="text-[10px] opacity-60">📦</span>}
                   <button onClick={() => removeIngredient(item)} className="ml-1 hover:text-red-500">×</button>
                 </span>
