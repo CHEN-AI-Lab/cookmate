@@ -12,13 +12,20 @@ function errMsg(locale: string, zh: string, en: string): string {
 // ====== 食材风险管控清单 ======
 // 完整版见 docs/risk-control.md
 
-const NON_FOOD = ["石头", "沙子", "泥土", "铁", "铜", "铝", "钢", "钉子", "螺丝", "水泥", "玻璃", "塑料", "纸", "布", "橡胶", "胶水", "电池", "绳子", "木头", "油漆", "涂料", "胶带", "铁丝", "树叶", "树皮", "树枝", "木棍"]
-const TOXIC = ["甲醇", "甲醛", "苯", "丙酮", "洗衣粉", "洗洁精", "漂白水", "洁厕灵", "消毒液", "84消毒液", "84", "农药", "杀虫剂", "除草剂", "百草枯", "敌敌畏", "毒蘑菇", "毒草", "夹竹桃", "曼陀罗", "断肠草", "乌头", "汞", "水银", "铅", "镉", "砷", "工业酒精", "乙醇"]
-const PROTECTED = ["大熊猫", "熊猫", "金丝猴", "东北虎", "老虎", "雪豹", "藏羚羊", "扬子鳄", "中华鲟", "黑熊", "熊掌", "穿山甲", "天鹅", "猫头鹰", "海龟", "鲸鱼", "鲸", "鲨鱼", "鱼翅", "海马", "珊瑚", "红豆杉", "银杏", "野生人参", "珙桐", "雪莲", "保护动物", "野生动物", "国家保护"]
-const DRUGS = ["海洛因", "冰毒", "大麻", "可卡因", "吗啡", "鸦片", "摇头丸", "K粉", "罂粟", "罂粟壳", "麻黄草", "LSD", "神仙水", "开心水"]
-const ILLEGAL = ["猫", "狗", "猫肉", "狗肉", "蝙蝠", "果子狸", "活吃", "生吃"]
-const FICTIONAL = ["恐龙", "龙肉", "凤凰", "独角兽", "麒麟", "美人鱼", "外星人", "异形", "年兽"]
-const ADDITIVES = ["苏丹红", "三聚氰胺", "吊白块", "工业明胶", "硼砂", "福尔马林", "工业盐"]
+const NON_FOOD = ["石头", "沙子", "泥土", "铁", "铜", "铝", "钢", "钉子", "螺丝", "水泥", "玻璃", "塑料", "纸", "布", "橡胶", "胶水", "电池", "绳子", "木头", "油漆", "涂料", "胶带", "铁丝", "树叶", "树皮", "树枝", "木棍",
+  "stone", "rock", "sand", "dirt", "soil", "iron", "copper", "aluminum", "steel", "nail", "screw", "cement", "glass", "plastic", "paper", "cloth", "rubber", "glue", "battery", "rope", "wood", "paint", "tape", "wire", "leaf", "bark", "twig", "stick"]
+const TOXIC = ["甲醇", "甲醛", "苯", "丙酮", "洗衣粉", "洗洁精", "漂白水", "洁厕灵", "消毒液", "84消毒液", "84", "农药", "杀虫剂", "除草剂", "百草枯", "敌敌畏", "毒蘑菇", "毒草", "夹竹桃", "曼陀罗", "断肠草", "乌头", "汞", "水银", "铅", "镉", "砷", "工业酒精", "乙醇",
+  "methanol", "formaldehyde", "benzene", "acetone", "detergent", "bleach", "disinfectant", "pesticide", "insecticide", "herbicide", "poison", "toxic", "mercury", "lead", "cadmium", "arsenic", "industrial alcohol"]
+const PROTECTED = ["大熊猫", "熊猫", "金丝猴", "东北虎", "老虎", "雪豹", "藏羚羊", "扬子鳄", "中华鲟", "黑熊", "熊掌", "穿山甲", "天鹅", "猫头鹰", "海龟", "鲸鱼", "鲸", "鲨鱼", "鱼翅", "海马", "珊瑚", "红豆杉", "银杏", "野生人参", "珙桐", "雪莲", "保护动物", "野生动物", "国家保护",
+  "panda", "giant panda", "golden monkey", "tiger", "siberian tiger", "snow leopard", "antelope", "tibetan antelope", "crocodile", "sturgeon", "black bear", "bear", "bear paw", "pangolin", "swan", "owl", "sea turtle", "turtle", "whale", "shark", "fin", "seahorse", "coral", "protected", "endangered", "wild animal"]
+const DRUGS = ["海洛因", "冰毒", "大麻", "可卡因", "吗啡", "鸦片", "摇头丸", "K粉", "罂粟", "罂粟壳", "麻黄草", "LSD", "神仙水", "开心水",
+  "heroin", "meth", "crystal meth", "cocaine", "morphine", "opium", "ecstasy", "mdma", "ketamine", "poppy", "lsd", "cannabis", "marijuana", "weed", "drug"]
+const ILLEGAL = ["猫", "狗", "猫肉", "狗肉", "蝙蝠", "果子狸", "活吃", "生吃",
+  "cat", "dog", "bat", "civet", "raw", "live"]
+const FICTIONAL = ["恐龙", "龙肉", "凤凰", "独角兽", "麒麟", "美人鱼", "外星人", "异形", "年兽",
+  "dinosaur", "dragon", "phoenix", "unicorn", "qilin", "mermaid", "alien", "monster"]
+const ADDITIVES = ["苏丹红", "三聚氰胺", "吊白块", "工业明胶", "硼砂", "福尔马林", "工业盐",
+  "sudan red", "melamine", "formalin", "borax", "industrial salt"]
 
 const BLACKLIST = [...NON_FOOD, ...TOXIC, ...PROTECTED, ...DRUGS, ...ILLEGAL, ...FICTIONAL, ...ADDITIVES]
 
@@ -96,7 +103,7 @@ export async function POST(req: Request) {
 
     // 风险管控
     const invalid = ingredients.filter((i: string) =>
-      BLACKLIST.some((b) => i.includes(b))
+      BLACKLIST.some((b) => i.toLowerCase().includes(b.toLowerCase()))
     )
 
     if (invalid.length > 0) {
