@@ -1,12 +1,7 @@
 "use client"
+import { useTranslations } from "next-intl"
 
-const DAY_LABELS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 const MEAL_TYPES = ["breakfast", "lunch", "dinner"]
-const MEAL_LABELS: Record<string, string> = {
-  breakfast: "早餐",
-  lunch: "午餐",
-  dinner: "晚餐",
-}
 const MEAL_EMOJIS: Record<string, string> = {
   breakfast: "🌅",
   lunch: "☀️",
@@ -37,6 +32,17 @@ interface MealPlanGridProps {
 }
 
 export function MealPlanGrid({ plan, onSlotClick }: MealPlanGridProps) {
+  const t = useTranslations("mealPlan")
+  const DAY_LABELS = [
+    t("monday"), t("tuesday"), t("wednesday"),
+    t("thursday"), t("friday"), t("saturday"), t("sunday"),
+  ]
+  const MEAL_LABELS: Record<string, string> = {
+    breakfast: t("breakfast"),
+    lunch: t("lunch"),
+    dinner: t("dinner"),
+  }
+
   return (
     <div className="space-y-3">
       {DAY_LABELS.map((day, dayIdx) => (
@@ -71,12 +77,12 @@ export function MealPlanGrid({ plan, onSlotClick }: MealPlanGridProps) {
                       </div>
                       {slot.recipe.cookingTime && (
                         <p className="text-xs text-gray-400 mt-0.5">
-                          ⏱ {slot.recipe.cookingTime}分钟
+                          ⏱ {slot.recipe.cookingTime} min
                         </p>
                       )}
                     </div>
                   ) : (
-                    <p className="text-xs text-gray-300">未安排</p>
+                    <p className="text-xs text-gray-300">{t("emptySlot")}</p>
                   )}
                 </button>
               )
