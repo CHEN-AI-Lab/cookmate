@@ -455,7 +455,8 @@
     "noPassword": "Not set",
     "profileLoading": "Loading...",
     "accountInfo": "Account Info",
-    "demoToast": "🔒 Demo users cannot modify. Please sign up."
+    "demoToast": "🔒 Demo users cannot modify. Please sign up.",
+    "nameUpdated": "✅ Username updated"
   },
   "billing": {
     "title": "💳 Billing & Subscription",

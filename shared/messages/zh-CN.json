@@ -455,7 +455,8 @@
     "noPassword": "未设置",
     "profileLoading": "加载中...",
     "accountInfo": "账号信息",
-    "demoToast": "🔒 体验用户无法修改，请注册后使用"
+    "demoToast": "🔒 体验用户无法修改，请注册后使用",
+    "nameUpdated": "✅ 用户名已更新"
   },
   "billing": {
     "title": "💳 账单与订阅",

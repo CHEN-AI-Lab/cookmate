@@ -5,10 +5,11 @@ import { setPasswordSchema, translateZodErrors } from "@cookmate/shared/validato
 import { isDemoUser } from "@/lib/auth-helpers"
 
 export async function POST(req: Request) {
-  try {
-    const session = await auth()
+  export async function POST(req: Request) {
     const { password, phone, email, code, locale } = await req.json()
     const l = locale || "zh-CN"
+    try {
+      const session = await auth()
 
     if (session?.user?.id) {
       if (isDemoUser(session)) return NextResponse.json({ error: "体验用户不支持设置密码，请注册后使用" }, { status: 403 })
@@ -58,7 +59,7 @@ export async function POST(req: Request) {
     // 校验密码格式
     const parsed = setPasswordSchema.safeParse({ password })
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
+      return NextResponse.json({ error: translateZodErrors(parsed.error.errors, l)[0] }, { status: 400 })
     }
 
     // 查找用户
@@ -68,7 +69,7 @@ export async function POST(req: Request) {
       : await prisma.user.findUnique({ where: { email: email! } })
 
     if (!user) {
-      return NextResponse.json({ error: "用户不存在" }, { status: 404 })
+      return NextResponse.json({ error: l === "en" ? "User not found" : "用户不存在" }, { status: 404 })
     }
 
     // 加密并设置密码
@@ -84,6 +85,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Set password error:", error)
-    return NextResponse.json({ error: "设置密码失败" }, { status: 500 })
+    return NextResponse.json({ error: l === "en" ? "Failed to set password" : "设置密码失败" }, { status: 500 })
   }
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import Link from "next/link"
 import PasswordInput from "@/components/ui/PasswordInput"
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from "@cookmate/shared/constants"
@@ -10,6 +10,7 @@ export default function SettingsPage() {
   const ts = useTranslations("settings")
   const tc = useTranslations("common")
   const tv = useTranslations("validation")
+  const locale = useLocale()
 
   const dietLabel: Record<string, string> = {
     "不限": ts("dietUnlimited"), "减脂": ts("dietLoseFat"),
