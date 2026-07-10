@@ -88,25 +88,17 @@ export default function PantryPage() {
   const addItem = async (name: string, category?: string) => {
     const trimmed = name.trim()
     if (!trimmed) return
-    // 跨语言重复检测：同时检查中文名和英文翻译
+    // 统一转成中文名存储（英文→中文映射）
     const trimmedLower = trimmed.toLowerCase()
-    // ingLabels: { "西红柿": "Tomato", ... }
-    // 建立 英文→中文 反向映射
     const enToZh: Record<string, string> = {}
     for (const [zh, en] of Object.entries(ingLabels)) {
       enToZh[en.toLowerCase()] = zh.toLowerCase()
     }
-    const isDuplicate = items.some((i) => {
-      const existing = i.name.toLowerCase()
-      if (existing === trimmedLower) return true
-      // 新增的是中文 → 查它的英文翻译是否匹配已有
-      if (ingLabels[trimmedLower] && ingLabels[trimmedLower].toLowerCase() === existing) return true
-      // 新增的是英文 → 查它的中文原词是否匹配已有
-      if (enToZh[trimmedLower] && enToZh[trimmedLower] === existing) return true
-      return false
-    })
-    if (isDuplicate) {
-      setDupDialog(trimmed)
+    const chineseName = enToZh[trimmedLower] || trimmed
+
+    // 重复检测：用中文名比较
+    if (items.some((i) => i.name.toLowerCase() === chineseName.toLowerCase())) {
+      setDupDialog(chineseName)
       setTimeout(() => setDupDialog(null), 2500)
       setInputName("")
       return
@@ -115,7 +107,7 @@ export default function PantryPage() {
       const res = await fetch("/api/pantry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: trimmed, category: category }),
+        body: JSON.stringify({ name: chineseName, category: category }),
       })
       if (res.ok) {
         const data = await res.json()
@@ -123,7 +115,7 @@ export default function PantryPage() {
       } else {
         const data = await res.json().catch((err) => { console.error("parse pantry response error:", err); return {} })
         if (data.error?.includes("已存在")) {
-          setDupDialog(trimmed)
+          setDupDialog(chineseName)
           setTimeout(() => setDupDialog(null), 2500)
         } else {
           setError(data.error || "添加失败，请稍后重试")
@@ -253,8 +245,7 @@ export default function PantryPage() {
                 <p className="text-sm text-gray-500 mb-2">{catLabels[group.category] || group.category}</p>
                 <div className="flex flex-wrap gap-2">
                   {group.items.map((item) => {
-                    const checkName = (ingLabels[item] || item).toLowerCase()
-                    const alreadyAdded = items.some((i) => i.name.toLowerCase() === checkName)
+                    const alreadyAdded = items.some((i) => i.name.toLowerCase() === item.toLowerCase())
                     return (
                       <button
                         key={item}
@@ -266,7 +257,7 @@ export default function PantryPage() {
                           }
                           if (alreadyAdded) {
                             // 已添加则删除
-                            const toRemove = items.find((i) => i.name.toLowerCase() === (ingLabels[item] || item).toLowerCase())
+                            const toRemove = items.find((i) => i.name.toLowerCase() === item.toLowerCase())
                             if (toRemove) {
                               await fetch(`/api/pantry/${toRemove.id}`, { method: "DELETE" })
                               setItems((prev) => prev.filter((i) => i.id !== toRemove.id))
@@ -277,8 +268,8 @@ export default function PantryPage() {
                               })
                             }
                           } else {
-                            // 未添加则添加
-                            addItem(ingLabels[item] || item, group.category)
+                            // 未添加则添加（始终存中文名）
+                            addItem(item, group.category)
                           }
                         }}
                         className={`px-3 py-1 rounded-full text-sm border transition-colors ${
