@@ -288,19 +288,6 @@
     "demoLockedAdd": "🔒 Sign up to add",
     "demoLockedAction": "🔒 Demo users cannot use this. Please sign up.",
     "searchIcon": "🔍",
-    "ingredientLabels": {
-      "西红柿": "Tomato", "黄瓜": "Cucumber", "青菜": "Greens", "白菜": "Napa Cabbage",
-      "菠菜": "Spinach", "生菜": "Lettuce", "西兰花": "Broccoli", "茄子": "Eggplant",
-      "土豆": "Potato", "胡萝卜": "Carrot", "冬瓜": "Winter Melon", "木耳": "Wood Ear",
-      "洋葱": "Onion", "大蒜": "Garlic", "姜": "Ginger", "葱": "Spring Onion", "辣椒": "Chili",
-      "苹果": "Apple", "香蕉": "Banana", "橙子": "Orange", "柠檬": "Lemon", "草莓": "Strawberry",
-      "鸡蛋": "Egg", "鸡胸肉": "Chicken Breast", "鸡腿": "Chicken Thigh", "鸡翅": "Chicken Wing",
-      "五花肉": "Pork Belly", "猪里脊": "Pork Loin", "排骨": "Ribs", "牛肉": "Beef",
-      "羊肉": "Lamb", "培根": "Bacon",
-      "牛奶": "Milk", "酸奶": "Yogurt", "豆腐": "Tofu",
-      "大米": "Rice", "面条": "Noodles", "面粉": "Flour", "挂面": "Dried Noodles",
-      "馒头": "Steamed Bun", "食用油": "Cooking Oil", "小米": "Millet", "粉丝": "Glass Noodles"
-    },
     "catLabels": {
       "🥬 蔬菜": "🥬 Vegetables",
       "🍎 水果": "🍎 Fruits",

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { INGREDIENT_LABELS } from "@cookmate/shared/constants/ingredients"
 import { getDemoPantryItems } from "@cookmate/shared/demo-data"
 
 const QUICK_ADD = [
@@ -41,7 +42,7 @@ export default function PantryPage() {
   const t = useTranslations("pantry")
   const tc = useTranslations("common")
   const catLabels = t.raw("catLabels") as Record<string, string>
-  const ingLabels = t.raw("ingredientLabels") as Record<string, string>
+  const ingLabels = INGREDIENT_LABELS
   const [items, setItems] = useState<PantryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")

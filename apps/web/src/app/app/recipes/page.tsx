@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { INGREDIENT_LABELS } from "@cookmate/shared/constants/ingredients"
 import { RecipeCard } from "@/components/features/RecipeCard"
 
 interface Recipe {
@@ -29,7 +30,7 @@ export default function RecipesPage() {
   const t = useTranslations("recipes")
   const tmeal = useTranslations("mealPlan")
   const tp = useTranslations("pantry")
-  const ingLabels = tp.raw("ingredientLabels") as Record<string, string>
+  const ingLabels = INGREDIENT_LABELS
   const router = useRouter()
   const searchParams = useSearchParams()
   const [ingredients, setIngredients] = useState<string[]>(() => {
