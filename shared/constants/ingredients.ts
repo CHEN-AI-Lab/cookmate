@@ -122,7 +122,7 @@ export const NON_FOOD = [
   "stone", "rock", "sand", "dirt", "soil", "iron", "copper", "aluminum",
   "steel", "nail", "screw", "cement", "glass", "plastic", "paper", "cloth",
   "rubber", "glue", "battery", "rope", "wood", "paint", "tape",
-  "wire", "leaf", "bark", "twig",
+  "wire", "leaf", "bark", "twig", "stick",
 ]
 
 export const TOXIC = [
@@ -151,7 +151,7 @@ export const PROTECTED = [
   "sturgeon", "black bear", "bear", "bear paw", "pangolin",
   "swan", "owl", "sea turtle", "turtle", "whale", "shark",
   "shark fin", "seahorse", "coral", "yew", "ginkgo",
-  "wild ginseng",
+  "wild ginseng", "snow lotus",
   "protected", "endangered", "wild animal",
 ]
 
@@ -159,9 +159,9 @@ export const DRUGS = [
   "海洛因", "冰毒", "大麻", "可卡因", "吗啡", "鸦片",
   "摇头丸", "K粉", "罂粟", "罂粟壳", "麻黄草",
   // English
-  "heroin", "meth", "cocaine", "morphine", "opium",
-  "cannabis", "weed", "ecstasy", "ketamine",
-  "poppy", "lsd",
+  "heroin", "meth", "crystal meth", "cocaine", "morphine", "opium",
+  "cannabis", "marijuana", "weed", "ecstasy", "mdma", "ketamine",
+  "poppy", "lsd", "drug",
 ]
 
 export const ILLEGAL = [
