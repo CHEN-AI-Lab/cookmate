@@ -456,7 +456,9 @@
     "profileLoading": "Loading...",
     "accountInfo": "Account Info",
     "demoToast": "🔒 Demo users cannot modify. Please sign up.",
-    "nameUpdated": "✅ Username updated"
+    "nameUpdated": "✅ Username updated",
+    "updateFailed": "Update failed",
+    "bindErrorPasswordTypes": "Password must contain at least 2 character types (uppercase, lowercase, numbers, symbols)"
   },
   "billing": {
     "title": "💳 Billing & Subscription",
