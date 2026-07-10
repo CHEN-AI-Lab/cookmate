@@ -5,11 +5,10 @@ import { setPasswordSchema, translateZodErrors } from "@cookmate/shared/validato
 import { isDemoUser } from "@/lib/auth-helpers"
 
 export async function POST(req: Request) {
-  export async function POST(req: Request) {
-    const { password, phone, email, code, locale } = await req.json()
-    const l = locale || "zh-CN"
-    try {
-      const session = await auth()
+  const { password, phone, email, code, locale } = await req.json()
+  const l = locale || "zh-CN"
+  try {
+    const session = await auth()
 
     if (session?.user?.id) {
       if (isDemoUser(session)) return NextResponse.json({ error: "体验用户不支持设置密码，请注册后使用" }, { status: 403 })
@@ -30,12 +29,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true })
     }
 
-    // 未登录用户：需要验证码 + 邮箱/手机号
     if (!password || !code || (!phone && !email)) {
-      return NextResponse.json({ error: "缺少必要参数" }, { status: 400 })
+      return NextResponse.json({ error: l === "en" ? "Missing required parameters" : "缺少必要参数" }, { status: 400 })
     }
 
-    // 验证验证码
     const record = phone
       ? await prisma.verificationCode.findFirst({
           where: { phone, code, used: false, expiresAt: { gte: new Date() } },
@@ -47,22 +44,19 @@ export async function POST(req: Request) {
         })
 
     if (!record) {
-      return NextResponse.json({ error: "验证码错误或已过期" }, { status: 401 })
+      return NextResponse.json({ error: l === "en" ? "Invalid or expired verification code" : "验证码错误或已过期" }, { status: 401 })
     }
 
-    // 标记验证码为已使用
     await prisma.verificationCode.update({
       where: { id: record.id },
       data: { used: true },
     })
 
-    // 校验密码格式
     const parsed = setPasswordSchema.safeParse({ password })
     if (!parsed.success) {
       return NextResponse.json({ error: translateZodErrors(parsed.error.errors, l)[0] }, { status: 400 })
     }
 
-    // 查找用户
     const isPhone = !!phone
     const user = isPhone
       ? await prisma.user.findUnique({ where: { phone } })
@@ -72,7 +66,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: l === "en" ? "User not found" : "用户不存在" }, { status: 404 })
     }
 
-    // 加密并设置密码
     const bcrypt = await import("bcryptjs")
     const salt = await bcrypt.genSalt(10)
     const passwordHash = await bcrypt.hash(parsed.data.password, salt)
