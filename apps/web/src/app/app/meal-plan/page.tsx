@@ -31,15 +31,19 @@ interface MealPlan {
   slots: MealSlot[]
 }
 
-const DAY_LABELS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 const MEAL_TYPES = ["breakfast", "lunch", "dinner"]
-const MEAL_LABELS: Record<string, string> = { breakfast: "早餐", lunch: "午餐", dinner: "晚餐" }
-const MEAL_EMOJIS: Record<string, string> = { breakfast: "🌅", lunch: "☀️", dinner: "🌙" }
 
 export default function MealPlanPage() {
   const t = useTranslations("mealPlan")
   const tc = useTranslations("common")
   const tr = useTranslations("recipes")
+  const DAY_LABELS = [t("monday"), t("tuesday"), t("wednesday"), t("thursday"), t("friday"), t("saturday"), t("sunday")]
+  const MEAL_LABELS: Record<string, string> = {
+    breakfast: t("breakfast"), lunch: t("lunch"), dinner: t("dinner"),
+  }
+  const MEAL_EMOJIS: Record<string, string> = {
+    breakfast: "🌅", lunch: "☀️", dinner: "🌙",
+  }
   const [plan, setPlan] = useState<MealPlan | null>(null)
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
