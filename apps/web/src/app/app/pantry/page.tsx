@@ -340,10 +340,9 @@ export default function PantryPage() {
                       <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setDupDialog(null)}>
                         <div className="bg-[#2D3436] text-white px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center" onClick={(e) => e.stopPropagation()}>
                           <span>{t("alreadyInPantry", { name: dupDialog })}</span>
-            <span className="text-gray-700">「{dupDialog}」已在食材库中</span>
-          </div>
-        </div>
-      )}
+                        </div>
+                      </div>
+                    )}
 
       {/* Demo user toast */}
       {demoToast && (
