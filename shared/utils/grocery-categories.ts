@@ -1,6 +1,7 @@
 // ====== 超市分类知识库（按购物动线排列，10大类别） ======
 // 中国超市行业标准分类：蔬菜水果→肉禽蛋→海鲜→乳品豆制品→粮油米面→调味佐料→冷冻速食→零食饮料→酒类→日用品
 // 本文件是唯一分类数据源，所有 API 路由从此导入
+import { INGREDIENT_LABELS } from "../constants/ingredients"
 
 // ====== 10大类别 ======
 export const CATEGORIES = [
@@ -446,6 +447,19 @@ export function decomposeDishName(name: string): string[] {
 
 // ====== 判断食材属于哪个分类 ======
 export function classifyIngredient(name: string): string {
+  // 先查 INGREDIENT_LABELS 反向映射：英文名 → 中文名
+  const nameLower = name.toLowerCase()
+  for (const [zh, en] of Object.entries(INGREDIENT_LABELS)) {
+    if (en.toLowerCase() === nameLower || nameLower.includes(en.toLowerCase())) {
+      // 用中文名重新分类
+      for (const cat of classifyMap) {
+        if (cat.keywords && cat.keywords.some((k) => zh.includes(k))) {
+          if (cat.excludeKeywords && cat.excludeKeywords.some((k) => zh.includes(k))) continue
+          return cat.name
+        }
+      }
+    }
+  }
   for (const cat of classifyMap) {
     // 精确关键词匹配（优先）
     if (cat.keywords && cat.keywords.some((k) => name.includes(k))) {
