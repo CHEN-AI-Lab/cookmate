@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { INGREDIENT_LABELS } from "@cookmate/shared/constants/ingredients"
 import { getDemoPantryItems } from "@cookmate/shared/demo-data"
 
@@ -41,6 +41,7 @@ export default function PantryPage() {
   const router = useRouter()
   const t = useTranslations("pantry")
   const tc = useTranslations("common")
+  const locale = useLocale()
   const catLabels = t.raw("catLabels") as Record<string, string>
   const ingLabels = INGREDIENT_LABELS
   const [items, setItems] = useState<PantryItem[]>([])
@@ -146,6 +147,12 @@ export default function PantryPage() {
 
   const filtered = items.filter((i) => !search || i.name.includes(search))
 
+  // 按当前语言显示食材名：中文直接显示，英文查映射
+  const displayName = (name: string) => {
+    if (locale === "zh-CN") return name
+    return ingLabels[name] || name
+  }
+
   if (loading) return <div className="text-center py-16 text-gray-400">{t("loading")}</div>
 
   return (
@@ -192,7 +199,7 @@ export default function PantryPage() {
                     : "bg-orange-50 text-[#FF6B35] border-orange-200 hover:bg-orange-100"
                 }`}
               >
-                {ingLabels[item.name] || item.name}
+                {displayName(item.name)}
                 <button onClick={(e) => { e.stopPropagation(); removeItem(item.id) }} className="ml-1 hover:text-red-500">{isDemoUser ? "" : "×"}</button>
               </span>
             ))}
@@ -279,7 +286,7 @@ export default function PantryPage() {
                             : "bg-gray-50 text-gray-600 border-gray-200 hover:border-[#FF6B35]"
                         } ${isDemoUser ? "opacity-50 cursor-not-allowed" : ""}`}
                       >
-                        {alreadyAdded ? `✓ ${ingLabels[item] || item}` : ingLabels[item] || item}
+                        {alreadyAdded ? `✓ ${displayName(item)}` : displayName(item)}
                       </button>
                     )
                   })}

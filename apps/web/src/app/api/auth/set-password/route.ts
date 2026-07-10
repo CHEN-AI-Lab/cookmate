@@ -1,23 +1,23 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { setPasswordSchema } from "@cookmate/shared/validators"
+import { setPasswordSchema, translateZodErrors } from "@cookmate/shared/validators"
 import { isDemoUser } from "@/lib/auth-helpers"
 
 export async function POST(req: Request) {
   try {
     const session = await auth()
-    const { password, phone, email, code } = await req.json()
+    const { password, phone, email, code, locale } = await req.json()
+    const l = locale || "zh-CN"
 
     if (session?.user?.id) {
       if (isDemoUser(session)) return NextResponse.json({ error: "体验用户不支持设置密码，请注册后使用" }, { status: 403 })
-      // 已登录用户：直接设置密码，无需验证码
       if (!password) {
-        return NextResponse.json({ error: "请输入密码" }, { status: 400 })
+        return NextResponse.json({ error: l === "en" ? "Please enter a password" : "请输入密码" }, { status: 400 })
       }
       const parsed = setPasswordSchema.safeParse({ password })
       if (!parsed.success) {
-        return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
+        return NextResponse.json({ error: translateZodErrors(parsed.error.errors, l)[0] }, { status: 400 })
       }
       const bcrypt = await import("bcryptjs")
       const salt = await bcrypt.genSalt(10)
