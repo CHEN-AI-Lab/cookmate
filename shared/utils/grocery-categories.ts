@@ -466,10 +466,10 @@ const classifyMap: CategoryRule[] = [
 // ====== 常备品（不需要出现在购物清单） ======
 // 家里长期备着、用到才补、不按周采购的基础食材
 export const STAPLE_EXCLUSIONS = [
-  // 水：永远不需要购买，家里常备
+  // 水
   "水", "白开水", "凉白开", "温水", "开水", "纯净水", "矿泉水", "饮用水",
 
-  // 基础调味：家里长期常备，单独一瓶能用好几个月
+  // 基础调味
   "盐", "糖", "冰糖", "红糖", "白糖", "白砂糖",
   "生抽", "老抽", "酱油", "味极鲜", "蒸鱼豉油",
   "醋", "陈醋", "香醋", "白醋", "米醋",
@@ -479,26 +479,47 @@ export const STAPLE_EXCLUSIONS = [
   "食用油", "花生油", "橄榄油", "菜籽油", "玉米油", "芝麻油", "猪油",
   "淀粉", "生粉", "玉米淀粉", "红薯淀粉",
   "小苏打", "泡打粉", "酵母",
-  // 酱料类：一瓶用很久
   "豆瓣酱", "甜面酱", "黄豆酱", "番茄酱", "番茄沙司", "番茄膏",
   "辣椒酱", "蒜蓉辣酱", "甜辣酱",
   "芝麻酱", "花生酱", "沙拉酱", "千岛酱", "蛋黄酱", "美乃滋",
   "老干妈", "腐乳", "豆腐乳", "红腐乳", "白腐乳",
   "排骨酱", "叉烧酱", "烧烤酱", "照烧酱", "黑胡椒酱", "牛排酱",
   "蜂蜜", "枫糖浆", "炼乳",
-  "芥末", "辣根", "青芥辣", "wasabi",
+  "芥末", "辣根", "青芥辣",
   "浓缩鸡汁", "浓汤宝", "高汤",
   "咖喱粉", "咖喱块", "咖喱膏",
   "椰浆", "椰奶", "椰汁",
-  // 干香料：买一次用半年
   "花椒", "麻椒", "胡椒", "白胡椒", "黑胡椒",
   "胡椒粉", "花椒粉", "辣椒粉", "孜然", "孜然粉",
   "五香粉", "十三香", "椒盐",
   "八角", "桂皮", "香叶", "干辣椒", "辣椒段", "辣椒丝",
-  // 干货：常温保存，随用随取
   "干香菇", "干木耳", "干海带", "紫菜",
   "红枣", "枸杞", "桂圆干",
   "粉丝", "粉条", "宽粉", "腐竹", "豆皮",
+
+  // English
+  "water", "salt", "sugar", "brown sugar", "white sugar",
+  "soy sauce", "dark soy sauce", "light soy sauce",
+  "vinegar", "rice vinegar", "cooking wine", "shaoxing wine",
+  "oyster sauce", "msg", "chicken bouillon",
+  "sesame oil", "chili oil",
+  "cooking oil", "vegetable oil", "olive oil", "canola oil",
+  "cornstarch", "potato starch", "baking soda", "baking powder", "yeast",
+  "doubanjiang", "sweet bean sauce", "hoisin sauce", "ketchup", "tomato paste",
+  "chili sauce", "garlic chili sauce",
+  "sesame paste", "peanut butter", "mayonnaise",
+  "laoganma", "fermented tofu",
+  "honey", "maple syrup", "condensed milk",
+  "wasabi", "mustard",
+  "chicken stock", "broth",
+  "curry powder", "curry paste",
+  "coconut milk", "coconut cream",
+  "sichuan peppercorn", "white pepper", "black pepper",
+  "cumin", "five spice",
+  "star anise", "cinnamon", "dried chili",
+  "dried mushroom", "dried seaweed",
+  "red dates", "goji berries",
+  "glass noodles", "vermicelli", "tofu skin",
 ]
 
 // ====== 菜名→主食材 拆解映射 ======
@@ -551,6 +572,25 @@ export const DISH_DECOMPOSE_MAP: Record<string, string[]> = {
   "酱油炒饭": ["米饭"], "蛋包饭": ["鸡蛋", "米饭"],
   "炒面": ["面条"], "炒饭": ["米饭"], "炒粉": ["米粉"],
   "饺子": ["饺子皮", "猪肉"], "馄饨": ["馄饨皮", "猪肉"],
+
+  // English dish → ingredients
+  "scrambled egg": ["egg"], "fried egg": ["egg"], "omelette": ["egg"],
+  "boiled egg": ["egg"], "poached egg": ["egg"],
+  "tomato egg": ["tomato", "egg"],
+  "mashed potato": ["potato"], "french fries": ["potato"], "baked potato": ["potato"],
+  "braised pork belly": ["pork belly"], "sweet and sour ribs": ["ribs"],
+  "kung pao chicken": ["chicken"], "teriyaki chicken": ["chicken"],
+  "grilled chicken": ["chicken"], "roast chicken": ["whole chicken"],
+  "steamed fish": ["fish"], "grilled fish": ["fish"], "fish fillet": ["fish"],
+  "garlic shrimp": ["shrimp"], "grilled shrimp": ["shrimp"],
+  "mapo tofu": ["tofu"],
+  "beef stew": ["beef"], "beef stir fry": ["beef"],
+  "stir fry": ["mixed vegetable"],
+  "fried rice": ["rice", "egg"], "egg fried rice": ["rice", "egg"],
+  "chow mein": ["noodles"], "lo mein": ["noodles"],
+  "pasta": ["pasta"], "spaghetti": ["pasta"],
+  "salad": ["lettuce", "mixed vegetable"],
+  "soup": ["mixed vegetable"],
 }
 
 // ====== 判断食材是否属于常备品 ======
