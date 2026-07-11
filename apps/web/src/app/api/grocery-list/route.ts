@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import { CATEGORIES, classifyIngredient, isStaple, decomposeDishName, normalizeIngredientName, STAPLE_EXCLUSIONS } from "@cookmate/shared/utils/grocery-categories"
 
 // ====== 中文数字映射 ======
@@ -112,9 +113,10 @@ function roundUpFraction(qty: string): string {
 }
 
 export async function GET(req: Request) {
+  const loc = getLocaleFromCookie(req)
   try {
     const session = await auth()
-    if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+    if (!session?.user?.id) return NextResponse.json({ error: err(loc, "loginRequired") }, { status: 401 })
 
     // 获取天数参数，默认7天
     const url = new URL(req.url)
@@ -262,6 +264,6 @@ export async function GET(req: Request) {
     })
   } catch (error) {
     console.error("Grocery list GET:", error)
-    return NextResponse.json({ error: "请求失败，请稍后重试" }, { status: 500 })
+    return NextResponse.json({ error: err(loc, "requestFailed") }, { status: 500 })
   }
 }

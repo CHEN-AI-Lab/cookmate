@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 
-export async function GET(req: NextRequest) {
+export async function GET(req: Request) {
   const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+  if (!session?.user?.id) return NextResponse.json({ error: "Please log in first" }, { status: 401 })
   try {
     const { searchParams } = new URL(req.url)
     const starredParam = searchParams.get("starred")
@@ -42,9 +43,9 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function DELETE(req: NextRequest) {
+export async function DELETE(req: Request) {
   const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+  if (!session?.user?.id) return NextResponse.json({ error: "Please log in first" }, { status: 401 })
   try {
     let body: { ids?: string[] } = {}
     try {
@@ -64,6 +65,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: true, count: result.count })
   } catch (error) {
     console.error("Clear recipes error:", error)
-    return NextResponse.json({ error: "删除失败" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to delete" }, { status: 500 })
   }
 }

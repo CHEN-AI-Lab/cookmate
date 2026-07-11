@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import { generateWeeklyPlan, normalizeIngredients } from "@cookmate/shared/api/openai"
 import { checkUsageLimit, incrementUsage } from "@/lib/auth-helpers"
 import type { User } from "@prisma/client"
@@ -17,10 +18,11 @@ function getDayMap(locale: string): Record<string, number> {
     : { "周一": 0, "周二": 1, "周三": 2, "周四": 3, "周五": 4, "周六": 5, "周日": 6 }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  const loc = getLocaleFromCookie(req)
   try {
     const session = await auth()
-    if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+    if (!session?.user?.id) return NextResponse.json({ error: err(loc, "loginRequired") }, { status: 401 })
 
     const now = new Date()
     const dayOfWeek = now.getDay()
@@ -39,13 +41,14 @@ export async function GET() {
     return NextResponse.json({ plans, weekStart: monday.toISOString() })
   } catch (error) {
     console.error("Meal plan GET:", error)
-    return NextResponse.json({ error: errMsg("zh-CN", "请求失败，请稍后重试", "Request failed, please try again later") }, { status: 500 })
+    return NextResponse.json({ error: err(loc, "requestFailed") }, { status: 500 })
   }
 }
 
 export async function POST(req: Request) {
+  const loc = getLocaleFromCookie(req)
   const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: errMsg("zh-CN", "请先登录", "Please log in first") }, { status: 401 })
+  if (!session?.user?.id) return NextResponse.json({ error: err(loc, "loginRequired") }, { status: 401 })
 
   // 读取语言偏好
   const cookieHeader = req.headers.get("cookie") || ""
@@ -175,6 +178,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ plan: mealPlan, generated: weekPlan })
   } catch (error) {
     console.error("Meal plan generation error:", error)
-    return NextResponse.json({ error: e("生成失败，AI 暂时无法响应，请稍后重试", "Generation failed. AI is temporarily unavailable, please try again later") }, { status: 500 })
+    return NextResponse.json({ error: err(loc, "requestFailed") }, { status: 500 })
   }
 }

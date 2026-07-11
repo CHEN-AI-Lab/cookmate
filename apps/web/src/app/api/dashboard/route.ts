@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import { isAlipayConfigured } from "@cookmate/shared/api/alipay-pay"
 import { isCreemConfigured } from "@cookmate/shared/api/creem"
 import { isDemoUser } from "@/lib/auth-helpers"
@@ -28,10 +29,11 @@ async function checkSubscription(userId: string, user: { subscriptionTier: strin
   return "PRO"
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  const loc = getLocaleFromCookie(req)
   try {
     const session = await auth()
-    if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+    if (!session?.user?.id) return NextResponse.json({ error: err(loc, "loginRequired") }, { status: 401 })
 
     const userId = session.user.id
 
@@ -85,6 +87,6 @@ export async function GET() {
     })
   } catch (error) {
     console.error("Dashboard GET:", error)
-    return NextResponse.json({ error: "请求失败，请稍后重试" }, { status: 500 })
+    return NextResponse.json({ error: err(loc, "requestFailed") }, { status: 500 })
   }
 }

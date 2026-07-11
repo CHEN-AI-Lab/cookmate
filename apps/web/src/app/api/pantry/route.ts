@@ -7,7 +7,7 @@ export async function GET(req: Request) {
   const loc = getLocaleFromCookie(req)
   try {
     const session = await auth()
-    if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+    if (!session?.user?.id) return NextResponse.json({ error: "Please log in first" }, { status: 401 })
 
     const items = await prisma.pantryItem.findMany({
       where: { userId: session.user.id },
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   const loc = getLocaleFromCookie(req)
   try {
     const session = await auth()
-    if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+    if (!session?.user?.id) return NextResponse.json({ error: "Please log in first" }, { status: 401 })
 
     const body = await req.json()
 
