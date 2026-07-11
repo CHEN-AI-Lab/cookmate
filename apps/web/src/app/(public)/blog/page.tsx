@@ -15,7 +15,7 @@ export default async function BlogPage() {
       title: t('post1Title'),
       excerpt: t('post1Excerpt'),
       date: "2026-05-20",
-      tags: t('post1Tags') as unknown as string[],
+      tags: t.raw('post1Tags') as string[],
       readTime: t('post1ReadTime'),
     },
     {
@@ -23,7 +23,7 @@ export default async function BlogPage() {
       title: t('post2Title'),
       excerpt: t('post2Excerpt'),
       date: "2026-05-15",
-      tags: t('post2Tags') as unknown as string[],
+      tags: t.raw('post2Tags') as string[],
       readTime: t('post2ReadTime'),
     },
     {
@@ -31,7 +31,7 @@ export default async function BlogPage() {
       title: t('post3Title'),
       excerpt: t('post3Excerpt'),
       date: "2026-05-10",
-      tags: t('post3Tags') as unknown as string[],
+      tags: t.raw('post3Tags') as string[],
       readTime: t('post3ReadTime'),
     },
     {
@@ -39,7 +39,7 @@ export default async function BlogPage() {
       title: t('post4Title'),
       excerpt: t('post4Excerpt'),
       date: "2026-05-05",
-      tags: t('post4Tags') as unknown as string[],
+      tags: t.raw('post4Tags') as string[],
       readTime: t('post4ReadTime'),
     },
     {
@@ -47,7 +47,7 @@ export default async function BlogPage() {
       title: t('post5Title'),
       excerpt: t('post5Excerpt'),
       date: "2026-04-28",
-      tags: t('post5Tags') as unknown as string[],
+      tags: t.raw('post5Tags') as string[],
       readTime: t('post5ReadTime'),
     },
   ]
