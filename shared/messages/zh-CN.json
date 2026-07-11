@@ -461,7 +461,17 @@
     "bindErrorPasswordTypes": "密码需包含至少两种字符类型（大小写字母、数字、符号）",
     "passwordUpdatedModify": "✅ 密码已修改",
     "passwordUpdatedSet": "✅ 密码已设置",
-    "operationFailed": "操作失败"
+    "operationFailed": "操作失败",
+    "bindAction": "绑定",
+    "bindWarningTitle": "⚠️ 重要提醒",
+    "bindErrorInvalidPhone": "请输入正确的11位手机号",
+    "bindErrorRealPhone": "请输入真实的手机号码",
+    "bindErrorPasswordTooShort": "密码至少 8 位（需包含至少两种字符类型）",
+    "bindSuccessPhone": "✅ 手机号绑定成功",
+    "bindSuccessEmail": "✅ 邮箱绑定成功",
+    "bindFailed": "绑定失败",
+    "selectCuisineFirst": "请至少选择一个菜系",
+    "codeSentToEmail": "验证码已发送到 {email}"
   },
   "billing": {
     "title": "💳 账单与订阅",

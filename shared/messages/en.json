@@ -461,7 +461,17 @@
     "bindErrorPasswordTypes": "Password must contain at least 2 character types (uppercase, lowercase, numbers, symbols)",
     "passwordUpdatedModify": "✅ Password updated",
     "passwordUpdatedSet": "✅ Password set",
-    "operationFailed": "Operation failed"
+    "operationFailed": "Operation failed",
+    "bindAction": "Bind",
+    "bindWarningTitle": "⚠️ Important Notice",
+    "bindErrorInvalidPhone": "Please enter a valid 11-digit phone number",
+    "bindErrorRealPhone": "Please enter a real phone number",
+    "bindErrorPasswordTooShort": "Password must be at least 8 characters with at least 2 character types",
+    "bindSuccessPhone": "✅ Phone number bound successfully",
+    "bindSuccessEmail": "✅ Email bound successfully",
+    "bindFailed": "Binding failed",
+    "selectCuisineFirst": "Please select at least one cuisine",
+    "codeSentToEmail": "Verification code sent to {email}"
   },
   "billing": {
     "title": "💳 Billing & Subscription",
