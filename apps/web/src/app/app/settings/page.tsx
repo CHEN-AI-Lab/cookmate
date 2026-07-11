@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useTranslations, useLocale } from "next-intl"
+import { signOut } from "next-auth/react"
 import Link from "next/link"
 import PasswordInput from "@/components/ui/PasswordInput"
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from "@cookmate/shared/constants"
@@ -30,6 +31,9 @@ export default function SettingsPage() {
   const [showSaved, setShowSaved] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteEmail, setDeleteEmail] = useState("")
+  const [deleteCode, setDeleteCode] = useState("")
+  const [codeSent, setCodeSent] = useState(false)
+  const [sendingCode, setSendingCode] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
   const [error, setError] = useState("")
@@ -152,6 +156,19 @@ const save = async () => {
     }
   }
 
+  const handleSendDeleteCode = async () => {
+    setDeleteError("")
+    setSendingCode(true)
+    try {
+      const res = await fetch("/api/user/delete/send-code", { method: "POST" })
+      const data = await res.json()
+      if (!res.ok) { setDeleteError(data.error || ts("sendCodeFailed")); return }
+      if (data.devCode) setDeleteCode(data.devCode)
+      setCodeSent(true)
+    } catch { setDeleteError(ts("sendCodeFailed"))
+    } finally { setSendingCode(false) }
+  }
+
   const handleDelete = async () => {
     setDeleteError("")
     setDeleting(true)
@@ -159,10 +176,11 @@ const save = async () => {
       const res = await fetch("/api/user/delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: deleteEmail }),
+        body: JSON.stringify({ email: deleteEmail, code: deleteCode }),
       })
       const data = await res.json()
       if (data.success) {
+        await signOut({ redirect: false })
         window.location.href = "/"
       } else {
         setDeleteError(data.error || ts("deleteFailed"))
@@ -534,7 +552,7 @@ const save = async () => {
 
       {/* Delete confirmation modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowDeleteModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => { setShowDeleteModal(false); setDeleteEmail(""); setDeleteCode(""); setCodeSent(false); setDeleteError("") }}>
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold text-lg text-red-600 mb-2">{ts("deleteTitle")}</h3>
             <p className="text-sm text-gray-600 mb-1">{ts("deleteWarning")}</p>
@@ -543,32 +561,62 @@ const save = async () => {
               <li>{ts("deleteItem2")}</li>
               <li>{ts("deleteItem3")}</li>
             </ul>
-            <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
-              <p className="text-xs text-red-700 font-medium">{ts("deleteConfirmInstruction")}</p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">{ts("deleteEmailLabel")}</label>
+                <input
+                  type="email"
+                  placeholder={ts("deleteEmailPlaceholder")}
+                  value={deleteEmail}
+                  onChange={(e) => setDeleteEmail(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200"
+                  disabled={codeSent}
+                  autoFocus
+                />
+              </div>
+
+              {codeSent && (
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">{ts("deleteCodeLabel")}</label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder={ts("deleteCodePlaceholder")}
+                    value={deleteCode}
+                    onChange={(e) => setDeleteCode(e.target.value.replace(/\D/g, ""))}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200 text-center text-lg tracking-widest"
+                    autoFocus
+                    onKeyDown={(e) => { if (e.key === "Enter" && deleteCode.length === 6) handleDelete() }}
+                  />
+                </div>
+              )}
             </div>
-            <input
-              type="email"
-              placeholder={ts("deleteEmailPlaceholder")}
-              value={deleteEmail}
-              onChange={(e) => setDeleteEmail(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200 mb-4"
-              autoFocus
-              onKeyDown={(e) => { if (e.key === "Enter" && deleteEmail) handleDelete() }}
-            />
-            <div className="flex gap-2">
+
+            <div className="flex gap-2 mt-4">
               <button
-                onClick={() => { setShowDeleteModal(false); setDeleteEmail(""); setDeleteError("") }}
+                onClick={() => { setShowDeleteModal(false); setDeleteEmail(""); setDeleteCode(""); setCodeSent(false); setDeleteError("") }}
                 className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
               >
                 {tc("cancel")}
               </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting || !deleteEmail}
-                className="flex-1 px-4 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 disabled:bg-gray-300 transition-colors font-medium"
-              >
-                {deleting ? ts("deleting") : ts("confirmDeleteBtn")}
-              </button>
+              {!codeSent ? (
+                <button
+                  onClick={handleSendDeleteCode}
+                  disabled={sendingCode || !deleteEmail}
+                  className="flex-1 px-4 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 disabled:bg-gray-300 transition-colors font-medium"
+                >
+                  {sendingCode ? ts("sendingCode") : ts("sendDeleteCode")}
+                </button>
+              ) : (
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting || deleteCode.length !== 6}
+                  className="flex-1 px-4 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 disabled:bg-gray-300 transition-colors font-medium"
+                >
+                  {deleting ? ts("deleting") : ts("confirmDeleteBtn")}
+                </button>
+              )}
             </div>
             {deleteError && <p className="mt-3 text-xs text-red-500">{deleteError}</p>}
           </div>

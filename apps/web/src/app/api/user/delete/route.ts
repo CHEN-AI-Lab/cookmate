@@ -12,21 +12,31 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "体验用户不支持此操作" }, { status: 403 })
   }
 
-  const { email } = await req.json()
-  if (!email) {
-    return NextResponse.json({ error: "请提供邮箱地址以确认" }, { status: 400 })
+  const { email, code } = await req.json()
+  if (!email || !code) {
+    return NextResponse.json({ error: "请提供邮箱和验证码" }, { status: 400 })
   }
 
   // 验证邮箱匹配当前用户
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { email: true },
-  })
-  if (!user?.email || user.email.toLowerCase() !== email.toLowerCase()) {
-    return NextResponse.json({ error: "邮箱不匹配，请确认输入的邮箱与账号绑定的邮箱一致" }, { status: 400 })
+  if (!session.user.email || session.user.email.toLowerCase() !== email.toLowerCase()) {
+    return NextResponse.json({ error: "邮箱不匹配" }, { status: 400 })
   }
 
-  // Cascade delete: all related records deleted via Prisma onDelete: Cascade
+  // 验证验证码
+  const record = await prisma.verificationCode.findFirst({
+    where: { email, code, used: false, expiresAt: { gte: new Date() } },
+    orderBy: { createdAt: "desc" },
+  })
+  if (!record) {
+    return NextResponse.json({ error: "验证码错误或已过期" }, { status: 400 })
+  }
+
+  await prisma.verificationCode.update({
+    where: { id: record.id },
+    data: { used: true },
+  })
+
+  // Cascade delete user and all related data
   await prisma.user.delete({ where: { id: session.user.id } })
 
   return NextResponse.json({ success: true, message: "账号已永久删除" })
