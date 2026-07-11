@@ -8,7 +8,7 @@ export default function PublicFooter() {
   return (
     <footer className="bg-[#2D3436] text-gray-400 text-sm">
       <div className="max-w-[1400px] mx-auto px-8 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-8">
           {/* Brand */}
           <div>
             <p className="text-white font-bold text-lg">🍳 {tcommon("appName")}</p>
