@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { isDemoUser } from "@/lib/auth-helpers"
+import { t } from "@cookmate/shared/utils/locale"
 
 export async function GET() {
   try {
@@ -62,7 +63,8 @@ export async function PUT(req: Request) {
     if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
     if (isDemoUser(session)) return NextResponse.json({ error: "体验用户不支持修改资料，请注册后使用" }, { status: 403 })
 
-    const { name, phone, email, password } = await req.json()
+    const { name, phone, email, password, locale } = await req.json()
+    const l = locale || "zh-CN"
 
     // 更新用户名 — 不需要密码验证
     if (name !== undefined) {
@@ -76,33 +78,33 @@ export async function PUT(req: Request) {
     // 密码验证：绑定手机号/邮箱必须验证密码
     const currentUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { passwordHash: true } })
     if (!currentUser?.passwordHash) {
-      return NextResponse.json({ error: "请先设置密码后再绑定" }, { status: 400 })
+      return NextResponse.json({ error: t(l, "请先设置密码后再绑定", "Please set a password first") }, { status: 400 })
     }
-    if (!password) return NextResponse.json({ error: "请输入密码验证身份" }, { status: 400 })
+    if (!password) return NextResponse.json({ error: t(l, "请输入密码验证身份", "Please enter your password") }, { status: 400 })
     const bcrypt = await import("bcryptjs")
     if (!await bcrypt.compare(password, currentUser.passwordHash)) {
-      return NextResponse.json({ error: "密码错误" }, { status: 401 })
+      return NextResponse.json({ error: t(l, "密码错误", "Incorrect password") }, { status: 401 })
     }
 
     // 绑定手机号
     if (phone) {
-      if (!/^1\d{10}$/.test(phone)) return NextResponse.json({ error: "请输入正确的手机号" }, { status: 400 })
+      if (!/^1\d{10}$/.test(phone)) return NextResponse.json({ error: t(l, "请输入正确的手机号", "Please enter a valid phone number") }, { status: 400 })
       const existing = await prisma.user.findUnique({ where: { phone } })
-      if (existing && existing.id !== session.user.id) return NextResponse.json({ error: "该手机号已被其他账号绑定" }, { status: 409 })
+      if (existing && existing.id !== session.user.id) return NextResponse.json({ error: t(l, "该手机号已被其他账号绑定", "This phone number is already bound to another account") }, { status: 409 })
       await prisma.user.update({ where: { id: session.user.id }, data: { phone } })
       return NextResponse.json({ success: true, phone })
     }
 
     // 绑定邮箱（密码验证在上面已处理）
     if (email) {
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ error: "请输入正确的邮箱" }, { status: 400 })
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ error: t(l, "请输入正确的邮箱", "Please enter a valid email") }, { status: 400 })
       const existing = await prisma.user.findUnique({ where: { email } })
-      if (existing && existing.id !== session.user.id) return NextResponse.json({ error: "该邮箱已被其他账号绑定" }, { status: 409 })
+      if (existing && existing.id !== session.user.id) return NextResponse.json({ error: t(l, "该邮箱已被其他账号绑定", "This email is already bound to another account") }, { status: 409 })
       await prisma.user.update({ where: { id: session.user.id }, data: { email } })
       return NextResponse.json({ success: true, email })
     }
 
-    return NextResponse.json({ error: "没有要更新的内容" }, { status: 400 })
+    return NextResponse.json({ error: t(l, "没有要更新的内容", "Nothing to update") }, { status: 400 })
   } catch (error) {
     console.error("Profile PUT:", error)
     return NextResponse.json({ error: "更新失败" }, { status: 500 })

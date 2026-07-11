@@ -99,7 +99,7 @@ export default function SettingsPage() {
     if (!bindEmail || !/^[^\s]+@[^\s]+\.[^\s]+$/.test(bindEmail)) { setAccountMsg(tv("invalidEmail")); setTimeout(() => setAccountMsg(""), 3000); return }
     setBindLoading(true)
     try {
-      const r = await fetch("/api/user/bind-email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: bindEmail }) })
+      const r = await fetch("/api/user/bind-email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: bindEmail, locale }) })
       const d = await r.json()
       if (r.ok) { setBindCodeSent(true); setAccountMsg(ts("codeSentToEmail", { email: bindEmail })); setTimeout(() => setAccountMsg(""), 3000) }
       else { setAccountMsg(d.error || tv("sendFailed")); setTimeout(() => setAccountMsg(""), 3000) }
@@ -111,7 +111,7 @@ export default function SettingsPage() {
     if (!bindEmailCode || bindEmailCode.length < 6) { setAccountMsg(tv("emptyCode")); setTimeout(() => setAccountMsg(""), 3000); return }
     setBindLoading(true)
     try {
-      const r = await fetch("/api/user/bind-email", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: bindEmail, code: bindEmailCode }) })
+      const r = await fetch("/api/user/bind-email", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: bindEmail, code: bindEmailCode, locale }) })
       const d = await r.json()
       if (r.ok) { setProfile((p) => p ? { ...p, email: bindEmail } : p); setShowBindEmail(false); setBindCodeSent(false); setBindEmail(""); setBindEmailCode(""); setAccountMsg(ts("bindSuccessEmail")); setTimeout(() => setAccountMsg(""), 3000) }
       else { setAccountMsg(d.error || ts("bindFailed")); setTimeout(() => setAccountMsg(""), 3000) }
@@ -262,7 +262,7 @@ const save = async () => {
                                         try {
                                           const r = await fetch("/api/user/profile", {
                                             method: "PUT", headers: { "Content-Type": "application/json" },
-                                            body: JSON.stringify({ phone: bindPhone, password: bindCode }),
+                                            body: JSON.stringify({ phone: bindPhone, password: bindCode, locale }),
                                           })
                                           const d = await r.json()
                                           if (r.ok) {
@@ -342,6 +342,7 @@ const save = async () => {
                       onClose={() => setShowPasswordForm(false)}
                       ts={ts}
                       tv={tv}
+                      locale={locale}
                     />
                   </div>
                 )}
@@ -481,7 +482,7 @@ const save = async () => {
   )
 }
 
-function PasswordForm({ hasPassword, onClose, ts, tv }: { hasPassword: boolean; onClose: () => void; ts: any; tv: any }) {
+function PasswordForm({ hasPassword, onClose, ts, tv, locale }: { hasPassword: boolean; onClose: () => void; ts: any; tv: any; locale: string }) {
   const [newPassword, setNewPassword] = useState("")
   const [confirm, setConfirm] = useState("")
   const [saving, setSaving] = useState(false)
@@ -496,7 +497,7 @@ function PasswordForm({ hasPassword, onClose, ts, tv }: { hasPassword: boolean; 
       const res = await fetch("/api/auth/set-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: newPassword }),
+        body: JSON.stringify({ password: newPassword, locale }),
       })
       const data = await res.json()
       if (res.ok) {
