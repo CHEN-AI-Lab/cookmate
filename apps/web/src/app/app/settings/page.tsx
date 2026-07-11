@@ -196,7 +196,10 @@ const save = async () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-[#2D3436] mb-6">⚙️ {ts("title")}</h1>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-[#2D3436]">{ts("title")}</h1>
+        <p className="text-sm text-gray-400 mt-1">{ts("subtitle")}</p>
+      </div>
 
       {profile?.isDemoUser && (
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 text-center">
@@ -217,8 +220,13 @@ const save = async () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {/* Left column: Account info + Plan */}
         <div className="h-full">
-          <div className="bg-white rounded-2xl shadow-sm border border-orange-50 p-6 h-full">
-            <h2 className="font-bold text-[#2D3436] mb-4">{ts("profile")}</h2>
+          <div className="bg-white rounded-2xl shadow-sm border border-orange-50 overflow-hidden h-full">
+            <div className="h-1 bg-gradient-to-r from-[#FF6B35] to-orange-300" />
+            <div className="p-5 sm:p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <span className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center text-sm shrink-0">👤</span>
+              <h2 className="font-bold text-[#2D3436]">{ts("profile")}</h2>
+            </div>
             {profile ? (
                           <div className="space-y-3">
                             <div className="flex items-center justify-between py-2 border-b border-gray-50">
@@ -411,16 +419,22 @@ const save = async () => {
             ) : (
               <p className="text-sm text-gray-400">{ts("profileLoading")}</p>
             )}
-            <Link href="/app/billing" className="inline-block mt-4 bg-gradient-to-r from-[#FF6B35] to-orange-400 text-white px-6 py-2.5 rounded-full text-sm font-medium hover:opacity-90">
+            <Link href="/app/billing" className="inline-block mt-5 w-full text-center bg-gradient-to-r from-[#FF6B35] to-orange-400 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
               {settings.subscriptionTier === "PRO" ? ts("manageSubscription") : ts("upgradePlan")}
             </Link>
           </div>
         </div>
+        </div>
 
         {/* Right column: Diet preferences */}
-        <div className="bg-white rounded-2xl shadow-sm border border-orange-50 p-6 h-full">
-          <h2 className="font-bold text-[#2D3436] mb-4">{ts("dietPreferences")}</h2>
-          <div className="space-y-5">
+        <div className="bg-white rounded-2xl shadow-sm border border-orange-50 overflow-hidden h-full">
+                    <div className="h-1 bg-gradient-to-r from-green-400 to-green-200" />
+                    <div className="p-5 sm:p-6">
+                    <div className="flex items-center gap-2 mb-5">
+                      <span className="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center text-sm shrink-0">🥗</span>
+                      <h2 className="font-bold text-[#2D3436]">{ts("dietPreferences")}</h2>
+                    </div>
+                  <div className="space-y-5">
             <div>
               <label className="text-sm text-gray-600 font-medium">{ts("dietType")}</label>
               <div className="flex flex-wrap gap-2 mt-2">
@@ -490,6 +504,7 @@ const save = async () => {
                 ))}
               </div>
             </div>
+          </div>
           </div>
           <div className="flex items-center gap-3 mt-6">
             <button
