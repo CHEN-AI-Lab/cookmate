@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 
 function isPhone(val: string) {
   return /^1\d{10}$/.test(val)
@@ -9,9 +10,10 @@ function isEmail(val: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
 }
 
-async function sendEmailViaResend(to: string, code: string) {
+/** 发送邮件，返回 { ok, quotaExceeded } */
+async function sendEmailViaResend(to: string, code: string): Promise<{ ok: boolean; quotaExceeded: boolean }> {
   const apiKey = process.env.RESEND_API_KEY
-  if (!apiKey) return false
+  if (!apiKey) return { ok: false, quotaExceeded: false }
 
   try {
     const res = await fetch("https://api.resend.com/emails", {
@@ -34,27 +36,33 @@ async function sendEmailViaResend(to: string, code: string) {
         </div>`,
       }),
     })
-    return res.ok
+    if (res.ok) return { ok: true, quotaExceeded: false }
+
+    // 检查是否额度用尽
+    const body = await res.json().catch(() => ({}))
+    const isQuota = body?.name === "daily_quota_exceeded" || body?.name === "monthly_quota_exceeded"
+    return { ok: false, quotaExceeded: isQuota }
   } catch (err) {
     console.error("send email error:", err)
-    return false
+    return { ok: false, quotaExceeded: false }
   }
 }
 
 export async function POST(req: Request) {
+  const loc = getLocaleFromCookie(req)
   try {
     const { phone, email } = await req.json()
     const identifier = phone || email
 
     if (!identifier) {
-      return NextResponse.json({ error: "请输入手机号或邮箱" }, { status: 400 })
+      return NextResponse.json({ error: err(loc, "loginRequired") }, { status: 400 })
     }
 
     if (phone && !isPhone(phone)) {
-      return NextResponse.json({ error: "请输入正确的手机号" }, { status: 400 })
+      return NextResponse.json({ error: err(loc, "invalidPhone") }, { status: 400 })
     }
     if (email && !isEmail(email)) {
-      return NextResponse.json({ error: "请输入正确的邮箱地址" }, { status: 400 })
+      return NextResponse.json({ error: err(loc, "invalidEmail") }, { status: 400 })
     }
 
     // 检查是否 60 秒内已发过
@@ -68,7 +76,7 @@ export async function POST(req: Request) {
           orderBy: { createdAt: "desc" },
         })
     if (recent) {
-      return NextResponse.json({ error: "验证码已发送，请稍后再试" }, { status: 429 })
+      return NextResponse.json({ error: err(loc, "codeRecentlySent") }, { status: 429 })
     }
 
     // 生成 6 位验证码
@@ -97,21 +105,22 @@ export async function POST(req: Request) {
     const isDev = process.env.NODE_ENV === "development"
 
     if (email && !isDev) {
-      // 生产环境发真实邮件
-      const sent = await sendEmailViaResend(email, code)
-      if (!sent) {
-        return NextResponse.json({ error: "邮件发送失败，请检查 RESEND_API_KEY 配置" }, { status: 500 })
+      const result = await sendEmailViaResend(email, code)
+      if (result.quotaExceeded) {
+        return NextResponse.json({ error: err(loc, "emailQuotaExceeded") }, { status: 429 })
+      }
+      if (!result.ok) {
+        return NextResponse.json({ error: err(loc, "emailSendFailed") }, { status: 500 })
       }
     }
 
     if (phone && !isDev) {
-      // 生产环境不支持短信验证码（未配置短信服务）
-      return NextResponse.json({ error: "手机号登录暂未开放，请使用邮箱或密码登录" }, { status: 400 })
+      return NextResponse.json({ error: err(loc, "smsNotAvailable") }, { status: 400 })
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Send code error:", error)
-    return NextResponse.json({ error: "发送失败" }, { status: 500 })
+    return NextResponse.json({ error: err(loc, "sendFailed") }, { status: 500 })
   }
 }
