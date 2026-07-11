@@ -291,7 +291,7 @@ const save = async () => {
                                   <span className="text-sm font-medium text-[#2D3436]">
                                     {profile.email || ts("notBound")}
                                     {!profile.email && !showBindEmail && (
-                                                                                              <button onClick={() => { if (profile?.isDemoUser) { setGlobalToast(ts("demoToast")); setTimeout(() => setGlobalToast(""), 3000); return } setShowBindEmail(true) }} className="text-[#FF6B35] text-xs hover:underline">{ts("bindAction")}</button>
+                                      <button onClick={() => { if (profile?.isDemoUser) { setGlobalToast(ts("demoToast")); setTimeout(() => setGlobalToast(""), 3000); return } setShowBindEmail(true) }} className="ml-2 text-[#FF6B35] text-xs hover:underline">{ts("bindAction")}</button>
                                                                         )}
                                   </span>
                                 </div>
