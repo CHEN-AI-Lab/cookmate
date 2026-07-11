@@ -39,6 +39,25 @@ export default function PublicFooter() {
             </ul>
           </div>
 
+          {/* Legal */}
+          <div>
+            <p className="text-gray-300 font-semibold mb-3 text-xs uppercase tracking-wider">
+              {tfooter("legal")}
+            </p>
+            <ul className="space-y-2">
+              <li>
+                <Link href="/privacy" className="hover:text-[#FF6B35] transition-colors">
+                  {tfooter("privacy")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="hover:text-[#FF6B35] transition-colors">
+                  {tfooter("terms")}
+                </Link>
+              </li>
+            </ul>
+          </div>
+
           {/* Contact */}
           <div>
             <p className="text-gray-300 font-semibold mb-3 text-xs uppercase tracking-wider">
