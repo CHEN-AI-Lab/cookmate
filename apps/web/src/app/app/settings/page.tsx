@@ -500,7 +500,7 @@ function PasswordForm({ hasPassword, onClose, ts, tv }: { hasPassword: boolean; 
       })
       const data = await res.json()
       if (res.ok) {
-        setMsg(ts("passwordUpdated") + (hasPassword ? ts("passwordFormModify") : ts("passwordFormSet")))
+        setMsg(hasPassword ? ts("passwordUpdatedModify") : ts("passwordUpdatedSet"))
         setNewPassword("")
         setConfirm("")
         setTimeout(onClose, 1500)
