@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
+import { sendEmail } from "@cookmate/shared/utils/email"
 
 function isPhone(val: string) {
   return /^1\d{10}$/.test(val)

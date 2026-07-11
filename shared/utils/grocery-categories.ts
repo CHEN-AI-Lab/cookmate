@@ -27,8 +27,10 @@ export type Category = (typeof CATEGORIES)[number]
 interface CategoryRule {
   name: string
   keywords: string[]
+  keywordsEn?: string[]
   keywordsLow?: string[]
   excludeKeywords?: string[]
+  excludeKeywordsEn?: string[]
 }
 
 const classifyMap: CategoryRule[] = [
@@ -95,6 +97,30 @@ const classifyMap: CategoryRule[] = [
       "蒜蓉酱", "蒜粉", "姜粉",
       "花椒粉", "花椒油",
     ],
+    keywordsEn: [
+      "cabbage", "spinach", "lettuce", "celery", "chive", "broccoli",
+      "cauliflower", "bean sprout",
+      "chili", "pepper", "bell pepper",
+      "tomato", "eggplant",
+      "potato", "taro", "yam", "sweet potato",
+      "carrot", "radish", "turnip",
+      "cucumber", "zucchini", "pumpkin", "bitter melon",
+      "corn", "asparagus", "lotus root", "bamboo shoot", "okra",
+      "green bean", "pea", "edamame",
+      "garlic", "onion", "ginger", "scallion", "leek",
+      "mushroom", "shiitake", "enoki", "oyster mushroom",
+      "apple", "banana", "orange", "lemon", "lime", "grapefruit",
+      "mango", "strawberry", "blueberry", "grape", "peach", "pear",
+      "kiwi", "dragon fruit", "plum", "apricot", "persimmon",
+      "watermelon", "cantaloupe", "papaya", "durian", "lychee",
+      "cherry", "pomegranate", "hawthorn", "jujube", "date",
+      "avocado", "passion fruit", "coconut", "pineapple", "sugarcane", "fig",
+      "mulberry", "bayberry", "mangosteen", "wax apple",
+      "pickled vegetable", "pickled cabbage", "kimchi",
+    ],
+    excludeKeywordsEn: [
+      "ketchup", "salsa", "jam", "jelly", "juice", "fruit snack",
+    ],
   },
 
   // ========== 🥩 肉禽蛋 ==========
@@ -144,6 +170,22 @@ const classifyMap: CategoryRule[] = [
       // 菌菇误匹配（含有"菇""腿"等）
       "蘑菇", "香菇", "金针菇", "杏鲍菇", "平菇", "茶树菇",
     ],
+    keywordsEn: [
+      "pork", "pork belly", "pork chop", "pork rib", "pork liver",
+      "ground pork", "minced pork",
+      "beef", "brisket", "shank", "oxtail", "steak", "beef rib",
+      "lamb", "lamb chop", "mutton",
+      "chicken", "chicken breast", "chicken thigh", "chicken wing",
+      "chicken feet", "chicken liver", "duck", "duck breast",
+      "egg", "egg white", "egg yolk", "quail egg", "century egg",
+      "ham", "bacon", "sausage", "luncheon meat", "cured meat",
+    ],
+    excludeKeywordsEn: [
+      "chicken powder", "chicken essence", "egg tart", "egg roll",
+      "egg cake", "egg fried rice", "chocolate",
+      "fish cake", "fish ball", "fish tofu",
+      "pork floss", "meatball",
+    ],
   },
 
   // ========== 🦐 海鲜水产 ==========
@@ -179,6 +221,20 @@ const classifyMap: CategoryRule[] = [
       // 含"蟹"但不是海鲜
       "蟹棒", "蟹肉棒", "蟹柳",
     ],
+    keywordsEn: [
+      "fish", "salmon", "cod", "tuna", "sea bass", "tilapia",
+      "shrimp", "prawn", "lobster",
+      "crab", "crab meat",
+      "clam", "oyster", "scallop", "mussel", "abalone", "snail",
+      "squid", "cuttlefish", "octopus",
+      "seaweed", "kelp", "nori",
+      "crayfish", "mantis shrimp",
+    ],
+    excludeKeywordsEn: [
+      "fish sauce", "fish ball", "fish cake", "fish tofu",
+      "shrimp dumpling", "shrimp paste",
+      "crab stick", "surimi",
+    ],
   },
 
   // ========== 🥛 乳品豆制品 ==========
@@ -192,6 +248,12 @@ const classifyMap: CategoryRule[] = [
       // 豆制品
       "豆腐", "豆干", "豆皮", "腐竹", "豆浆", "豆花", "豆腐脑",
       "千张", "油豆腐", "豆腐泡",
+    ],
+    keywordsEn: [
+      "milk", "whole milk", "skim milk", "yogurt", "butter",
+      "cheese", "cream", "whipping cream", "condensed milk",
+      "tofu", "silken tofu", "firm tofu", "dried tofu",
+      "soy milk", "tofu skin", "tofu puff",
     ],
   },
 
@@ -236,7 +298,22 @@ const classifyMap: CategoryRule[] = [
       // 含"油"但不是粮油（这些是调味品）
       "蚝油", "酱油", "生抽", "老抽", "豉油", "蒸鱼豉油",
       "辣椒油", "花椒油", "芥末油",
-      "香油", "芝麻油", // 香油、芝麻油在调味和粮油中都有，优先调味的归类
+      "香油", "芝麻油",
+    ],
+    keywordsEn: [
+      "rice", "jasmine rice", "brown rice", "glutinous rice", "millet",
+      "quinoa", "oat", "oatmeal", "cereal",
+      "red bean", "green bean", "soybean", "black bean",
+      "flour", "bread flour", "cake flour", "all-purpose flour",
+      "noodle", "pasta", "spaghetti", "vermicelli", "rice noodle",
+      "bread", "steamed bun", "mantou", "rice cake",
+      "wonton wrapper", "dumpling wrapper",
+      "glass noodle", "sweet potato noodle",
+      "oil", "cooking oil", "olive oil", "vegetable oil", "sesame oil",
+    ],
+    excludeKeywordsEn: [
+      "soy sauce", "oyster sauce", "fish sauce", "chili oil",
+      "fried rice with egg",
     ],
   },
 
@@ -277,6 +354,23 @@ const classifyMap: CategoryRule[] = [
       "糟卤",
     ],
     excludeKeywords: [],
+    keywordsEn: [
+      "salt", "sugar", "brown sugar", "honey",
+      "soy sauce", "oyster sauce", "fish sauce", "vinegar",
+      "cooking wine", "mirin",
+      "msg", "chicken powder", "chicken essence",
+      "chili oil", "sesame oil",
+      "bean paste", "soybean paste", "sweet bean sauce",
+      "ketchup", "mayonnaise", "salad dressing",
+      "chili sauce", "sriracha", "hoisin sauce",
+      "sesame paste", "peanut butter", "fermented tofu",
+      "curry", "curry powder", "curry paste",
+      "sichuan pepper", "pepper", "black pepper", "white pepper",
+      "cumin", "five spice", "star anise", "cinnamon", "bay leaf",
+      "cornstarch", "baking powder", "baking soda", "yeast",
+      "dried chili", "fermented black bean",
+      "sesame seed",
+    ],
   },
 
   // ========== ❄️ 冷冻速食 ==========
@@ -291,6 +385,14 @@ const classifyMap: CategoryRule[] = [
       "方便面", "速食", "自热锅", "自热米饭", "自嗨锅",
       "鱼丸", "肉丸", "牛肉丸", "虾滑", "蟹棒", "蟹肉棒",
       "速冻饺子", "速冻馄饨",
+    ],
+    keywordsEn: [
+      "frozen", "freezer", "ice cream", "ice cream bar",
+      "dumpling", "pot sticker", "spring roll", "wonton",
+      "frozen pizza", "frozen vegetable", "frozen fruit",
+      "frozen chicken", "frozen fish", "frozen shrimp",
+      "instant noodle", "instant ramen", "instant soup",
+      "fish ball", "meatball", "crab stick", "surimi",
     ],
   },
 
@@ -311,6 +413,14 @@ const classifyMap: CategoryRule[] = [
       "奶茶", "咖啡", "茶叶", "红茶", "绿茶", "乌龙茶", "花茶",
     ],
     keywordsLow: [],
+    keywordsEn: [
+      "chip", "cookie", "chocolate", "candy", "gummy",
+      "cake", "bread", "toast", "pastry", "croissant", "bagel",
+      "nut", "peanut", "walnut", "almond", "cashew", "pistachio",
+      "cola", "soda", "sparkling water", "juice", "beverage",
+      "water", "mineral water", "spring water",
+      "coffee", "tea", "milk tea", "boba",
+    ],
   },
 
   // ========== 🍺 酒类 ==========
@@ -320,6 +430,13 @@ const classifyMap: CategoryRule[] = [
       "啤酒", "白酒", "红酒", "葡萄酒", "米酒", "黄酒",
       "果酒", "清酒", "威士忌", "伏特加", "白兰地", "朗姆酒",
       "鸡尾酒",
+    ],
+    keywordsEn: [
+      "beer", "ale", "lager", "stout",
+      "wine", "red wine", "white wine", "rosé",
+      "liquor", "whiskey", "whisky", "vodka", "rum", "gin",
+      "brandy", "cognac", "tequila", "sake", "soju",
+      "cocktail", "hard seltzer",
     ],
   },
 
@@ -336,6 +453,13 @@ const classifyMap: CategoryRule[] = [
       "桶装水", "矿泉水", "纯净水",
     ],
     keywordsLow: ["水"],
+    keywordsEn: [
+      "detergent", "dish soap", "laundry detergent", "bleach",
+      "toothpaste", "toothbrush", "shampoo", "body wash", "soap",
+      "tissue", "paper towel", "toilet paper", "napkin", "wet wipe",
+      "plastic wrap", "plastic bag", "garbage bag", "aluminum foil",
+      "toothpick", "disposable", "sponge", "cleaning",
+    ],
   },
 ]
 
@@ -451,7 +575,6 @@ export function classifyIngredient(name: string): string {
   const nameLower = name.toLowerCase()
   for (const [zh, en] of Object.entries(INGREDIENT_LABELS)) {
     if (en.toLowerCase() === nameLower || nameLower.includes(en.toLowerCase())) {
-      // 用中文名重新分类
       for (const cat of classifyMap) {
         if (cat.keywords && cat.keywords.some((k) => zh.includes(k))) {
           if (cat.excludeKeywords && cat.excludeKeywords.some((k) => zh.includes(k))) continue
@@ -461,7 +584,12 @@ export function classifyIngredient(name: string): string {
     }
   }
   for (const cat of classifyMap) {
-    // 精确关键词匹配（优先）
+    // 英文关键词匹配（contains）
+    if (cat.keywordsEn && cat.keywordsEn.some((k) => nameLower.includes(k))) {
+      if (cat.excludeKeywordsEn && cat.excludeKeywordsEn.some((k) => nameLower.includes(k))) continue
+      return cat.name
+    }
+    // 中文关键词匹配（contains）
     if (cat.keywords && cat.keywords.some((k) => name.includes(k))) {
       if (cat.excludeKeywords && cat.excludeKeywords.some((k) => name.includes(k))) continue
       return cat.name
