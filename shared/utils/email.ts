@@ -2,6 +2,9 @@
 // 支持多个服务商，按顺序尝试，一个失败自动切到下一个
 // 配置环境变量即可启用对应服务商，不配置就跳过
 
+const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@aaigc.online"
+const FROM_NAME = process.env.FROM_NAME || "CookMate"
+
 interface EmailProvider {
   name: string
   send(to: string, subject: string, html: string): Promise<{ ok: boolean; quotaExceeded: boolean }>
@@ -17,7 +20,7 @@ const resendProvider: EmailProvider = {
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ from: "CookMate <noreply@aaigc.online>", to, subject, html }),
+        body: JSON.stringify({ from: `${FROM_NAME} <${FROM_EMAIL}>`, to, subject, html }),
       })
       if (res.ok) return { ok: true, quotaExceeded: false }
       const body = await res.json().catch(() => ({}))
@@ -39,7 +42,7 @@ const sendgridProvider: EmailProvider = {
         headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           personalizations: [{ to: [{ email: to }] }],
-          from: { email: "noreply@aaigc.online" },
+          from: { email: FROM_EMAIL },
           subject,
           content: [{ type: "text/html", value: html }],
         }),
@@ -60,7 +63,7 @@ const mailgunProvider: EmailProvider = {
     if (!apiKey || !domain) return { ok: false, quotaExceeded: false }
     try {
       const formData = new URLSearchParams()
-      formData.append("from", `CookMate <noreply@aaigc.online>`)
+      formData.append("from", `${FROM_NAME} <${FROM_EMAIL}>`)
       formData.append("to", to)
       formData.append("subject", subject)
       formData.append("html", html)
