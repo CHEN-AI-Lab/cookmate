@@ -7,6 +7,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const session = await auth()
   if (!session?.user) redirect("/login")
 
+  // 新用户未完成 onboarding 时重定向
+  if (!session.user.onboardingCompleted && !session.user.id.startsWith("demo")) {
+    redirect("/app/onboarding-preview")
+  }
+
   return (
     <div className="min-h-screen bg-[#FFF8F0] flex">
       <Sidebar name={session.user.name} />

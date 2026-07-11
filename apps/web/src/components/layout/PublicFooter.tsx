@@ -36,6 +36,11 @@ export default function PublicFooter() {
                   {tfooter("about")}
                 </Link>
               </li>
+              <li>
+                <Link href="/faq" className="hover:text-[#FF6B35] transition-colors">
+                  {tfooter("faq")}
+                </Link>
+              </li>
             </ul>
           </div>
 

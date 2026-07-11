@@ -382,6 +382,30 @@ export default function BillingPage() {
           <p className="text-sm text-gray-500 mb-4">
             {t("subscriptionManageDesc")}
           </p>
+          <button
+            onClick={async () => {
+              if (!confirm(t("cancelConfirm"))) return
+              setActionLoading("cancel")
+              try {
+                const res = await fetch("/api/subscription/cancel", { method: "POST" })
+                const data = await res.json()
+                if (data.success) {
+                  setMessage(data.message)
+                  setRefreshKey((k) => k + 1)
+                } else {
+                  setError(data.error || t("cancelFailed"))
+                }
+              } catch {
+                setError(t("networkError"))
+              } finally {
+                setActionLoading(null)
+              }
+            }}
+            disabled={actionLoading !== null}
+            className="text-sm text-red-500 border border-red-200 rounded-full px-4 py-2 hover:bg-red-50 transition-colors disabled:opacity-40"
+          >
+            {actionLoading === "cancel" ? t("cancelling") : t("cancelSubscription")}
+          </button>
         </div>
       )}
 

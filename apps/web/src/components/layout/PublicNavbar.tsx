@@ -34,6 +34,9 @@ export default function PublicNavbar({
           <Link href="/about" className="hover:text-[#FF6B35]">
             {tnav("about")}
           </Link>
+          <Link href="/faq" className="hover:text-[#FF6B35]">
+            {tnav("faq")}
+          </Link>
         </nav>
 
         <div className="flex items-center gap-3">
