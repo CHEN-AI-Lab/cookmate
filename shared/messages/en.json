@@ -705,7 +705,7 @@
     "phoneBound": "This phone number is already bound to another account",
     "emailBound": "This email is already bound to another account",
     "codeExpired": "Invalid or expired verification code",
-    "emailSendFailed": "Email sending failed. Please check RESEND_API_KEY configuration",
+    "emailSendFailed": "Failed to send email, please try again later",
     "invalidPassword": "Incorrect password",
     "profileEditDenied": "Demo users cannot edit profile. Please sign up.",
     "emailBindDenied": "Demo users cannot bind email. Please sign up."
