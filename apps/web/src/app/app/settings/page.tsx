@@ -472,6 +472,50 @@ const save = async () => {
         </div>
       </div>
 
+      {/* Data management */}
+      {!profile?.isDemoUser && (
+        <div className="bg-white rounded-2xl border border-orange-50 shadow-sm p-6 mt-6">
+          <h2 className="font-bold text-[#2D3436] mb-4">{ts("dataManagement")}</h2>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch("/api/user/export")
+                  if (!res.ok) { setError(ts("exportFailed")); return }
+                  const blob = await res.blob()
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement("a")
+                  a.href = url
+                  a.download = `cookmate-export-${new Date().toISOString().split("T")[0]}.json`
+                  a.click()
+                  URL.revokeObjectURL(url)
+                } catch { setError(ts("exportFailed")) }
+              }}
+              className="border border-gray-200 text-sm text-gray-600 px-4 py-2 rounded-full hover:border-[#FF6B35] hover:text-[#FF6B35] transition-colors"
+            >
+              {ts("exportData")}
+            </button>
+            <button
+              onClick={async () => {
+                if (!confirm(ts("deleteConfirm"))) return
+                try {
+                  const res = await fetch("/api/user/delete", { method: "POST" })
+                  const data = await res.json()
+                  if (data.success) {
+                    window.location.href = "/"
+                  } else {
+                    setError(data.error || ts("deleteFailed"))
+                  }
+                } catch { setError(ts("deleteFailed")) }
+              }}
+              className="border border-red-200 text-sm text-red-500 px-4 py-2 rounded-full hover:bg-red-50 transition-colors"
+            >
+              {ts("deleteAccount")}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Global toast */}
       {globalToast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#2D3436] text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
