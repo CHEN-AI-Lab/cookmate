@@ -28,6 +28,10 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [showSaved, setShowSaved] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteEmail, setDeleteEmail] = useState("")
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(true)
   const [showPasswordForm, setShowPasswordForm] = useState(false)
@@ -145,6 +149,28 @@ const save = async () => {
       }
     } catch (err) { console.error("save settings error:", err) } finally {
       setSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    setDeleteError("")
+    setDeleting(true)
+    try {
+      const res = await fetch("/api/user/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: deleteEmail }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        window.location.href = "/"
+      } else {
+        setDeleteError(data.error || ts("deleteFailed"))
+      }
+    } catch {
+      setDeleteError(ts("deleteFailed"))
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -476,6 +502,7 @@ const save = async () => {
       {!profile?.isDemoUser && (
         <div className="bg-white rounded-2xl border border-orange-50 shadow-sm p-6 mt-6">
           <h2 className="font-bold text-[#2D3436] mb-4">{ts("dataManagement")}</h2>
+          <p className="text-sm text-gray-500 mb-4">{ts("dataManagementDesc")}</p>
           <div className="flex flex-wrap gap-3">
             <button
               onClick={async () => {
@@ -493,25 +520,57 @@ const save = async () => {
               }}
               className="border border-gray-200 text-sm text-gray-600 px-4 py-2 rounded-full hover:border-[#FF6B35] hover:text-[#FF6B35] transition-colors"
             >
-              {ts("exportData")}
+              📥 {ts("exportJson")}
             </button>
             <button
-              onClick={async () => {
-                if (!confirm(ts("deleteConfirm"))) return
-                try {
-                  const res = await fetch("/api/user/delete", { method: "POST" })
-                  const data = await res.json()
-                  if (data.success) {
-                    window.location.href = "/"
-                  } else {
-                    setError(data.error || ts("deleteFailed"))
-                  }
-                } catch { setError(ts("deleteFailed")) }
-              }}
+              onClick={() => setShowDeleteModal(true)}
               className="border border-red-200 text-sm text-red-500 px-4 py-2 rounded-full hover:bg-red-50 transition-colors"
             >
-              {ts("deleteAccount")}
+              🗑️ {ts("deleteAccount")}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowDeleteModal(false)}>
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-bold text-lg text-red-600 mb-2">{ts("deleteTitle")}</h3>
+            <p className="text-sm text-gray-600 mb-1">{ts("deleteWarning")}</p>
+            <ul className="text-xs text-gray-500 mb-4 ml-4 list-disc space-y-1">
+              <li>{ts("deleteItem1")}</li>
+              <li>{ts("deleteItem2")}</li>
+              <li>{ts("deleteItem3")}</li>
+            </ul>
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
+              <p className="text-xs text-red-700 font-medium">{ts("deleteConfirmInstruction")}</p>
+            </div>
+            <input
+              type="email"
+              placeholder={ts("deleteEmailPlaceholder")}
+              value={deleteEmail}
+              onChange={(e) => setDeleteEmail(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200 mb-4"
+              autoFocus
+              onKeyDown={(e) => { if (e.key === "Enter" && deleteEmail) handleDelete() }}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setShowDeleteModal(false); setDeleteEmail(""); setDeleteError("") }}
+                className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                {tc("cancel")}
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting || !deleteEmail}
+                className="flex-1 px-4 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 disabled:bg-gray-300 transition-colors font-medium"
+              >
+                {deleting ? ts("deleting") : ts("confirmDeleteBtn")}
+              </button>
+            </div>
+            {deleteError && <p className="mt-3 text-xs text-red-500">{deleteError}</p>}
           </div>
         </div>
       )}
