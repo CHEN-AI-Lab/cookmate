@@ -12,42 +12,6 @@ function isEmail(val: string) {
 }
 
 /** 发送邮件，返回 { ok, quotaExceeded } */
-async function sendEmailViaResend(to: string, code: string): Promise<{ ok: boolean; quotaExceeded: boolean }> {
-  const apiKey = process.env.RESEND_API_KEY
-  if (!apiKey) return { ok: false, quotaExceeded: false }
-
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: "CookMate <noreply@aaigc.online>",
-        to,
-        subject: "CookMate 登录验证码",
-        html: `<div style="font-family:sans-serif;padding:24px;max-width:400px">
-          <h2 style="color:#FF6B35">🍳 CookMate</h2>
-          <p style="color:#333">您的验证码是：</p>
-          <div style="font-size:32px;font-weight:bold;color:#FF6B35;letter-spacing:8px;text-align:center;padding:16px;background:#FFF8F0;border-radius:12px;margin:16px 0">
-            ${code}
-          </div>
-          <p style="color:#999;font-size:12px">验证码 5 分钟内有效，请勿泄露给他人。</p>
-        </div>`,
-      }),
-    })
-    if (res.ok) return { ok: true, quotaExceeded: false }
-
-    // 检查是否额度用尽
-    const body = await res.json().catch(() => ({}))
-    const isQuota = body?.name === "daily_quota_exceeded" || body?.name === "monthly_quota_exceeded"
-    return { ok: false, quotaExceeded: isQuota }
-  } catch (err) {
-    console.error("send email error:", err)
-    return { ok: false, quotaExceeded: false }
-  }
-}
 
 export async function POST(req: Request) {
   const loc = getLocaleFromCookie(req)
@@ -106,7 +70,14 @@ export async function POST(req: Request) {
     const isDev = process.env.NODE_ENV === "development"
 
     if (email && !isDev) {
-      const result = await sendEmailViaResend(email, code)
+      const result = await sendEmail(email, "CookMate 登录验证码", `<div style="font-family:sans-serif;padding:24px;max-width:400px">
+          <h2 style="color:#FF6B35">🍳 CookMate</h2>
+          <p style="color:#333">您的验证码是：</p>
+          <div style="font-size:32px;font-weight:bold;color:#FF6B35;letter-spacing:8px;text-align:center;padding:16px;background:#FFF8F0;border-radius:12px;margin:16px 0">
+            ${code}
+          </div>
+          <p style="color:#999;font-size:12px">验证码 5 分钟内有效，请勿泄露给他人。</p>
+        </div>`)
       if (result.quotaExceeded) {
         return NextResponse.json({ error: err(loc, "emailQuotaExceeded") }, { status: 429 })
       }
