@@ -1,8 +1,15 @@
 import { auth } from "@/lib/auth"
+import Link from "next/link"
+import { getTranslations } from "next-intl/server"
 import PublicNavbar from "@/components/layout/PublicNavbar"
 import PublicFooter from "@/components/layout/PublicFooter"
 import { PricingCards } from "@/components/features/PricingCards"
-import { getTranslations } from "next-intl/server"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "定价 — CookMate",
+  description: "免费开始使用 CookMate Pro，无限 AI 菜谱生成、智能周计划、购物清单。",
+}
 
 export default async function PricingPage() {
   const session = await auth()

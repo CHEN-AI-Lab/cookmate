@@ -3,6 +3,12 @@ import { getTranslations } from "next-intl/server"
 import PublicNavbar from "@/components/layout/PublicNavbar"
 import PublicFooter from "@/components/layout/PublicFooter"
 import { BlogCard } from "@/components/features/BlogCard"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "博客 — CookMate",
+  description: "餐食规划技巧、AI 美食推荐，让下厨更简单。",
+}
 
 export default async function BlogPage() {
   const session = await auth()

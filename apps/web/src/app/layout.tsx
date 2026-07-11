@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { NextIntlClientProvider } from "next-intl"
 import { getMessages, getLocale } from "next-intl/server"
+import CookieConsent from "@/components/ui/CookieConsent"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -9,6 +10,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "CookMate — AI 智能食谱 & 餐食规划",
   description: "告诉我你有什么食材，3秒生成菜谱。每周计划+购物清单，从此不再纠结今天吃什么。",
+  icons: { icon: "/favicon.svg" },
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -20,6 +22,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className={inter.className}>
         <NextIntlClientProvider messages={messages}>
           {children}
+          <CookieConsent />
         </NextIntlClientProvider>
       </body>
     </html>

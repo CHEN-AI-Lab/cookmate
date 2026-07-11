@@ -3,6 +3,12 @@ import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import PublicNavbar from "@/components/layout/PublicNavbar"
 import PublicFooter from "@/components/layout/PublicFooter"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "隐私政策 — CookMate",
+  description: "CookMate 隐私政策 — 我们如何收集、使用和保护您的个人信息。",
+}
 
 export default async function PrivacyPage() {
   const session = await auth()

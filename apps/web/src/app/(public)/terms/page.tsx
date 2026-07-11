@@ -3,6 +3,12 @@ import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import PublicNavbar from "@/components/layout/PublicNavbar"
 import PublicFooter from "@/components/layout/PublicFooter"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "服务条款 — CookMate",
+  description: "CookMate 服务条款 — 使用 CookMate 服务需遵守的条款和条件。",
+}
 
 export default async function TermsPage() {
   const session = await auth()
