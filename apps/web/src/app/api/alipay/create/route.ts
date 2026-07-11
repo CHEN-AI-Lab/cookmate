@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { createPagePay, isAlipayConfigured } from "@cookmate/shared/api/alipay-pay"
 import { generateOrderId } from "@cookmate/shared/utils/order-id"
 import { isDemoUser } from "@/lib/auth-helpers"
+import { PRICING } from "@cookmate/shared/constants/pricing"
 
 export async function POST(_req: Request) {
   const session = await auth()
@@ -19,11 +20,12 @@ export async function POST(_req: Request) {
   try {
     const orderId = generateOrderId("alipay")
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+    const price = PRICING.plans.monthly.cny
 
     const payUrl = await createPagePay(
       orderId,
       "CookMate Pro 月度订阅",
-      15,
+      price.amount / 100,
       `${baseUrl}/api/alipay/notify`,
       `${baseUrl}/app/billing?success=true`,
     )
@@ -34,7 +36,7 @@ export async function POST(_req: Request) {
         userId: session.user.id,
         orderId,
         channel: "alipay",
-        amount: 1500,
+        amount: price.amount,
         status: "PENDING",
       },
     })

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { createCheckout, retrieveCheckout, isCreemConfigured } from "@cookmate/shared/api/creem"
 import { prisma } from "@/lib/prisma"
 import { generateOrderId } from "@cookmate/shared/utils/order-id"
+import { PRICING } from "@cookmate/shared/constants/pricing"
 
 export async function POST() {
   try {
@@ -32,7 +33,7 @@ export async function POST() {
           userId: session.user.id,
           orderId,
           channel: "creem",
-          amount: 1500,
+          amount: PRICING.plans.monthly.cny.amount,
           status: "PENDING",
         },
       })

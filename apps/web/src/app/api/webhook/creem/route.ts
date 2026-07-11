@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { PRICING } from "@cookmate/shared/constants/pricing"
 
 // 从事件中提取 userId
 // Creem webhook payload 结构：
@@ -78,7 +79,7 @@ async function recordOrder(userId: string, _orderId: string) {
         userId,
         orderId: _orderId,
         channel: "creem",
-        amount: 1500,
+        amount: PRICING.plans.monthly.cny.amount,
         status: "PAID",
       },
     })
