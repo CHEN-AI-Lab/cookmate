@@ -505,7 +505,6 @@ const save = async () => {
               </div>
             </div>
           </div>
-          </div>
           <div className="flex items-center gap-3 mt-6">
             <button
               onClick={() => {
@@ -529,11 +528,14 @@ const save = async () => {
           </div>
           {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
         </div>
+        </div>
       </div>
 
       {/* Data management */}
       {!profile?.isDemoUser && (
-        <div className="space-y-4 mt-6">
+        <div className="mt-6">
+          <h2 className="font-bold text-[#2D3436] mb-4">{ts("dataManagement")}</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* ── Export Data ── */}
           <div className="bg-white rounded-2xl border border-orange-50 shadow-sm overflow-hidden">
             <div className="p-5 sm:p-6">
@@ -623,13 +625,19 @@ const save = async () => {
             </div>
           </div>
         </div>
+        </div>
       )}
 
       {/* Delete confirmation modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => { setShowDeleteModal(false); setDeleteEmail(""); setDeleteCode(""); setCodeSent(false); setDeleteError("") }}>
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-bold text-lg text-red-600 mb-2">{ts("deleteModalTitle")}</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+              </div>
+              <h3 className="font-bold text-lg text-red-600">{ts("deleteModalTitle")}</h3>
+            </div>
             <p className="text-sm text-gray-600 mb-1">{ts("deleteWarning")}</p>
             <ul className="text-xs text-gray-500 mb-4 ml-4 list-disc space-y-1">
               <li>{ts("deleteItem1")}</li>
