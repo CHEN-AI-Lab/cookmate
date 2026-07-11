@@ -683,5 +683,31 @@
     "contact": "联系我们",
     "email": "phoebe.yanxi@gmail.com",
     "copyright": "© 2026 CookMate. 保留所有权利。"
+  },
+  "errors": {
+    "loginRequired": "请先登录",
+    "notFound": "菜谱不存在",
+    "permissionDenied": "无权限",
+    "deleteFailed": "删除失败",
+    "saveFailed": "保存失败",
+    "updateFailed": "更新失败",
+    "bindFailed": "绑定失败",
+    "requestFailed": "请求失败，请稍后重试",
+    "nothingToUpdate": "没有要更新的内容",
+    "userNotFound": "用户不存在",
+    "missingParams": "参数不完整",
+    "enterPassword": "请输入密码验证身份",
+    "setPasswordFirst": "请先设置密码后再绑定",
+    "invalidPhone": "请输入正确的手机号",
+    "invalidEmail": "请输入正确的邮箱地址",
+    "ingredientExists": "该食材已存在",
+    "enterIngredientName": "请输入食材名称",
+    "phoneBound": "该手机号已被其他账号绑定",
+    "emailBound": "该邮箱已被其他账号绑定",
+    "codeExpired": "验证码错误或已过期",
+    "emailSendFailed": "邮件发送失败，请检查 RESEND_API_KEY 配置",
+    "invalidPassword": "密码错误",
+    "profileEditDenied": "体验用户不支持修改资料，请注册后使用",
+    "emailBindDenied": "体验用户不支持绑定邮箱，请注册后使用"
   }
 }

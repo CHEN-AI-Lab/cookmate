@@ -482,7 +482,7 @@ const save = async () => {
   )
 }
 
-function PasswordForm({ hasPassword, onClose, ts, tv, locale }: { hasPassword: boolean; onClose: () => void; ts: any; tv: any; locale: string }) {
+function PasswordForm({ hasPassword, onClose, ts, tv, locale }: { hasPassword: boolean; onClose: () => void; ts: (key: string) => string; tv: (key: string) => string; locale: string }) {
   const [newPassword, setNewPassword] = useState("")
   const [confirm, setConfirm] = useState("")
   const [saving, setSaving] = useState(false)

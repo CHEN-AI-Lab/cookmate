@@ -683,5 +683,31 @@
     "contact": "Contact",
     "email": "phoebe.yanxi@gmail.com",
     "copyright": "© 2026 CookMate. All rights reserved."
+  },
+  "errors": {
+    "loginRequired": "Please log in first",
+    "notFound": "Not found",
+    "permissionDenied": "Permission denied",
+    "deleteFailed": "Delete failed",
+    "saveFailed": "Save failed",
+    "updateFailed": "Update failed",
+    "bindFailed": "Binding failed",
+    "requestFailed": "Request failed, please try again later",
+    "nothingToUpdate": "Nothing to update",
+    "userNotFound": "User not found",
+    "missingParams": "Missing parameters",
+    "enterPassword": "Please enter your password",
+    "setPasswordFirst": "Please set a password first",
+    "invalidPhone": "Please enter a valid phone number",
+    "invalidEmail": "Please enter a valid email address",
+    "ingredientExists": "This ingredient already exists",
+    "enterIngredientName": "Please enter an ingredient name",
+    "phoneBound": "This phone number is already bound to another account",
+    "emailBound": "This email is already bound to another account",
+    "codeExpired": "Invalid or expired verification code",
+    "emailSendFailed": "Email sending failed. Please check RESEND_API_KEY configuration",
+    "invalidPassword": "Incorrect password",
+    "profileEditDenied": "Demo users cannot edit profile. Please sign up.",
+    "emailBindDenied": "Demo users cannot bind email. Please sign up."
   }
 }

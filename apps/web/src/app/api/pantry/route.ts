@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { getLocaleFromCookie, e } from "@cookmate/shared/utils/locale"
+import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 
 export async function GET(req: Request) {
   const loc = getLocaleFromCookie(req)
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ items })
   } catch (error) {
     console.error("Pantry GET:", error)
-    return NextResponse.json({ error: e(loc, "请求失败，请稍后重试", "Request failed, please try again later") }, { status: 500 })
+    return NextResponse.json({ error: err(loc, "requestFailed") }, { status: 500 })
   }
 }
 
@@ -59,10 +59,10 @@ export async function POST(req: Request) {
     // 单个添加
     const { name, category, quantity } = body
     const normalizedName = (name || "").trim().toLowerCase()
-    if (!normalizedName) return NextResponse.json({ error: e(loc, "请输入食材名称", "Please enter an ingredient name") }, { status: 400 })
+    if (!normalizedName) return NextResponse.json({ error: err(loc, "enterIngredientName") }, { status: 400 })
 
     const existing = await prisma.pantryItem.findFirst({ where: { name: normalizedName, userId: session.user.id } }).catch((err: unknown) => { console.error("findFirst pantry item error:", err); return null })
-    if (existing) return NextResponse.json({ error: e(loc, "该食材已存在", "This ingredient already exists") }, { status: 400 })
+    if (existing) return NextResponse.json({ error: err(loc, "ingredientExists") }, { status: 400 })
 
     const item = await prisma.pantryItem.create({
       data: {
@@ -76,6 +76,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ item })
   } catch (error) {
     console.error("Pantry POST:", error)
-    return NextResponse.json({ error: e(loc, "请求失败，请稍后重试", "Request failed, please try again later") }, { status: 500 })
+    return NextResponse.json({ error: err(loc, "requestFailed") }, { status: 500 })
   }
 }
