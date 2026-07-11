@@ -20,6 +20,7 @@ interface CategoryGroup {
 export default function GroceryListPage() {
   const tg = useTranslations("grocery")
   const tc = useTranslations("common")
+  const catLabels = tg.raw("catLabels") as Record<string, string>
   // Category name translation lookup (API returns Chinese names)
   const getCatLabel = useCallback((name: string): string => {
     try {
@@ -343,7 +344,7 @@ export default function GroceryListPage() {
           <div className="space-y-0">
             {categories.map((cat) => (
               <div key={cat.name} className="border-b border-gray-100 py-2 last:border-b-0">
-                <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">{cat.name}</h3>
+                <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">{catLabels[cat.name] || cat.name}</h3>
                 <div className="flex flex-wrap gap-x-6 gap-y-1">
                   {cat.items.map((item, i) => (
                     <label key={i} className="text-sm flex items-center gap-1.5 cursor-pointer hover:text-[#FF6B35] transition-colors group">
