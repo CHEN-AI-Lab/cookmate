@@ -7,6 +7,10 @@ import { prisma } from "@/lib/prisma"
  * 用于排查 webhook 不工作的问题
  */
 export async function POST() {
+  if (process.env.ENABLE_DEBUG_ROUTES !== "true") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 })
+  }
+
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 })

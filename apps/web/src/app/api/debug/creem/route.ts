@@ -7,6 +7,10 @@ import { prisma } from "@/lib/prisma"
  * 不验证任何东西，纯粹为了排查问题
  */
 export async function GET() {
+  if (process.env.ENABLE_DEBUG_ROUTES !== "true") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 })
+  }
+
   const session = await auth()
   const result: Record<string, unknown> = {
     has_session: !!session,

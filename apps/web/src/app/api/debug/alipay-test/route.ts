@@ -2,6 +2,10 @@ import { NextResponse } from "next/server"
 import crypto from "node:crypto"
 
 export async function GET(req: Request) {
+  if (process.env.ENABLE_DEBUG_ROUTES !== "true") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 })
+  }
+
   const { searchParams } = new URL(req.url)
   const authCode = searchParams.get("auth_code")
 

@@ -4,6 +4,10 @@ import { prisma } from "@/lib/prisma"
 import { queryOrder, isAlipayConfigured } from "@cookmate/shared/api/alipay-pay"
 
 export async function GET() {
+  if (process.env.ENABLE_DEBUG_ROUTES !== "true") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 })
+  }
+
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 })
