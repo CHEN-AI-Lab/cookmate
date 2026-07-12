@@ -163,11 +163,15 @@ export default function OrdersPage() {
       {/* Delete confirmation modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => setDeleteTarget(null)}>
-          <div className="bg-white rounded-2xl shadow-xl p-5 max-w-xs w-full" onClick={(e) => e.stopPropagation()}>
-            <p className="font-bold text-[#2D3436] mb-3">{t("deleteConfirm")}</p>
-            <div className="flex gap-2">
-              <button onClick={() => setDeleteTarget(null)} className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors whitespace-nowrap">{t("cancel")}</button>
-              <button onClick={confirmDelete} className="flex-1 px-4 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors font-medium whitespace-nowrap">{t("confirm")}</button>
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            </div>
+            <p className="font-bold text-[#2D3436] text-lg mb-2">{t("deleteConfirm")}</p>
+            <p className="text-sm text-gray-500 mb-6">{t("deleteConfirmHint")}</p>
+            <div className="flex gap-3">
+              <button onClick={() => setDeleteTarget(null)} className="flex-1 px-4 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors font-medium">{t("cancel")}</button>
+              <button onClick={confirmDelete} className="flex-1 px-4 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors font-medium">{t("confirm")}</button>
             </div>
           </div>
         </div>

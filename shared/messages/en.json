@@ -616,6 +616,7 @@
     "cancel": "Cancel",
     "confirm": "Delete",
     "deleteConfirm": "Delete this order?",
+    "deleteConfirmHint": "This action cannot be undone.",
     "channelAlipay": "Alipay",
     "channelStripe": "Stripe",
     "channelCreem": "Creem",
