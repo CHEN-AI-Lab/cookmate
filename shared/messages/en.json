@@ -610,10 +610,10 @@
     "failed": "Failed",
     "refunded": "Refunded",
     "expired": "Expired",
+    "cancelled": "Cancelled",
     "channelAlipay": "Alipay",
     "channelStripe": "Stripe",
     "channelCreem": "Creem",
-    "retryPayment": "Pay Now",
     "backToBilling": "← Back to Billing",
     "loading": "Loading..."
   },

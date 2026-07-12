@@ -35,27 +35,7 @@ export default function OrdersPage() {
     PENDING: "text-amber-600 bg-amber-50",
     EXPIRED: "text-gray-500 bg-gray-50",
   }
-  const [payingId, setPayingId] = useState<string | null>(null)
-
-  const retryPayment = async (orderId: string, channel: string) => {
-    setPayingId(orderId)
-    try {
-      let apiPath = ""
-      if (channel === "creem") apiPath = "/api/creem/create-checkout"
-      else if (channel === "alipay") apiPath = "/api/alipay/create"
-      else if (channel === "stripe") apiPath = "/api/stripe/create-checkout"
-      else return
-      const res = await fetch(apiPath, { method: "POST" })
-      const data = await res.json()
-      if (data.url) {
-        window.location.href = data.url
-      }
-    } catch (e) {
-      console.error("retry payment error:", e)
-    } finally {
-      setPayingId(null)
-    }
-  }
+  // retryPayment removed — pending orders are not re-payable
 
   return (
     <div className="space-y-8">
@@ -130,13 +110,7 @@ export default function OrdersPage() {
                   {statusLabel[order.status] || order.status}
                 </span>
                 {order.status === "PENDING" && (
-                  <button
-                    onClick={() => retryPayment(order.orderId, order.channel)}
-                    disabled={payingId === order.orderId}
-                    className="ml-2 shrink-0 bg-[#FF6B35] text-white px-3 py-1.5 rounded-full text-xs font-medium hover:bg-orange-600 transition-colors disabled:opacity-50"
-                  >
-                    {payingId === order.orderId ? "..." : t("retryPayment")}
-                  </button>
+                  <span className="ml-2 text-xs text-gray-400">{t("cancelled")}</span>
                 )}
               </div>
             )

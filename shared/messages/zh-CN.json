@@ -610,10 +610,10 @@
     "failed": "失败",
     "refunded": "已退款",
     "expired": "已过期",
+    "cancelled": "已取消",
     "channelAlipay": "支付宝",
     "channelStripe": "Stripe",
     "channelCreem": "Creem",
-    "retryPayment": "去支付",
     "backToBilling": "← 返回账单",
     "loading": "加载中..."
   },
