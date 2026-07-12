@@ -31,6 +31,11 @@
     "demoMode": "🔒 体验演示模式",
     "demoDesc": "以下数据为示例展示，注册后可获得专属菜谱计划"
   },
+  "error": {
+    "loadFailed": "加载失败",
+    "loadFailedDesc": "页面加载出错了，请稍后重试",
+    "reload": "重新加载"
+  },
   "nav": {
     "howToUse": "使用流程",
     "pricing": "定价",

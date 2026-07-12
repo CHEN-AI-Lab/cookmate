@@ -116,7 +116,7 @@ export default function PantryPage() {
       if (res.ok) {
         const data = await res.json()
         setItems((prev) => [data.item, ...prev])
-        setToast(displayName(data.item.name))
+        setToast(`${locale.startsWith("en") ? "✅ Added " : "✅ 已添加 "}${displayName(data.item.name)}`)
         setTimeout(() => setToast(""), 2000)
       } else {
         const data = await res.json().catch((err) => { console.error("parse pantry response error:", err); return {} })

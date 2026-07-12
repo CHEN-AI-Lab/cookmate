@@ -29,9 +29,14 @@
     "freeStart": "Get Started Free",
     "freeRegister": "Free Sign Up →",
     "demoMode": "🔒 Demo Mode",
-    "demoDesc": "This is sample data. Sign up to get your personalized meal plans."
-  },
-  "nav": {
+    "demoDesc": "Sample data for demonstration. Register to get your personalized meal plans."
+      },
+      "error": {
+        "loadFailed": "Load Failed",
+        "loadFailedDesc": "Something went wrong while loading this page. Please try again.",
+        "reload": "Reload"
+      },
+      "nav": {
     "howToUse": "How It Works",
     "pricing": "Pricing",
     "about": "About",
