@@ -26,6 +26,7 @@ check() {
 }
 
 check "Structure check" "bash scripts/check-structure.sh"
+check "Translation keys parity" "python3 scripts/check-translations.py"
 check "TypeScript compile" "cd apps/web && npx tsc --noEmit"
 
 # Translation key parity check
@@ -50,6 +51,7 @@ for section in sorted(zh_keys):
 if issues: raise SystemExit(chr(10).join(issues))
 "'
 
+check "Build" "pnpm build"
 check "Build" "pnpm build"
 check "Tests" "pnpm test"
 
