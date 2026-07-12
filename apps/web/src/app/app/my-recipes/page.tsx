@@ -46,13 +46,16 @@ export default function MyRecipesPage() {
   const [isSelectMode, setIsSelectMode] = useState(false)
   const [deleteDialog, setDeleteDialog] = useState<Recipe[] | null>(null)
   const [isDemoUser, setIsDemoUser] = useState(false)
+  const [page, setPage] = useState(1)
+  const [totalPage, setTotalPage] = useState(1)
+  const PAGE_SIZE = 30
 
   const showToast = useCallback((msg: string) => {
     setToast(msg)
     setTimeout(() => setToast(""), 2500)
   }, [])
 
-  const loadRecipes = async () => {
+  const loadRecipes = async (pageNum = 1) => {
     try {
       const profileRes = await fetch("/api/user/profile")
       const profile = await profileRes.json()
@@ -62,7 +65,7 @@ export default function MyRecipesPage() {
         setLoading(false)
         return
       }
-      const res = await fetch("/api/recipes")
+      const res = await fetch(\`/api/recipes?page=\${pageNum}&pageSize=\${PAGE_SIZE}\`)
       const data = await res.json()
       if (data.recipes) {
         const sorted = [...data.recipes].sort((a: Recipe, b: Recipe) => {
@@ -71,6 +74,8 @@ export default function MyRecipesPage() {
           return 0
         })
         setRecipes(sorted)
+        setPage(data.page || 1)
+        setTotalPage(Math.ceil((data.total || 0) / PAGE_SIZE))
       }
     } catch (err) { console.error("load recipes error:", err) } finally {
       setLoading(false)
