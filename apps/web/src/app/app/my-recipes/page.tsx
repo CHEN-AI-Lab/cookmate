@@ -51,7 +51,7 @@ export default function MyRecipesPage() {
   const [totalCount, setTotalCount] = useState(0)
   const [starredCount, setStarredCount] = useState(0)
   const [jumpPage, setJumpPage] = useState("")
-  const PAGE_SIZE = 30
+  const PAGE_SIZE = 25
 
   const showToast = useCallback((msg: string) => {
     setToast(msg)
@@ -71,12 +71,7 @@ export default function MyRecipesPage() {
       const res = await fetch(`/api/recipes?page=${pageNum}&pageSize=${PAGE_SIZE}`)
       const data = await res.json()
       if (data.recipes) {
-        const sorted = [...data.recipes].sort((a: Recipe, b: Recipe) => {
-          if (a.starred && !b.starred) return -1
-          if (!a.starred && b.starred) return 1
-          return 0
-        })
-        setRecipes(sorted)
+        setRecipes(data.recipes)
         setPage(data.page || 1)
         setTotalPage(Math.ceil((data.total || 0) / PAGE_SIZE))
         setTotalCount(data.total || 0)
@@ -423,32 +418,7 @@ export default function MyRecipesPage() {
             ←
           </button>
 
-          {/* Page number buttons */}
-          {Array.from({ length: Math.min(totalPage, 7) }, (_, i) => {
-            let pageNum: number
-            if (totalPage <= 7) {
-              pageNum = i + 1
-            } else if (page <= 4) {
-              pageNum = i + 1
-            } else if (page >= totalPage - 3) {
-              pageNum = totalPage - 6 + i
-            } else {
-              pageNum = page - 3 + i
-            }
-            return (
-              <button
-                key={pageNum}
-                onClick={() => { setLoading(true); loadRecipes(pageNum) }}
-                className={`w-9 h-9 rounded-xl text-sm font-medium transition-colors ${
-                  page === pageNum
-                    ? "bg-[#FF6B35] text-white"
-                    : "text-gray-500 border border-gray-200 hover:border-[#FF6B35] hover:text-[#FF6B35]"
-                }`}
-              >
-                {pageNum}
-              </button>
-            )
-          })}
+          <span className="text-sm text-gray-400">{page} / {totalPage}</span>
 
           <button
             onClick={() => { if (page < totalPage) { setLoading(true); loadRecipes(page + 1) } }}

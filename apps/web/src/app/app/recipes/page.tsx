@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { INGREDIENT_LABELS } from "@cookmate/shared/constants/ingredients"
 import { RecipeCard } from "@/components/features/RecipeCard"
 
@@ -29,8 +29,10 @@ const MEAL_VALUES = ["早餐", "午餐", "晚餐"] as const
 export default function RecipesPage() {
   const t = useTranslations("recipes")
   const tmeal = useTranslations("mealPlan")
+  const locale = useLocale()
   const tp = useTranslations("pantry")
   const ingLabels = INGREDIENT_LABELS
+  const displayName = (name: string) => locale === "en" || locale.startsWith("en") ? (ingLabels[name] || name) : name
   const router = useRouter()
   const searchParams = useSearchParams()
   const [ingredients, setIngredients] = useState<string[]>(() => {
@@ -327,7 +329,7 @@ export default function RecipesPage() {
                         : "bg-gray-50 text-gray-500 border-gray-200 hover:border-green-300 hover:text-green-600 hover:bg-green-50/30"
                     }`}
                   >
-                    {ingLabels[item.name] || item.name}
+                    {displayName(item.name)}
                     {active && (
                       <span className="ml-0.5 text-green-500">✓</span>
                     )}
@@ -367,7 +369,7 @@ export default function RecipesPage() {
                       : "bg-orange-50 text-[#FF6B35] border-orange-200"
                   }`}
                 >
-                  {ingLabels[item] || item}
+                  {displayName(item)}
                   {isFromPantry(item) && <span className="text-[10px] opacity-60">📦</span>}
                   <button onClick={() => removeIngredient(item)} className="ml-1 hover:text-red-500">×</button>
                 </span>
@@ -469,7 +471,7 @@ export default function RecipesPage() {
         <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
           <div className="bg-white border border-gray-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
             <span className="text-amber-500 text-base shrink-0">⚠️</span>
-            <span className="text-gray-700">{t("alreadyInIngredients", { name: dupDialog })}</span>
+            <span className="text-gray-700">{t("duplicateIngredient", { name: dupDialog })}</span>
           </div>
         </div>
       )}
