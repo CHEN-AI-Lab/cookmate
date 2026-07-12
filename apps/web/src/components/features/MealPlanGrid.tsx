@@ -72,7 +72,7 @@ export function MealPlanGrid({ plan, onSlotClick }: MealPlanGridProps) {
                         <p className="text-sm font-medium text-[#2D3436] truncate min-w-0">
                           {slot.recipe.title}
                         </p>
-                        <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex items-center gap-2 shrink-0">
                           {slot.recipe.starred && (
                             <span className="text-amber-400 text-xs">⭐</span>
                           )}
