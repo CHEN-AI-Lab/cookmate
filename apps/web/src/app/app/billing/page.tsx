@@ -31,6 +31,7 @@ export default function BillingPage() {
   const [message, setMessage] = useState("")
   const [refreshKey, setRefreshKey] = useState(0)
   const [paying, setPaying] = useState(false)
+  const [topBanner, setTopBanner] = useState("")
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -148,7 +149,13 @@ export default function BillingPage() {
   const hasAnyPayment = info?.stripeConfigured
 
   return (
-    <div className="space-y-8">
+    <>
+      {topBanner && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-green-600 text-white text-center text-sm font-medium py-3 px-4 shadow-lg">
+          {topBanner}
+        </div>
+      )}
+      <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
         <p className="text-gray-500 mt-1 text-sm">{t("subtitle")}</p>
@@ -390,7 +397,8 @@ export default function BillingPage() {
                 const res = await fetch("/api/subscription/cancel", { method: "POST" })
                 const data = await res.json()
                 if (data.success) {
-                  setMessage(data.message)
+                  setTopBanner(data.message)
+                  setTimeout(() => setTopBanner(""), 5000)
                   setRefreshKey((k) => k + 1)
                 } else {
                   setError(data.error || t("cancelFailed"))
@@ -420,5 +428,6 @@ export default function BillingPage() {
         </div>
       )}
     </div>
+    </>
   )
 }
