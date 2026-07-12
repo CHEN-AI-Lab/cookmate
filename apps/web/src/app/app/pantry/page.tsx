@@ -151,12 +151,6 @@ export default function PantryPage() {
 
   const filtered = items.filter((i) => !search || i.name.includes(search))
 
-  // 按当前语言显示食材名：中文直接显示，英文查映射
-  const displayName = (name: string) => {
-    if (locale === "zh-CN") return name
-    return ingLabels[name] || name
-  }
-
   if (loading) return <div className="text-center py-16 text-gray-400">{t("loading")}</div>
 
   return (

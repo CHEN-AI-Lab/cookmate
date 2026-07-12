@@ -115,10 +115,16 @@ export default function MyRecipesPage() {
     })
     const data = await res.json()
     if (data.success) {
-      setRecipes((prev) =>
-        prev.map((r) => (r.id === recipeId ? { ...r, starred: data.starred } : r))
-      )
-      showToast(data.starred ? tr("starToast") : tr("unstarToast"))
+      const nowStarred = data.starred
+      setStarredCount((prev) => nowStarred ? prev + 1 : Math.max(0, prev - 1))
+      if (filter === "starred" && !nowStarred) {
+        setRecipes((prev) => prev.filter((r) => r.id !== recipeId))
+      } else {
+        setRecipes((prev) =>
+          prev.map((r) => (r.id === recipeId ? { ...r, starred: nowStarred } : r))
+        )
+      }
+      showToast(nowStarred ? tr("starToast") : tr("unstarToast"))
     }
   }
 
