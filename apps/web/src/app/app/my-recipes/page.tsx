@@ -76,9 +76,13 @@ export default function MyRecipesPage() {
         setRecipes(data.recipes)
         setPage(data.page || 1)
         setTotalPage(Math.ceil((data.total || 0) / PAGE_SIZE))
-        setTotalCount(data.total || 0)
-        // Fetch starred count
-        fetch("/api/recipes?starred=true&pageSize=1").then(r => r.json()).then(d => setStarredCount(d.total || 0)).catch(() => {})
+        if (f !== "starred") {
+          setTotalCount(data.total || 0)
+          // Fetch starred count separately
+          fetch("/api/recipes?starred=true&pageSize=1").then(r => r.json()).then(d => setStarredCount(d.total || 0)).catch(() => {})
+        } else {
+          setStarredCount(data.total || 0)
+        }
       }
     } catch (err) { console.error("load recipes error:", err) } finally {
       setLoading(false)
@@ -113,11 +117,6 @@ export default function MyRecipesPage() {
     if (data.success) {
       setRecipes((prev) =>
         prev.map((r) => (r.id === recipeId ? { ...r, starred: data.starred } : r))
-          .sort((a, b) => {
-            if (a.starred && !b.starred) return -1
-            if (!a.starred && b.starred) return 1
-            return 0
-          })
       )
       showToast(data.starred ? tr("starToast") : tr("unstarToast"))
     }

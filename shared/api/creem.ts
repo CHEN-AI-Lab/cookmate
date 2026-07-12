@@ -93,3 +93,17 @@ export async function retrieveCheckout(checkoutId: string): Promise<{ status: st
 
   return res.json()
 }
+
+// 取消订阅（立即取消，不计入下个周期）
+export async function cancelSubscription(subscriptionId: string): Promise<void> {
+  const res = await fetch(`${getBaseUrl()}/subscriptions/${subscriptionId}/cancel`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({ mode: "immediate" }),
+  })
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Creem cancel subscription failed: ${res.status} ${text.substring(0, 200)}`)
+  }
+}
