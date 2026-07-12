@@ -393,8 +393,11 @@ export default function BillingPage() {
           <button
             onClick={() => setShowCancelModal(true)}
             disabled={actionLoading !== null}
-            className="text-sm text-red-500 border border-red-200 rounded-full px-4 py-2 hover:bg-red-50 transition-colors disabled:opacity-40"
+            className="w-full flex items-center justify-center gap-2 text-sm text-red-500 border border-red-200 rounded-full px-4 py-2.5 hover:bg-red-50 transition-colors disabled:opacity-40"
           >
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
             {actionLoading === "cancel" ? t("cancelling") : t("cancelSubscription")}
           </button>
         </div>
