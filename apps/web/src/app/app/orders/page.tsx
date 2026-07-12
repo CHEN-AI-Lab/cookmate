@@ -166,8 +166,8 @@ export default function OrdersPage() {
           <div className="bg-white rounded-2xl shadow-xl p-5 max-w-xs w-full" onClick={(e) => e.stopPropagation()}>
             <p className="font-bold text-[#2D3436] mb-3">{t("deleteConfirm")}</p>
             <div className="flex gap-2">
-              <button onClick={() => setDeleteTarget(null)} className="flex-1 px-4 py-2 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">{t("cancel")}</button>
-              <button onClick={confirmDelete} className="flex-1 px-4 py-2 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors font-medium">{t("confirm")}</button>
+              <button onClick={() => setDeleteTarget(null)} className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors whitespace-nowrap">{t("cancel")}</button>
+              <button onClick={confirmDelete} className="flex-1 px-4 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors font-medium whitespace-nowrap">{t("confirm")}</button>
             </div>
           </div>
         </div>
