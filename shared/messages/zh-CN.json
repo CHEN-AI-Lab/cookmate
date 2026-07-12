@@ -617,6 +617,7 @@
     "confirm": "确认删除",
     "deleteConfirm": "确定要删除此订单吗？",
     "deleteConfirmHint": "删除后不可恢复，请谨慎操作。",
+    "deleteSuccess": "订单已删除",
     "channelAlipay": "支付宝",
     "channelStripe": "Stripe",
     "channelCreem": "Creem",

@@ -36,6 +36,7 @@ export default function OrdersPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [toast, setToast] = useState("")
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -59,7 +60,7 @@ export default function OrdersPage() {
     setDeleteTarget(null)
     try {
       const res = await fetch(`/api/orders/${deleteTarget}`, { method: "DELETE" })
-      if (res.ok) setOrders((prev) => prev.filter((o) => o.orderId !== deleteTarget))
+      if (res.ok) { setOrders((prev) => prev.filter((o) => o.orderId !== deleteTarget)); setToast(t("deleteSuccess")); setTimeout(() => setToast(""), 2500) }
     } catch (e) { console.error("delete order error:", e) }
     finally { setDeleting(null) }
   }
@@ -159,6 +160,12 @@ export default function OrdersPage() {
           {t("backToBilling")}
         </Link>
       </div>
+
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#2D3436] text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+          ✅ {toast}
+        </div>
+      )}
 
       {/* Delete confirmation modal */}
       {deleteTarget && (
