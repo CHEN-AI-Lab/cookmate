@@ -19,12 +19,23 @@ const CHANNEL_ICONS: Record<string, string> = {
   creem: `<svg viewBox="0 0 121 121" fill="none" class="w-full h-full"><rect width="121" height="121" rx="16" fill="#151617"/><path d="M22.1102 11C24.1187 11.0001 25.9669 12.0982 26.9281 13.8619L51.2059 58.4106C52.5699 60.9134 55.7048 61.8368 58.2077 60.473C60.7108 59.109 61.6342 55.9742 60.2701 53.4712L41.5466 19.113C39.554 15.4566 42.2004 11 46.3645 11H103.806C107.885 11 110.539 15.2933 108.715 18.9416L65.0579 106.254C63.0356 110.298 57.2654 110.298 55.2431 106.254L11.5863 18.9416C9.76212 15.2933 12.4156 11 15.4946 11H22.1102Z" fill="white"/></svg>`,
 }
 
+function planLabel(amount: number): string {
+  // amount is in cents (分)
+  const yuan = amount / 100
+  if (yuan === 119) return "Pro 年付"
+  if (yuan === 20) return "Pro 月付"
+  if (yuan === 51) return "Pro 季付"
+  if (yuan === 90) return "Pro 半年付"
+  return "Pro"
+}
+
 export default function OrdersPage() {
   const t = useTranslations("orders")
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -42,12 +53,13 @@ export default function OrdersPage() {
     EXPIRED: "text-gray-500 bg-gray-50",
   }
 
-  const deleteOrder = async (orderId: string) => {
-    if (!confirm(t("deleteConfirm"))) return
-    setDeleting(orderId)
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(deleteTarget)
+    setDeleteTarget(null)
     try {
-      const res = await fetch(`/api/orders/${orderId}`, { method: "DELETE" })
-      if (res.ok) setOrders((prev) => prev.filter((o) => o.orderId !== orderId))
+      const res = await fetch(`/api/orders/${deleteTarget}`, { method: "DELETE" })
+      if (res.ok) setOrders((prev) => prev.filter((o) => o.orderId !== deleteTarget))
     } catch (e) { console.error("delete order error:", e) }
     finally { setDeleting(null) }
   }
@@ -73,7 +85,6 @@ export default function OrdersPage() {
             const isExpanded = expandedId === order.id
             return (
               <div key={order.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                {/* Summary row - clickable */}
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : order.id)}
                   className="w-full flex items-center justify-between px-4 sm:px-5 py-3 hover:bg-gray-50/50 transition-colors text-left"
@@ -98,16 +109,21 @@ export default function OrdersPage() {
                   </div>
                 </button>
 
-                {/* Expanded details */}
                 {isExpanded && (
                   <div className="px-4 sm:px-5 pb-4 border-t border-gray-50 pt-3 space-y-2 text-sm">
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-400">{t("orderId")}</span>
-                      <span className="text-gray-600 font-mono text-xs">{order.orderId}</span>
+                      <span className="text-gray-400">{t("plan")}</span>
+                      <span className="text-gray-600 font-semibold">{planLabel(order.amount)}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-400">{t("amount")}</span>
                       <span className="text-gray-600 font-semibold">¥{(order.amount / 100).toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">{t("status")}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[order.status] || "text-gray-500 bg-gray-50"}`}>
+                        {statusLabel[order.status] || order.status}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-400">{t("date")}</span>
@@ -116,15 +132,13 @@ export default function OrdersPage() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-400">{t("status")}</span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[order.status] || "text-gray-500 bg-gray-50"}`}>
-                        {statusLabel[order.status] || order.status}
-                      </span>
+                      <span className="text-gray-400">{t("orderId")}</span>
+                      <span className="text-gray-500 font-mono text-xs break-all max-w-[200px] text-right">{order.orderId}</span>
                     </div>
                     {order.status === "PENDING" && (
                       <div className="pt-2 flex justify-end">
                         <button
-                          onClick={(e) => { e.stopPropagation(); deleteOrder(order.orderId) }}
+                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(order.orderId) }}
                           disabled={deleting === order.orderId}
                           className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-40"
                         >
@@ -145,6 +159,19 @@ export default function OrdersPage() {
           {t("backToBilling")}
         </Link>
       </div>
+
+      {/* Delete confirmation modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => setDeleteTarget(null)}>
+          <div className="bg-white rounded-2xl shadow-xl p-5 max-w-xs w-full" onClick={(e) => e.stopPropagation()}>
+            <p className="font-bold text-[#2D3436] mb-3">{t("deleteConfirm")}</p>
+            <div className="flex gap-2">
+              <button onClick={() => setDeleteTarget(null)} className="flex-1 px-4 py-2 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">{t("cancel")}</button>
+              <button onClick={confirmDelete} className="flex-1 px-4 py-2 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors font-medium">{t("confirm")}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
