@@ -115,6 +115,8 @@ export default function PantryPage() {
       if (res.ok) {
         const data = await res.json()
         setItems((prev) => [data.item, ...prev])
+        setToast(ingLabels[data.item.name] || data.item.name)
+        setTimeout(() => setToast(""), 2000)
       } else {
         const data = await res.json().catch((err) => { console.error("parse pantry response error:", err); return {} })
         if (data.error?.includes("已存在")) {
@@ -349,6 +351,12 @@ export default function PantryPage() {
       {demoToast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#2D3436] text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
           {demoToast}
+        </div>
+      )}
+      {/* Success toast */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50 flex items-center gap-2">
+          <span>✅</span> {toast}
         </div>
       )}
     </div>
