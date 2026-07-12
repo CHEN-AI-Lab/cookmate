@@ -73,13 +73,13 @@ export function MealPlanGrid({ plan, onSlotClick }: MealPlanGridProps) {
                           {slot.recipe.title}
                         </p>
                         <div className="flex items-center gap-1 shrink-0">
+                          {slot.recipe.starred && (
+                            <span className="text-amber-400 text-xs">⭐</span>
+                          )}
                           {slot.recipe.cookingTime && (
                             <span className="text-xs text-gray-400">
                               ⏱{slot.recipe.cookingTime}{timeSuffix}
                             </span>
-                          )}
-                          {slot.recipe.starred && (
-                            <span className="text-amber-400 text-xs">⭐</span>
                           )}
                         </div>
                       </div>
