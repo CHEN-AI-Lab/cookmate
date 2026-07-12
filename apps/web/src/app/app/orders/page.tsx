@@ -112,6 +112,10 @@ export default function OrdersPage() {
                 {isExpanded && (
                   <div className="px-4 sm:px-5 pb-4 border-t border-gray-50 pt-3 space-y-2 text-sm">
                     <div className="flex items-center justify-between">
+                      <span className="text-gray-400">{t("orderId")}</span>
+                      <span className="text-gray-500 font-mono text-xs break-all max-w-[200px] text-right">{order.orderId}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
                       <span className="text-gray-400">{t("plan")}</span>
                       <span className="text-gray-600 font-semibold">{planLabel(order.amount)}</span>
                     </div>
@@ -130,10 +134,6 @@ export default function OrdersPage() {
                       <span className="text-gray-600">
                         {date.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400">{t("orderId")}</span>
-                      <span className="text-gray-500 font-mono text-xs break-all max-w-[200px] text-right">{order.orderId}</span>
                     </div>
                     {order.status === "PENDING" && (
                       <div className="pt-2 flex justify-end">
