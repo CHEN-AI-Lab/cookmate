@@ -547,5 +547,8 @@
   "bindSuccessEmail": "✅ 邮箱绑定成功",
   "bindFailed": "绑定失败",
   "selectCuisineFirst": "请至少选择一个菜系",
-  "codeSentToEmail": "验证码已发送到 {email}"
+  "codeSentToEmail": "验证码已发送到 {email}",
+  "cancelSubscription": "取消订阅",
+  "cancelConfirm": "确定要取消订阅吗？取消后当前周期内仍可使用 Pro 功能，到期后自动降级为免费版。",
+  "cancelling": "取消中..."
 }

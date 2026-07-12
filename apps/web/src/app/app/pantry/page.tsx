@@ -42,6 +42,7 @@ export default function PantryPage() {
   const t = useTranslations("pantry")
   const tc = useTranslations("common")
   const locale = useLocale()
+  const displayName = (name: string) => locale === "en" || locale.startsWith("en") ? (ingLabels[name] || name) : name
   const catLabels = t.raw("catLabels") as Record<string, string>
   const ingLabels = INGREDIENT_LABELS
   const [items, setItems] = useState<PantryItem[]>([])
@@ -115,7 +116,7 @@ export default function PantryPage() {
       if (res.ok) {
         const data = await res.json()
         setItems((prev) => [data.item, ...prev])
-        setToast(ingLabels[data.item.name] || data.item.name)
+        setToast(displayName(data.item.name))
         setTimeout(() => setToast(""), 2000)
       } else {
         const data = await res.json().catch((err) => { console.error("parse pantry response error:", err); return {} })

@@ -135,8 +135,7 @@ const handleCancel = async () => {
       const res = await fetch("/api/subscription/cancel", { method: "POST" })
       const data = await res.json()
       if (data.success) {
-        setSettings((s) => ({ ...s, subscriptionTier: "FREE" }))
-        setGlobalToast(ts("cancelSubscription") + " ✅")
+        setGlobalToast(data.message || ts("cancelSubscription") + " ✅")
         setTimeout(() => setGlobalToast(""), 3000)
       } else {
         setGlobalToast(data.error || ts("cancelSubscription"))

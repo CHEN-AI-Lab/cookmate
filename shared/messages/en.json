@@ -547,5 +547,8 @@
   "bindSuccessEmail": "✅ Email bound successfully",
   "bindFailed": "Binding failed",
   "selectCuisineFirst": "Please select at least one cuisine",
-  "codeSentToEmail": "Verification code sent to {email}"
+  "codeSentToEmail": "Verification code sent to {email}",
+  "cancelSubscription": "Cancel Subscription",
+  "cancelConfirm": "Are you sure? Pro features remain active until the end of the current billing period, then downgrade to Free.",
+  "cancelling": "Cancelling..."
 }
