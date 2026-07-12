@@ -48,6 +48,9 @@ export default function MyRecipesPage() {
   const [isDemoUser, setIsDemoUser] = useState(false)
   const [page, setPage] = useState(1)
   const [totalPage, setTotalPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const [starredCount, setStarredCount] = useState(0)
+  const [jumpPage, setJumpPage] = useState("")
   const PAGE_SIZE = 30
 
   const showToast = useCallback((msg: string) => {
@@ -76,6 +79,9 @@ export default function MyRecipesPage() {
         setRecipes(sorted)
         setPage(data.page || 1)
         setTotalPage(Math.ceil((data.total || 0) / PAGE_SIZE))
+        setTotalCount(data.total || 0)
+        // Fetch starred count
+        fetch("/api/recipes?starred=true&pageSize=1").then(r => r.json()).then(d => setStarredCount(d.total || 0)).catch(() => {})
       }
     } catch (err) { console.error("load recipes error:", err) } finally {
       setLoading(false)
@@ -289,7 +295,7 @@ export default function MyRecipesPage() {
                     filter === "all" ? "bg-white text-[#2D3436] shadow-sm" : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
-                  {tr("all", { count: recipes.length })}
+                  {tr("all", { count: totalCount })}
                 </button>
                 <button
                   onClick={() => setFilter("starred")}
@@ -297,7 +303,7 @@ export default function MyRecipesPage() {
                     filter === "starred" ? "bg-white text-[#2D3436] shadow-sm" : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
-                  {tr("starredFilter", { count: recipes.filter((r) => r.starred).length })}
+                  {tr("starredFilter", { count: starredCount })}
                 </button>
               </div>
             </>
@@ -408,24 +414,69 @@ export default function MyRecipesPage() {
 
       {/* Pagination */}
       {!isDemoUser && totalPage > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
           <button
             onClick={() => { if (page > 1) { setLoading(true); loadRecipes(page - 1) } }}
             disabled={page <= 1}
-            className="px-4 py-2 rounded-xl text-sm border border-gray-200 hover:border-[#FF6B35] hover:text-[#FF6B35] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-2 rounded-xl text-sm border border-gray-200 hover:border-[#FF6B35] hover:text-[#FF6B35] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
-            ← {tr("prevPage")}
+            ←
           </button>
-          <span className="text-sm text-gray-400 px-3">
-            {tr("pageInfo", { page, total: totalPage })}
-          </span>
+
+          {/* Page number buttons */}
+          {Array.from({ length: Math.min(totalPage, 7) }, (_, i) => {
+            let pageNum: number
+            if (totalPage <= 7) {
+              pageNum = i + 1
+            } else if (page <= 4) {
+              pageNum = i + 1
+            } else if (page >= totalPage - 3) {
+              pageNum = totalPage - 6 + i
+            } else {
+              pageNum = page - 3 + i
+            }
+            return (
+              <button
+                key={pageNum}
+                onClick={() => { setLoading(true); loadRecipes(pageNum) }}
+                className={`w-9 h-9 rounded-xl text-sm font-medium transition-colors ${
+                  page === pageNum
+                    ? "bg-[#FF6B35] text-white"
+                    : "text-gray-500 border border-gray-200 hover:border-[#FF6B35] hover:text-[#FF6B35]"
+                }`}
+              >
+                {pageNum}
+              </button>
+            )
+          })}
+
           <button
             onClick={() => { if (page < totalPage) { setLoading(true); loadRecipes(page + 1) } }}
             disabled={page >= totalPage}
-            className="px-4 py-2 rounded-xl text-sm border border-gray-200 hover:border-[#FF6B35] hover:text-[#FF6B35] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-2 rounded-xl text-sm border border-gray-200 hover:border-[#FF6B35] hover:text-[#FF6B35] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
-            {tr("nextPage")} →
+            →
           </button>
+
+          {/* Jump to page */}
+          <div className="flex items-center gap-1 ml-2">
+            <input
+              type="number"
+              min={1}
+              max={totalPage}
+              placeholder={String(page)}
+              value={jumpPage}
+              onChange={(e) => setJumpPage(e.target.value.replace(/\D/g, ""))}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && jumpPage) {
+                  const n = parseInt(jumpPage)
+                  if (n >= 1 && n <= totalPage) { setLoading(true); loadRecipes(n); setJumpPage("") }
+                }
+              }}
+              className="w-14 text-center border border-gray-200 rounded-xl px-2 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
+            />
+            <span className="text-xs text-gray-400">/ {totalPage}</span>
+          </div>
         </div>
       )}
 
