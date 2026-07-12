@@ -32,6 +32,7 @@ export default function BillingPage() {
   const [refreshKey, setRefreshKey] = useState(0)
   const [paying, setPaying] = useState(false)
   const [topBanner, setTopBanner] = useState("")
+  const [showCancelModal, setShowCancelModal] = useState(false)
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -390,30 +391,62 @@ export default function BillingPage() {
             {t("subscriptionManageDesc")}
           </p>
           <button
-            onClick={async () => {
-              if (!confirm(t("cancelConfirm"))) return
-              setActionLoading("cancel")
-              try {
-                const res = await fetch("/api/subscription/cancel", { method: "POST" })
-                const data = await res.json()
-                if (data.success) {
-                  setTopBanner(data.message)
-                  setTimeout(() => setTopBanner(""), 5000)
-                  setRefreshKey((k) => k + 1)
-                } else {
-                  setError(data.error || t("cancelFailed"))
-                }
-              } catch {
-                setError(t("networkError"))
-              } finally {
-                setActionLoading(null)
-              }
-            }}
+            onClick={() => setShowCancelModal(true)}
             disabled={actionLoading !== null}
             className="text-sm text-red-500 border border-red-200 rounded-full px-4 py-2 hover:bg-red-50 transition-colors disabled:opacity-40"
           >
             {actionLoading === "cancel" ? t("cancelling") : t("cancelSubscription")}
           </button>
+        </div>
+      )}
+
+      {/* Cancel confirmation modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowCancelModal(false)}>
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="font-bold text-lg text-gray-900">{t("cancelSubscription")}</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">{t("cancelConfirm")}</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                {locale === "en" ? "Keep Pro" : "保留 Pro"}
+              </button>
+              <button
+                onClick={async () => {
+                  setShowCancelModal(false)
+                  setActionLoading("cancel")
+                  try {
+                    const res = await fetch("/api/subscription/cancel", { method: "POST" })
+                    const data = await res.json()
+                    if (data.success) {
+                      setTopBanner(data.message)
+                      setTimeout(() => setTopBanner(""), 5000)
+                      setRefreshKey((k) => k + 1)
+                    } else {
+                      setError(data.error || t("cancelFailed"))
+                    }
+                  } catch {
+                    setError(t("networkError"))
+                  } finally {
+                    setActionLoading(null)
+                  }
+                }}
+                disabled={actionLoading === "cancel"}
+                className="flex-1 px-4 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 disabled:bg-gray-300 transition-colors font-medium"
+              >
+                {actionLoading === "cancel" ? t("cancelling") : t("cancelSubscription")}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
