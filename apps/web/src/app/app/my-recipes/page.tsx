@@ -65,7 +65,7 @@ export default function MyRecipesPage() {
         setLoading(false)
         return
       }
-      const res = await fetch(\`/api/recipes?page=\${pageNum}&pageSize=\${PAGE_SIZE}\`)
+      const res = await fetch(`/api/recipes?page=${pageNum}&pageSize=${PAGE_SIZE}`)
       const data = await res.json()
       if (data.recipes) {
         const sorted = [...data.recipes].sort((a: Recipe, b: Recipe) => {
@@ -403,6 +403,29 @@ export default function MyRecipesPage() {
               )}
             </div>
           )})}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!isDemoUser && totalPage > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <button
+            onClick={() => { if (page > 1) { setLoading(true); loadRecipes(page - 1) } }}
+            disabled={page <= 1}
+            className="px-4 py-2 rounded-xl text-sm border border-gray-200 hover:border-[#FF6B35] hover:text-[#FF6B35] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            ← {tr("prevPage")}
+          </button>
+          <span className="text-sm text-gray-400 px-3">
+            {tr("pageInfo", { page, total: totalPage })}
+          </span>
+          <button
+            onClick={() => { if (page < totalPage) { setLoading(true); loadRecipes(page + 1) } }}
+            disabled={page >= totalPage}
+            className="px-4 py-2 rounded-xl text-sm border border-gray-200 hover:border-[#FF6B35] hover:text-[#FF6B35] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            {tr("nextPage")} →
+          </button>
         </div>
       )}
 
