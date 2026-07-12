@@ -55,6 +55,7 @@ export default function PantryPage() {
   const [dupDialog, setDupDialog] = useState<string | null>(null)
   const [isDemoUser, setIsDemoUser] = useState(false)
   const [demoToast, setDemoToast] = useState("")
+  const [toast, setToast] = useState("")
 
   const toggleSelect = (id: string) => {
     const next = new Set(selected)

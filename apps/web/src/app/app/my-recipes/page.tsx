@@ -58,7 +58,7 @@ export default function MyRecipesPage() {
     setTimeout(() => setToast(""), 2500)
   }, [])
 
-  const loadRecipes = async (pageNum = 1) => {
+  const loadRecipes = async (pageNum = 1, filterType?: string) => {
     try {
       const profileRes = await fetch("/api/user/profile")
       const profile = await profileRes.json()
@@ -68,7 +68,9 @@ export default function MyRecipesPage() {
         setLoading(false)
         return
       }
-      const res = await fetch(`/api/recipes?page=${pageNum}&pageSize=${PAGE_SIZE}`)
+      const f = filterType || filter
+      const starredParam = f === "starred" ? "&starred=true" : ""
+      const res = await fetch(`/api/recipes?page=${pageNum}&pageSize=${PAGE_SIZE}${starredParam}`)
       const data = await res.json()
       if (data.recipes) {
         setRecipes(data.recipes)
@@ -231,7 +233,7 @@ export default function MyRecipesPage() {
     }
   }
 
-  const filtered = filter === "starred" ? recipes.filter((r) => r.starred) : recipes
+  const filtered = recipes
 
   if (loading) return <div className="text-center py-16 text-gray-400">{tr("loading")}</div>
 
@@ -285,7 +287,7 @@ export default function MyRecipesPage() {
               </button>
               <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
                 <button
-                  onClick={() => setFilter("all")}
+                  onClick={() => { setFilter("all"); setLoading(true); loadRecipes(1, "all") }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     filter === "all" ? "bg-white text-[#2D3436] shadow-sm" : "text-gray-500 hover:text-gray-700"
                   }`}
@@ -293,7 +295,7 @@ export default function MyRecipesPage() {
                   {tr("all", { count: totalCount })}
                 </button>
                 <button
-                  onClick={() => setFilter("starred")}
+                  onClick={() => { setFilter("starred"); setLoading(true); loadRecipes(1, "starred") }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     filter === "starred" ? "bg-white text-[#2D3436] shadow-sm" : "text-gray-500 hover:text-gray-700"
                   }`}
