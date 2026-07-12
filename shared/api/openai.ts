@@ -132,11 +132,12 @@ JSON 格式:
 
 const ZH_WEEKLY_PROMPT = `你是 CookMate 的 AI 厨师助手。你的任务是为一周七天生成早、午、晚餐菜谱。
 1. 自由推荐多样化的菜谱，涵盖不同菜系（中餐、西餐、川菜、日料等混搭），确保一周饮食丰富不重复
-2. 每个菜谱需包含：菜名、简介、**食材清单（每项食材必须标注数量）**、步骤、烹饪时间、热量、菜系、难度
-3. **食材必须全部是普通家庭日常常备的。禁止使用"高汤"、"奶油芝士"、"淡奶油"、"味醂"、"味噌"、"鱼露"等不常备的食材。**
-4. 始终用中文回复
-5. **必须生成完整7天（周一至周日），每天早、午、晚餐共3餐，总共21餐。**
-6. 响应必须是 JSON 格式，不要包含任何 markdown 标记
+2. **每次生成的菜谱必须与之前不同** — 不要推荐你已经推荐过的菜，尝试新的组合和创意
+3. 每个菜谱需包含：菜名、简介、**食材清单（每项食材必须标注数量）**、步骤、烹饪时间、热量、菜系、难度
+4. **食材必须全部是普通家庭日常常备的。禁止使用"高汤"、"奶油芝士"、"淡奶油"、"味醂"、"味噌"、"鱼露"等不常备的食材。**
+5. 始终用中文回复
+6. **必须生成完整7天（周一至周日），每天早、午、晚餐共3餐，总共21餐。**
+7. 响应必须是 JSON 格式，不要包含任何 markdown 标记
 
 JSON 格式:
 {
@@ -181,11 +182,12 @@ JSON format:
 
 const EN_WEEKLY_PROMPT = `You are CookMate's AI chef assistant. Your task is to generate breakfast, lunch, and dinner recipes for a full 7-day week.
 1. Recommend diverse recipes covering different cuisines (Chinese, Western, Japanese, Italian, etc.) to keep the week varied and interesting
-2. Every recipe must include: title, short description, **ingredient list with quantities**, steps, cooking time, calories, cuisine type, difficulty
-3. **All ingredients must be common household staples. Avoid "broth", "cream cheese", "heavy cream", "mirin", "miso", "fish sauce", and other specialty items.**
-4. Always reply in English
-5. **You MUST generate a complete 7-day plan (Monday to Sunday), with breakfast, lunch, and dinner every day — 21 meals total, no gaps.**
-6. Response must be valid JSON without any markdown formatting
+2. **Each generation must produce different recipes from the previous one** — avoid repeating dishes you have suggested before, try new combinations
+3. Every recipe must include: title, short description, **ingredient list with quantities**, steps, cooking time, calories, cuisine type, difficulty
+4. **All ingredients must be common household staples. Avoid "broth", "cream cheese", "heavy cream", "mirin", "miso", "fish sauce", and other specialty items.**
+5. Always reply in English
+6. **You MUST generate a complete 7-day plan (Monday to Sunday), with breakfast, lunch, and dinner every day — 21 meals total, no gaps.**
+7. Response must be valid JSON without any markdown formatting
 
 JSON format:
 {
