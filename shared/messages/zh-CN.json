@@ -373,7 +373,10 @@
     "demoCannotGenerate": "🔒 体验用户无法生成菜谱，请注册后使用",
     "emptyGenerated": "AI 无法为这些食材生成菜谱，试试输入其他真实的食材",
     "emptyHasPantry": "👆 从上面食材库点击食材或手动输入，让 AI 为你的冰箱量身推荐菜谱",
-    "emptyDefault": "添加食材，让 AI 为你推荐菜谱"
+    "emptyDefault": "添加食材，让 AI 为你推荐菜谱",
+    "prevPage": "上一页",
+    "nextPage": "下一页",
+    "pageInfo": "第 {page} / {total} 页"
   },
   "settings": {
     "title": "设置",

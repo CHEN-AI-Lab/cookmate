@@ -373,7 +373,10 @@
     "demoCannotGenerate": "🔒 Demo users cannot generate recipes. Please sign up.",
     "emptyGenerated": "AI couldn't generate recipes for these ingredients. Try different ones.",
     "emptyHasPantry": "👆 Click ingredients from the pantry above or type them in to get AI-recommended recipes",
-    "emptyDefault": "Add ingredients and let AI recommend recipes for you"
+    "emptyDefault": "Add ingredients and let AI recommend recipes for you",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "pageInfo": "Page {page} / {total}"
   },
   "settings": {
     "title": "Settings",
