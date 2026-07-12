@@ -213,7 +213,6 @@
         "generateFailed": "生成失败",
         "deleteSlotSuccess": "✅ 菜谱已删除",
         "confirmDeleteTitle": "确认删除",
-        "duplicateIngredient": "「{name}」已在食材列表中",
         "confirmDeleteDesc": "确定要删除「{title}」吗？",
         "irreversible": "此操作不可恢复",
         "confirmDelete": "确认删除",
@@ -377,10 +376,11 @@
     "emptyDefault": "添加食材，让 AI 为你推荐菜谱",
     "prevPage": "上一页",
     "nextPage": "下一页",
-    "pageInfo": "第 {page} / {total} 页"
-  },
-  "settings": {
-    "title": "设置",
+    "pageInfo": "第 {page} / {total} 页",
+        "duplicateIngredient": "「{name}」已在食材列表中"
+      },
+
+      "trial"
     "subtitle": "管理您的账号信息和偏好设置",
     "profile": "账号信息",
     "dietPreferences": "饮食偏好",

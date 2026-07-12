@@ -213,8 +213,7 @@
         "generateFailed": "Failed to generate",
         "deleteSlotSuccess": "✅ Recipe deleted",
         "confirmDeleteTitle": "Confirm Delete",
-        "duplicateIngredient": "「{name}」is already in the ingredient list",
-            "confirmDeleteDesc": "Are you sure you want to delete「{title}」?",
+        "confirmDeleteDesc": "Are you sure you want to delete「{title}」?",
         "irreversible": "This action cannot be undone",
         "confirmDelete": "Confirm Delete",
         "loading": "Loading...",
@@ -377,10 +376,11 @@
     "emptyDefault": "Add ingredients and let AI recommend recipes for you",
     "prevPage": "Previous",
     "nextPage": "Next",
-    "pageInfo": "Page {page} / {total}"
-  },
-  "settings": {
-    "title": "Settings",
+    "pageInfo": "Page {page} / {total}",
+        "duplicateIngredient": "「{name}」is already in the ingredient list"
+      },
+
+      "settings"
     "subtitle": "Manage your account info and preferences",
     "profile": "Profile",
     "dietPreferences": "Diet Preferences",
