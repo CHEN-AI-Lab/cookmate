@@ -611,6 +611,8 @@
     "refunded": "Refunded",
     "expired": "Expired",
     "cancelled": "Cancelled",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this order?",
     "channelAlipay": "Alipay",
     "channelStripe": "Stripe",
     "channelCreem": "Creem",

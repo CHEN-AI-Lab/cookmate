@@ -611,6 +611,8 @@
     "refunded": "已退款",
     "expired": "已过期",
     "cancelled": "已取消",
+    "delete": "删除",
+    "deleteConfirm": "确定要删除此订单吗？",
     "channelAlipay": "支付宝",
     "channelStripe": "Stripe",
     "channelCreem": "Creem",
