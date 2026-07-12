@@ -104,16 +104,8 @@ export async function POST(req: Request) {
     let mealPlan: Record<string, unknown> | null = null
     const dayMap = getDayMap(locale)
     try {
+      // Delete old slots and meal plan (keep recipes to avoid losing user data)
       await prisma.mealSlot.deleteMany({ where: { mealPlan: { userId: userId, weekStart: monday } } })
-
-      try {
-        await prisma.recipe.deleteMany({
-          where: { mealSlots: { none: {} }, userId, isGenerated: true, starred: false },
-        })
-      } catch (err) {
-        console.error("Cleanup orphan recipes error:", err)
-      }
-
       await prisma.mealPlan.deleteMany({ where: { userId: userId, weekStart: monday } })
 
       const slotEntries = Object.entries(weekPlan).flatMap(([dayName, meals], dayIdx) => {
@@ -139,7 +131,22 @@ export async function POST(req: Request) {
           const prismaErr = err as { code?: string }
           if (prismaErr.code === "P2002") {
             const existing = await prisma.recipe.findFirst({ where: { userId, title: recipe.title } })
-            if (existing) { recipeId = existing.id } else { throw err }
+            if (existing) {
+              // Update existing recipe with new AI content (keep starred status)
+              await prisma.recipe.update({
+                where: { id: existing.id },
+                data: {
+                  description: recipe.description || existing.description,
+                  ingredients: normalizeIngredients(recipe.ingredients).join(", "),
+                  steps: recipe.steps.join("\n"),
+                  cookingTime: recipe.cookingTime || existing.cookingTime,
+                  calories: recipe.calories || existing.calories,
+                  cuisineType: recipe.cuisineType || existing.cuisineType,
+                  difficulty: recipe.difficulty || existing.difficulty,
+                },
+              })
+              recipeId = existing.id
+            } else { throw err }
           } else { throw err }
         }
         slotData.push({ dayOfWeek, mealType, recipeId, note: (recipe.description || "").substring(0, 100) })

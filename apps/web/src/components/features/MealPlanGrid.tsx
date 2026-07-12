@@ -1,5 +1,5 @@
 "use client"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 
 const MEAL_TYPES = ["breakfast", "lunch", "dinner"]
 const MEAL_EMOJIS: Record<string, string> = {
@@ -33,6 +33,8 @@ interface MealPlanGridProps {
 
 export function MealPlanGrid({ plan, onSlotClick }: MealPlanGridProps) {
   const t = useTranslations("mealPlan")
+  const locale = useLocale()
+  const timeSuffix = locale === "en" || locale.startsWith("en") ? " min" : " 分钟"
   const DAY_LABELS = [
     t("monday"), t("tuesday"), t("wednesday"),
     t("thursday"), t("friday"), t("saturday"), t("sunday"),
@@ -71,15 +73,15 @@ export function MealPlanGrid({ plan, onSlotClick }: MealPlanGridProps) {
                         <p className="text-sm font-medium text-[#2D3436] truncate">
                           {slot.recipe.title}
                         </p>
+                        {slot.recipe.cookingTime && (
+                          <span className="text-xs text-gray-400 shrink-0">
+                            ⏱{slot.recipe.cookingTime}{timeSuffix}
+                          </span>
+                        )}
                         {slot.recipe.starred && (
                           <span className="text-amber-400 text-xs shrink-0">⭐</span>
                         )}
                       </div>
-                      {slot.recipe.cookingTime && (
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          ⏱ {slot.recipe.cookingTime} min
-                        </p>
-                      )}
                     </div>
                   ) : (
                     <p className="text-xs text-gray-300">{t("emptySlot")}</p>

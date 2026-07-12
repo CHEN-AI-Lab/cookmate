@@ -11,7 +11,7 @@ export async function GET(req: Request) {
     const starredParam = searchParams.get("starred")
     const search = searchParams.get("search")?.trim() || ""
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"))
-    const pageSize = Math.max(1, Math.min(100, parseInt(searchParams.get("pageSize") || "30")))
+    const pageSize = Math.max(1, Math.min(1000, parseInt(searchParams.get("pageSize") || "1000")))
 
     const where: Record<string, unknown> = { userId: session.user.id }
     if (starredParam === "true") {
