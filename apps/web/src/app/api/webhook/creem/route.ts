@@ -46,7 +46,19 @@ function extractOrderId(event: Record<string, unknown>): string | null {
   return null
 }
 
-async function upgradeUser(userId: string) {
+// 从事件中提取 subscriptionId
+function extractSubscriptionId(event: Record<string, unknown>): string | null {
+  if (event.object && typeof event.object === "object") {
+    const obj = event.object as Record<string, unknown>
+    if (obj.subscription && typeof obj.subscription === "object") {
+      const sub = obj.subscription as Record<string, unknown>
+      if (typeof sub.id === "string") return sub.id
+    }
+  }
+  return null
+}
+
+async function upgradeUser(userId: string, creemSubscriptionId?: string) {
   const expiryDate = new Date()
   expiryDate.setUTCMonth(expiryDate.getUTCMonth() + 1)
 
@@ -55,6 +67,7 @@ async function upgradeUser(userId: string) {
     data: {
       subscriptionTier: "PRO",
       subscriptionExpiryDate: expiryDate,
+      ...(creemSubscriptionId ? { creemSubscriptionId } : {}),
     },
   })
 }
@@ -120,11 +133,12 @@ export async function POST(req: Request) {
     if (event.eventType === "checkout.completed") {
       const userId = extractUserId(event)
       const orderId = extractOrderId(event) || ""
+      const subscriptionId = extractSubscriptionId(event)
       if (orderId) {
         await recordOrder(userId || "unknown", orderId)
       }
       if (userId) {
-        await upgradeUser(userId)
+        await upgradeUser(userId, subscriptionId || undefined)
       }
       logWebhook("creem", "checkout.completed", "success")
       return NextResponse.json({ success: true })
@@ -133,8 +147,9 @@ export async function POST(req: Request) {
     // subscription.active / subscription.paid
     if (event.eventType === "subscription.active" || event.eventType === "subscription.paid") {
       const userId = extractUserId(event)
+      const subscriptionId = extractSubscriptionId(event)
       if (userId) {
-        await upgradeUser(userId)
+        await upgradeUser(userId, subscriptionId || undefined)
       }
       logWebhook("creem", event.eventType as string, "success")
       return NextResponse.json({ success: true })
