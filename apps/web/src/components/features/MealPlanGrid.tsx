@@ -68,21 +68,21 @@ export function MealPlanGrid({ plan, onSlotClick }: MealPlanGridProps) {
                     {MEAL_EMOJIS[meal]} {MEAL_LABELS[meal]}
                   </p>
                   {slot?.recipe ? (
-                    <div>
-                      <div className="flex items-center gap-1">
-                        <p className="text-sm font-medium text-[#2D3436] truncate">
+                    <div className="flex items-center justify-between gap-1">
+                        <p className="text-sm font-medium text-[#2D3436] truncate min-w-0">
                           {slot.recipe.title}
                         </p>
-                        {slot.recipe.cookingTime && (
-                          <span className="text-xs text-gray-400 shrink-0 ml-auto">
-                            ⏱{slot.recipe.cookingTime}{timeSuffix}
-                          </span>
-                        )}
-                        {slot.recipe.starred && (
-                          <span className="text-amber-400 text-xs shrink-0">⭐</span>
-                        )}
+                        <div className="flex items-center gap-1 shrink-0">
+                          {slot.recipe.cookingTime && (
+                            <span className="text-xs text-gray-400">
+                              ⏱{slot.recipe.cookingTime}{timeSuffix}
+                            </span>
+                          )}
+                          {slot.recipe.starred && (
+                            <span className="text-amber-400 text-xs">⭐</span>
+                          )}
+                        </div>
                       </div>
-                    </div>
                   ) : (
                     <p className="text-xs text-gray-300">{t("emptySlot")}</p>
                   )}
