@@ -53,6 +53,7 @@ export default function SettingsPage() {
   const [bindError, setBindError] = useState("")
     const [accountMsg, setAccountMsg] = useState("")
     const [globalToast, setGlobalToast] = useState("")
+  const [cancelLoading, setCancelLoading] = useState(false)
   useEffect(() => {
     Promise.all([
       fetch("/api/settings").then((r) => r.json()),
@@ -125,6 +126,28 @@ export default function SettingsPage() {
       else { setAccountMsg(d.error || ts("bindFailed")); setTimeout(() => setAccountMsg(""), 3000) }
     } catch (err) { console.error("confirm bind email error:", err); setAccountMsg(tv("networkError")); setTimeout(() => setAccountMsg(""), 3000) }
     finally { setBindLoading(false) }
+  }
+
+const handleCancel = async () => {
+    if (!confirm(ts("cancelConfirm"))) return
+    setCancelLoading(true)
+    try {
+      const res = await fetch("/api/subscription/cancel", { method: "POST" })
+      const data = await res.json()
+      if (data.success) {
+        setSettings((s) => ({ ...s, subscriptionTier: "FREE" }))
+        setGlobalToast(ts("cancelSubscription") + " ✅")
+        setTimeout(() => setGlobalToast(""), 3000)
+      } else {
+        setGlobalToast(data.error || ts("cancelSubscription"))
+        setTimeout(() => setGlobalToast(""), 3000)
+      }
+    } catch {
+      setGlobalToast("❌ " + ts("cancelSubscription"))
+      setTimeout(() => setGlobalToast(""), 3000)
+    } finally {
+      setCancelLoading(false)
+    }
   }
 
 const save = async () => {
@@ -422,6 +445,15 @@ const save = async () => {
             <Link href="/app/billing" className="inline-block mt-5 w-full text-center bg-gradient-to-r from-[#FF6B35] to-orange-400 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
               {settings.subscriptionTier === "PRO" ? ts("manageSubscription") : ts("upgradePlan")}
             </Link>
+            {settings.subscriptionTier === "PRO" && (
+              <button
+                onClick={handleCancel}
+                disabled={cancelLoading}
+                className="inline-block mt-2 w-full text-center border border-red-200 text-red-500 px-6 py-2 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors disabled:opacity-40"
+              >
+                {cancelLoading ? ts("cancelling") : ts("cancelSubscription")}
+              </button>
+            )}
           </div>
         </div>
         </div>
