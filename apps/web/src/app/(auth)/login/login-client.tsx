@@ -42,21 +42,8 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     }
   }, [])
   useEffect(() => {
-    // Restore countdown from localStorage on page load
-    const saved = localStorage.getItem("cookmate_code_sent_at")
-    if (saved) {
-      const elapsed = Math.floor((Date.now() - parseInt(saved)) / 1000)
-      const remaining = Math.max(0, 120 - elapsed)
-      if (remaining > 0) setCountdown(remaining)
-    }
+    // countdown timer no longer active
   }, [])
-
-  useEffect(() => {
-    if (countdown > 0) {
-      timerRef.current = setTimeout(() => setCountdown(countdown - 1), 1000)
-    }
-    return () => clearTimeout(timerRef.current ?? undefined)
-  }, [countdown])
 
   useEffect(() => {
     if (setupCountdown > 0) {
@@ -80,15 +67,9 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       })
       const data = await res.json()
       if (!res.ok) {
-        if (data.remainingSeconds) {
-          setCountdown(data.remainingSeconds)
-          localStorage.setItem("cookmate_code_sent_at", String(Date.now() - (120 - data.remainingSeconds) * 1000))
-        }
         setError(data.error || tv('sendFailed'))
         return
       }
-      localStorage.setItem("cookmate_code_sent_at", String(Date.now()))
-      setCountdown(120)
       if (data.devCode) {
         setCode(data.devCode)
         setError(tv('devCodeAutoFill', { code: data.devCode }))
@@ -144,23 +125,16 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       })
       const data = await res.json()
       if (!res.ok) {
-        if (data.remainingSeconds) {
-          const rem = data.remainingSeconds
-          setCountdown(rem)
-          localStorage.setItem("cookmate_code_sent_at", String(Date.now() - (120 - rem) * 1000))
-        }
         setError(data.error || tv('sendFailed'))
         return
       }
       setEmailCodeSent(true)
-      localStorage.setItem("cookmate_code_sent_at", String(Date.now()))
       if (data.devCode) {
         setEmailCode(data.devCode)
         setEmailMsg(tv('devCodePrefix') + ' ' + data.devCode)
       } else {
         setEmailMsg(tv('codeSentEmail'))
       }
-      setCountdown(120)
     } catch {
       setError(tv('sendFailedRetry'))
     } finally {
