@@ -124,6 +124,10 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       const data = await res.json()
       if (!res.ok) {
         setError(data.error || tv('sendFailed'))
+        // 即使被限制，用户已有有效验证码，显示输入框
+        if (data.error?.includes?.("codeRecentlySent") || data.error === tv('codeRecentlySent')) {
+          setEmailCodeSent(true)
+        }
         return
       }
       setEmailCodeSent(true)
@@ -379,6 +383,15 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 {emailMsg}
               </div>
             )}
+            {error && tab === "email" && (
+              <div className={`text-xs rounded-xl px-3 py-2 ${
+                error.includes("dev") ? "bg-green-50 border border-green-200 text-green-600"
+                : error.includes("sent") ? "bg-blue-50 border border-blue-200 text-blue-600"
+                : "bg-red-50 border border-red-200 text-red-600"
+              }`}>
+                {error}
+              </div>
+            )}
             {emailCodeSent && (
               <>
                 <div>
@@ -504,10 +517,10 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           </div>
         )}
 
-        {error && (
+        {/* 非邮箱 tab 的错误提示 */}
+        {error && tab !== "email" && (
           <div className={`mt-2 p-3 rounded-xl text-sm text-center ${
             error.includes("dev") ? "bg-green-50 border border-green-200 text-green-600"
-            : error.includes("sent") ? "bg-blue-50 border border-blue-200 text-blue-600"
             : "bg-red-50 border border-red-200 text-red-600"
           }`}>
             {error}
