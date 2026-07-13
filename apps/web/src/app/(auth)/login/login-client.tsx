@@ -1,7 +1,7 @@
 "use client"
 
 import { signIn, signOut } from "next-auth/react"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import PasswordInput from "@/components/ui/PasswordInput"
 import Link from "next/link"
 import OAuthLoadingOverlay from "@/components/ui/OAuthLoadingOverlay"
@@ -20,8 +20,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState("")
-  const [countdown, setCountdown] = useState(0)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // countdown removed
   const [oauthProvider, setOauthProvider] = useState<string | null>(null)
 
   // 密码设置模式（在密码登录 tab 中设密码）
@@ -41,9 +40,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       signIn("alipay-auth", { userId: alipayAuth, callbackUrl: "/app/dashboard" })
     }
   }, [])
-  useEffect(() => {
-    // countdown timer no longer active
-  }, [])
+
 
   useEffect(() => {
     if (setupCountdown > 0) {
@@ -368,10 +365,10 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 />
                 <button
                   onClick={handleEmailLogin}
-                  disabled={loading === "email" || countdown > 0 || !email}
+                  disabled={loading === "email" || !email}
                   className="px-4 py-3 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap transition-colors"
                 >
-                  {countdown > 0 ? `${countdown}s` : loading === "email" ? tc('sending') : tc('sendCode')}
+                  {loading === "email" ? tc('sending') : tc('sendCode')}
                 </button>
               </div>
             </div>
