@@ -31,6 +31,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   const [setupConfirmPassword, setSetupConfirmPassword] = useState("")
   const [setupCodeSent, setSetupCodeSent] = useState(false)
   const [setupCountdown, setSetupCountdown] = useState(0)
+  const [emailMsg, setEmailMsg] = useState("")
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -134,11 +135,11 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       setEmailCodeSent(true)
       if (data.devCode) {
         setEmailCode(data.devCode)
-        setError(tv('devCodePrefix') + ' ' + data.devCode)
+        setEmailMsg(tv('devCodePrefix') + ' ' + data.devCode)
       } else {
-        setError(tv('codeSentEmail'))
-        setTimeout(() => setError(""), 3000)
+        setEmailMsg(tv('codeSentEmail'))
       }
+      setTimeout(() => setEmailMsg(""), 3000)
       setCountdown(60)
     } catch {
       setError(tv('sendFailedRetry'))
@@ -380,6 +381,11 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 </button>
               </div>
             </div>
+            {emailMsg && (
+              <div className="text-xs text-green-600 bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+                {emailMsg}
+              </div>
+            )}
             {emailCodeSent && (
               <>
                 <div>
