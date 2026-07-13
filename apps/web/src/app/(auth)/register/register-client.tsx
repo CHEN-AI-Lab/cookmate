@@ -53,7 +53,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
         setErrorType('error')
         return
       }
-      // countdown removed
+      setCountdown(120)
       if (data.devCode) {
         setCode(data.devCode)
         setError(`${tv('devCodeAutoFill', { code: data.devCode })}`)
@@ -132,7 +132,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
         setError(tv('codeSentEmail'))
         setErrorType('info')
       }
-      // countdown removed
+      setCountdown(120)
     } catch {
       setError(tv('sendFailedRetry'))
       setErrorType('error')

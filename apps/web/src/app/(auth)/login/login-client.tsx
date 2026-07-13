@@ -1,7 +1,7 @@
 "use client"
 
 import { signIn, signOut } from "next-auth/react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import PasswordInput from "@/components/ui/PasswordInput"
 import Link from "next/link"
 import OAuthLoadingOverlay from "@/components/ui/OAuthLoadingOverlay"
@@ -20,7 +20,8 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError] = useState("")
-  // countdown removed
+  const [countdown, setCountdown] = useState(0)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [oauthProvider, setOauthProvider] = useState<string | null>(null)
 
   // 密码设置模式（在密码登录 tab 中设密码）
@@ -126,6 +127,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         return
       }
       setEmailCodeSent(true)
+      setCountdown(120)
       if (data.devCode) {
         setEmailCode(data.devCode)
         setEmailMsg(tv('devCodePrefix') + ' ' + data.devCode)
@@ -234,7 +236,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         return
       }
       setSetupCodeSent(true)
-      setSetupCountdown(60)
+      setSetupCountdown(120)
       if (data.devCode) {
         setSetupCode(data.devCode)
         setError(tv('devCodePrefix') + ' ' + data.devCode)
@@ -365,10 +367,10 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 />
                 <button
                   onClick={handleEmailLogin}
-                  disabled={loading === "email" || !email}
+                  disabled={loading === "email" || countdown > 0 || !email}
                   className="px-4 py-3 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap transition-colors"
                 >
-                  {loading === "email" ? tc('sending') : tc('sendCode')}
+                  {countdown > 0 ? `${countdown}s` : loading === "email" ? tc('sending') : tc('sendCode')}
                 </button>
               </div>
             </div>
