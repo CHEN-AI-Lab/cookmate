@@ -18,7 +18,9 @@ export default function LanguageSwitcher() {
   const toggleLocale = useCallback(() => {
     const currentIndex = locales.indexOf(locale as (typeof locales)[number])
     const nextLocale = locales[(currentIndex + 1) % locales.length]
-    const newPath = `/${nextLocale}${pathname}`
+    // Strip existing locale prefix from pathname
+    const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}(/|$)`), "/")
+    const newPath = `/${nextLocale}${pathWithoutLocale}`
     router.push(newPath)
   }, [locale, pathname, router])
 
