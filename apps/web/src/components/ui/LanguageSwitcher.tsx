@@ -3,7 +3,6 @@
 import { useLocale } from "next-intl"
 import { locales } from "@cookmate/shared/messages"
 import { useCallback } from "react"
-import { useRouter } from "next/navigation"
 
 const labelMap: Record<string, string> = {
   "zh-CN": "EN",
@@ -12,21 +11,18 @@ const labelMap: Record<string, string> = {
 
 export default function LanguageSwitcher() {
   const locale = useLocale()
-  const router = useRouter()
 
   const toggleLocale = useCallback(() => {
     const currentIndex = locales.indexOf(locale as (typeof locales)[number])
     const nextLocale = locales[(currentIndex + 1) % locales.length]
 
-    // Use actual browser URL (not react's pathname which may be rewritten)
+    // Use actual browser URL and force full page reload
     const browserPath = window.location.pathname
-    // Strip any existing locale prefix from the browser URL
     const pathWithoutLocale = browserPath.replace(
       new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
     )
-    const newPath = `/${nextLocale}${pathWithoutLocale}`
-    router.push(newPath)
-  }, [locale, router])
+    window.location.href = `/${nextLocale}${pathWithoutLocale}`
+  }, [locale])
 
   return (
     <button
