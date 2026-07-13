@@ -80,6 +80,10 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       })
       const data = await res.json()
       if (!res.ok) {
+        if (data.remainingSeconds) {
+          setCountdown(data.remainingSeconds)
+          localStorage.setItem("cookmate_code_sent_at", String(Date.now() - (120 - data.remainingSeconds) * 1000))
+        }
         setError(data.error || tv('sendFailed'))
         return
       }
@@ -140,6 +144,11 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       })
       const data = await res.json()
       if (!res.ok) {
+        if (data.remainingSeconds) {
+          const rem = data.remainingSeconds
+          setCountdown(rem)
+          localStorage.setItem("cookmate_code_sent_at", String(Date.now() - (120 - rem) * 1000))
+        }
         setError(data.error || tv('sendFailed'))
         return
       }

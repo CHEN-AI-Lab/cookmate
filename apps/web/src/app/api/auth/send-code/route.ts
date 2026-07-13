@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: err(loc, "invalidEmail") }, { status: 400 })
     }
 
-    // 检查是否 2 分钟内已发过 — 如有则复用旧验证码
+    // 检查是否 2 分钟内已发过
     const recent = phone
       ? await prisma.verificationCode.findFirst({
           where: { phone, used: false, createdAt: { gte: new Date(Date.now() - 120000) } },
@@ -41,8 +41,9 @@ export async function POST(req: Request) {
           orderBy: { createdAt: "desc" },
         })
     if (recent) {
-      // 复用旧验证码，不发新邮件
-      return NextResponse.json({ success: true, reused: true, devCode: process.env.NODE_ENV === "development" ? recent.code : undefined })
+      const elapsed = Math.floor((Date.now() - recent.createdAt.getTime()) / 1000)
+      const remaining = Math.max(1, 120 - elapsed)
+      return NextResponse.json({ error: err(loc, "codeRecentlySent"), remainingSeconds: remaining }, { status: 429 })
     }
 
     // 生成 6 位验证码
