@@ -30,26 +30,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: err(loc, "invalidEmail") }, { status: 400 })
     }
 
-    // 将之前的旧验证码标记为已过期
-    if (phone) {
-      await prisma.verificationCode.updateMany({ where: { phone, used: false }, data: { expiresAt: new Date(0) } }).catch(() => {})
-    }
-    if (email) {
-      await prisma.verificationCode.updateMany({ where: { email, used: false }, data: { expiresAt: new Date(0) } }).catch(() => {})
-    }
-
-    // 检查是否 2 分钟内已发过
+    // 检查是否 2 分钟内已发过 — 如有则复用旧验证码
     const recent = phone
       ? await prisma.verificationCode.findFirst({
-          where: { phone, used: false, expiresAt: { gte: new Date(Date.now() - 120000) } },
+          where: { phone, used: false, createdAt: { gte: new Date(Date.now() - 120000) } },
           orderBy: { createdAt: "desc" },
         })
       : await prisma.verificationCode.findFirst({
-          where: { email: email!, used: false, expiresAt: { gte: new Date(Date.now() - 120000) } },
+          where: { email: email!, used: false, createdAt: { gte: new Date(Date.now() - 120000) } },
           orderBy: { createdAt: "desc" },
         })
     if (recent) {
-      return NextResponse.json({ error: err(loc, "codeRecentlySent") }, { status: 429 })
+      // 复用旧验证码，不发新邮件
+      return NextResponse.json({ success: true, reused: true, devCode: process.env.NODE_ENV === "development" ? recent.code : undefined })
     }
 
     // 生成 6 位验证码

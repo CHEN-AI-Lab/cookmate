@@ -73,7 +73,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         setError(data.error || tv('sendFailed'))
         return
       }
-      setCountdown(60)
+      setCountdown(120)
       if (data.devCode) {
         setCode(data.devCode)
         setError(tv('devCodeAutoFill', { code: data.devCode }))
@@ -139,8 +139,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       } else {
         setEmailMsg(tv('codeSentEmail'))
       }
-      setTimeout(() => setEmailMsg(""), 3000)
-      setCountdown(60)
+      setCountdown(120)
     } catch {
       setError(tv('sendFailedRetry'))
     } finally {
