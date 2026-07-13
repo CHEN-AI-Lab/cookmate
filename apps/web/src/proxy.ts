@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-// Simple IP-based rate limiting using headers
-// Production: replace with Vercel KV or Upstash
-const RATE_LIMIT_WINDOW = 60_000 // 1 minute
+// Simple IP-based rate limiting (in-memory, per-instance)
+const RATE_LIMIT_WINDOW = 60_000
 const RATE_LIMIT_MAX = 10
 const ipHits = new Map<string, { count: number; resetAt: number }>()
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname
 
   // Only rate limit auth endpoints
