@@ -799,6 +799,7 @@
     "sendFailed": "发送失败"
   },
   "settings": {
+    "title": "设置",
     "subtitle": "管理您的账号信息和偏好设置",
     "profile": "账号信息",
     "dietPreferences": "饮食偏好",

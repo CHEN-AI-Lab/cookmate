@@ -799,6 +799,7 @@
     "sendFailed": "Failed to send"
   },
   "settings": {
+    "title": "Settings",
     "subtitle": "Manage your account info and preferences",
     "profile": "Profile",
     "dietPreferences": "Diet Preferences",

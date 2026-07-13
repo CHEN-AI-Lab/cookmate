@@ -43,7 +43,11 @@ export async function POST(req: Request) {
     if (recent) {
       const elapsed = Math.floor((Date.now() - recent.createdAt.getTime()) / 1000)
       const remaining = Math.max(1, 120 - elapsed)
-      return NextResponse.json({ error: err(loc, "codeRecentlySent"), remainingSeconds: remaining }, { status: 429 })
+      return NextResponse.json({
+        error: err(loc, "codeRecentlySent"),
+        remainingSeconds: remaining,
+        devCode: process.env.NODE_ENV === "development" ? recent.code : undefined,
+      }, { status: 429 })
     }
 
     // 生成 6 位验证码

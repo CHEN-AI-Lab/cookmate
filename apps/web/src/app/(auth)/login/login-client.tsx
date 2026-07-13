@@ -124,9 +124,10 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       const data = await res.json()
       if (!res.ok) {
         setError(data.error || tv('sendFailed'))
-        // 即使被限制，用户已有有效验证码，显示输入框
-        if (data.error?.includes?.("codeRecentlySent") || data.error === tv('codeRecentlySent')) {
+        // 429 = 2分钟内已有验证码，显示输入框让用户输入旧码
+        if (res.status === 429) {
           setEmailCodeSent(true)
+          if (data.devCode) setEmailCode(data.devCode)
         }
         return
       }
