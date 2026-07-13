@@ -33,11 +33,11 @@ export async function POST(req: Request) {
     // 检查是否 60 秒内已发过
     const recent = phone
       ? await prisma.verificationCode.findFirst({
-          where: { phone, used: false, createdAt: { gte: new Date(Date.now() - 60000) } },
+          where: { phone, used: false, createdAt: { gte: new Date(Date.now() - 120000) } },
           orderBy: { createdAt: "desc" },
         })
       : await prisma.verificationCode.findFirst({
-          where: { email: email!, used: false, createdAt: { gte: new Date(Date.now() - 60000) } },
+          where: { email: email!, used: false, createdAt: { gte: new Date(Date.now() - 120000) } },
           orderBy: { createdAt: "desc" },
         })
     if (recent) {
