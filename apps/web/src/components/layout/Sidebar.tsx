@@ -103,8 +103,11 @@ function UserMenu({ name, initial, t }: { name: string; initial: string; t: (key
   const toggleLanguage = () => {
     const idx = locales.indexOf(locale as any)
     const next = locales[(idx + 1) % locales.length]
-    document.cookie = `NEXT_LOCALE=${next}; path=/; max-age=${365 * 24 * 60 * 60}; SameSite=Lax`
-    window.location.reload()
+    const browserPath = window.location.pathname
+    const pathWithoutLocale = browserPath.replace(
+      new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
+    )
+    window.location.href = `/${next}${pathWithoutLocale}`
   }
 
   return (
