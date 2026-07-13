@@ -131,13 +131,13 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         setError(data.error || tv('sendFailed'))
         return
       }
+      setEmailCodeSent(true)
       if (data.devCode) {
         setEmailCode(data.devCode)
-        setEmailCodeSent(true)
         setError(tv('devCodePrefix') + ' ' + data.devCode)
       } else {
-        setEmailCodeSent(true)
         setError(tv('codeSentEmail'))
+        setTimeout(() => setError(""), 3000)
       }
       setCountdown(60)
     } catch {
@@ -381,27 +381,28 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
               </div>
             </div>
             {emailCodeSent && (
-              <div>
-                <label className="text-sm text-gray-600 font-medium">{t('codeLabel')}</label>
-                <input
-                  type="text"
-                  maxLength={6}
-                  placeholder={t('codePlaceholder')}
-                  value={emailCode}
-                  onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, ""))}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
-                />
-              </div>
+              <>
+                <div>
+                  <label className="text-sm text-gray-600 font-medium">{t('codeLabel')}</label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder={t('codePlaceholder')}
+                    value={emailCode}
+                    onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, ""))}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
+                  />
+                </div>
+                <button
+                  onClick={handleEmailVerify}
+                  disabled={loading === "email_login" || !emailCode}
+                  className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
+                >
+                  {loading === "email_login" ? t('loggingIn') : t('loginRegisterAction')}
+                </button>
+              </>
             )}
-            {emailCodeSent ? (
-              <button
-                onClick={handleEmailVerify}
-                disabled={loading === "email_login" || !emailCode}
-                className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
-              >
-                {loading === "email_login" ? t('loggingIn') : t('loginRegisterAction')}
-              </button>
-            ) : (
+            {!emailCodeSent && (
               <p className="text-xs text-gray-400 text-center">{t('sendCodeHint')}</p>
             )}
           </div>
