@@ -26,6 +26,15 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   const [oauthProvider, setOauthProvider] = useState<string | null>(null)
 
   useEffect(() => {
+    const saved = localStorage.getItem("cookmate_code_sent_at")
+    if (saved) {
+      const elapsed = Math.floor((Date.now() - parseInt(saved)) / 1000)
+      const remaining = Math.max(0, 120 - elapsed)
+      if (remaining > 0) setCountdown(remaining)
+    }
+  }, [])
+
+  useEffect(() => {
     if (countdown > 0) {
       timerRef.current = setTimeout(() => setCountdown(countdown - 1), 1000)
     }
@@ -53,6 +62,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
         setErrorType('error')
         return
       }
+      localStorage.setItem("cookmate_code_sent_at", String(Date.now()))
       setCountdown(120)
       if (data.devCode) {
         setCode(data.devCode)
@@ -132,6 +142,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
         setError(tv('codeSentEmail'))
         setErrorType('info')
       }
+      localStorage.setItem("cookmate_code_sent_at", String(Date.now()))
       setCountdown(120)
     } catch {
       setError(tv('sendFailedRetry'))

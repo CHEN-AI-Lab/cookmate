@@ -42,6 +42,16 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     }
   }, [])
   useEffect(() => {
+    // Restore countdown from localStorage on page load
+    const saved = localStorage.getItem("cookmate_code_sent_at")
+    if (saved) {
+      const elapsed = Math.floor((Date.now() - parseInt(saved)) / 1000)
+      const remaining = Math.max(0, 120 - elapsed)
+      if (remaining > 0) setCountdown(remaining)
+    }
+  }, [])
+
+  useEffect(() => {
     if (countdown > 0) {
       timerRef.current = setTimeout(() => setCountdown(countdown - 1), 1000)
     }
@@ -73,6 +83,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         setError(data.error || tv('sendFailed'))
         return
       }
+      localStorage.setItem("cookmate_code_sent_at", String(Date.now()))
       setCountdown(120)
       if (data.devCode) {
         setCode(data.devCode)
@@ -133,6 +144,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         return
       }
       setEmailCodeSent(true)
+      localStorage.setItem("cookmate_code_sent_at", String(Date.now()))
       if (data.devCode) {
         setEmailCode(data.devCode)
         setEmailMsg(tv('devCodePrefix') + ' ' + data.devCode)
