@@ -176,6 +176,7 @@
     "passwordTooShort": "密码至少 8 位",
     "passwordMismatch": "两次密码不一致",
     "sendFailed": "发送失败",
+    "sendFailedRetry": "发送失败，请重试",
     "verifyFailed": "验证失败",
     "networkError": "网络错误，请稍后重试",
     "codeSent": "验证码已发送，请查收手机短信",

@@ -176,6 +176,7 @@
     "passwordTooShort": "Password must be at least 8 characters",
     "passwordMismatch": "Passwords do not match",
     "sendFailed": "Failed to send",
+    "sendFailedRetry": "Failed to send, please retry",
     "verifyFailed": "Verification failed",
     "networkError": "Network error, please try again later",
     "codeSent": "Verification code sent to your phone",
