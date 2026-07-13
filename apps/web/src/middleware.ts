@@ -1,49 +1,35 @@
-import createMiddleware from "next-intl/middleware"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { locales, defaultLocale } from "@cookmate/shared/messages"
 
-// ─── next-intl i18n middleware: locale detection + URL prefix ───
-const intlMiddleware = createMiddleware({
-  locales,
-  defaultLocale,
-  localePrefix: "always",
-  localeDetection: true,
-})
-
-// ─── Simple IP-based rate limiting for auth endpoints ───
-const RATE_LIMIT_WINDOW = 60_000
+// Simple IP-based rate limiting using headers
+// Production: replace with Vercel KV or Upstash
+const RATE_LIMIT_WINDOW = 60_000 // 1 minute
 const RATE_LIMIT_MAX = 10
 const ipHits = new Map<string, { count: number; resetAt: number }>()
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
 
-  // Rate limit auth endpoints
-  if (path.startsWith("/api/auth/")) {
-    const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown"
-    const now = Date.now()
-    const hit = ipHits.get(ip)
-    if (!hit || now > hit.resetAt) {
-      ipHits.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW })
-      return NextResponse.next()
-    }
-    hit.count++
-    if (hit.count > RATE_LIMIT_MAX) {
-      return NextResponse.json({ error: "请求过于频繁，请稍后再试" }, { status: 429 })
-    }
+  // Only rate limit auth endpoints
+  if (!path.startsWith("/api/auth/")) return NextResponse.next()
+
+  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown"
+  const now = Date.now()
+  const hit = ipHits.get(ip)
+
+  if (!hit || now > hit.resetAt) {
+    ipHits.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW })
     return NextResponse.next()
   }
 
-  // Skip API, static, and Next.js internal routes
-  if (path.startsWith("/api/") || path.startsWith("/_next/") || path.startsWith("/_vercel") || path.includes(".")) {
-    return NextResponse.next()
+  hit.count++
+  if (hit.count > RATE_LIMIT_MAX) {
+    return NextResponse.json({ error: "请求过于频繁，请稍后再试" }, { status: 429 })
   }
 
-  // Run next-intl i18n middleware for page routes
-  return intlMiddleware(request)
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ["/((?!_next|_vercel|.*\\..*).*)"],
+  matcher: "/api/auth/:path*",
 }
