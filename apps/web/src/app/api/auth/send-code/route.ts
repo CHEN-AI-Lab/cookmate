@@ -30,7 +30,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: err(loc, "invalidEmail") }, { status: 400 })
     }
 
-    // 检查是否 60 秒内已发过
+    // 将之前的旧验证码标记为已过期
+    if (phone) {
+      await prisma.verificationCode.updateMany({ where: { phone, used: false }, data: { expiresAt: new Date(0) } }).catch(() => {})
+    }
+    if (email) {
+      await prisma.verificationCode.updateMany({ where: { email, used: false }, data: { expiresAt: new Date(0) } }).catch(() => {})
+    }
+
+    // 检查是否 2 分钟内已发过
     const recent = phone
       ? await prisma.verificationCode.findFirst({
           where: { phone, used: false, createdAt: { gte: new Date(Date.now() - 120000) } },
