@@ -41,7 +41,12 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       signIn("alipay-auth", { userId: alipayAuth, callbackUrl: "/app/dashboard" })
     }
   }, [])
-
+  useEffect(() => {
+    if (countdown > 0) {
+      timerRef.current = setTimeout(() => setCountdown(countdown - 1), 1000)
+    }
+    return () => clearTimeout(timerRef.current ?? undefined)
+  }, [countdown])
 
   useEffect(() => {
     if (setupCountdown > 0) {
