@@ -35,8 +35,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Skip API, static, and internal routes
-  if (path.startsWith("/api/") || path.startsWith("/_next/") || path.startsWith("/_vercel") || path.includes(".")) {
+  // Skip non-auth API, static, and internal routes
+  if (
+    (path.startsWith("/api/") && !path.startsWith("/api/auth/")) ||
+    path.startsWith("/_next/") ||
+    path.startsWith("/_vercel") ||
+    path.includes(".")
+  ) {
     return NextResponse.next()
   }
 
