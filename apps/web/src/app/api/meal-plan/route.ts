@@ -184,7 +184,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ plan: mealPlan, generated: weekPlan })
   } catch (error) {
-    console.error("Meal plan generation error:", error)
-    return NextResponse.json({ error: err(loc, "requestFailed") }, { status: 500 })
+    const errMsg = error instanceof Error ? error.message : String(error)
+    console.error("Meal plan generation error:", errMsg, error)
+    return NextResponse.json({ error: err(loc, "requestFailed"), detail: errMsg }, { status: 500 })
   }
 }
