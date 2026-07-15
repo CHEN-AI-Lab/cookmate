@@ -8,7 +8,7 @@ export default function PublicFooter() {
   const tfooter = useTranslations("footer")
 
   const links = [
-    { href: "/app/recipes", labelKey: "aiRecipes" },
+    { href: "/app/recipes", labelKey: "features" },
     { href: "/pricing", labelKey: "pricing" },
     { href: "/about", labelKey: "about" },
     { href: "/faq", labelKey: "faq" },

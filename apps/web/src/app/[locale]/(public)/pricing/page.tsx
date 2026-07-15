@@ -1,17 +1,24 @@
 import { auth } from "@/lib/auth"
-import Link from "next/link"
-import { getTranslations } from "next-intl/server"
+import { getTranslations, setRequestLocale } from "next-intl/server"
 import PublicNavbar from "@/components/layout/PublicNavbar"
 import PublicFooter from "@/components/layout/PublicFooter"
 import { PricingCards } from "@/components/features/PricingCards"
-import type { Metadata } from "next"
+import { routing } from "@/i18n/routing"
 
-export const metadata: Metadata = {
-  title: "定价 — CookMate",
-  description: "免费开始使用 CookMate Pro，无限 AI 菜谱生成、智能周计划、购物清单。",
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  const tb = await getTranslations({ locale, namespace: "billing" })
+
+  return {
+    title: `${tb("selectPlan")} — CookMate`,
+    description: tb("upgradeNow"),
+  }
 }
 
-export default async function PricingPage() {
+export default async function PricingPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  setRequestLocale(locale)
+
   const session = await auth()
   const ctaHref = session ? "/app/dashboard" : "/register"
   const tb = await getTranslations("billing")
