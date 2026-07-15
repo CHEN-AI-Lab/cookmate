@@ -6,7 +6,7 @@ import { signOut } from "next-auth/react"
 import { useTranslations } from "next-intl"
 import { useLocale } from "next-intl"
 import { useState, useRef, useEffect } from "react"
-import { locales } from "@cookmate/shared/messages"
+import { locales } from "@cookmate/shared/constants"
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
 
 const navItems = [

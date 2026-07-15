@@ -37,3 +37,4 @@ export const API_ROUTES = {
 } as const;
 
 export * from './preferences';
+export * from './locales';

@@ -2,7 +2,7 @@
 
 import { useLocale } from "next-intl"
 import { usePathname, useRouter } from "@/i18n/navigation"
-import { locales } from "@cookmate/shared/messages"
+import { locales } from "@cookmate/shared/constants"
 import { useCallback } from "react"
 
 const labelMap: Record<string, string> = {

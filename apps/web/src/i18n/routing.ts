@@ -1,5 +1,5 @@
 import { defineRouting } from "next-intl/routing"
-import { locales, defaultLocale } from "@cookmate/shared/messages"
+import { locales, defaultLocale } from "@cookmate/shared/constants"
 
 export const routing = defineRouting({
   locales,
