@@ -1,6 +1,13 @@
 import { getRequestConfig } from "next-intl/server"
 import { hasLocale } from "next-intl"
 import { routing } from "./routing"
+import zhCN from "@cookmate/shared/messages/zh-CN.json"
+import en from "@cookmate/shared/messages/en.json"
+
+const messageMap: Record<string, Record<string, unknown>> = {
+  "zh-CN": zhCN as Record<string, unknown>,
+  "en": en as Record<string, unknown>,
+}
 
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale
@@ -8,6 +15,6 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
   return {
     locale,
-    messages: (await import(`@cookmate/shared/messages/${locale}.json`)).default,
+    messages: messageMap[locale] ?? messageMap["zh-CN"],
   }
 })
