@@ -1,18 +1,32 @@
+import { Link } from "@/i18n/navigation"
 import { useTranslations } from "next-intl"
-import Link from "next/link"
+import { locales } from "@cookmate/shared/messages"
+import type { MessageLocale } from "@cookmate/shared/messages"
 
 export default function PublicFooter() {
   const tcommon = useTranslations("common")
   const tfooter = useTranslations("footer")
 
+  const links = [
+    { href: "/app/recipes", labelKey: "aiRecipes" },
+    { href: "/pricing", labelKey: "pricing" },
+    { href: "/about", labelKey: "about" },
+    { href: "/faq", labelKey: "faq" },
+  ] as const
+
+  const legalLinks = [
+    { href: "/privacy", labelKey: "privacy" },
+    { href: "/terms", labelKey: "terms" },
+  ] as const
+
   return (
-    <footer className="bg-[#2D3436] text-gray-400 text-sm">
+    <footer className="bg-[#2D3436] text-gray-400">
       <div className="max-w-[1400px] mx-auto px-8 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div>
-            <p className="text-white font-bold text-lg">🍳 {tcommon("appName")}</p>
-            <p className="mt-2 text-gray-500">{tcommon("appTagline")}</p>
+            <span className="text-2xl">🍳</span>
+            <p className="text-sm mt-2">{tcommon("slogan")}</p>
           </div>
 
           {/* Quick links */}
@@ -21,26 +35,13 @@ export default function PublicFooter() {
               {tfooter("links")}
             </p>
             <ul className="space-y-2">
-              <li>
-                <Link href="/app/recipes" className="hover:text-[#FF6B35] transition-colors">
-                  {tfooter("features")}
-                </Link>
-              </li>
-              <li>
-                <Link href="/pricing" className="hover:text-[#FF6B35] transition-colors">
-                  {tfooter("pricing")}
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="hover:text-[#FF6B35] transition-colors">
-                  {tfooter("about")}
-                </Link>
-              </li>
-              <li>
-                <Link href="/faq" className="hover:text-[#FF6B35] transition-colors">
-                  {tfooter("faq")}
-                </Link>
-              </li>
+              {links.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="hover:text-[#FF6B35] transition-colors">
+                    {tfooter(link.labelKey)}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -50,16 +51,13 @@ export default function PublicFooter() {
               {tfooter("legal")}
             </p>
             <ul className="space-y-2">
-              <li>
-                <Link href="/privacy" className="hover:text-[#FF6B35] transition-colors">
-                  {tfooter("privacy")}
-                </Link>
-              </li>
-              <li>
-                <Link href="/terms" className="hover:text-[#FF6B35] transition-colors">
-                  {tfooter("terms")}
-                </Link>
-              </li>
+              {legalLinks.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="hover:text-[#FF6B35] transition-colors">
+                    {tfooter(link.labelKey)}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -68,12 +66,9 @@ export default function PublicFooter() {
             <p className="text-gray-300 font-semibold mb-3 text-xs uppercase tracking-wider">
               {tfooter("contact")}
             </p>
-            <ul className="space-y-2">
+            <ul className="space-y-2 text-sm">
               <li>
-                <a
-                  href={`mailto:${tfooter("email")}`}
-                  className="hover:text-[#FF6B35] transition-colors"
-                >
+                <a href={`mailto:${tfooter("email")}`} className="hover:text-[#FF6B35] transition-colors">
                   {tfooter("email")}
                 </a>
               </li>
@@ -81,8 +76,20 @@ export default function PublicFooter() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-gray-700 text-center text-gray-500">
-          <p>{tfooter("copyright")}</p>
+        {/* Language switcher */}
+        <div className="mt-8 pt-8 border-t border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-gray-500">{tfooter("copyright")}</p>
+          <div className="flex gap-2">
+            {locales.map((locale) => (
+              <a
+                key={locale}
+                href={`/${locale}`}
+                className="text-xs px-2 py-1 rounded hover:text-[#FF6B35] transition-colors"
+              >
+                {locale === "zh-CN" ? "中文" : "English"}
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </footer>
