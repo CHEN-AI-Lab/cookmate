@@ -578,7 +578,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         </div>
 
         <p className="text-center text-sm text-gray-400 mt-6">
-          {t('hasAccount')}<Link href="/register" className="text-[#FF6B35] hover:underline">{t('registerAction')}</Link>
+          {t('hasAccount')}
         </p>
       </div>
     </div>
