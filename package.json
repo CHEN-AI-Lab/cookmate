@@ -4,17 +4,25 @@
   "private": true,
   "packageManager": "pnpm@10.28.0",
   "pnpm": {
-    "onlyBuiltDependencies": ["@prisma/client", "@prisma/engines", "prisma", "sharp", "unrs-resolver"]
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "sharp",
+      "unrs-resolver"
+    ]
   },
   "scripts": {
     "dev": "pnpm --filter cookmate-web dev",
     "build": "pnpm --filter cookmate-web build",
     "test": "pnpm --filter cookmate-web test",
     "test:watch": "pnpm --filter cookmate-web test:watch",
-    "test:shared": "cd shared && npx vitest run",
     "lint": "pnpm --filter cookmate-web lint",
     "lint:shared": "pnpm --filter @cookmate/shared lint",
     "check": "bash scripts/check.sh",
     "postinstall": "pnpm --filter cookmate-web postinstall"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
   }
 }
