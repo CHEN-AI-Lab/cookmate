@@ -1,8 +1,17 @@
+import createMiddleware from "next-intl/middleware"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 const LOCALES = ["zh-CN", "en"] as const
 const DEFAULT_LOCALE = "zh-CN"
+
+// Use next-intl middleware to set x-next-intl-locale header (required for requestLocale)
+const intlMiddleware = createMiddleware({
+  locales: LOCALES as unknown as string[],
+  defaultLocale: DEFAULT_LOCALE,
+  localeDetection: true,
+  localePrefix: "as-needed",
+})
 
 function detectLocale(acceptLang: string | null): string {
   if (!acceptLang) return DEFAULT_LOCALE
@@ -47,9 +56,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // If path already has locale prefix, let it through (matched by [locale] route)
+  // If path already has locale prefix, let next-intl middleware handle it
   if (LOCALES.some((l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`))) {
-    return NextResponse.next()
+    return intlMiddleware(request)
   }
 
   // No locale prefix: redirect to detected locale
