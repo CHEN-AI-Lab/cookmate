@@ -1,5 +1,5 @@
 import { Sidebar } from "./Sidebar"
-import { MobileNav } from "./MobileNav"
+import MobileNav from "./MobileNav"
 
 export default function AppShell({
   children,
