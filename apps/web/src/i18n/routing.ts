@@ -1,7 +1,8 @@
 import { defineRouting } from "next-intl/routing"
+import { locales, defaultLocale } from "@cookmate/shared/messages"
 
 export const routing = defineRouting({
-  locales: ["zh-CN", "en"],
-  defaultLocale: "zh-CN",
+  locales,
+  defaultLocale,
   localePrefix: "always",
 })

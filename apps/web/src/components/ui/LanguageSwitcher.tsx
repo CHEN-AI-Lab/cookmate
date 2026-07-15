@@ -1,6 +1,7 @@
 "use client"
 
 import { useLocale } from "next-intl"
+import { usePathname, useRouter } from "@/i18n/navigation"
 import { locales } from "@cookmate/shared/messages"
 import { useCallback } from "react"
 
@@ -11,18 +12,14 @@ const labelMap: Record<string, string> = {
 
 export default function LanguageSwitcher() {
   const locale = useLocale()
+  const pathname = usePathname()
+  const router = useRouter()
 
   const toggleLocale = useCallback(() => {
     const currentIndex = locales.indexOf(locale as (typeof locales)[number])
     const nextLocale = locales[(currentIndex + 1) % locales.length]
-
-    // Use actual browser URL and force full page reload
-    const browserPath = window.location.pathname
-    const pathWithoutLocale = browserPath.replace(
-      new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
-    )
-    window.location.href = `/${nextLocale}${pathWithoutLocale}`
-  }, [locale])
+    router.push(pathname, { locale: nextLocale })
+  }, [locale, pathname, router])
 
   return (
     <button
