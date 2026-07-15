@@ -26,7 +26,7 @@ export default function PublicFooter() {
           {/* Brand */}
           <div>
             <span className="text-2xl">🍳</span>
-            <p className="text-sm mt-2">{tcommon("slogan")}</p>
+            <p className="text-sm mt-2">{tcommon("appTagline")}</p>
           </div>
 
           {/* Quick links */}
