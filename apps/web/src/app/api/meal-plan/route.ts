@@ -186,6 +186,9 @@ export async function POST(req: Request) {
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error)
     console.error("Meal plan generation error:", errMsg, error)
-    return NextResponse.json({ error: err(loc, "requestFailed"), detail: errMsg }, { status: 500 })
+    return NextResponse.json({
+      error: err(loc, "requestFailed"),
+      ...(process.env.NODE_ENV !== "production" ? { detail: errMsg } : {}),
+    }, { status: 500 })
   }
 }
