@@ -1,5 +1,6 @@
 "use client"
 
+import { Link } from "@/i18n/navigation"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { useTranslations } from "next-intl"
@@ -28,31 +29,26 @@ export function Sidebar({
   const t = useTranslations("nav")
   const initial = name?.charAt(0)?.toUpperCase() || "?"
 
-  // Use window.location.href for all navigation to ensure full page reload (locale consistency)
-  const navigate = (href: string) => {
-    window.location.href = `/${locale}${href}`
-  }
-
   return (
     <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-orange-100 h-screen sticky top-0">
       {/* Logo */}
-      <button
-        onClick={() => navigate("/app/dashboard")}
-        className="flex items-center gap-2 px-6 h-16 border-b border-orange-100 w-full text-left"
+      <Link
+        href="/app/dashboard"
+        className="flex items-center gap-2 px-6 h-16 border-b border-orange-100"
       >
         <span className="text-2xl">🍳</span>
         <span className="text-xl font-bold text-[#2D3436]">CookMate</span>
-      </button>
+      </Link>
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
-            <button
+            <Link
               key={item.href}
-              onClick={() => navigate(item.href)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full text-left ${
+              href={item.href}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
                   ? "bg-orange-100 text-[#FF6B35]"
                   : "text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35]"
@@ -60,7 +56,7 @@ export function Sidebar({
             >
               <span className="text-lg">{item.icon}</span>
               <span>{t(item.labelKey)}</span>
-            </button>
+            </Link>
           )
         })}
       </nav>
@@ -94,6 +90,7 @@ function UserMenu({ name, initial, t }: { name: string; initial: string; t: (key
   const menuRef = useRef<HTMLDivElement>(null)
   const locale = useLocale()
 
+  // Close on click outside
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -114,13 +111,9 @@ function UserMenu({ name, initial, t }: { name: string; initial: string; t: (key
     window.location.href = `/${next}${pathWithoutLocale}`
   }
 
-  const navigate = (href: string) => {
-    setOpen(false)
-    window.location.href = `/${locale}${href}`
-  }
-
   return (
     <div ref={menuRef} className="relative">
+      {/* Avatar button */}
       <button
         onClick={() => setOpen(!open)}
         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-orange-50 w-full text-left transition-colors"
@@ -134,15 +127,17 @@ function UserMenu({ name, initial, t }: { name: string; initial: string; t: (key
         </svg>
       </button>
 
+      {/* Dropdown */}
       {open && (
         <div className="absolute bottom-full left-0 right-0 mb-1 bg-white border border-orange-100 rounded-xl shadow-lg py-1.5 text-sm">
-          <button
-            onClick={() => navigate("/app/settings")}
-            className="flex items-center gap-2.5 px-4 py-2 text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] w-full text-left transition-colors"
+          <Link
+            href="/app/settings"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-4 py-2 text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
           >
             <span className="text-base">⚙️</span>
             <span>{t("settings")}</span>
-          </button>
+          </Link>
           <button
             onClick={toggleLanguage}
             className="flex items-center gap-2.5 px-4 py-2 text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] w-full text-left transition-colors"
