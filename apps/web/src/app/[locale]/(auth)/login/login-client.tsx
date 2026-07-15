@@ -576,10 +576,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
             {loading === "demo" ? t('loggingIn') : t('demoVersion')}
           </button>
         </div>
-
-        <p className="text-center text-sm text-gray-400 mt-6">
-          {t('hasAccount')}
-        </p>
+        <p className="text-center text-xs text-gray-400 mt-4">{t("autoRegisterHint")}</p>
       </div>
     </div>
     </>

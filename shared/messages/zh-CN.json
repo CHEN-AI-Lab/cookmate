@@ -163,7 +163,8 @@
     "demoLogin": "体验登录",
     "demoLoginDesc": "无需注册，立即体验",
     "redirectingTo": "正在跳转到 {provider} 登录...",
-    "demoVersion": "体验演示版"
+    "demoVersion": "体验演示版",
+    "autoRegisterHint": "未注册用户验证后将自动创建账号"
   },
   "validation": {
     "invalidPhone": "请输入正确的11位手机号",
