@@ -1,8 +1,8 @@
 "use client"
 
-import { Link } from "@/i18n/navigation"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { useLocale } from "next-intl"
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
 
 const navItems = [
@@ -13,42 +13,39 @@ const navItems = [
   { href: "/app/grocery-list", icon: "🛒", labelKey: "groceryList" },
   { href: "/app/pantry", icon: "🥦", labelKey: "pantry" },
   { href: "/app/settings", icon: "⚙️", labelKey: "settings" },
-  { href: "/app/billing", icon: "💳", labelKey: "billing" },
 ]
 
-export function MobileNav() {
+export default function MobileNav() {
   const pathname = usePathname()
+  const locale = useLocale()
   const t = useTranslations("nav")
 
-  return (
-    <header className="fixed top-0 left-0 right-0 md:hidden bg-white border-b border-orange-100 h-16 z-50 flex items-center justify-between px-4">
-      {/* Left: Logo */}
-      <Link href="/app/dashboard" className="flex items-center gap-2">
-        <span className="text-xl">🍳</span>
-        <span className="text-base font-bold text-[#2D3436]">CookMate</span>
-      </Link>
+  const navigate = (href: string) => {
+    window.location.href = `/${locale}${href}`
+  }
 
-      {/* Right: Icon-only nav links */}
-      <nav className="flex items-center gap-3">
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-orange-100 md:hidden z-50">
+      <div className="flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
-            <Link
+            <button
               key={item.href}
-              href={item.href}
-              className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg transition-colors ${
+              onClick={() => navigate(item.href)}
+              className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
                 isActive
                   ? "text-[#FF6B35]"
-                  : "text-gray-400 hover:text-[#FF6B35]"
+                  : "text-gray-500 hover:text-[#FF6B35]"
               }`}
             >
               <span className="text-lg">{item.icon}</span>
-              <span className="text-[10px] font-medium leading-tight">{t(item.labelKey)}</span>
-            </Link>
+              <span>{t(item.labelKey)}</span>
+            </button>
           )
         })}
         <LanguageSwitcher />
-      </nav>
-    </header>
+      </div>
+    </nav>
   )
 }
