@@ -17,17 +17,15 @@ export default function PublicNavbar({
   return (
     <header className="border-b border-orange-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-[1400px] mx-auto px-8 h-16 flex items-center justify-between">
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-        <a href="/" className="flex items-center gap-2 shrink-0">
+        <Link href="/" className="flex items-center gap-2 shrink-0">
           <span className="text-2xl">🍳</span>
           <span className="text-xl font-bold text-[#2D3436]">CookMate</span>
-        </a>
+        </Link>
 
         <nav className="hidden sm:flex items-center gap-6 text-sm text-gray-600">
-          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a href="/#how" className="hover:text-[#FF6B35]">
+          <Link href="/#how" className="hover:text-[#FF6B35]">
             {tnav("howToUse")}
-          </a>
+          </Link>
           <Link href="/pricing" className="hover:text-[#FF6B35]">
             {tnav("pricing")}
           </Link>
