@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { useTranslations } from "next-intl"
@@ -33,7 +33,7 @@ export function Sidebar({
     <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-orange-100 h-screen sticky top-0">
       {/* Logo */}
       <Link
-        href={`/${locale}/app/dashboard`}
+        href="/app/dashboard"
         className="flex items-center gap-2 px-6 h-16 border-b border-orange-100"
       >
         <span className="text-2xl">🍳</span>
@@ -43,12 +43,11 @@ export function Sidebar({
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
-          const prefixedHref = `/${locale}${item.href}`
           const isActive = pathname === item.href
           return (
             <Link
               key={item.href}
-              href={prefixedHref}
+              href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
                   ? "bg-orange-100 text-[#FF6B35]"
@@ -132,7 +131,7 @@ function UserMenu({ name, initial, t }: { name: string; initial: string; t: (key
       {open && (
         <div className="absolute bottom-full left-0 right-0 mb-1 bg-white border border-orange-100 rounded-xl shadow-lg py-1.5 text-sm">
           <Link
-            href={`/${locale}/app/settings`}
+            href="/app/settings"
             onClick={() => setOpen(false)}
             className="flex items-center gap-2.5 px-4 py-2 text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
           >
