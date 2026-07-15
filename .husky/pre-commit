@@ -1,6 +1,7 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-# Run full quality check before every commit
+# Lightweight pre-commit check: structure + tests only
 cd "$(dirname "$0")/.."
-bash scripts/check.sh
+bash scripts/check-structure.sh
+pnpm test

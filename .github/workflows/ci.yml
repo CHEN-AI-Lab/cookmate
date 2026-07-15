@@ -17,5 +17,7 @@ jobs:
           node-version: 22
           cache: 'pnpm'
       - run: pnpm install
+      - run: bash scripts/check-structure.sh
+      - run: pnpm lint
       - run: pnpm test
       - run: pnpm build
