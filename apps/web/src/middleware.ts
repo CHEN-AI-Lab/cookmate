@@ -14,8 +14,28 @@ function detectLocale(acceptLang: string | null): string {
   return DEFAULT_LOCALE
 }
 
+const RATE_LIMIT_WINDOW = 60_000
+const RATE_LIMIT_MAX = 10
+const ipHits = new Map<string, { count: number; resetAt: number }>()
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // Rate limit auth endpoints
+  if (pathname.startsWith("/api/auth/")) {
+    const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown"
+    const now = Date.now()
+    const hit = ipHits.get(ip)
+    if (!hit || now > hit.resetAt) {
+      ipHits.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW })
+      return NextResponse.next()
+    }
+    hit.count++
+    if (hit.count > RATE_LIMIT_MAX) {
+      return NextResponse.json({ error: "请求过于频繁，请稍后再试" }, { status: 429 })
+    }
+    return NextResponse.next()
+  }
 
   // Skip API, static, internal routes
   if (
@@ -27,20 +47,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check if URL already has locale prefix
-  for (const locale of LOCALES) {
-    if (pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)) {
-      const newPath = pathname.replace(`/${locale}`, "") || "/"
-      const url = request.nextUrl.clone()
-      url.pathname = newPath
-      const response = NextResponse.rewrite(url)
-      response.cookies.set("NEXT_LOCALE", locale, {
-        path: "/",
-        maxAge: 365 * 24 * 60 * 60,
-        sameSite: "lax",
-      })
-      return response
-    }
+  // If path already has locale prefix, let it through (matched by [locale] route)
+  if (LOCALES.some((l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`))) {
+    return NextResponse.next()
   }
 
   // No locale prefix: redirect to detected locale
