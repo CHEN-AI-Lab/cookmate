@@ -322,9 +322,8 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     <>
       <OAuthLoadingOverlay provider={oauthProvider} />
       <div className="min-h-screen bg-gradient-to-br from-[#FFF8F0] to-[#FFE8D6] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full ring-1 ring-orange-100/50 relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FF6B35] via-orange-400 to-[#FFA94D]" />
-        <div className="text-center mb-8 mt-2">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full ring-1 ring-orange-100/50">
+        <div className="text-center mb-8">
           <Link href="/" className="text-2xl hover:scale-105 transition-transform inline-block">🍳</Link>
           <h1 className="text-2xl font-bold text-[#2D3436] mt-2">{t('loginTitle')}</h1>
           <p className="text-gray-500 mt-1">{t('loginSubtitle')}</p>
