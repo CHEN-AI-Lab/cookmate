@@ -464,10 +464,10 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         {tab === "password" && passwordSetupMode && (
           <div className="space-y-4">
             <div>
-              <label className="text-sm text-gray-600 font-medium">{t('accountLabel')}</label>
+              <label className="text-sm text-gray-600 font-medium">{t('emailLabel')}</label>
               <input
                 type="text"
-                placeholder={t('accountPlaceholder')}
+                placeholder={t('emailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
