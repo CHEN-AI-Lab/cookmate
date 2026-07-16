@@ -34,6 +34,18 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
     "🥩 肉禽蛋": t("catMeat"),
     "🍚 主食粮油": t("catStaples"),
   }
+  const ingredientLabel: Record<string, string> = {
+    "西红柿": t("ingredient_tomato"), "青菜": t("ingredient_greens"),
+    "白菜": t("ingredient_cabbage"), "土豆": t("ingredient_potato"),
+    "胡萝卜": t("ingredient_carrot"), "洋葱": t("ingredient_onion"),
+    "大蒜": t("ingredient_garlic"), "姜": t("ingredient_ginger"),
+    "葱": t("ingredient_scallion"), "鸡蛋": t("ingredient_egg"),
+    "鸡胸肉": t("ingredient_chicken_breast"), "鸡腿": t("ingredient_chicken_leg"),
+    "五花肉": t("ingredient_pork_belly"), "牛肉": t("ingredient_beef"),
+    "培根": t("ingredient_bacon"), "大米": t("ingredient_rice"),
+    "面条": t("ingredient_noodles"), "面粉": t("ingredient_flour"),
+    "挂面": t("ingredient_dried_noodles"), "食用油": t("ingredient_oil"),
+  }
   const [step, setStep] = useState(0)
   const [dietType, setDietType] = useState("不限")
   const [cuisinePref, setCuisinePref] = useState<string[]>([])
@@ -264,7 +276,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                               : "bg-gray-50 text-gray-600 border border-gray-100 hover:bg-gray-100"
                           }`}
                         >
-                          {selectedIngredients.has(item) ? "✓ " : ""}{item}
+                          {selectedIngredients.has(item) ? "✓ " : ""}{ingredientLabel[item]}
                         </button>
                       ))}
                     </div>
