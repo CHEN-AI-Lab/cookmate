@@ -701,6 +701,9 @@
     "saving": "保存中...",
     "startUsing": "✨ 开始使用",
     "selectCuisineError": "请至少选择一个菜系",
+    "catVegetables": "🥬 蔬菜",
+    "catMeat": "🥩 肉禽蛋",
+    "catStaples": "🍚 主食粮油",
     "saveFailed": "保存失败"
   },
   "error": {

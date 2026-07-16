@@ -15,7 +15,25 @@ const QUICK_INGREDIENTS = [
 
 export default function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
   const t = useTranslations("onboarding")
+  const ts = useTranslations("settings")
   const router = useRouter()
+
+  const dietLabel: Record<string, string> = {
+    "不限": ts("dietUnlimited"), "减脂": ts("dietLoseFat"),
+    "增肌": ts("dietBuildMuscle"), "素食": ts("dietVegetarian"),
+    "低碳水": ts("dietLowCarb"), "无麸质": ts("dietGlutenFree"),
+  }
+  const cuisineLabel: Record<string, string> = {
+    "中餐": ts("cuisineChinese"), "西餐": ts("cuisineWestern"),
+    "日料": ts("cuisineJapanese"), "韩餐": ts("cuisineKorean"),
+    "东南亚": ts("cuisineSoutheastAsian"), "印度菜": ts("cuisineIndian"),
+    "中东菜": ts("cuisineMiddleEastern"), "墨西哥菜": ts("cuisineMexican"),
+  }
+  const ingredientCats: Record<string, string> = {
+    "🥬 蔬菜": t("catVegetables"),
+    "🥩 肉禽蛋": t("catMeat"),
+    "🍚 主食粮油": t("catStaples"),
+  }
   const [step, setStep] = useState(0)
   const [dietType, setDietType] = useState("不限")
   const [cuisinePref, setCuisinePref] = useState<string[]>([])
@@ -158,7 +176,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                 <div className="flex flex-wrap gap-2 mt-2">
                   {DIET_OPTIONS.map((opt) => (
                     <button
-                      key={opt}
+                      key={dietLabel[opt]}
                       onClick={() => setDietType(opt)}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                         dietType === opt
@@ -166,7 +184,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
-                      {opt}
+                      {dietLabel[opt]}
                     </button>
                   ))}
                 </div>
@@ -192,7 +210,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                             : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                         }`}
                       >
-                        {selected ? "✓" : ""} {opt}
+                        {selected ? "✓" : ""} {cuisineLabel[opt]}
                       </button>
                     )
                   })}
@@ -234,7 +252,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
               <div className="mt-5 space-y-3 max-h-64 overflow-y-auto">
                 {QUICK_INGREDIENTS.map((group) => (
                   <div key={group.cat}>
-                    <p className="text-xs font-semibold text-gray-400 mb-1.5">{group.cat}</p>
+                    <p className="text-xs font-semibold text-gray-400 mb-1.5">{ingredientCats[group.cat]}</p>
                     <div className="flex flex-wrap gap-2">
                       {group.items.map((item) => (
                         <button

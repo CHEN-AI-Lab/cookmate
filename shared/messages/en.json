@@ -687,11 +687,11 @@
     "preferenceDesc": "Set your dietary preferences. AI recommends accordingly.",
     "dietType": "Diet Type",
     "cuisinePref": "Cuisine Preferences (multi-select)",
-    "selectedCuisines": "{count} cuisines selected",
+    "selectedCuisines": "{count, plural, one {# cuisine selected} other {# cuisines selected}}",
     "servingSize": "Serving Size",
     "ingredientTitle": "What's in your fridge?",
     "ingredientDesc": "Select your staple ingredients for AI recommendations",
-    "selectedIngredients": "{count} ingredients selected (you can always add more in Pantry)",
+    "selectedIngredients": "{count, plural, one {# ingredient selected} other {# ingredients selected}} (you can always add more in Pantry)",
     "tryAiTitle": "Try AI Recommendations",
     "tryAiDesc": "Go to recipes page, enter ingredients,<br />and get AI recipe suggestions. Regenerate anytime.",
     "tryAiButton": "🍳 Try it now →",
@@ -701,6 +701,9 @@
     "saving": "Saving...",
     "startUsing": "✨ Start Using",
     "selectCuisineError": "Please select at least one cuisine preference",
+    "catVegetables": "🥬 Vegetables",
+    "catMeat": "🥩 Meat, Poultry & Eggs",
+    "catStaples": "🍚 Rice, Grains & Oil",
     "saveFailed": "Save failed"
   },
   "error": {
