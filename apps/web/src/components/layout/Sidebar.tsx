@@ -102,7 +102,7 @@ function UserMenu({ name, initial, t }: { name: string; initial: string; t: (key
   }, [])
 
   const toggleLanguage = () => {
-    const idx = locales.indexOf(locale as any)
+    const idx = locales.indexOf(locale as (typeof locales)[number])
     const next = locales[(idx + 1) % locales.length]
     const browserPath = window.location.pathname
     const pathWithoutLocale = browserPath.replace(

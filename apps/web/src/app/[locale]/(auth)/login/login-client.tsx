@@ -311,10 +311,15 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   }
 
   const handleOAuth = async (provider: string) => {
+    if (isLoggedIn) {
+      await signOut({ redirect: false })
+      // Full page navigation after signOut ensures clean session
+      window.location.href = \`/api/auth/signin/\${provider}?callbackUrl=\${encodeURIComponent("/app/dashboard")}\`
+      return
+    }
     setOauthProvider(provider)
     setError("")
     try {
-      if (isLoggedIn) await signOut({ redirect: false })
       await signIn(provider, { callbackUrl: "/app/dashboard" })
     } catch {
       setError(tv('oauthNotConfigured'))

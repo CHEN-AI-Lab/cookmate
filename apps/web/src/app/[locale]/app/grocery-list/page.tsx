@@ -65,7 +65,10 @@ export default function GroceryListPage() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem("cookmate_grocery_checked")
-      if (saved) setChecked(new Set(JSON.parse(saved)))
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        Promise.resolve().then(() => setChecked(new Set(parsed)))
+      }
       // 注意：manualItems 不再从 localStorage 读取，改为从 API 获取（按用户隔离）
       // 历史残留的 localStorage 数据会被 API 的正确数据覆盖
       const synced = localStorage.getItem("cookmate_grocery_synced")

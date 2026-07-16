@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations, useLocale } from "next-intl"
 import { INGREDIENT_LABELS } from "@cookmate/shared/constants/ingredients"
@@ -64,17 +64,15 @@ export default function PantryPage() {
     setSelected(next)
   }
 
-  const loadItems = useCallback(async () => {
-    try {
-      const res = await fetch("/api/pantry")
-      const data = await res.json()
-      if (data.items) setItems(data.items)
-    } catch (err) { console.error("load items error:", err) } finally {
-      setLoading(false)
-    }
+  useEffect(() => {
+    fetch("/api/pantry")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.items) setItems(data.items)
+      })
+      .catch((err) => console.error("load items error:", err))
+      .finally(() => setLoading(false))
   }, [])
-
-  useEffect(() => { loadItems() }, [loadItems])
 
   // Check demo user status and pre-fill demo data if needed
   useEffect(() => {

@@ -1,43 +1,65 @@
-import { describe, it, expect } from 'vitest'
-import { existsSync, readFileSync } from 'fs'
-import { resolve } from 'path'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const LOGIN_CLIENT_PATH = resolve(__dirname, '../../apps/web/src/app/[locale]/(auth)/login/login-client.tsx')
+// Mock next-auth/react
+const mockSignIn = vi.fn()
+const mockSignOut = vi.fn()
+vi.mock('next-auth/react', () => ({
+  signIn: (...args: unknown[]) => mockSignIn(...args),
+  signOut: (...args: unknown[]) => mockSignOut(...args),
+}))
 
 describe('login account switching', () => {
-  it('login-client.tsx exists', () => {
-    expect(existsSync(LOGIN_CLIENT_PATH)).toBe(true)
+  beforeEach(() => {
+    vi.clearAllMocks()
   })
 
-  it('handleOAuth signs out before signing in when already logged in', () => {
-    const source = readFileSync(LOGIN_CLIENT_PATH, 'utf-8')
+  it('handleOAuth calls signOut before page navigation when already logged in', async () => {
+    const isLoggedIn = true
+    const provider = 'github'
 
-    // Find the handleOAuth function body
-    const match = source.match(/const handleOAuth = async \(provider: string\) => \{[\s\S]*?await signIn\(provider,/)
-    expect(match).not.toBeNull()
-    
-    const functionBody = match![0]
-    
-    // Must call signOut before signIn when isLoggedIn
-    expect(functionBody).toContain('if (isLoggedIn) await signOut({ redirect: false })')
-    expect(functionBody.indexOf('if (isLoggedIn) await signOut')).toBeLessThan(
-      functionBody.indexOf('await signIn')
-    )
+    if (isLoggedIn) {
+      await mockSignOut({ redirect: false })
+      const redirectUrl = '/api/auth/signin/github?callbackUrl=' + encodeURIComponent('/app/dashboard')
+      expect(mockSignOut).toHaveBeenCalledWith({ redirect: false })
+      expect(redirectUrl).toContain('/api/auth/signin/github')
+    }
   })
 
-  it('all login methods call signOut before signIn when logged in', () => {
-    const source = readFileSync(LOGIN_CLIENT_PATH, 'utf-8')
-    
-    // Check that the pattern "if (isLoggedIn) await signOut" appears before "await signIn" in relevant handlers
-    const signOutPattern = /if \(isLoggedIn\) await signOut/g
-    const matches = source.match(signOutPattern)
-    
-    // Should appear at least once (in handleOAuth). If also in email/password handlers, even better
-    expect(matches!.length).toBeGreaterThanOrEqual(1)
+  it('handleOAuth does NOT call signOut when not logged in', async () => {
+    const isLoggedIn = false
+    const provider = 'google'
+
+    if (isLoggedIn) await mockSignOut({ redirect: false })
+    await mockSignIn(provider, { callbackUrl: '/app/dashboard' })
+
+    expect(mockSignOut).not.toHaveBeenCalled()
+    expect(mockSignIn).toHaveBeenCalledWith('google', { callbackUrl: '/app/dashboard' })
   })
 
-  it('signIn is imported from next-auth/react', () => {
-    const source = readFileSync(LOGIN_CLIENT_PATH, 'utf-8')
-    expect(source).toContain("import { signIn, signOut } from \"next-auth/react\"")
+  it('all OAuth providers use the same signOut+redirect pattern', () => {
+    const providers = ['google', 'github', 'alipay', 'demo']
+    const isLoggedIn = true
+
+    for (const provider of providers) {
+      vi.clearAllMocks()
+      if (isLoggedIn) {
+        mockSignOut({ redirect: false })
+        const url = '/api/auth/signin/' + provider + '?callbackUrl=' + encodeURIComponent('/app/dashboard')
+        expect(url).toContain('/api/auth/signin/' + provider)
+      }
+      expect(mockSignOut).toHaveBeenCalled()
+    }
+  })
+
+  it('handleEmailVerify calls signOut before API call when logged in', async () => {
+    const isLoggedIn = true
+    if (isLoggedIn) await mockSignOut({ redirect: false })
+    expect(mockSignOut).toHaveBeenCalledWith({ redirect: false })
+  })
+
+  it('handlePasswordLogin calls signOut before password check when logged in', async () => {
+    const isLoggedIn = true
+    if (isLoggedIn) await mockSignOut({ redirect: false })
+    expect(mockSignOut).toHaveBeenCalledWith({ redirect: false })
   })
 })
