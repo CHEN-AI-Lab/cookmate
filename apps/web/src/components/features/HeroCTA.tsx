@@ -1,6 +1,7 @@
 "use client"
 
 import { useTranslations } from "next-intl"
+import Link from "next/link"
 
 export function HeroCTA() {
   const td = useTranslations("dashboard")
@@ -15,12 +16,12 @@ export function HeroCTA() {
             {td("recommendDesc")}
           </p>
         </div>
-        <a
+        <Link
           href="/app/recipes"
           className="inline-flex items-center gap-2 bg-[#FF6B35] text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-orange-600 hover:shadow-lg hover:shadow-orange-200/50 transition-all duration-200 shrink-0"
         >
           🍳 {thero("cta")}
-        </a>
+        </Link>
       </div>
     </div>
   )

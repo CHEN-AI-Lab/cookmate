@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { cn } from "@cookmate/shared/utils"
 
 type ToastType = "success" | "error" | "info"
@@ -32,23 +32,11 @@ export default function Toast({
   type = "info",
   duration = 3000,
 }: ToastProps) {
-  const [mounted, setMounted] = useState(false)
-
   useEffect(() => {
-    if (visible) {
-      setMounted(true)
-      const timer = setTimeout(() => {
-        onClose()
-      }, duration)
-      return () => clearTimeout(timer)
-    } else {
-      // Delay unmount for exit animation
-      const timer = setTimeout(() => setMounted(false), 200)
-      return () => clearTimeout(timer)
-    }
+    if (!visible) return
+    const timer = setTimeout(() => onClose(), duration)
+    return () => clearTimeout(timer)
   }, [visible, duration, onClose])
-
-  if (!mounted) return null
 
   return (
     <div
@@ -56,7 +44,7 @@ export default function Toast({
         "fixed bottom-6 left-1/2 z-[100] -translate-x-1/2 transition-all duration-200",
         visible
           ? "translate-y-0 opacity-100"
-          : "translate-y-2 opacity-0",
+          : "translate-y-2 opacity-0 pointer-events-none",
       )}
     >
       <div

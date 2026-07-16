@@ -35,12 +35,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const oauth = params.get("oauth")
-    if (oauth) {
-      window.history.replaceState({}, "", "/login")
-      signIn(oauth, { callbackUrl: "/app/dashboard" })
-      return
-    }
     const alipayAuth = params.get("alipay_auth")
     if (alipayAuth) {
       window.history.replaceState({}, "", "/login")
@@ -317,13 +311,10 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   }
 
   const handleOAuth = async (provider: string) => {
-    if (isLoggedIn) {
-      await signOut({ callbackUrl: "/login?oauth=" + provider })
-      return
-    }
     setOauthProvider(provider)
     setError("")
     try {
+      if (isLoggedIn) await signOut({ redirect: false })
       await signIn(provider, { callbackUrl: "/app/dashboard" })
     } catch {
       setError(tv('oauthNotConfigured'))

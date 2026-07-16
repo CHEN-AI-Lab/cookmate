@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { useTranslations } from "next-intl"
 import { MealPlanGrid } from "@/components/features/MealPlanGrid"
 import { MealPlanDetailModal } from "@/components/features/MealPlanDetailModal"
@@ -53,17 +53,15 @@ export default function MealPlanPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [isDemoUser, setIsDemoUser] = useState(false)
 
-  const loadPlan = useCallback(async () => {
-    try {
-      const res = await fetch("/api/meal-plan")
-      const data = await res.json()
-      if (data.plans?.length > 0) setPlan(data.plans[0])
-    } catch (err) { console.error("load meal plan error:", err) } finally {
-      setLoading(false)
-    }
+  useEffect(() => {
+    fetch("/api/meal-plan")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.plans?.length > 0) setPlan(data.plans[0])
+      })
+      .catch((err) => console.error("load meal plan error:", err))
+      .finally(() => setLoading(false))
   }, [])
-
-  useEffect(() => { loadPlan() }, [loadPlan])
 
   useEffect(() => {
     fetch("/api/user/profile")

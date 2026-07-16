@@ -89,7 +89,34 @@ export default function MyRecipesPage() {
     }
   }
 
-  useEffect(() => { loadRecipes() }, [])
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const profileRes = await fetch("/api/user/profile")
+        const profile = await profileRes.json()
+        if (profile.isDemoUser) {
+          setIsDemoUser(true)
+          setRecipes(getDemoRecipes())
+          return
+        }
+        const res = await fetch(`/api/recipes?page=1&pageSize=${PAGE_SIZE}`)
+        const data = await res.json()
+        if (data.recipes) {
+          setRecipes(data.recipes)
+          setPage(data.page || 1)
+          setTotalPage(Math.ceil((data.total || 0) / PAGE_SIZE))
+          setTotalCount(data.total || 0)
+        }
+        // Fetch starred count separately
+        fetch("/api/recipes?starred=true&pageSize=1").then(r => r.json()).then(d => setStarredCount(d.total || 0)).catch(() => {})
+      } catch (err) {
+        console.error("load recipes error:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    init()
+  }, [])
 
   useEffect(() => {
     fetch("/api/user/profile")

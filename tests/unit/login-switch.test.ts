@@ -19,9 +19,9 @@ describe('login account switching', () => {
     const functionBody = match![0]
     
     // Must call signOut before signIn when isLoggedIn
-    expect(functionBody).toMatch(/if.*isLoggedIn/)
-    expect(functionBody.indexOf('signOut')).toBeLessThan(
-      functionBody.indexOf('signIn') >= 0 ? functionBody.indexOf('signIn') : Infinity
+    expect(functionBody).toContain('if (isLoggedIn) await signOut({ redirect: false })')
+    expect(functionBody.indexOf('if (isLoggedIn) await signOut')).toBeLessThan(
+      functionBody.indexOf('await signIn')
     )
   })
 
