@@ -44,3 +44,21 @@ describe('formatDate', () => {
     expect(result).toContain('25日')
   })
 })
+
+describe('t() i18n loader', () => {
+  it('resolves dot-separated keys', () => {
+    const { t } = require('@cookmate/shared/i18n')
+    expect(t('zh-CN', 'home.title')).toBeTruthy()
+    expect(t('en', 'home.title')).toBeTruthy()
+  })
+
+  it('falls back to key path for missing keys', () => {
+    const { t } = require('@cookmate/shared/i18n')
+    expect(t('zh-CN', 'nonexistent.key')).toBe('nonexistent.key')
+  })
+
+  it('returns fallback text when provided', () => {
+    const { t } = require('@cookmate/shared/i18n')
+    expect(t('zh-CN', 'nonexistent.key', '默认')).toBe('默认')
+  })
+})
