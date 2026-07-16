@@ -240,7 +240,8 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           {isLoggedIn && (
             <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
               <p className="text-sm text-blue-700">{t('alreadyLoggedIn', { name: userName || '' })}</p>
-              <Link href="/app/dashboard" className="flex-1 bg-blue-600 text-white text-center text-sm py-2 rounded-lg hover:bg-blue-700">{t('enterDashboard')}</Link>
+              <p className="text-xs text-blue-500 mt-1">{t('switchAccount')}</p>
+              <Link href="/app/dashboard" className="block mt-2 bg-blue-600 text-white text-center text-sm py-2 rounded-lg hover:bg-blue-700">{t('enterDashboard')}</Link>
             </div>
           )}
 
