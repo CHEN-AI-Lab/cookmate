@@ -191,7 +191,8 @@
     "setPasswordFailed": "Failed to set password",
     "setupFailed": "Setup failed, please try again",
     "oauthNotConfigured": "This login method is not configured yet",
-    "emailNotRegistered": "This email is not registered"
+    "emailNotRegistered": "This email is not registered",
+    "email": "Email"
   },
   "dashboard": {
     "welcomeBack": "👋 Welcome back",

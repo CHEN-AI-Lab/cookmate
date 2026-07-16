@@ -191,7 +191,8 @@
     "setPasswordFailed": "设置密码失败",
     "setupFailed": "设置失败，请重试",
     "oauthNotConfigured": "该登录方式尚未配置，上线后即可使用",
-    "emailNotRegistered": "该邮箱未注册"
+    "emailNotRegistered": "该邮箱未注册",
+    "email": "邮箱"
   },
   "dashboard": {
     "welcomeBack": "👋 欢迎回来",

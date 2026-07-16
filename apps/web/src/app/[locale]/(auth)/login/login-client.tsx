@@ -231,12 +231,11 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   }
 
   const sendSetupCode = async () => {
-    const isPhone = /^1\d{10}$/.test(email)
-    setLoading("setup_code")
-    setError("")
-    try {
-      const body = isPhone ? { phone: email } : { email }
-      const res = await fetch("/api/auth/send-code", {
+      setLoading("setup_code")
+      setError("")
+      try {
+        const body = { email }
+        const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -252,7 +251,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         setSetupCode(data.devCode)
         setError(tv('devCodePrefix') + ' ' + data.devCode)
       } else {
-        setError(tv('codeSentTo', { target: isPhone ? tv('phone') : tv('email') }))
+        setError(tv('codeSentTo', { target: tv('email') }))
         setTimeout(() => setError(""), 3000)
       }
     } catch {
