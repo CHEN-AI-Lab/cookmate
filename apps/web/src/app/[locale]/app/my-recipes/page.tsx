@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { getDemoRecipes } from "@cookmate/shared/demo-data"
 
 interface Recipe {
@@ -23,6 +23,7 @@ const MEAL_KEYS = ["早餐","午餐","晚餐"] as const
 
 export default function MyRecipesPage() {
   const tr = useTranslations("recipes")
+  const locale = useLocale()
   const tm = useTranslations("mealPlan")
   const dayLabel: Record<string, string> = {
     "周一": tm("monday"), "周二": tm("tuesday"), "周三": tm("wednesday"),
@@ -64,7 +65,7 @@ export default function MyRecipesPage() {
       const profile = await profileRes.json()
       if (profile.isDemoUser) {
         setIsDemoUser(true)
-        setRecipes(getDemoRecipes())
+        setRecipes(getDemoRecipes(locale))
         setLoading(false)
         return
       }
@@ -96,7 +97,7 @@ export default function MyRecipesPage() {
         const profile = await profileRes.json()
         if (profile.isDemoUser) {
           setIsDemoUser(true)
-          setRecipes(getDemoRecipes())
+          setRecipes(getDemoRecipes(locale))
           return
         }
         const res = await fetch(`/api/recipes?page=1&pageSize=${PAGE_SIZE}`)
@@ -124,7 +125,7 @@ export default function MyRecipesPage() {
       .then((data) => {
         if (data.isDemoUser) {
           setIsDemoUser(true)
-          setRecipes((prev) => prev.length > 0 ? prev : getDemoRecipes())
+          setRecipes((prev) => prev.length > 0 ? prev : getDemoRecipes(locale))
         }
       })
       .catch((err) => console.error("load profile error:", err))

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { MealPlanGrid } from "@/components/features/MealPlanGrid"
 import { MealPlanDetailModal } from "@/components/features/MealPlanDetailModal"
 import { getDemoMealPlan } from "@cookmate/shared/demo-data"
@@ -35,6 +35,7 @@ const MEAL_TYPES = ["breakfast", "lunch", "dinner"]
 
 export default function MealPlanPage() {
   const t = useTranslations("mealPlan")
+  const locale = useLocale()
   const tc = useTranslations("common")
   const tr = useTranslations("recipes")
   const DAY_LABELS = [t("monday"), t("tuesday"), t("wednesday"), t("thursday"), t("friday"), t("saturday"), t("sunday")]
@@ -69,7 +70,7 @@ export default function MealPlanPage() {
       .then((data) => {
         if (data.isDemoUser) {
           setIsDemoUser(true)
-          setPlan((prev) => prev || getDemoMealPlan())
+          setPlan((prev) => prev || getDemoMealPlan(locale))
         }
       })
       .catch((err) => console.error("load profile error:", err))

@@ -21,8 +21,10 @@ const navItems = [
 
 export function Sidebar({
   name,
+  isDemoUser,
 }: {
   name?: string | undefined | null
+  isDemoUser?: boolean
 }) {
   const pathname = usePathname()
   const locale = useLocale()
@@ -64,7 +66,7 @@ export function Sidebar({
       {/* Bottom: user menu dropdown */}
       <div className="px-3 py-3 border-t border-orange-100">
         {name ? (
-          <UserMenu name={name} initial={initial} t={t} />
+          <UserMenu name={name} initial={initial} t={t} isDemoUser={isDemoUser} />
         ) : (
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
@@ -85,8 +87,9 @@ export function Sidebar({
   )
 }
 
-function UserMenu({ name, initial, t }: { name: string; initial: string; t: (key: string) => string }) {
+function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: string; t: (key: string) => string; isDemoUser?: boolean }) {
   const [open, setOpen] = useState(false)
+  const [demoLangToast, setDemoLangToast] = useState("")
   const menuRef = useRef<HTMLDivElement>(null)
   const locale = useLocale()
 
@@ -102,6 +105,17 @@ function UserMenu({ name, initial, t }: { name: string; initial: string; t: (key
   }, [])
 
   const toggleLanguage = () => {
+    if (isDemoUser) {
+      const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
+      setDemoLangToast("Demo users can only switch between Chinese and English")
+      setTimeout(() => setDemoLangToast(""), 2500)
+      const browserPath = window.location.pathname
+      const pathWithoutLocale = browserPath.replace(
+        new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
+      )
+      window.location.href = `/${nextLocale}${pathWithoutLocale}`
+      return
+    }
     const idx = locales.indexOf(locale as (typeof locales)[number])
     const next = locales[(idx + 1) % locales.length]
     const browserPath = window.location.pathname
@@ -157,6 +171,11 @@ function UserMenu({ name, initial, t }: { name: string; initial: string; t: (key
             </svg>
             <span>{t("logout")}</span>
           </button>
+        </div>
+      )}
+      {demoLangToast && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-5 py-2.5 rounded-xl text-xs shadow-lg z-[100] whitespace-nowrap">
+          {demoLangToast}
         </div>
       )}
     </div>

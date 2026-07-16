@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
+import { useState } from "react"
 
 const navItems = [
   { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
@@ -16,9 +17,14 @@ const navItems = [
   { href: "/app/billing", icon: "💳", labelKey: "billing" },
 ]
 
-export function MobileNav() {
+export function MobileNav({
+  isDemoUser,
+}: {
+  isDemoUser?: boolean
+}) {
   const pathname = usePathname()
   const t = useTranslations("nav")
+  const [demoLangToast, setDemoLangToast] = useState("")
 
   return (
     <header className="fixed top-0 left-0 right-0 md:hidden bg-white border-b border-orange-100 h-16 z-50 flex items-center justify-between px-4">
@@ -47,8 +53,13 @@ export function MobileNav() {
             </Link>
           )
         })}
-        <LanguageSwitcher />
+        <LanguageSwitcher isDemoUser={isDemoUser} onDemoToast={() => { setDemoLangToast("Demo users can only switch between Chinese and English"); setTimeout(() => setDemoLangToast(""), 2500) }} />
       </nav>
+      {demoLangToast && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-5 py-2.5 rounded-xl text-xs shadow-lg z-[100] whitespace-nowrap">
+          {demoLangToast}
+        </div>
+      )}
     </header>
   )
 }

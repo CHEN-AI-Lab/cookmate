@@ -59,12 +59,18 @@ export default function SettingsPage() {
       fetch("/api/user/profile").then((r) => r.json()),
     ])
       .then(([settingsData, profileData]) => {
-        if (settingsData.settings) {
+        const profileDataAny = profileData as Record<string, unknown>
+        const isDemo = !!(profileDataAny.isDemoUser)
+        if (settingsData.settings || isDemo) {
           setSettings({
-            dietType: settingsData.settings.dietType ?? DIET_OPTIONS[0],
-            cuisinePref: settingsData.settings.cuisinePref ? settingsData.settings.cuisinePref.split(",").filter(Boolean) : [],
-            servingSize: settingsData.settings.servingSize ?? 2,
-            subscriptionTier: settingsData.settings.subscriptionTier ?? "FREE",
+            dietType: settingsData.settings?.dietType ?? DIET_OPTIONS[0],
+            cuisinePref: isDemo
+              ? [...CUISINE_OPTIONS]
+              : settingsData.settings?.cuisinePref
+                ? settingsData.settings.cuisinePref.split(",").filter(Boolean)
+                : [],
+            servingSize: settingsData.settings?.servingSize ?? 2,
+            subscriptionTier: settingsData.settings?.subscriptionTier ?? "FREE",
           })
         }
         if (profileData.name !== undefined) {

@@ -14,10 +14,12 @@ export default async function AppLayout({ children, params }: { children: React.
     redirect(`/${locale}/app/onboarding-preview`)
   }
 
+  const isDemoUser = session.user.id.startsWith("demo")
+
   return (
     <div className="min-h-screen bg-[#FFF8F0] flex">
-      <Sidebar name={session.user.name} />
-      <MobileNav />
+      <Sidebar name={session.user.name} isDemoUser={isDemoUser} />
+      <MobileNav isDemoUser={isDemoUser} />
       <main className="flex-1 md:ml-0 pt-16 md:pt-4 px-4 md:px-8 pb-8">
         <div className="max-w-5xl mx-auto">
           {children}
