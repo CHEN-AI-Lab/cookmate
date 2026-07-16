@@ -1,7 +1,7 @@
 import { Link } from "@/i18n/navigation"
 import { useTranslations } from "next-intl"
 import { locales } from "@cookmate/shared/constants"
-import type { MessageLocale } from "@cookmate/shared/constants"
+import type { Locale } from "@cookmate/shared/constants"
 
 export default function PublicFooter() {
   const tcommon = useTranslations("common")

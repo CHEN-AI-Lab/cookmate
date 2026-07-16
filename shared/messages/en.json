@@ -799,7 +799,8 @@
     "codeRecentlySent": "Verification code already sent, please try again later",
     "emailQuotaExceeded": "Daily email quota exceeded, please try again later",
     "smsNotAvailable": "Phone login is not available yet. Please use email or password to log in.",
-    "sendFailed": "Failed to send"
+    "sendFailed": "Failed to send",
+    "emailNotRegistered": "This email is not registered"
   },
   "settings": {
     "title": "Settings",

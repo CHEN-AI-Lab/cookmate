@@ -1,9 +1,7 @@
-// ─── CookMate Locale Configuration ───
+// ─── Locale Configuration ───
 // Single source of truth for supported languages.
-// All platforms (Web, MiniProgram, App) read from here.
-
-export type MessageLocale = 'zh-CN' | 'en'
+// All platforms (Web, MiniProgram, App, Desktop) read from here.
 
 export const locales = ['zh-CN', 'en'] as const
-export const defaultLocale = 'zh-CN' as const
-export type Messages = typeof import('../messages/zh-CN.json')
+export type Locale = (typeof locales)[number]
+export const defaultLocale: Locale = 'en'

@@ -799,7 +799,8 @@
     "codeRecentlySent": "验证码已发送，请稍后再试",
     "emailQuotaExceeded": "今日邮件发送额度已用完，请稍后再试",
     "smsNotAvailable": "手机号登录暂未开放，请使用邮箱或密码登录",
-    "sendFailed": "发送失败"
+    "sendFailed": "发送失败",
+    "emailNotRegistered": "该邮箱未注册"
   },
   "settings": {
     "title": "设置",
