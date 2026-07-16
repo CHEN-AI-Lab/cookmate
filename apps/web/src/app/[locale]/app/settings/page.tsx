@@ -128,27 +128,6 @@ export default function SettingsPage() {
     finally { setBindLoading(false) }
   }
 
-const handleCancel = async () => {
-    if (!confirm(ts("cancelConfirm"))) return
-    setCancelLoading(true)
-    try {
-      const res = await fetch("/api/subscription/cancel", { method: "POST" })
-      const data = await res.json()
-      if (data.success) {
-        setGlobalToast(data.message || ts("cancelSubscription") + " ✅")
-        setTimeout(() => setGlobalToast(""), 3000)
-      } else {
-        setGlobalToast(data.error || ts("cancelSubscription"))
-        setTimeout(() => setGlobalToast(""), 3000)
-      }
-    } catch {
-      setGlobalToast("❌ " + ts("cancelSubscription"))
-      setTimeout(() => setGlobalToast(""), 3000)
-    } finally {
-      setCancelLoading(false)
-    }
-  }
-
 const save = async () => {
     if (settings.cuisinePref.length === 0) {
       setError(ts("selectCuisineFirst"))
