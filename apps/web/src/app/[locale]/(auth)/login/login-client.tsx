@@ -132,6 +132,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         // 429 = 2分钟内已有验证码，显示输入框让用户输入旧码
         if (res.status === 429) {
           setEmailCodeSent(true)
+          if (data.remainingSeconds) setCountdown(data.remainingSeconds)
           if (data.devCode) setEmailCode(data.devCode)
         }
         return
