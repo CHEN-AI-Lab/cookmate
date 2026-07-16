@@ -53,7 +53,6 @@ export default function SettingsPage() {
   const [bindError, setBindError] = useState("")
     const [accountMsg, setAccountMsg] = useState("")
     const [globalToast, setGlobalToast] = useState("")
-  const [cancelLoading, setCancelLoading] = useState(false)
   useEffect(() => {
     Promise.all([
       fetch("/api/settings").then((r) => r.json()),
@@ -423,15 +422,6 @@ const save = async () => {
             <Link href="/app/billing" className="inline-block mt-5 w-full text-center bg-gradient-to-r from-[#FF6B35] to-orange-400 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
               {settings.subscriptionTier === "PRO" ? ts("manageSubscription") : ts("upgradePlan")}
             </Link>
-            {settings.subscriptionTier === "PRO" && (
-              <button
-                onClick={handleCancel}
-                disabled={cancelLoading}
-                className="inline-block mt-2 w-full text-center border border-red-200 text-red-500 px-6 py-2 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors disabled:opacity-40"
-              >
-                {cancelLoading ? ts("cancelling") : ts("cancelSubscription")}
-              </button>
-            )}
           </div>
         </div>
         </div>
