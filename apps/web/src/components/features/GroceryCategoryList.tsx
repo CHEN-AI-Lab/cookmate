@@ -1,5 +1,6 @@
 "use client"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
+import { INGREDIENT_LABELS } from "@cookmate/shared/constants/ingredients"
 
 interface GroceryItem {
   name: string
@@ -72,7 +73,9 @@ export function GroceryCategoryList({
   total,
 }: GroceryCategoryListProps) {
   const t = useTranslations("grocery")
+  const locale = useLocale()
   const catLabels = t.raw("catLabels") as Record<string, string>
+  const displayName = (name: string) => locale === "en" || locale.startsWith("en") ? (INGREDIENT_LABELS[name] || name) : name
   return (
     <div>
       {/* Summary */}
@@ -135,7 +138,7 @@ export function GroceryCategoryList({
                         }
                       }}
                     >
-                      {item.name}
+                      {displayName(item.name)}
                       {item.quantity && (
                         <span className="text-gray-400 font-normal">
                           {" "}

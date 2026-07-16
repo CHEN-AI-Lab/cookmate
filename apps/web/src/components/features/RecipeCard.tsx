@@ -1,5 +1,6 @@
 "use client"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
+import { CUISINE_LABELS } from "@cookmate/shared/constants"
 
 interface Recipe {
   id: string
@@ -51,6 +52,7 @@ export function RecipeCard({
 }: RecipeCardProps) {
   const t = useTranslations("recipes")
   const tc = useTranslations("common")
+  const locale = useLocale()
 
   function difficultyLabel(d: string) {
     const lower = d?.toLowerCase() ?? ""
@@ -98,7 +100,7 @@ export function RecipeCard({
             <div className="flex flex-wrap gap-3 mt-2 text-xs">
               <span>⏱ {recipe.cookingTime}{t("minutes")}</span>
               <span>🔥 {recipe.calories}{t("caloriesShort")}</span>
-              <span>{recipe.cuisineType}</span>
+              <span>{locale === "en" || locale.startsWith("en") ? (CUISINE_LABELS[recipe.cuisineType] || recipe.cuisineType) : recipe.cuisineType}</span>
               <span className={`px-2 py-0.5 rounded-full ${diffColor(recipe.difficulty)}`}>
                 {difficultyLabel(recipe.difficulty)}
               </span>

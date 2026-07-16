@@ -12,10 +12,8 @@ const labelMap: Record<string, string> = {
 
 export default function LanguageSwitcher({
   isDemoUser,
-  onDemoToast,
 }: {
   isDemoUser?: boolean
-  onDemoToast?: () => void
 }) {
   const locale = useLocale()
   const pathname = usePathname()
@@ -23,16 +21,15 @@ export default function LanguageSwitcher({
 
   const toggleLocale = useCallback(() => {
     if (isDemoUser) {
-      // Demo users: only toggle between zh-CN and en, ignore other locales
+      // Demo users: only toggle between zh-CN and en
       const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
       router.push(pathname, { locale: nextLocale })
-      onDemoToast?.()
       return
     }
     const currentIndex = locales.indexOf(locale as (typeof locales)[number])
     const nextLocale = locales[(currentIndex + 1) % locales.length]
     router.push(pathname, { locale: nextLocale })
-  }, [locale, pathname, router, isDemoUser, onDemoToast])
+  }, [locale, pathname, router, isDemoUser])
 
   return (
     <button

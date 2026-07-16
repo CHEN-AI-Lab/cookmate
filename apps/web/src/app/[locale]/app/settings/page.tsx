@@ -254,7 +254,7 @@ const save = async () => {
                                   </div>
                                 ) : (
                                   <>
-                                    {profile.name || ts("notSet")}
+                                    {profile?.isDemoUser && (locale === "en" || locale.startsWith("en")) ? "Demo User" : profile.name || ts("notSet")}
                                     <button onClick={() => { if (profile?.isDemoUser) { setGlobalToast(ts("demoToast")); setTimeout(() => setGlobalToast(""), 3000); return } setEditNameValue(profile.name || ""); setEditingName(true) }} className="ml-2 text-[#FF6B35] text-xs hover:underline disabled:text-gray-300 disabled:cursor-not-allowed">{ts("editName")}</button>
                                   </>
                                 )}
@@ -262,7 +262,10 @@ const save = async () => {
                             </div>
                             <div className="flex items-center justify-between py-2 border-b border-gray-50">
                               <span className="text-sm text-gray-500">{ts("loginMethod")}</span>
-                  <span className="text-sm font-medium text-[#2D3436]">{profile.loginMethod}</span>
+                  <span className="text-sm font-medium text-[#2D3436]">
+                {profile?.isDemoUser && (locale === "en" || locale.startsWith("en"))
+                  ? "Demo Login"
+                  : profile.loginMethod}</span>
                 </div>
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
                   <span className="text-sm text-gray-500">{ts("phone")}</span>
@@ -411,7 +414,7 @@ const save = async () => {
                 )}
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
                   <span className="text-sm text-gray-500">{ts("registerDate")}</span>
-                  <span className="text-sm font-medium text-[#2D3436]">{new Date(profile.createdAt).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</span>
+                  <span className="text-sm font-medium text-[#2D3436]">{new Date(profile.createdAt).toLocaleDateString(locale === "en" ? "en-US" : "zh-CN", { year: "numeric", month: "long", day: "numeric" })}</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <span className="text-sm text-gray-500">{ts("currentPlan")}</span>

@@ -418,7 +418,8 @@
     "prevPage": "上一页",
     "nextPage": "下一页",
     "pageInfo": "第 {page} / {total} 页",
-    "duplicateIngredient": "「{name}」已在食材列表中"
+    "duplicateIngredient": "「{name}」已在食材列表中",
+    "demoToast": "🔒 体验用户无法修改，请注册后使用"
   },
   "billing": {
     "title": "💳 账单与订阅",

@@ -89,7 +89,6 @@ export function Sidebar({
 
 function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: string; t: (key: string) => string; isDemoUser?: boolean }) {
   const [open, setOpen] = useState(false)
-  const [demoLangToast, setDemoLangToast] = useState("")
   const menuRef = useRef<HTMLDivElement>(null)
   const locale = useLocale()
 
@@ -107,8 +106,6 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
   const toggleLanguage = () => {
     if (isDemoUser) {
       const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
-      setDemoLangToast("Demo users can only switch between Chinese and English")
-      setTimeout(() => setDemoLangToast(""), 2500)
       const browserPath = window.location.pathname
       const pathWithoutLocale = browserPath.replace(
         new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
@@ -135,7 +132,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
         <span className="flex items-center justify-center w-7 h-7 rounded-full bg-orange-100 text-[#FF6B35] text-xs font-bold shrink-0">
           {initial}
         </span>
-        <span className="truncate flex-1">{name}</span>
+        <span className="truncate flex-1">{isDemoUser && (locale === "en" || locale.startsWith("en")) ? "Demo User" : name}</span>
         <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="6 9 12 15 18 9" />
         </svg>
@@ -171,11 +168,6 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             </svg>
             <span>{t("logout")}</span>
           </button>
-        </div>
-      )}
-      {demoLangToast && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-5 py-2.5 rounded-xl text-xs shadow-lg z-[100] whitespace-nowrap">
-          {demoLangToast}
         </div>
       )}
     </div>

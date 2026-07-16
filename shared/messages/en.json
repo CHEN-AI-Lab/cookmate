@@ -418,7 +418,8 @@
     "prevPage": "Previous",
     "nextPage": "Next",
     "pageInfo": "Page {page} / {total}",
-    "duplicateIngredient": "「{name}」is already in the ingredient list"
+    "duplicateIngredient": "「{name}」is already in the ingredient list",
+    "demoToast": "🔒 Demo users cannot modify. Please sign up."
   },
   "billing": {
     "title": "💳 Billing & Subscription",

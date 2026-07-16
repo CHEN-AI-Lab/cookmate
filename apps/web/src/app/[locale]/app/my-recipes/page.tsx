@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useTranslations, useLocale } from "next-intl"
 import { getDemoRecipes } from "@cookmate/shared/demo-data"
+import { CUISINE_LABELS } from "@cookmate/shared/constants"
 
 interface Recipe {
   id: string
@@ -65,7 +66,10 @@ export default function MyRecipesPage() {
       const profile = await profileRes.json()
       if (profile.isDemoUser) {
         setIsDemoUser(true)
-        setRecipes(getDemoRecipes(locale))
+        const demoRecipes = getDemoRecipes(locale)
+        setRecipes(demoRecipes)
+        setTotalCount(demoRecipes.length)
+        setStarredCount(demoRecipes.filter((r) => r.starred).length)
         setLoading(false)
         return
       }
@@ -97,7 +101,10 @@ export default function MyRecipesPage() {
         const profile = await profileRes.json()
         if (profile.isDemoUser) {
           setIsDemoUser(true)
-          setRecipes(getDemoRecipes(locale))
+          const demoRecipes = getDemoRecipes(locale)
+          setRecipes(demoRecipes)
+          setTotalCount(demoRecipes.length)
+          setStarredCount(demoRecipes.filter((r) => r.starred).length)
           return
         }
         const res = await fetch(`/api/recipes?page=1&pageSize=${PAGE_SIZE}`)
@@ -125,7 +132,13 @@ export default function MyRecipesPage() {
       .then((data) => {
         if (data.isDemoUser) {
           setIsDemoUser(true)
-          setRecipes((prev) => prev.length > 0 ? prev : getDemoRecipes(locale))
+          setRecipes((prev) => {
+            if (prev.length > 0) return prev
+            const demoRecipes = getDemoRecipes(locale)
+            setTotalCount(demoRecipes.length)
+            setStarredCount(demoRecipes.filter((r) => r.starred).length)
+            return demoRecipes
+          })
         }
       })
       .catch((err) => console.error("load profile error:", err))
@@ -383,7 +396,7 @@ export default function MyRecipesPage() {
                       <div className="flex flex-wrap gap-2 mt-1.5 text-xs text-gray-400">
                         {recipe.cookingTime && <span>⏱ {recipe.cookingTime}{tr("minutes")}</span>}
                         {recipe.calories && <span>🔥 {recipe.calories}{tr("caloriesShort")}</span>}
-                        {recipe.cuisineType && <span>{recipe.cuisineType}</span>}
+                        {recipe.cuisineType && <span>{locale === "en" || locale.startsWith("en") ? (CUISINE_LABELS[recipe.cuisineType] || recipe.cuisineType) : recipe.cuisineType}</span>}
                         {recipe.difficulty && (
                           <span className="px-1.5 py-0.5 rounded bg-gray-50">{diffLabel(recipe.difficulty)}</span>
                         )}
