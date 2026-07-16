@@ -107,7 +107,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
   const toggleLanguage = () => {
     if (isDemoUser) {
       const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
-      setDemoLangToast("Demo users can only switch between Chinese and English")
+      setDemoLangToast(t("demoLangToast"))
       setTimeout(() => setDemoLangToast(""), 2500)
       const browserPath = window.location.pathname
       const pathWithoutLocale = browserPath.replace(

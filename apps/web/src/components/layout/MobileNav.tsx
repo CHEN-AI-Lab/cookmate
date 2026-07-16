@@ -26,7 +26,7 @@ export function MobileNav({
   const t = useTranslations("nav")
   const [demoLangToast, setDemoLangToast] = useState("")
   const showDemoLangToast = useCallback(() => {
-    setDemoLangToast("Demo users can only switch between Chinese and English")
+    setDemoLangToast(t("demoLangToast"))
     setTimeout(() => setDemoLangToast(""), 2500)
   }, [])
 

@@ -209,7 +209,7 @@ export default function PantryPage() {
           <button
             onClick={() => {
               if (isDemoUser) {
-                setDemoToast("🔒 体验用户无法使用，请注册后使用")
+                setDemoToast(t("demoLockedAction"))
                 setTimeout(() => setDemoToast(""), 3000)
                 return
               }
@@ -255,7 +255,7 @@ export default function PantryPage() {
                         key={item}
                         onClick={async () => {
                           if (isDemoUser) {
-                            setDemoToast("🔒 体验用户无法使用，请注册后使用")
+                            setDemoToast(t("demoLockedAction"))
                             setTimeout(() => setDemoToast(""), 3000)
                             return
                           }

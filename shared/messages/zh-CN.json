@@ -45,6 +45,7 @@
     "pantry": "食材库",
     "settings": "设置",
     "billing": "账单",
+    "demoLangToast": "体验用户只能在中文和英文间切换",
     "logout": "退出登录"
   },
   "hero": {

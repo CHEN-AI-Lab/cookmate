@@ -45,6 +45,7 @@
     "pantry": "Pantry",
     "settings": "Settings",
     "billing": "Billing",
+    "demoLangToast": "Demo users can only switch between Chinese and English",
     "logout": "Log Out"
   },
   "hero": {
