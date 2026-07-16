@@ -796,7 +796,7 @@
     "invalidPassword": "Incorrect password",
     "profileEditDenied": "Demo users cannot edit profile. Please sign up.",
     "emailBindDenied": "Demo users cannot bind email. Please sign up.",
-    "codeRecentlySent": "Verification code already sent, please try again later",
+    "codeRecentlySent": "Code already sent — check your email. Please wait 120s before requesting a new one.",
     "emailQuotaExceeded": "Daily email quota exceeded, please try again later",
     "smsNotAvailable": "Phone login is not available yet. Please use email or password to log in.",
     "sendFailed": "Failed to send",
