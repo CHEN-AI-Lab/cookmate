@@ -3,13 +3,15 @@ import { redirect } from "next/navigation"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { MobileNav } from "@/components/layout/MobileNav"
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
   const session = await auth()
   if (!session?.user) redirect("/login")
 
+  const { locale } = await params
+
   // 新用户未完成 onboarding 时重定向
   if (!session.user.onboardingCompleted && !session.user.id.startsWith("demo")) {
-    redirect("/app/onboarding-preview")
+    redirect(`/${locale}/app/onboarding-preview`)
   }
 
   return (
