@@ -145,8 +145,8 @@
     "passwordPlaceholderSetup": "至少 8 位，需含 2 种以上字符",
     "confirmPasswordLabel": "确认密码",
     "confirmPasswordPlaceholder": "再次输入密码",
-    "accountLabel": "邮箱 / 手机号",
-    "accountPlaceholder": "请输入邮箱或手机号",
+    "accountLabel": "邮箱",
+    "accountPlaceholder": "请输入邮箱",
     "loginAction": "登录",
     "registerAction": "注册",
     "loginRegisterAction": "登录 / 注册",
@@ -190,7 +190,8 @@
     "wrongPassword": "邮箱/手机号或密码错误",
     "setPasswordFailed": "设置密码失败",
     "setupFailed": "设置失败，请重试",
-    "oauthNotConfigured": "该登录方式尚未配置，上线后即可使用"
+    "oauthNotConfigured": "该登录方式尚未配置，上线后即可使用",
+    "emailNotRegistered": "该邮箱未注册"
   },
   "dashboard": {
     "welcomeBack": "👋 欢迎回来",

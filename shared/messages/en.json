@@ -135,8 +135,8 @@
     "newPasswordLabel": "New Password",
     "confirmPasswordLabel": "Confirm Password",
     "confirmPasswordPlaceholder": "Re-enter password",
-    "accountLabel": "Email / Phone",
-    "accountPlaceholder": "Enter email or phone number",
+    "accountLabel": "Email",
+    "accountPlaceholder": "Enter your email",
     "loginAction": "Log In",
     "registerAction": "Sign Up",
     "loginRegisterAction": "Log In / Sign Up",
@@ -190,7 +190,8 @@
     "wrongPassword": "Incorrect email/phone or password",
     "setPasswordFailed": "Failed to set password",
     "setupFailed": "Setup failed, please try again",
-    "oauthNotConfigured": "This login method is not configured yet"
+    "oauthNotConfigured": "This login method is not configured yet",
+    "emailNotRegistered": "This email is not registered"
   },
   "dashboard": {
     "welcomeBack": "👋 Welcome back",
