@@ -59,7 +59,14 @@ export default function DemoOnboarding() {
       <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
         <div className="text-4xl mb-3">{content[step].title.split(" ")[0]}</div>
         <h3 className="font-bold text-lg text-[#2D3436] mb-2">{content[step].title}</h3>
-        <p className="text-sm text-gray-500 leading-relaxed">{content[step].desc}</p>
+        <p className="text-sm text-gray-500 leading-relaxed">
+          {content[step].desc}
+          {step === content.length - 1 && content[step].action && (
+            <Link href="/register" className="text-[#FF6B35] hover:underline font-medium" onClick={close}>
+              {content[step].action}
+            </Link>
+          )}
+        </p>
 
         {/* Step dots */}
         <div className="flex justify-center gap-1.5 mt-5">
@@ -98,12 +105,21 @@ export default function DemoOnboarding() {
               {isEn ? "Next →" : "下一步 →"}
             </button>
           ) : (
-            <button
-              onClick={close}
-              className="flex-1 px-4 py-2.5 text-sm text-white bg-[#FF6B35] rounded-xl hover:bg-orange-600 font-medium transition-colors"
-            >
-              {isEn ? "Got it!" : "知道了！"}
-            </button>
+            <div className="flex gap-2 w-full">
+              <button
+                onClick={close}
+                className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                {isEn ? "Later" : "稍后"}
+              </button>
+              <Link
+                href="/register"
+                onClick={close}
+                className="flex-1 px-4 py-2.5 text-sm text-center text-white bg-[#FF6B35] rounded-xl hover:bg-orange-600 font-medium transition-colors"
+              >
+                {isEn ? "Free Sign Up" : "免费注册"}
+              </Link>
+            </div>
           )}
         </div>
       </div>
