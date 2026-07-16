@@ -839,6 +839,8 @@
     "proPlan": "Pro",
     "upgradePlan": "⬆️ Upgrade to Pro",
     "manageSubscription": "💳 Manage Subscription",
+    "cancelSubscription": "Cancel Subscription",
+    "cancelling": "Cancelling...",
     "dietType": "Diet Type",
     "dietUnlimited": "No Restriction",
     "dietLoseFat": "Fat Loss",
