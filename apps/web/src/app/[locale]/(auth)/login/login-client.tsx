@@ -160,6 +160,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     setLoading("email_login")
     setError("")
     try {
+      if (isLoggedIn) await signOut({ redirect: false })
       const res = await fetch("/api/auth/verify-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -194,6 +195,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     setLoading("password")
     setError("")
     try {
+      if (isLoggedIn) await signOut({ redirect: false })
       // 先检查账号是否设置了密码
       const checkRes = await fetch("/api/auth/check-password", {
         method: "POST",
@@ -311,6 +313,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     setOauthProvider(provider)
     setError("")
     try {
+      if (isLoggedIn) await signOut({ redirect: false })
       await signIn(provider, { callbackUrl: "/app/dashboard" })
     } catch {
       setError(tv('oauthNotConfigured'))
