@@ -12,6 +12,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   const tv = useTranslations('validation')
   const tc = useTranslations('common')
   const [tab, setTab] = useState<"email" | "password">("email")
+  const [phone, setPhone] = useState("")
   const [code, setCode] = useState("")
   const [email, setEmail] = useState("")
   const [emailCode, setEmailCode] = useState("")
@@ -54,37 +55,57 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     }
   }, [setupCountdown])
 
-  const sendEmailCode = async () => {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError(tv('invalidEmail'))
+  const sendCode = async () => {
+    if (!/^1\d{10}$/.test(phone)) {
+      setError(tv('invalidPhone'))
       return
     }
+    setLoading("send")
     setError("")
-    setLoading("email")
     try {
       const res = await fetch("/api/auth/send-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ phone }),
       })
       const data = await res.json()
       if (!res.ok) {
-        if (res.status === 429 && data.remainingSeconds) {
-          setCountdown(data.remainingSeconds)
-          setError(data.error)
-          return
-        }
         setError(data.error || tv('sendFailed'))
         return
       }
-      setEmailCodeSent(true)
-      setCountdown(120)
       if (data.devCode) {
-        setEmailCode(data.devCode)
-        setError(tv('devCode', { code: data.devCode }))
+        setCode(data.devCode)
+        setError(tv('devCodeAutoFill', { code: data.devCode }))
       } else {
-        setError("")
+        setError(tv('codeSent'))
+        setTimeout(() => setError(""), 3000)
       }
+    } catch {
+      setError(tv('networkError'))
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  const handlePhoneLogin = async () => {
+    if (!phone || !code) {
+      setError(tv('emptyPhoneAndCode'))
+      return
+    }
+    setLoading("phone")
+    setError("")
+    try {
+      const res = await fetch("/api/auth/verify-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, code }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || tv('verifyFailed'))
+        return
+      }
+      window.location.href = "/app/dashboard"
     } catch {
       setError(tv('networkError'))
     } finally {
@@ -93,23 +114,62 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   }
 
   const handleEmailLogin = async () => {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError(tv('invalidEmail'))
+      return
+    }
+    setLoading("email")
+    setError("")
+    try {
+      const res = await fetch("/api/auth/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || tv('sendFailed'))
+        // 429 = 2分钟内已有验证码，显示输入框让用户输入旧码
+        if (res.status === 429) {
+          setEmailCodeSent(true)
+          if (data.devCode) setEmailCode(data.devCode)
+        }
+        return
+      }
+      setEmailCodeSent(true)
+      setCountdown(120)
+      if (data.devCode) {
+        setEmailCode(data.devCode)
+        setEmailMsg(tv('devCodePrefix') + ' ' + data.devCode)
+      } else {
+        setEmailMsg(tv('codeSentEmail'))
+      }
+    } catch {
+      setError(tv('sendFailedRetry'))
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  const handleEmailVerify = async () => {
     if (!email || !emailCode) {
       setError(tv('emptyEmailAndCode'))
       return
     }
-    setLoading("email")
+    setLoading("email_login")
+    setError("")
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/auth/verify-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code: emailCode }),
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || tv('loginFailed'))
+        setError(data.error || tv('verifyFailed'))
         return
       }
-      await signIn("credentials", { email, code: emailCode, callbackUrl: "/app/dashboard" })
+      window.location.href = "/app/dashboard"
     } catch {
       setError(tv('networkError'))
     } finally {
@@ -118,55 +178,70 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   }
 
   const handlePasswordLogin = async () => {
-    if (!email || !password) {
-      setError(tv('emptyEmailAndPassword'))
+    if (!email || (!/^1\d{10}$/.test(email) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+      setError(tv('invalidAccount'))
+      return
+    }
+    if (!password) {
+      setError(tv('emptyPassword'))
+      return
+    }
+    if (password.length < 8) {
+      setError(tv('passwordTooShort'))
       return
     }
     setLoading("password")
+    setError("")
     try {
-      const result = await signIn("credentials", {
-        email,
+      // 先检查账号是否设置了密码
+      const checkRes = await fetch("/api/auth/check-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ account: email }),
+      })
+      const checkData = await checkRes.json()
+      if (!checkData.userExists) {
+        setError(tv('accountNotFound'))
+        setLoading(null)
+        return
+      }
+      if (!checkData.hasPassword) {
+        setPasswordSetupMode(true)
+        setError(tv('noPasswordSet'))
+        setLoading(null)
+        return
+      }
+
+      const result = await signIn("password", {
+        account: email,
         password,
         redirect: false,
-        callbackUrl: "/app/dashboard",
       })
       if (result?.error) {
-        setError(result.error === "CredentialsSignin" ? tv('invalidCredentials') : result.error)
-      } else if (result?.url) {
-        window.location.href = result.url
+        setError(tv('wrongPassword'))
+      } else {
+        window.location.href = result?.url || "/app/dashboard"
       }
     } catch {
-      setError(tv('networkError'))
+      setError(tv('wrongPassword'))
     } finally {
       setLoading(null)
     }
   }
 
-  // 发送设置密码的验证码
   const sendSetupCode = async () => {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError(tv('invalidEmail'))
-      return
-    }
-    setError("")
+    const isPhone = /^1\d{10}$/.test(email)
     setLoading("setup_code")
+    setError("")
     try {
-      const res = await fetch("/api/auth/forgot-password", {
+      const body = isPhone ? { phone: email } : { email }
+      const res = await fetch("/api/auth/send-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(body),
       })
       const data = await res.json()
       if (!res.ok) {
-        if (res.status === 404) {
-          setError(tv('emailNotRegistered'))
-          return
-        }
-        if (res.status === 429 && data.remainingSeconds) {
-          setSetupCountdown(data.remainingSeconds)
-          setError(data.error)
-          return
-        }
         setError(data.error || tv('sendFailed'))
         return
       }
@@ -174,285 +249,339 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       setSetupCountdown(120)
       if (data.devCode) {
         setSetupCode(data.devCode)
-        setError(tv('devCode', { code: data.devCode }))
+        setError(tv('devCodePrefix') + ' ' + data.devCode)
       } else {
-        setError("")
+        setError(tv('codeSentTo', { target: isPhone ? tv('phone') : tv('email') }))
+        setTimeout(() => setError(""), 3000)
       }
     } catch {
-      setError(tv('networkError'))
+      setError(tv('sendFailed'))
     } finally {
       setLoading(null)
     }
   }
 
-  // 提交密码设置
   const handleSetupPassword = async () => {
-    if (!setupNewPassword || !setupConfirmPassword) {
-      setError(tv('emptyPassword'))
+    if (!setupCode) {
+      setError(tv('emptyCode'))
+      return
+    }
+    if (setupNewPassword.length < 8) {
+      setError(tv('passwordTooShort'))
       return
     }
     if (setupNewPassword !== setupConfirmPassword) {
       setError(tv('passwordMismatch'))
       return
     }
-    if (setupNewPassword.length < 6) {
-      setError(tv('passwordTooShort'))
-      return
-    }
-    setLoading("setup")
+    setLoading("setup_submit")
+    setError("")
     try {
-      const res = await fetch("/api/auth/forgot-password", {
-        method: "PUT",
+      const isPhone = /^1\d{10}$/.test(email)
+
+      // 设置密码（set-password 会自己验证验证码）
+      const body = isPhone
+        ? { phone: email, password: setupNewPassword, code: setupCode }
+        : { email, password: setupNewPassword, code: setupCode }
+      const setRes = await fetch("/api/auth/set-password", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code: setupCode, password: setupNewPassword }),
+        body: JSON.stringify(body),
       })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || tv('updateFailed'))
+      if (!setRes.ok) {
+        const setData = await setRes.json()
+        setError(setData.error || tv('setPasswordFailed'))
         return
       }
-      setPasswordSetupMode(false)
-      setEmailMsg(t('passwordUpdated'))
-      setTimeout(() => setEmailMsg(""), 3000)
+
+      // 设置成功，用密码登录
+      await signIn("password", {
+        account: email,
+        password: setupNewPassword,
+        callbackUrl: "/app/dashboard",
+      })
     } catch {
-      setError(tv('networkError'))
+      setError(tv('setupFailed'))
     } finally {
       setLoading(null)
     }
   }
 
-  const handleOAuth = (provider: string) => {
+  const handleOAuth = async (provider: string) => {
     setOauthProvider(provider)
-    signIn(provider, { callbackUrl: "/app/dashboard" })
+    setError("")
+    try {
+      await signIn(provider, { callbackUrl: "/app/dashboard" })
+    } catch {
+      setError(tv('oauthNotConfigured'))
+      setOauthProvider(null)
+    }
   }
 
   return (
     <>
       <OAuthLoadingOverlay provider={oauthProvider} />
       <div className="min-h-screen bg-[#FFF8F0] flex items-center justify-center p-4">
-        <div className="w-full max-w-sm">
-          {/* Logo */}
+      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+        <div className="text-center mb-8">
           <Link href="/" className="text-2xl">🍳</Link>
-          <h1 className="text-2xl font-bold text-[#2D3436] mt-4">{t('loginTitle')}</h1>
-          <p className="text-sm text-gray-500 mt-1">{t('loginSubtitle')}</p>
-
-          {/* 已登录提示 */}
-          {isLoggedIn && (
-            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
-              <p className="text-sm text-blue-700">{t('alreadyLoggedIn', { name: userName || '' })}</p>
-              <p className="text-xs text-blue-500 mt-1">{t('switchAccount')}</p>
-              <Link href="/app/dashboard" className="block mt-2 bg-blue-600 text-white text-center text-sm py-2 rounded-lg hover:bg-blue-700">{t('enterDashboard')}</Link>
-            </div>
-          )}
-
-          {!isLoggedIn && (
-            <div className="mt-6">
-              {/* Tab 切换 */}
-              {!passwordSetupMode && (
-                <div className="flex gap-4 mb-6">
-                  <button
-                    onClick={() => { setTab("email"); setError(""); setEmailCodeSent(false); setEmailCode("") }}
-                    className={`text-sm font-medium pb-2 border-b-2 transition-colors ${tab === "email" ? "text-[#FF6B35] border-[#FF6B35]" : "text-gray-400 border-transparent"}`}
-                  >
-                    {t('tabEmail')}
-                  </button>
-                  <button
-                    onClick={() => { setTab("password"); setError("") }}
-                    className={`text-sm font-medium pb-2 border-b-2 transition-colors ${tab === "password" ? "text-[#FF6B35] border-[#FF6B35]" : "text-gray-400 border-transparent"}`}
-                  >
-                    {t('tabPassword')}
-                  </button>
-                </div>
-              )}
-
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">{error}</div>
-              )}
-              {emailMsg && (
-                <div className="bg-green-50 border border-green-200 text-green-600 text-sm rounded-xl px-4 py-3 mb-4">{emailMsg}</div>
-              )}
-
-              {tab === "email" && !passwordSetupMode && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm text-gray-600 font-medium">{t('emailLabel')}</label>
-                    <input
-                      type="email"
-                      placeholder={t('emailPlaceholder')}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
-                    />
-                  </div>
-                  {!emailCodeSent ? (
-                    <button
-                      onClick={sendEmailCode}
-                      disabled={loading === "email" || !email}
-                      className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
-                    >
-                      {loading === "email" ? tc('sending') : tc('sendCode')}
-                    </button>
-                  ) : (
-                    <>
-                      <div>
-                        <label className="text-sm text-gray-600 font-medium">{t('codeLabel')}</label>
-                        <input
-                          type="text"
-                          placeholder={t('codePlaceholder')}
-                          value={emailCode}
-                          onChange={(e) => setEmailCode(e.target.value)}
-                          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
-                        />
-                      </div>
-                      <button
-                        onClick={handleEmailLogin}
-                        disabled={loading === "email" || !emailCode}
-                        className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
-                      >
-                        {loading === "email" ? t('loggingIn') : t('loginAction')}
-                      </button>
-                      <button
-                        onClick={sendEmailCode}
-                        disabled={loading === "email" || countdown > 0}
-                        className="w-full text-xs text-gray-400 hover:text-[#FF6B35] transition-colors"
-                      >
-                        {countdown > 0 ? `${countdown}s` : loading === "email" ? tc('sending') : tc('resend')}
-                      </button>
-                    </>
-                  )}
-                  <p className="text-xs text-gray-400 text-center">{t('sendCodeHint')}</p>
-                </div>
-              )}
-
-              {tab === "password" && !passwordSetupMode && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm text-gray-600 font-medium">{t('emailLabel')}</label>
-                    <input
-                      type="email"
-                      placeholder={t('emailPlaceholder')}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
-                    />
-                  </div>
-                  <PasswordInput
-                    value={password}
-                    onChange={setPassword}
-                    placeholder={t('passwordPlaceholder')}
-                  />
-                  <button
-                    onClick={handlePasswordLogin}
-                    disabled={loading === "password" || !email || !password}
-                    className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
-                  >
-                    {loading === "password" ? t('loggingIn') : t('loginAction')}
-                  </button>
-                  <button
-                    onClick={() => { setPasswordSetupMode(true); setError(""); setPassword(""); setSetupNewPassword(""); setSetupConfirmPassword(""); setSetupCode(""); setSetupCodeSent(false) }}
-                    className="w-full text-xs text-gray-400 hover:text-[#FF6B35] transition-colors"
-                  >
-                    {t('forgotPassword')}
-                  </button>
-                </div>
-              )}
-
-              {/* 密码设置 / 忘记密码 */}
-              {passwordSetupMode && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm text-gray-600 font-medium">{t('emailLabel')}</label>
-                    <input
-                      type="text"
-                      placeholder={t('emailPlaceholder')}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder={t('codePlaceholder')}
-                      value={setupCode}
-                      onChange={(e) => setSetupCode(e.target.value)}
-                      className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white"
-                    />
-                    <button
-                      onClick={sendSetupCode}
-                      disabled={loading === "setup_code" || setupCountdown > 0 || !email}
-                      className="px-4 py-3 bg-gray-100 text-gray-600 text-sm rounded-xl hover:bg-gray-200 disabled:opacity-50 whitespace-nowrap"
-                    >
-                      {setupCountdown > 0 ? `${setupCountdown}s` : loading === "setup_code" ? tc('sending') : tc('sendCode')}
-                    </button>
-                  </div>
-                  <div>
-                    <PasswordInput
-                      value={setupNewPassword}
-                      onChange={setSetupNewPassword}
-                      placeholder={t('newPasswordPlaceholder')}
-                    />
-                  </div>
-                  <div>
-                    <PasswordInput
-                      value={setupConfirmPassword}
-                      onChange={setSetupConfirmPassword}
-                      placeholder={t('confirmPasswordPlaceholder')}
-                    />
-                  </div>
-                  <button
-                    onClick={handleSetupPassword}
-                    disabled={loading === "setup" || !setupNewPassword || !setupConfirmPassword || !setupCode}
-                    className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
-                  >
-                    {loading === "setup" ? t('saving') : t('setPassword')}
-                  </button>
-                  <button
-                    onClick={() => { setPasswordSetupMode(false); setError("") }}
-                    className="w-full text-xs text-gray-400 hover:text-[#FF6B35] transition-colors"
-                  >
-                    {t('backToLogin')}
-                  </button>
-                </div>
-              )}
-
-              {/* 分隔线 */}
-              {!passwordSetupMode && (
-                <div className="flex items-center gap-3 my-6">
-                  <div className="flex-1 h-px bg-gray-200" />
-                  <span className="text-xs text-gray-400">{t('socialLogin')}</span>
-                  <div className="flex-1 h-px bg-gray-200" />
-                </div>
-              )}
-
-              {/* 第三方登录 */}
-              {!passwordSetupMode && (
-                <div className="space-y-3">
-                  <button
-                    onClick={() => handleOAuth("alipay")}
-                    disabled={loading !== null}
-                    className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-xl py-3 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                  >
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0"><rect width="24" height="24" rx="5" fill="#1677FF"/><text x="12" y="17" textAnchor="middle" fill="#fff" fontSize="15" fontFamily="sans-serif" fontWeight="bold">支</text></svg>
-                    <span className="font-medium text-gray-700">{t("oauthAlipay")}</span>
-                  </button>
-
-                  <div className="mt-3">
-                    <button
-                      onClick={() => handleOAuth("demo")}
-                      disabled={loading !== null}
-                      className="w-full bg-gradient-to-r from-[#FF6B35] to-orange-400 text-white rounded-xl py-3 font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-                    >
-                      {loading === "demo" ? t('loggingIn') : t('demoVersion')}
-                    </button>
-                  </div>
-                  <p className="text-center text-xs text-gray-400 mt-4">{t("autoRegisterHint")}</p>
-                </div>
-              )}
-            </div>
-          )}
+          <h1 className="text-2xl font-bold text-[#2D3436] mt-2">{t('loginTitle')}</h1>
+          <p className="text-gray-500 mt-1">{t('loginSubtitle')}</p>
         </div>
+
+        {isLoggedIn && (
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+            <p className="text-sm text-blue-700 font-medium">
+              {userName ? `👋 ${userName}` : t('alreadyLoggedIn')}
+            </p>
+            <p className="text-xs text-blue-500 mt-1">{t('switchAccount')}</p>
+            <div className="mt-3 flex gap-2">
+              <Link href="/app/dashboard" className="flex-1 bg-blue-600 text-white text-center text-sm py-2 rounded-lg hover:bg-blue-700">{t('enterDashboard')}</Link>
+              <button onClick={() => signOut({ callbackUrl: "/" })} className="flex-1 bg-white text-gray-600 text-center text-sm py-2 rounded-lg border border-gray-200 hover:bg-gray-50">{tc('logout')}</button>
+            </div>
+          </div>
+        )}
+
+        {/* 登录方式切换标签 */}
+        <div className="flex mb-6 bg-gray-100 rounded-xl p-1">
+          <button
+            onClick={() => setTab("email")}
+            className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
+              tab === "email" ? "bg-white text-[#2D3436] shadow-sm" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {t('tabEmail')}
+          </button>
+          <button
+            onClick={() => setTab("password")}
+            className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
+              tab === "password" ? "bg-white text-[#2D3436] shadow-sm" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {t('tabPassword')}
+          </button>
+        </div>
+
+        {/* 邮箱登录 */}
+        {tab === "email" && (
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-gray-600 font-medium">{t('emailLabel')}</label>
+              <div className="flex gap-2 mt-1.5">
+                <input
+                  type="email"
+                  placeholder={t('emailPlaceholder')}
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setEmailCodeSent(false) }}
+                  className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white"
+                />
+                <button
+                  onClick={handleEmailLogin}
+                  disabled={loading === "email" || countdown > 0 || !email}
+                  className="px-4 py-3 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap transition-colors"
+                >
+                  {countdown > 0 ? `${countdown}s` : loading === "email" ? tc('sending') : tc('sendCode')}
+                </button>
+              </div>
+            </div>
+            {emailMsg && (
+              <div className="text-xs text-green-600 bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+                {emailMsg}
+              </div>
+            )}
+            {error && tab === "email" && (
+              <div className={`text-xs rounded-xl px-3 py-2 ${
+                error.includes("dev") ? "bg-green-50 border border-green-200 text-green-600"
+                : error.includes("sent") ? "bg-blue-50 border border-blue-200 text-blue-600"
+                : "bg-red-50 border border-red-200 text-red-600"
+              }`}>
+                {error}
+              </div>
+            )}
+            {emailCodeSent && (
+              <>
+                <div>
+                  <label className="text-sm text-gray-600 font-medium">{t('codeLabel')}</label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder={t('codePlaceholder')}
+                    value={emailCode}
+                    onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, ""))}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
+                  />
+                </div>
+                <button
+                  onClick={handleEmailVerify}
+                  disabled={loading === "email_login" || !emailCode}
+                  className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
+                >
+                  {loading === "email_login" ? t('loggingIn') : t('loginRegisterAction')}
+                </button>
+              </>
+            )}
+            {!emailCodeSent && (
+              <p className="text-xs text-gray-400 text-center">{t('sendCodeHint')}</p>
+            )}
+          </div>
+        )}
+
+        {/* 密码登录 */}        {tab === "password" && !passwordSetupMode && (          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-gray-600 font-medium">{t('accountLabel')}</label>
+              <input
+                type="text"
+                placeholder={t('accountPlaceholder')}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-gray-600 font-medium">{t('passwordLabel')}</label>
+              <PasswordInput
+                placeholder={t('passwordPlaceholder')}
+                value={password}
+                onChange={setPassword}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
+              />
+            </div>            <button
+              onClick={handlePasswordLogin}
+              disabled={loading === "password" || !email || !password}
+              className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
+            >
+              {loading === "password" ? t('loggingIn') : t('loginAction')}
+            </button>
+            <button
+              onClick={() => { setPasswordSetupMode(true); setError(""); setPassword(""); setSetupNewPassword(""); setSetupConfirmPassword(""); setSetupCode(""); setSetupCodeSent(false) }}
+              className="w-full text-xs text-gray-400 hover:text-[#FF6B35] transition-colors"
+            >
+              {t('forgotPassword')}
+            </button>          </div>        )}
+
+        {/* 密码设置模式（没设密码时直接设） */}
+        {tab === "password" && passwordSetupMode && (
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-gray-600 font-medium">{t('accountLabel')}</label>
+              <input
+                type="text"
+                placeholder={t('accountPlaceholder')}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
+              />
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder={t('codePlaceholder')}
+                value={setupCode}
+                onChange={(e) => setSetupCode(e.target.value.replace(/\D/g, ""))}
+                className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white"
+                maxLength={6}
+              />
+              <button
+                onClick={sendSetupCode}
+                disabled={loading === "setup_code" || setupCountdown > 0}
+                className="px-4 py-3 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap"
+              >
+                {setupCountdown > 0 ? `${setupCountdown}s` : loading === "setup_code" ? tc('sending') : tc('sendCode')}
+              </button>
+            </div>
+            <div>
+              <label className="text-sm text-gray-600 font-medium">{t('passwordLabel')}</label>
+              <PasswordInput
+                placeholder={t('passwordPlaceholderSetup')}
+                value={setupNewPassword}
+                onChange={setSetupNewPassword}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-gray-600 font-medium">{t('confirmPasswordLabel')}</label>
+              <PasswordInput
+                placeholder={t('confirmPasswordPlaceholder')}
+                value={setupConfirmPassword}
+                onChange={setSetupConfirmPassword}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
+              />
+            </div>
+            <button
+              onClick={handleSetupPassword}
+              disabled={loading === "setup_submit" || !setupCode || !setupNewPassword || !setupConfirmPassword}
+              className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
+            >
+              {loading === "setup_submit" ? t('loggingIn') : t('setupPassword')}
+            </button>
+            <button
+              onClick={() => { setPasswordSetupMode(false); setError(""); setSetupCodeSent(false) }}
+              className="w-full text-sm text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              {t('backToLogin')}
+            </button>
+          </div>
+        )}
+
+        {/* 非邮箱 tab 的错误提示 */}
+        {error && tab !== "email" && (
+          <div className={`mt-2 p-3 rounded-xl text-sm text-center ${
+            error.includes("dev") ? "bg-green-50 border border-green-200 text-green-600"
+            : "bg-red-50 border border-red-200 text-red-600"
+          }`}>
+            {error}
+          </div>
+        )}
+
+        {/* 社交账号登录 */}
+        <div className="my-6 flex items-center gap-4">
+          <div className="flex-1 h-px bg-gray-200" />
+          <span className="text-sm text-gray-400">{t('socialLogin')}</span>
+          <div className="flex-1 h-px bg-gray-200" />
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            onClick={() => handleOAuth("google")}
+            disabled={loading !== null}
+            className="flex items-center justify-center gap-1.5 border border-gray-200 rounded-xl py-2.5 hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            <span className="font-medium text-gray-700">Google</span>
+          </button>
+          <button
+            onClick={() => handleOAuth("github")}
+            disabled={loading !== null}
+            className="flex items-center justify-center gap-1.5 border border-gray-200 rounded-xl py-2.5 hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="#24292F"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            <span className="font-medium text-gray-700">GitHub</span>
+          </button>
+          <button
+            onClick={() => handleOAuth("alipay")}
+            disabled={loading !== null}
+            className="flex items-center justify-center gap-1.5 border border-gray-200 rounded-xl py-2.5 hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0"><rect width="24" height="24" rx="5" fill="#1677FF"/><text x="12" y="17" textAnchor="middle" fill="#fff" fontSize="15" fontFamily="sans-serif" fontWeight="bold">支</text></svg>
+            <span className="font-medium text-gray-700">{t("oauthAlipay")}</span>
+          </button>
+        </div>
+
+        <div className="mt-3">
+          <button
+            onClick={() => handleOAuth("demo")}
+            disabled={loading !== null}
+            className="w-full bg-gradient-to-r from-[#FF6B35] to-orange-400 text-white rounded-xl py-3 font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {loading === "demo" ? t('loggingIn') : t('demoVersion')}
+          </button>
+        </div>
+
+        <p className="text-center text-sm text-gray-400 mt-6">
+          {t('hasAccount')}<Link href="/register" className="text-[#FF6B35] hover:underline">{t('registerAction')}</Link>
+        </p>
       </div>
+    </div>
     </>
   )
 }
