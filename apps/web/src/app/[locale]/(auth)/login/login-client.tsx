@@ -253,13 +253,13 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                     onClick={() => { setTab("email"); setError(""); setEmailCodeSent(false); setEmailCode("") }}
                     className={`text-sm font-medium pb-2 border-b-2 transition-colors ${tab === "email" ? "text-[#FF6B35] border-[#FF6B35]" : "text-gray-400 border-transparent"}`}
                   >
-                    {t('emailLogin')}
+                    {t('tabEmail')}
                   </button>
                   <button
                     onClick={() => { setTab("password"); setError("") }}
                     className={`text-sm font-medium pb-2 border-b-2 transition-colors ${tab === "password" ? "text-[#FF6B35] border-[#FF6B35]" : "text-gray-400 border-transparent"}`}
                   >
-                    {t('passwordLogin')}
+                    {t('tabPassword')}
                   </button>
                 </div>
               )}

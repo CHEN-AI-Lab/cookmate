@@ -164,7 +164,10 @@
     "registering": "Registering...",
     "passwordOptionalLabel": "Set Password (Optional)",
     "passwordOptionalPlaceholder": "At least 8 characters (optional)",
-    "autoRegisterHint": "New users will be automatically registered after verification"
+    "autoRegisterHint": "New users will be automatically registered after verification",
+    "setPassword": "Set Password",
+    "passwordUpdated": "Password updated successfully",
+    "newPasswordPlaceholder": "New password (min 6 chars)"
   },
   "validation": {
     "invalidPhone": "Please enter a valid 11-digit phone number",
