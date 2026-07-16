@@ -321,10 +321,11 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   return (
     <>
       <OAuthLoadingOverlay provider={oauthProvider} />
-      <div className="min-h-screen bg-[#FFF8F0] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
-        <div className="text-center mb-8">
-          <Link href="/" className="text-2xl">🍳</Link>
+      <div className="min-h-screen bg-gradient-to-br from-[#FFF8F0] to-[#FFE8D6] flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full ring-1 ring-orange-100/50 relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FF6B35] via-orange-400 to-[#FFA94D]" />
+        <div className="text-center mb-8 mt-2">
+          <Link href="/" className="text-2xl hover:scale-105 transition-transform inline-block">🍳</Link>
           <h1 className="text-2xl font-bold text-[#2D3436] mt-2">{t('loginTitle')}</h1>
           <p className="text-gray-500 mt-1">{t('loginSubtitle')}</p>
         </div>
@@ -414,7 +415,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 <button
                   onClick={handleEmailVerify}
                   disabled={loading === "email_login" || !emailCode}
-                  className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
+                  className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all active:scale-[0.98]"
                 >
                   {loading === "email_login" ? t('loggingIn') : t('loginRegisterAction')}
                 </button>
@@ -448,7 +449,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
             </div>            <button
               onClick={handlePasswordLogin}
               disabled={loading === "password" || !email || !password}
-              className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
+              className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all active:scale-[0.98]"
             >
               {loading === "password" ? t('loggingIn') : t('loginAction')}
             </button>
@@ -510,7 +511,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
             <button
               onClick={handleSetupPassword}
               disabled={loading === "setup_submit" || !setupCode || !setupNewPassword || !setupConfirmPassword}
-              className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
+              className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all active:scale-[0.98]"
             >
               {loading === "setup_submit" ? t('loggingIn') : t('setupPassword')}
             </button>
