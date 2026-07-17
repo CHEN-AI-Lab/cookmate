@@ -95,6 +95,17 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
   const menuRef = useRef<HTMLDivElement>(null)
   const locale = useLocale()
 
+  // Restore toast from sessionStorage after page reload
+  useEffect(() => {
+    const saved = sessionStorage.getItem("demoLangToast")
+    if (saved) {
+      setDemoLangToast(saved)
+      sessionStorage.removeItem("demoLangToast")
+      const timer = setTimeout(() => setDemoLangToast(""), 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
   // Close on click outside
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -109,8 +120,10 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
   const toggleLanguage = () => {
     if (isDemoUser) {
       const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
-      setDemoLangToast(t("demoLangToast"))
-      setTimeout(() => setDemoLangToast(""), 4000)
+      const msg = t("demoLangToast")
+      setDemoLangToast(msg)
+      sessionStorage.setItem("demoLangToast", msg)
+      setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 4000)
       const pathWithoutLocale = window.location.pathname.replace(
         new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
       )
@@ -173,7 +186,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
         </div>
       )}
       {demoLangToast && (
-        <div className="absolute top-full right-0 mt-2 bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs shadow-lg z-[100] whitespace-nowrap">
+        <div className="fixed top-16 right-4 bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs shadow-lg z-[100] whitespace-nowrap">
           {demoLangToast}
         </div>
       )}

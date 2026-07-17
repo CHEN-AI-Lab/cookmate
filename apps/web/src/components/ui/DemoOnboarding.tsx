@@ -85,14 +85,14 @@ export default function DemoOnboarding() {
           {step > 0 ? (
             <button
               onClick={prev}
-              className="flex-1 px-4 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              className="flex-1 px-3 py-2 text-xs text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors whitespace-nowrap"
             >
               {isEn ? "← Back" : "← 上一步"}
             </button>
           ) : (
             <button
               onClick={close}
-              className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              className="flex-1 px-3 py-2 text-xs text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors whitespace-nowrap"
             >
               {isEn ? "Skip" : "跳过"}
             </button>
@@ -100,7 +100,7 @@ export default function DemoOnboarding() {
           {step < content.length - 1 ? (
             <button
               onClick={next}
-              className="flex-1 px-4 py-2.5 text-sm text-white bg-[#FF6B35] rounded-xl hover:bg-orange-600 font-medium transition-colors"
+              className="flex-1 px-3 py-2 text-xs text-white bg-[#FF6B35] rounded-xl hover:bg-orange-600 font-medium transition-colors whitespace-nowrap"
             >
               {isEn ? "Next →" : "下一步 →"}
             </button>
@@ -108,14 +108,14 @@ export default function DemoOnboarding() {
             <div className="flex gap-2 w-full">
               <button
                 onClick={close}
-                className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                className="flex-1 px-3 py-2 text-xs text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors whitespace-nowrap"
               >
                 {isEn ? "Later" : "稍后"}
               </button>
               <Link
                 href="/register"
                 onClick={close}
-                className="flex-1 px-4 py-2.5 text-sm text-center text-white bg-[#FF6B35] rounded-xl hover:bg-orange-600 font-medium transition-colors"
+                className="flex-1 px-3 py-2 text-xs text-center text-white bg-[#FF6B35] rounded-xl hover:bg-orange-600 font-medium transition-colors whitespace-nowrap"
               >
                 {isEn ? "Free Sign Up" : "免费注册"}
               </Link>

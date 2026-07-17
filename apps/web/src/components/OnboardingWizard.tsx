@@ -18,7 +18,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
   const t = useTranslations("onboarding")
   const ts = useTranslations("settings")
   const router = useRouter()
-  const [isDemoUser, setIsDemoUser] = useState(false)
+  const [isDemoUser, setIsDemoUser] = useState<boolean | null>(null)
 
   useEffect(() => {
     fetch("/api/user/profile")
@@ -66,6 +66,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
   const [error, setError] = useState("")
 
   const canNext = () => {
+    if (isDemoUser === null) return false
     if (step === 0) return true
     if (step === 1 && cuisinePref.length === 0) {
       return false
@@ -86,7 +87,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
       return
     }
     // Complete — demo users cannot save
-    if (isDemoUser) {
+    if (isDemoUser === true) {
       window.location.href = "/register"
       return
     }
@@ -140,7 +141,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
         {/* Close/skip button */}
         <button
           onClick={async () => {
-            if (isDemoUser) {
+            if (isDemoUser === true) {
               window.location.href = "/app/dashboard"
               return
             }
@@ -321,7 +322,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
 
           {step === 4 && (
             <div className="text-center py-6">
-              {isDemoUser ? (
+              {isDemoUser === true ? (
                 <>
                   <div className="text-5xl mb-4">💡</div>
                   <h2 className="text-2xl font-bold text-gray-900">{t("readyTitle")}</h2>
@@ -346,7 +347,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
           )}
 
           {/* Actions — hidden for demo users on the last step (register button is in the content) */}
-          {isDemoUser && step === STEPS.length - 1 ? null : (
+          {isDemoUser === true && step === STEPS.length - 1 ? null : (
           <div className="flex items-center justify-between mt-6">
             <button
               onClick={() => step > 0 && setStep(step - 1)}

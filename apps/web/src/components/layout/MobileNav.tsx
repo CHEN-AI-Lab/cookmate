@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation"
 import { usePathname } from "next/navigation"
 import { useTranslations, useLocale } from "next-intl"
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 
 const navItems = [
   { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
@@ -32,8 +32,20 @@ export function MobileNav({
       ? "体验用户只能在中文和英文间切换"
       : "Demo users can only switch between Chinese and English"
     setDemoLangToast(msg)
-    setTimeout(() => setDemoLangToast(""), 4000)
+    sessionStorage.setItem("demoLangToast", msg)
+    setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 4000)
   }, [locale])
+
+  // Restore toast from sessionStorage after page reload
+  useEffect(() => {
+    const saved = sessionStorage.getItem("demoLangToast")
+    if (saved) {
+      setDemoLangToast(saved)
+      sessionStorage.removeItem("demoLangToast")
+      const timer = setTimeout(() => setDemoLangToast(""), 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [])
 
   return (
     <header className="fixed top-0 left-0 right-0 md:hidden bg-white border-b border-orange-100 h-16 z-50 flex items-center justify-between px-4">
