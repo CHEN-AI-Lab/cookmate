@@ -205,7 +205,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
           {step === 1 && (
             <div className="py-4">
               <h2 className="text-xl font-bold text-gray-900 text-center">{t("preferenceTitle")}</h2>
-              <p className="text-gray-500 text-sm text-center mt-1">{t("preferenceDesc")}</p>
+              <p className="text-gray-500 text-sm text-center mt-1" dangerouslySetInnerHTML={{ __html: t.raw("preferenceDesc") }} />
 
               <div className="mt-6">
                 <label className="text-sm font-semibold text-gray-700">{t("dietType")}</label>
@@ -283,7 +283,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
           {step === 2 && (
             <div className="py-4">
               <h2 className="text-xl font-bold text-gray-900 text-center">{t("ingredientTitle")}</h2>
-              <p className="text-gray-500 text-sm text-center mt-1">{t("ingredientDesc")}</p>
+              <p className="text-gray-500 text-sm text-center mt-1" dangerouslySetInnerHTML={{ __html: t.raw("ingredientDesc") }} />
 
               <div className="mt-5 space-y-3 max-h-64 overflow-y-auto">
                 {QUICK_INGREDIENTS.map((group) => (
