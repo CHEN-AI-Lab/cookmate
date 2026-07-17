@@ -157,8 +157,9 @@ export default function BillingPage() {
   if (loading) return <div className="text-center py-16 text-gray-400">{t("loading")}</div>
 
   const isFree = info?.subscriptionTier === "FREE"
+  const currency = locale === "zh-CN" ? "CNY" : "USD"
   const currencySymbol = locale === "zh-CN" ? "¥" : "$"
-  const planPrice = PRICING.get(billingPeriod, "CNY")
+  const planPrice = PRICING.get(billingPeriod, currency)
   const planPriceDisplay = `${currencySymbol}${planPrice.display}`
   const planPeriodLabel = billingPeriod === "annual"
     ? (locale === "zh-CN" ? "/年" : "/yr")
