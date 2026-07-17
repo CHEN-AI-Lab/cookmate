@@ -24,7 +24,13 @@ export async function POST(req: Request) {
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 
+    // 按周期选择对应的 Creem 产品 ID
+    const productId = period === "annual"
+      ? process.env.CREEM_ANNUAL_PRODUCT_ID
+      : process.env.CREEM_MONTHLY_PRODUCT_ID || process.env.CREEM_PRODUCT_ID
+
     const { checkoutUrl, sessionId } = await createCheckout({
+      productId: productId || undefined,
       successUrl: `${baseUrl}/app/billing?success=true`,
       metadata: { userId: session.user.id, period },
     })

@@ -46,6 +46,25 @@ function extractOrderId(event: Record<string, unknown>): string | null {
   return null
 }
 
+// 从事件 metadata 中提取 period
+function extractPeriod(event: Record<string, unknown>): string | undefined {
+  if (event.object && typeof event.object === "object") {
+    const obj = event.object as Record<string, unknown>
+    if (obj.metadata && typeof obj.metadata === "object") {
+      const meta = obj.metadata as Record<string, string>
+      if (meta.period === "annual" || meta.period === "monthly") return meta.period
+    }
+    if (obj.subscription && typeof obj.subscription === "object") {
+      const sub = obj.subscription as Record<string, unknown>
+      if (sub.metadata && typeof sub.metadata === "object") {
+        const meta = sub.metadata as Record<string, string>
+        if (meta.period === "annual" || meta.period === "monthly") return meta.period
+      }
+    }
+  }
+  return undefined
+}
+
 // 从事件中提取 subscriptionId
 function extractSubscriptionId(event: Record<string, unknown>): string | null {
   if (event.object && typeof event.object === "object") {
@@ -58,9 +77,13 @@ function extractSubscriptionId(event: Record<string, unknown>): string | null {
   return null
 }
 
-async function upgradeUser(userId: string, creemSubscriptionId?: string) {
+async function upgradeUser(userId: string, creemSubscriptionId?: string, period?: string) {
   const expiryDate = new Date()
-  expiryDate.setUTCMonth(expiryDate.getUTCMonth() + 1)
+  if (period === "annual") {
+    expiryDate.setUTCFullYear(expiryDate.getUTCFullYear() + 1)
+  } else {
+    expiryDate.setUTCMonth(expiryDate.getUTCMonth() + 1)
+  }
 
   await prisma.user.update({
     where: { id: userId },
@@ -134,11 +157,12 @@ export async function POST(req: Request) {
       const userId = extractUserId(event)
       const orderId = extractOrderId(event) || ""
       const subscriptionId = extractSubscriptionId(event)
+      const period = extractPeriod(event)
       if (orderId) {
         await recordOrder(userId || "unknown", orderId)
       }
       if (userId) {
-        await upgradeUser(userId, subscriptionId || undefined)
+        await upgradeUser(userId, subscriptionId || undefined, period)
       }
       logWebhook("creem", "checkout.completed", "success")
       return NextResponse.json({ success: true })
@@ -148,8 +172,9 @@ export async function POST(req: Request) {
     if (event.eventType === "subscription.active" || event.eventType === "subscription.paid") {
       const userId = extractUserId(event)
       const subscriptionId = extractSubscriptionId(event)
+      const period = extractPeriod(event)
       if (userId) {
-        await upgradeUser(userId, subscriptionId || undefined)
+        await upgradeUser(userId, subscriptionId || undefined, period)
       }
       logWebhook("creem", event.eventType as string, "success")
       return NextResponse.json({ success: true })
