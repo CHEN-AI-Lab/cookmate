@@ -90,6 +90,7 @@ export function Sidebar({
 
 function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: string; t: (key: string) => string; isDemoUser?: boolean }) {
   const [open, setOpen] = useState(false)
+  const [langOpen, setLangOpen] = useState(false)
   const [demoLangToast, setDemoLangToast] = useState("")
   const router = useRouter()
   const menuRef = useRef<HTMLDivElement>(null)
@@ -151,21 +152,38 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             <span>{t("settings")}</span>
           </Link>
           <div className="border-t border-orange-100 my-1" />
-          {locales.map((l) => {
-            const active = l === locale
-            return (
-              <button
-                key={l}
-                onClick={() => {
-                  setOpen(false)
-                  router.push(window.location.pathname.replace(new RegExp("^/(" + locales.join("|") + ")(/|$)"), "/") || "/", { locale: l })
-                }}
-                className={"w-full text-left px-4 py-2 text-sm transition-colors " + (active ? "text-[#FF6B35] bg-orange-50 font-medium" : "text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35]")}
-              >
-                {(l === "zh-CN" ? "中文" : "English")}
-              </button>
-            )
-          })}
+          {/* Language sub-menu */}
+          <div className="relative">
+            <button
+              onClick={(e) => { e.stopPropagation(); setLangOpen(!langOpen) }}
+              className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+            >
+              <span className="text-base">🌐</span>
+              <span className="flex-1 text-left">{locale === "zh-CN" ? "语言" : "Language"}</span>
+              <svg className={`w-3 h-3 text-gray-400 transition-transform ${langOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+            </button>
+            {langOpen && (
+              <div className="absolute right-0 top-0 ml-1 bg-white border border-gray-100 rounded-lg shadow-lg py-1 min-w-[110px] z-50">
+                {locales.map((l) => {
+                  const active = l === locale
+                  return (
+                    <button
+                      key={l}
+                      onClick={() => {
+                        setLangOpen(false)
+                        setOpen(false)
+                        if (isDemoUser && l !== "zh-CN" && l !== "en") return
+                        router.push(window.location.pathname.replace(new RegExp("^/(" + locales.join("|") + ")(/|$)"), "/") || "/", { locale: l })
+                      }}
+                      className={"w-full text-left px-4 py-2 text-sm transition-colors " + (active ? "text-[#FF6B35] bg-orange-50 font-medium" : "text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35]")}
+                    >
+                      {l === "zh-CN" ? "中文" : l === "en" ? "English" : l}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
           <div className="border-t border-orange-100 my-1" />
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
