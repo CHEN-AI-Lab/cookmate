@@ -163,7 +163,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
               <svg className={`w-3 h-3 text-gray-400 transition-transform ${langOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
             </button>
             {langOpen && (
-              <div className="absolute right-0 top-0 ml-1 bg-white border border-gray-100 rounded-lg shadow-lg py-1 min-w-[110px] z-50">
+              <div className="absolute left-full top-0 ml-2 bg-white border border-gray-100 rounded-lg shadow-lg py-1 min-w-[110px] z-50">
                 {locales
                   .filter((l) => !isDemoUser || l === "zh-CN" || l === "en")
                   .map((l) => {
