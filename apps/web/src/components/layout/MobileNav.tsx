@@ -32,7 +32,7 @@ export function MobileNav({
       ? "体验用户只能在中文和英文间切换"
       : "Demo users can only switch between Chinese and English"
     setDemoLangToast(msg)
-    setTimeout(() => setDemoLangToast(""), 2500)
+    setTimeout(() => setDemoLangToast(""), 4000)
   }, [locale])
 
   return (

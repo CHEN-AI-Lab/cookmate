@@ -108,7 +108,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
     if (isDemoUser) {
       const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
       setDemoLangToast(t("demoLangToast"))
-      setTimeout(() => setDemoLangToast(""), 2500)
+      setTimeout(() => setDemoLangToast(""), 4000)
       const browserPath = window.location.pathname
       const pathWithoutLocale = browserPath.replace(
         new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
