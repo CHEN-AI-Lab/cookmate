@@ -695,7 +695,7 @@
     "selectedIngredients": "{count, plural, one {# ingredient selected} other {# ingredients selected}} (you can always add more in Pantry)",
     "tryAiTitle": "🥦 Pantry Management",
     "tryAiDesc": "Manage your ingredients in the Pantry, organized by category.<br />The system tracks what you have and what to buy.<br /><br />Select your common ingredients — AI will prioritize them in recipes.<br />No worries if you skip this, add items anytime.",
-    "tryAiButton": "🍳 Try it now →",
+    "tryAiButton": "🍳 Try It Now →",
     "readyTitle": "You're all set!",
     "readyDesc": "Your preferences and ingredients are saved.<br />Head to the dashboard to start your CookMate journey!<br /><br />💡 <b>Tip</b>: You can update your preferences anytime in Settings.",
     "previous": "← Previous",
@@ -727,7 +727,11 @@
     "ingredient_oil": "Cooking Oil",
     "saveFailed": "Save failed",
     "demoCannotSave": "Demo user data cannot be saved. Sign up to save your settings and recipes.",
-    "freeRegister": "Free Sign Up"
+    "freeRegister": "Free Sign Up",
+    "step2Title": "🥦 Pantry Management",
+    "step2Desc": "Manage your ingredients in the Pantry, organized by category.<br />The system tracks what you have and what to buy.<br /><br />Select your common ingredients — AI will prioritize them in recipes.<br />No worries if you skip this, add items anytime.",
+    "step3Title": "🤖 Meal Plan & Grocery List",
+    "step3Desc": "Plan your weekly meals in the Meal Planner.<br />Your shopping list is auto-generated — never miss an ingredient.<br /><br />Check off purchased items and they sync to your Pantry automatically.<br /><br />Try the AI Recipes page — enter ingredients, get instant recipes,<br />add them to your meal plan with one click. Regenerate anytime."
   },
   "error": {
     "title": "Something went wrong",
