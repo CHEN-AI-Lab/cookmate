@@ -74,13 +74,15 @@ export function MobileNav({
             </Link>
           )
         })}
+        <div className="relative">
         <LanguageSwitcher isDemoUser={isDemoUser} onDemoToast={showDemoLangToast} />
+        {demoLangToast && (
+          <div className="absolute -top-1 right-0 translate-x-1/2 bg-amber-100 text-amber-700 text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap shadow-sm z-50">
+            {demoLangToast}
+          </div>
+        )}
+      </div>
       </nav>
-      {demoLangToast && (
-        <div className="mx-4 mt-1 bg-amber-50 border border-amber-200 text-amber-700 text-xs px-2.5 py-1.5 rounded-lg whitespace-nowrap text-center">
-          {demoLangToast}
-        </div>
-      )}
     </header>
   )
 }

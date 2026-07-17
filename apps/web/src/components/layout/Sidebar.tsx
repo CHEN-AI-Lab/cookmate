@@ -148,6 +148,11 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
           {initial}
         </span>
         <span className="truncate flex-1">{isDemoUser && (locale === "en" || locale.startsWith("en")) ? "Demo User" : name}</span>
+        {demoLangToast && (
+          <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium shrink-0">
+            {demoLangToast}
+          </span>
+        )}
         <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="6 9 12 15 18 9" />
         </svg>
@@ -171,13 +176,6 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             <span className="text-base">🌐</span>
             <span>{locale === "zh-CN" ? "English" : "中文"}</span>
           </button>
-          {demoLangToast && (
-            <div className="px-4 pb-1.5">
-              <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs px-2.5 py-1.5 rounded-lg whitespace-nowrap">
-                {demoLangToast}
-              </div>
-            </div>
-          )}
           <div className="border-t border-orange-100 my-1" />
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
