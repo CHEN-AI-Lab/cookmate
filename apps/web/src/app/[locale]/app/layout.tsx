@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { headers } from "next/headers"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { MobileNav } from "@/components/layout/MobileNav"
 import DemoOnboarding from "@/components/ui/DemoOnboarding"
@@ -13,6 +14,15 @@ export default async function AppLayout({ children, params }: { children: React.
 
   const onboardingCompleted = session.user.onboardingCompleted ?? false
   const isDemoUser = session.user.id.startsWith("demo")
+
+  // Server-side guard: redirect demo users away from onboarding-preview
+  if (isDemoUser) {
+    const headersList = await headers()
+    const pathname = headersList.get("x-invoke-path") || ""
+    if (pathname.includes("onboarding-preview")) {
+      redirect(`/${locale}/app/dashboard`)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#FFF8F0] flex">

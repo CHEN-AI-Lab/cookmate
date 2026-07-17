@@ -152,6 +152,9 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
             })
             if (res.ok) {
               onComplete()
+            } else {
+              // If save fails, still redirect to dashboard
+              window.location.href = "/app/dashboard"
             }
           }}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-sm"
