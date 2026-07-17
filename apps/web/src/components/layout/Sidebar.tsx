@@ -101,7 +101,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
     if (saved) {
       setDemoLangToast(saved)
       sessionStorage.removeItem("demoLangToast")
-      const timer = setTimeout(() => setDemoLangToast(""), 4000)
+      const timer = setTimeout(() => setDemoLangToast(""), 2500)
       return () => clearTimeout(timer)
     }
   }, [])
@@ -123,7 +123,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
       const msg = t("demoLangToast")
       setDemoLangToast(msg)
       sessionStorage.setItem("demoLangToast", msg)
-      setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 4000)
+      setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 2500)
       const pathWithoutLocale = window.location.pathname.replace(
         new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
       )
@@ -148,11 +148,6 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
           {initial}
         </span>
         <span className="truncate flex-1">{isDemoUser && (locale === "en" || locale.startsWith("en")) ? "Demo User" : name}</span>
-        {demoLangToast && (
-          <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium shrink-0">
-            {demoLangToast}
-          </span>
-        )}
         <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="6 9 12 15 18 9" />
         </svg>
@@ -188,6 +183,11 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             </svg>
             <span>{t("logout")}</span>
           </button>
+        </div>
+      )}
+      {demoLangToast && (
+        <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-2 leading-snug">
+          {demoLangToast}
         </div>
       )}
     </div>

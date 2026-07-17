@@ -33,7 +33,7 @@ export function MobileNav({
       : "Demo users can only switch between Chinese and English"
     setDemoLangToast(msg)
     sessionStorage.setItem("demoLangToast", msg)
-    setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 4000)
+    setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 2500)
   }, [locale])
 
   // Restore toast from sessionStorage after page reload
@@ -42,7 +42,7 @@ export function MobileNav({
     if (saved) {
       setDemoLangToast(saved)
       sessionStorage.removeItem("demoLangToast")
-      const timer = setTimeout(() => setDemoLangToast(""), 4000)
+      const timer = setTimeout(() => setDemoLangToast(""), 2500)
       return () => clearTimeout(timer)
     }
   }, [])
