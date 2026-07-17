@@ -29,9 +29,8 @@ export function Sidebar({
 }) {
   const pathname = usePathname()
   const locale = useLocale()
-  const router = useRouter()
   const t = useTranslations("nav")
-  const initial = isDemoUser && (locale === "en" || locale.startsWith("en")) ? "D" : (name?.charAt(0)?.toUpperCase() || "?")
+  const initial = name?.charAt(0)?.toUpperCase() || "?"
 
   return (
     <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-orange-100 h-screen sticky top-0">
@@ -96,6 +95,17 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
   const menuRef = useRef<HTMLDivElement>(null)
   const locale = useLocale()
 
+  // Restore toast from sessionStorage after page reload
+  useEffect(() => {
+    const saved = sessionStorage.getItem("demoLangToast")
+    if (saved) {
+      setDemoLangToast(saved)
+      sessionStorage.removeItem("demoLangToast")
+      const timer = setTimeout(() => setDemoLangToast(""), 2500)
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
   // Close on click outside
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -106,6 +116,26 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
     document.addEventListener("mousedown", handleClick)
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
+
+  const toggleLanguage = () => {
+    if (isDemoUser) {
+      const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
+      const msg = t("demoLangToast")
+      setDemoLangToast(msg)
+      sessionStorage.setItem("demoLangToast", msg)
+      setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 2500)
+      const pathWithoutLocale = window.location.pathname.replace(
+        new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
+      )
+      router.push(pathWithoutLocale || "/", { locale: nextLocale })
+      return
+    }
+    const nextLocale = locales[(locales.indexOf(locale as (typeof locales)[number]) + 1) % locales.length]
+    const pathWithoutLocale = window.location.pathname.replace(
+      new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
+    )
+    router.push(pathWithoutLocale || "/", { locale: nextLocale })
+  }
 
   return (
     <div ref={menuRef} className="relative">
@@ -123,12 +153,6 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
         </svg>
       </button>
 
-      {demoLangToast && (
-        <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mb-2 leading-snug">
-          {demoLangToast}
-        </div>
-      )}
-
       {/* Dropdown */}
       {open && (
         <div className="absolute bottom-full left-0 right-0 mb-1 bg-white border border-orange-100 rounded-xl shadow-lg py-1.5 text-sm">
@@ -140,25 +164,13 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             <span className="text-base">⚙️</span>
             <span>{t("settings")}</span>
           </Link>
-          {isDemoUser && (
-            <button
-              onClick={() => {
-                const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
-                const msg = nextLocale === "zh-CN" ? "体验用户只能在中文和英文间切换" : "Demo users can only switch between Chinese and English"
-                setDemoLangToast(msg)
-                sessionStorage.setItem("demoLangToast", msg)
-                setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 2500)
-                const pathWithoutLocale = window.location.pathname.replace(
-                  new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
-                )
-                router.push(pathWithoutLocale || "/", { locale: nextLocale })
-              }}
-              className="flex items-center gap-2.5 px-4 py-2 text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] w-full text-left transition-colors"
-            >
-              <span className="text-base">🌐</span>
-              <span>{locale === "zh-CN" ? "English" : "中文"}</span>
-            </button>
-          )}
+          <button
+            onClick={toggleLanguage}
+            className="flex items-center gap-2.5 px-4 py-2 text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] w-full text-left transition-colors"
+          >
+            <span className="text-base">🌐</span>
+            <span>{locale === "zh-CN" ? "English" : "中文"}</span>
+          </button>
           <div className="border-t border-orange-100 my-1" />
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
@@ -171,6 +183,11 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             </svg>
             <span>{t("logout")}</span>
           </button>
+        </div>
+      )}
+      {demoLangToast && (
+        <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-2 leading-snug">
+          {demoLangToast}
         </div>
       )}
     </div>
