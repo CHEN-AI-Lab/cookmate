@@ -120,7 +120,9 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
   const toggleLanguage = () => {
     if (isDemoUser) {
       const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
-      const msg = t("demoLangToast")
+      const msg = nextLocale === "zh-CN"
+        ? "体验用户只能在中文和英文间切换"
+        : "Demo users can only switch between Chinese and English"
       setDemoLangToast(msg)
       sessionStorage.setItem("demoLangToast", msg)
       setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 2500)
