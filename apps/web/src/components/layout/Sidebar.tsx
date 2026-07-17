@@ -7,7 +7,7 @@ import { signOut } from "next-auth/react"
 import { useTranslations } from "next-intl"
 import { useLocale } from "next-intl"
 import { useState, useRef, useEffect } from "react"
-import { locales, localeNames } from "@cookmate/shared/constants"
+import { locales } from "@cookmate/shared/constants"
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
 
 const navItems = [
@@ -64,6 +64,11 @@ export function Sidebar({
         })}
       </nav>
 
+      {/* Bottom: language switcher */}
+      <div className="px-3 py-2 border-t border-orange-100 flex items-center justify-between">
+        <LanguageSwitcher isDemoUser={isDemoUser} />
+      </div>
+
       {/* Bottom: user menu dropdown */}
       <div className="px-3 py-3 border-t border-orange-100">
         {name ? (
@@ -90,7 +95,6 @@ export function Sidebar({
 
 function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: string; t: (key: string) => string; isDemoUser?: boolean }) {
   const [open, setOpen] = useState(false)
-  const [langOpen, setLangOpen] = useState(false)
   const [demoLangToast, setDemoLangToast] = useState("")
   const router = useRouter()
   const menuRef = useRef<HTMLDivElement>(null)
@@ -117,28 +121,6 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
     document.addEventListener("mousedown", handleClick)
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
-
-  const toggleLanguage = () => {
-    if (isDemoUser) {
-      const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
-      const msg = nextLocale === "zh-CN"
-        ? "体验用户只能在中文和英文间切换"
-        : "Demo users can only switch between Chinese and English"
-      setDemoLangToast(msg)
-      sessionStorage.setItem("demoLangToast", msg)
-      setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 2500)
-      const pathWithoutLocale = window.location.pathname.replace(
-        new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
-      )
-      router.push(pathWithoutLocale || "/", { locale: nextLocale })
-      return
-    }
-    const nextLocale = locales[(locales.indexOf(locale as (typeof locales)[number]) + 1) % locales.length]
-    const pathWithoutLocale = window.location.pathname.replace(
-      new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
-    )
-    router.push(pathWithoutLocale || "/", { locale: nextLocale })
-  }
 
   return (
     <>
@@ -173,42 +155,6 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             <span className="text-base">⚙️</span>
             <span>{t("settings")}</span>
           </Link>
-          <div className="border-t border-orange-100 my-1" />
-          {/* Language switcher */}
-          <div className="relative">
-            <button
-              onClick={(e) => { e.stopPropagation(); setLangOpen(!langOpen) }}
-              className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
-            >
-              <span className="text-base">🌐</span>
-              <span className="flex-1 text-left">{localeNames[locale] || locale}</span>
-              <svg className={`w-3 h-3 text-gray-400 transition-transform ${langOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
-            </button>
-            {langOpen && (
-              <div className="bg-white border border-gray-100 rounded-lg shadow-sm py-1">
-                {locales.map((l) => {
-                  const active = l === locale
-                  return (
-                    <button
-                      key={l}
-                      onClick={() => {
-                        setLangOpen(false)
-                        if (isDemoUser && l !== "zh-CN" && l !== "en") {
-                          setDemoLangToast(locale.startsWith("en") ? "Demo users can only switch between Chinese and English" : "体验用户只能在中文和英文间切换")
-                          setTimeout(() => setDemoLangToast(""), 2500)
-                          return
-                        }
-                        router.push(window.location.pathname.replace(new RegExp(`^/(${locales.join("|")})(/|$)`), "/") || "/", { locale: l })
-                      }}
-                      className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${active ? "text-[#FF6B35] bg-orange-50 font-medium" : "text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35]"}`}
-                    >
-                      {localeNames[l] || l}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
           <div className="border-t border-orange-100 my-1" />
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
