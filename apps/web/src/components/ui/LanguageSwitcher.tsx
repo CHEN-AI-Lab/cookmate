@@ -95,8 +95,11 @@ export default function LanguageSwitcher({
         )}
       </div>
       {toast && (
-        <div className="fixed top-4 right-4 bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs shadow-lg z-[999] whitespace-nowrap">
-          {toast}
+        /* Centered toast — floats in middle of screen, auto-dismisses 2.5s */
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[999]">
+          <div className="bg-gray-900 text-white px-5 py-3 rounded-xl text-sm shadow-xl">
+            {toast}
+          </div>
         </div>
       )}
     </>

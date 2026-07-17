@@ -1,9 +1,11 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useTranslations, useLocale } from "next-intl"
 import { PricingCard } from "@/components/features/PricingCard"
+import { PRICING } from "@cookmate/shared/constants/pricing"
+import type { BillingPeriod } from "@cookmate/shared/constants/pricing"
 
 interface BillingInfo {
   subscriptionTier: string
@@ -34,6 +36,7 @@ export default function BillingPage() {
   const [paying, setPaying] = useState(false)
   const [topBanner, setTopBanner] = useState("")
   const [showCancelModal, setShowCancelModal] = useState(false)
+  const [selectedPeriod, setSelectedPeriod] = useState<"monthly" | "annual">("monthly")
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -104,11 +107,15 @@ export default function BillingPage() {
     }
   }
 
-  const handleCreemUpgrade = async () => {
+  const handleCreemUpgrade = async (period: "monthly" | "annual") => {
     setActionLoading("creem")
     setError("")
     try {
-      const res = await fetch("/api/creem/create-checkout", { method: "POST" })
+      const res = await fetch("/api/creem/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ period }),
+      })
       const data = await res.json()
       if (!res.ok) {
         setError(data.error || t("createPaymentFailed"))
@@ -150,6 +157,11 @@ export default function BillingPage() {
 
   const isFree = info?.subscriptionTier === "FREE"
   const hasAnyPayment = info?.stripeConfigured
+  const currencySymbol = locale === "zh-CN" ? "¥" : "$"
+  const selectedPrice = PRICING.plans[selectedPeriod][locale === "zh-CN" ? "cny" : "usd"].display
+  const periodUnit = locale === "zh-CN"
+    ? (selectedPeriod === "annual" ? "年" : "月")
+    : (selectedPeriod === "annual" ? "/yr" : "/mo")
 
   return (
     <>
@@ -223,10 +235,16 @@ export default function BillingPage() {
             saving={t("yearlySaving")}
             features={t.raw("proPlanFeatures") as string[]}
             highlighted={true}
-            isCurrent={!isFree}
-            ctaLabel={isFree ? t("upgradeAction") : t("inUse")}
-            onCta={() => {}}
-            disabled={true}
+            isCurrent={isFree ? selectedPeriod === "annual" : !isFree}
+            ctaLabel={
+              isFree
+                ? selectedPeriod === "annual"
+                  ? t("selectedPlan")
+                  : t("selectThisPlan")
+                : t("inUse")
+            }
+            onCta={() => { if (isFree) setSelectedPeriod("annual") }}
+            disabled={!isFree}
             loading={false}
           />
           <PricingCard
@@ -236,10 +254,16 @@ export default function BillingPage() {
             period={t("monthlyPeriod")}
             features={t.raw("proPlanFeatures") as string[]}
             highlighted={false}
-            isCurrent={false}
-            ctaLabel={t("subscribePro")}
-            onCta={() => {}}
-            disabled={true}
+            isCurrent={isFree ? selectedPeriod === "monthly" : false}
+            ctaLabel={
+              isFree
+                ? selectedPeriod === "monthly"
+                  ? t("selectedPlan")
+                  : t("selectThisPlan")
+                : t("subscribePro")
+            }
+            onCta={() => { if (isFree) setSelectedPeriod("monthly") }}
+            disabled={!isFree}
             loading={false}
           />
         </div>
@@ -285,7 +309,11 @@ export default function BillingPage() {
                 setPaying(true)
                 setError("")
                 try {
-                  const res = await fetch("/api/alipay/create", { method: "POST" })
+                  const res = await fetch("/api/alipay/create", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ period: selectedPeriod }),
+                  })
                   const data = await res.json()
                   if (data.payUrl) {
                     window.location.href = data.payUrl
@@ -332,7 +360,7 @@ export default function BillingPage() {
 
             {info?.creemConfigured && (
               <button
-                onClick={handleCreemUpgrade}
+                onClick={() => handleCreemUpgrade(selectedPeriod)}
                 disabled={actionLoading !== null}
                 className="flex-1 min-w-[160px] flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-green-400 hover:bg-green-50/50 hover:shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed group"
               >

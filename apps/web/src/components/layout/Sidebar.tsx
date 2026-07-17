@@ -126,8 +126,11 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
   return (
     <>
       {demoLangToast && (
-        <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mb-2 leading-snug">
-          {demoLangToast}
+        /* Centered toast — floats in middle of screen, auto-dismisses 2.5s */
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[999]">
+          <div className="bg-gray-900 text-white px-5 py-3 rounded-xl text-sm shadow-xl">
+            {demoLangToast}
+          </div>
         </div>
       )}
     <div ref={menuRef} className="relative">
