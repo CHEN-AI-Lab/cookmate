@@ -1,6 +1,7 @@
 "use client"
 
 import { Link } from "@/i18n/navigation"
+import { useRouter } from "@/i18n/navigation"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { useTranslations } from "next-intl"
@@ -90,6 +91,7 @@ export function Sidebar({
 function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: string; t: (key: string) => string; isDemoUser?: boolean }) {
   const [open, setOpen] = useState(false)
   const [demoLangToast, setDemoLangToast] = useState("")
+  const router = useRouter()
   const menuRef = useRef<HTMLDivElement>(null)
   const locale = useLocale()
 
@@ -109,20 +111,17 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
       const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
       setDemoLangToast(t("demoLangToast"))
       setTimeout(() => setDemoLangToast(""), 4000)
-      const browserPath = window.location.pathname
-      const pathWithoutLocale = browserPath.replace(
+      const pathWithoutLocale = window.location.pathname.replace(
         new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
       )
-      window.location.href = `/${nextLocale}${pathWithoutLocale}`
+      router.push(pathWithoutLocale || "/", { locale: nextLocale })
       return
     }
-    const idx = locales.indexOf(locale as (typeof locales)[number])
-    const next = locales[(idx + 1) % locales.length]
-    const browserPath = window.location.pathname
-    const pathWithoutLocale = browserPath.replace(
+    const nextLocale = locales[(locales.indexOf(locale as (typeof locales)[number]) + 1) % locales.length]
+    const pathWithoutLocale = window.location.pathname.replace(
       new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
     )
-    window.location.href = `/${next}${pathWithoutLocale}`
+    router.push(pathWithoutLocale || "/", { locale: nextLocale })
   }
 
   return (

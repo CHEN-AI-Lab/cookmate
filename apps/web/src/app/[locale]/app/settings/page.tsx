@@ -524,7 +524,7 @@ const save = async () => {
                 }
                 save()
               }}
-              disabled={saving || settings.cuisinePref.length === 0 || profile === null || profile?.isDemoUser}
+              disabled={saving || settings.cuisinePref.length === 0}
               className="bg-[#FF6B35] text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all"
             >
               {saving ? ts("saving") : ts("saveSettings")}
