@@ -8,17 +8,17 @@ const STORAGE_KEY = "cookmate_demo_onboarding_done"
 
 const steps = {
   "zh-CN": [
-    { title: "👋 欢迎体验 CookMate", desc: "这是演示版本，您可以直接体验 CookMate 的所有功能。" },
-    { title: "🍳 智能菜谱", desc: "点击「AI 菜谱」可以自动生成个性化菜谱，也可以查看示例菜谱。" },
-    { title: "📅 周计划", desc: "在「周计划」中规划一周的饮食，系统会自动生成购物清单。" },
-    { title: "🥦 食材管理", desc: "在「食材库」中管理您的食材，系统会提醒您哪些已有、哪些需要购买。" },
+    { title: "👋 欢迎体验 CookMate", desc: "这是演示版本。设置口味偏好、添加食材、AI 推荐菜谱 — 三步搞定一周饭菜。所有功能都能直接使用。" },
+    { title: "🍳 AI 智能菜谱", desc: "输入你冰箱里的食材，AI 秒出菜谱推荐。不满意随时重新生成，还能一键收藏、加入周计划。" },
+    { title: "📅 周计划 & 购物清单", desc: "在周计划中规划一周三餐，系统自动汇总购物清单。勾选已买的食材，自动同步到食材库。" },
+    { title: "🥦 食材管理", desc: "在食材库中管理你的食材，系统会提醒你哪些已有、哪些需要购买。分类一目了然。" },
     { title: "💡 温馨提示", desc: "体验用户的数据无法保存。如需保存您的设置和菜谱，请", action: "注册账号。" },
   ],
   en: [
-    { title: "👋 Welcome to CookMate", desc: "This is a demo version. You can explore all CookMate features right away." },
-    { title: "🍳 AI Recipes", desc: "Click 'AI Recipes' to generate personalized recipes, or browse sample recipes." },
-    { title: "📅 Meal Planner", desc: "Plan your weekly meals and let the system auto-generate your grocery list." },
-    { title: "🥦 Pantry Management", desc: "Manage your pantry ingredients — the system tracks what you have and what to buy." },
+    { title: "👋 Welcome to CookMate", desc: "This is the demo version. Set preferences, add pantry items, get AI recipes — three steps to your weekly meals. Everything is ready to try." },
+    { title: "🍳 AI Smart Recipes", desc: "Enter what you have in your fridge, get instant recipe suggestions. Not happy? Regenerate with one click. Save favorites and add to your meal plan." },
+    { title: "📅 Meal Plan & Grocery List", desc: "Plan your weekly meals and let the system auto-generate your shopping list. Check off items and they sync to your pantry automatically." },
+    { title: "🥦 Pantry Management", desc: "Manage your ingredients in the pantry. The system tracks what you have and what to buy, organized by category." },
     { title: "💡 Note", desc: "Demo user data cannot be saved. ", action: "Sign up for free to save your settings and recipes." },
   ],
 }
