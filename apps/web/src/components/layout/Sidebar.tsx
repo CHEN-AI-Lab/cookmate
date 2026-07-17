@@ -67,6 +67,21 @@ export function Sidebar({
 
       {/* Bottom: user menu dropdown */}
       <div className="px-3 py-3 border-t border-orange-100">
+        {isDemoUser && (
+          <button
+            onClick={() => {
+              const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
+              const pathWithoutLocale = window.location.pathname.replace(
+                new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
+              )
+              router.push(pathWithoutLocale || "/", { locale: nextLocale })
+            }}
+            className="flex items-center gap-2 px-3 py-2 mb-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors w-full text-left"
+          >
+            <span className="text-base">🌐</span>
+            <span>{locale === "zh-CN" ? "English" : "中文"}</span>
+          </button>
+        )}
         {name ? (
           <UserMenu name={name} initial={initial} t={t} isDemoUser={isDemoUser} />
         ) : (
