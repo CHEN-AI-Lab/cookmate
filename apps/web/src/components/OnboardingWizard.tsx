@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
+import Link from "next/link"
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from "@cookmate/shared/constants"
 
 const STEPS = ["欢迎", "偏好", "食材", "上手", "完成"]
@@ -324,16 +325,14 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                 <>
                   <div className="text-5xl mb-4">💡</div>
                   <h2 className="text-2xl font-bold text-gray-900">{t("readyTitle")}</h2>
-                  <p className="text-gray-500 mt-3 leading-relaxed">
-                    {t("demoCannotSave") || "体验用户的数据无法保存。如需保存您的设置和菜谱，请注册账号。"}
-                  </p>
+                  <p className="text-gray-500 mt-3 leading-relaxed">{t("demoCannotSave")}</p>
                   <div className="mt-6">
-                    <a
+                    <Link
                       href="/register"
                       className="inline-block bg-[#FF6B35] text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-orange-600 transition-colors"
                     >
-                      {t("freeRegister") || "免费注册"}
-                    </a>
+                      {t("freeRegister")}
+                    </Link>
                   </div>
                 </>
               ) : (
@@ -346,7 +345,8 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
             </div>
           )}
 
-          {/* Actions */}
+          {/* Actions — hidden for demo users on the last step (register button is in the content) */}
+          {isDemoUser && step === STEPS.length - 1 ? null : (
           <div className="flex items-center justify-between mt-6">
             <button
               onClick={() => step > 0 && setStep(step - 1)}
@@ -369,6 +369,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
               {saving ? t("saving") : step === STEPS.length - 1 ? t("startUsing") : t("next")}
             </button>
           </div>
+        )}
         </div>
       </div>
     </div>

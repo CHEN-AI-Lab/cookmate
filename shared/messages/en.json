@@ -725,7 +725,9 @@
     "ingredient_flour": "Flour",
     "ingredient_dried_noodles": "Dried Noodles",
     "ingredient_oil": "Cooking Oil",
-    "saveFailed": "Save failed"
+    "saveFailed": "Save failed",
+    "demoCannotSave": "Demo user data cannot be saved. Sign up to save your settings and recipes.",
+    "freeRegister": "Free Sign Up"
   },
   "error": {
     "title": "Something went wrong",

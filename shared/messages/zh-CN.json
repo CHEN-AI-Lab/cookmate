@@ -725,7 +725,9 @@
     "ingredient_flour": "面粉",
     "ingredient_dried_noodles": "挂面",
     "ingredient_oil": "食用油",
-    "saveFailed": "保存失败"
+    "saveFailed": "保存失败",
+    "demoCannotSave": "体验用户的数据无法保存。如需保存您的设置和菜谱，请注册账号。",
+    "freeRegister": "免费注册"
   },
   "error": {
     "title": "出错了",
