@@ -64,11 +64,6 @@ export function Sidebar({
         })}
       </nav>
 
-      {/* Bottom: language switcher */}
-      <div className="px-3 py-2 border-t border-orange-100 flex items-center justify-between">
-        <LanguageSwitcher isDemoUser={isDemoUser} />
-      </div>
-
       {/* Bottom: user menu dropdown */}
       <div className="px-3 py-3 border-t border-orange-100">
         {name ? (
@@ -155,6 +150,22 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             <span className="text-base">⚙️</span>
             <span>{t("settings")}</span>
           </Link>
+          <div className="border-t border-orange-100 my-1" />
+          {locales.map((l) => {
+            const active = l === locale
+            return (
+              <button
+                key={l}
+                onClick={() => {
+                  setOpen(false)
+                  router.push(window.location.pathname.replace(new RegExp("^/(" + locales.join("|") + ")(/|$)"), "/") || "/", { locale: l })
+                }}
+                className={"w-full text-left px-4 py-2 text-sm transition-colors " + (active ? "text-[#FF6B35] bg-orange-50 font-medium" : "text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35]")}
+              >
+                {(l === "zh-CN" ? "中文" : "English")}
+              </button>
+            )
+          })}
           <div className="border-t border-orange-100 my-1" />
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
