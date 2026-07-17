@@ -7,6 +7,7 @@ import { signOut } from "next-auth/react"
 import { useTranslations } from "next-intl"
 import { useLocale } from "next-intl"
 import { useState, useRef, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { locales } from "@cookmate/shared/constants"
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
 
@@ -125,13 +126,14 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
 
   return (
     <>
-      {demoLangToast && (
+      {demoLangToast && typeof document !== "undefined" && createPortal(
         /* Centered toast — floats in middle of screen, auto-dismisses 2.5s */
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[99999]">
           <div className="bg-gray-900 text-white px-5 py-3 rounded-xl text-sm shadow-xl">
             {demoLangToast}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     <div ref={menuRef} className="relative">
       {/* Avatar button */}
