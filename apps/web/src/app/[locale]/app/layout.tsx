@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { MobileNav } from "@/components/layout/MobileNav"
 import DemoOnboarding from "@/components/ui/DemoOnboarding"
-import { headers } from "next/headers"
+import OnboardingGuard from "@/components/ui/OnboardingGuard"
 
 export default async function AppLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
   const session = await auth()
@@ -11,19 +11,12 @@ export default async function AppLayout({ children, params }: { children: React.
 
   const { locale } = await params
 
-  // 新用户未完成 onboarding 时重定向到引导页（排除引导页自身，避免死循环）
-  if (!session.user.onboardingCompleted && !session.user.id.startsWith("demo")) {
-    const headersList = await headers()
-    const pathname = headersList.get("x-invoke-path") || ""
-    if (!pathname.includes("onboarding-preview")) {
-      redirect(`/${locale}/app/onboarding-preview`)
-    }
-  }
-
+  const onboardingCompleted = session.user.onboardingCompleted ?? false
   const isDemoUser = session.user.id.startsWith("demo")
 
   return (
     <div className="min-h-screen bg-[#FFF8F0] flex">
+      <OnboardingGuard onboardingCompleted={onboardingCompleted} isDemoUser={isDemoUser} locale={locale} />
       <Sidebar name={session.user.name} isDemoUser={isDemoUser} />
       <MobileNav isDemoUser={isDemoUser} />
       {isDemoUser && <DemoOnboarding />}
