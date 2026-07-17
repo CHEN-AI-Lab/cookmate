@@ -173,7 +173,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
         </div>
       )}
       {demoLangToast && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-5 py-2.5 rounded-xl text-xs shadow-lg z-[100] whitespace-nowrap">
+        <div className="absolute top-full right-0 mt-2 bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs shadow-lg z-[100] whitespace-nowrap">
           {demoLangToast}
         </div>
       )}
