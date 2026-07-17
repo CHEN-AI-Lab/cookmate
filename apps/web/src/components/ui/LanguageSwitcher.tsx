@@ -98,7 +98,7 @@ export default function LanguageSwitcher({
       {toast && typeof document !== "undefined" && createPortal(
         /* Centered toast — floats in middle of screen, auto-dismisses 2.5s */
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[99999]">
-          <div className="bg-gray-900 text-white px-5 py-3 rounded-xl text-sm shadow-xl">
+          <div className="bg-amber-50 border border-amber-200 text-amber-700 px-5 py-3 rounded-xl text-sm shadow-lg">
             {toast}
           </div>
         </div>,
