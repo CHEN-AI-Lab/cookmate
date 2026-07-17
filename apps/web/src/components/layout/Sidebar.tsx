@@ -164,17 +164,25 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             </button>
             {langOpen && (
               <div className="absolute right-0 top-0 ml-1 bg-white border border-gray-100 rounded-lg shadow-lg py-1 min-w-[110px] z-50">
-                {locales.map((l) => {
+                {locales
+                  .filter((l) => !isDemoUser || l === "zh-CN" || l === "en")
+                  .map((l) => {
                   const active = l === locale
                   return (
                     <button
                       key={l}
                       onClick={() => {
-                        setLangOpen(false)
-                        setOpen(false)
-                        if (isDemoUser && l !== "zh-CN" && l !== "en") return
-                        router.push(window.location.pathname.replace(new RegExp("^/(" + locales.join("|") + ")(/|$)"), "/") || "/", { locale: l })
-                      }}
+                                              setLangOpen(false)
+                                              setOpen(false)
+                                              if (isDemoUser && l !== "zh-CN" && l !== "en") return
+                                              if (isDemoUser) {
+                                                const msg = l === "zh-CN" ? "体验用户只能在中文和英文间切换" : "Demo users can only switch between Chinese and English"
+                                                setDemoLangToast(msg)
+                                                sessionStorage.setItem("demoLangToast", msg)
+                                                setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 2500)
+                                              }
+                                              router.push(window.location.pathname.replace(new RegExp("^/(?:" + locales.join("|") + ")(/|$)"), "/") || "/", { locale: l })
+                                            }}
                       className={"w-full text-left px-4 py-2 text-sm transition-colors " + (active ? "text-[#FF6B35] bg-orange-50 font-medium" : "text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35]")}
                     >
                       {l === "zh-CN" ? "中文" : l === "en" ? "English" : l}
