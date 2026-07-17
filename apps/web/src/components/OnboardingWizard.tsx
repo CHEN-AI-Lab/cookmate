@@ -66,12 +66,13 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
   const [error, setError] = useState("")
 
   const canNext = () => {
-    if (isDemoUser === null) return false
     if (step === 0) return true
     if (step === 1 && cuisinePref.length === 0) {
       return false
     }
     if (step === 2) return true
+    // Step 4 (last): wait for demo check before enabling
+    if (step === STEPS.length - 1 && isDemoUser === null) return false
     return true
   }
 
