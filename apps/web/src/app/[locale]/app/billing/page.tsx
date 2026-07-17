@@ -335,7 +335,7 @@ export default function BillingPage() {
               </svg>
               <div className="min-w-0">
                 <p className="font-semibold text-gray-900 text-sm">{t("alipay")}</p>
-                <p className="text-xs text-gray-400">{t("payFrom")}</p>
+                <p className="text-xs text-gray-400">{`${currencySymbol}${selectedPrice}/${periodUnit}`}</p>
               </div>
               {paying && <span className="ml-auto text-xs text-gray-400 shrink-0">{t("redirecting")}</span>}
             </button>
@@ -352,7 +352,7 @@ export default function BillingPage() {
                 </svg>
                 <div className="min-w-0">
                   <p className="font-semibold text-gray-900 text-sm">{t("creditCard")}</p>
-                  <p className="text-xs text-gray-400">{t("creditCardDesc")}</p>
+                  <p className="text-xs text-gray-400">{`${locale === "zh-CN" ? "$" : "¥"}${selectedPeriod === "annual" ? PRICING.plans.annual[locale === "zh-CN" ? "usd" : "cny"].display : PRICING.plans.monthly[locale === "zh-CN" ? "usd" : "cny"].display}/${selectedPeriod === "annual" ? "yr" : "mo"} · Stripe`}</p>
                 </div>
                 {actionLoading === "pro" && <span className="ml-auto text-xs text-gray-400 shrink-0">{t("redirecting")}</span>}
               </button>

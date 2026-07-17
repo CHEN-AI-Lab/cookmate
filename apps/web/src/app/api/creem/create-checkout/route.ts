@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { generateOrderId } from "@cookmate/shared/utils/order-id"
 import { PRICING } from "@cookmate/shared/constants/pricing"
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
@@ -16,16 +16,23 @@ export async function POST() {
       return NextResponse.json({ error: "Creem 支付正在配置中" }, { status: 503 })
     }
 
+    let period: "monthly" | "annual" = "monthly"
+    try {
+      const body = await req.json()
+      if (body.period === "annual" || body.period === "monthly") period = body.period
+    } catch { /* 默认 monthly */ }
+
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 
     const { checkoutUrl, sessionId } = await createCheckout({
       successUrl: `${baseUrl}/app/billing?success=true`,
-      metadata: { userId: session.user.id },
+      metadata: { userId: session.user.id, period },
     })
 
     // 保存订单记录（用统一订单号）
     if (sessionId) {
       const orderId = generateOrderId("creem")
+      const price = PRICING.get(period, "CNY")
       await prisma.paymentOrder.upsert({
         where: { orderId },
         update: {},
@@ -33,7 +40,7 @@ export async function POST() {
           userId: session.user.id,
           orderId,
           channel: "creem",
-          amount: PRICING.plans.monthly.cny.amount,
+          amount: price.amount,
           status: "PENDING",
         },
       })

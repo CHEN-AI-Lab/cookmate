@@ -450,6 +450,8 @@
     ],
     "freeTier": "免费使用",
     "subscribePro": "订阅",
+    "selectThisPlan": "选择此方案",
+    "selectedPlan": "已选",
     "freePlanDesc": "每天 1 次 AI 菜谱推荐",
     "proPlanDesc": "无限 AI 生成，享受全部 Pro 功能",
     "freeBadge": "🆓 免费版",

@@ -6,7 +6,7 @@ import { generateOrderId } from "@cookmate/shared/utils/order-id"
 import { isDemoUser } from "@/lib/auth-helpers"
 import { PRICING } from "@cookmate/shared/constants/pricing"
 
-export async function POST(_req: Request) {
+export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 })
@@ -18,13 +18,20 @@ export async function POST(_req: Request) {
   }
 
   try {
+    let period: "monthly" | "annual" = "monthly"
+    try {
+      const body = await req.json()
+      if (body.period === "annual" || body.period === "monthly") period = body.period
+    } catch { /* 默认 monthly */ }
+
     const orderId = generateOrderId("alipay")
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL
-    const price = PRICING.plans.monthly.cny
+    const price = PRICING.get(period, "CNY")
+    const subject = period === "annual" ? "CookMate Pro 年度订阅" : "CookMate Pro 月度订阅"
 
     const payUrl = await createPagePay(
       orderId,
-      "CookMate Pro 月度订阅",
+      subject,
       price.amount / 100,
       `${baseUrl}/api/alipay/notify`,
       `${baseUrl}/app/billing?success=true`,

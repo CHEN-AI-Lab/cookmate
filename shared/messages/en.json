@@ -450,6 +450,8 @@
     ],
     "freeTier": "Free to Use",
     "subscribePro": "Subscribe",
+    "selectThisPlan": "Select this plan",
+    "selectedPlan": "Selected",
     "freePlanDesc": "1 AI recipe recommendation per day",
     "proPlanDesc": "Unlimited AI generation, full Pro features",
     "freeBadge": "🆓 Free",
