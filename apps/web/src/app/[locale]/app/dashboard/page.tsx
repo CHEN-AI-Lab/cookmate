@@ -31,8 +31,9 @@ export default function DashboardPage() {
     ])
       .then(([statsData, onboardingData]) => {
         setStats(statsData)
-        if (statsData.isDemoUser) setIsDemoUser(true)
-        if (!onboardingData.onboardingCompleted) {
+        if (statsData.isDemoUser) {
+          setIsDemoUser(true)
+        } else if (!onboardingData.onboardingCompleted) {
           setShowOnboarding(true)
         }
       })

@@ -58,7 +58,7 @@ export function Sidebar({
               }`}
             >
               <span className="text-lg">{item.icon}</span>
-              <span>{t(item.labelKey)}</span>
+              <span className="truncate">{t(item.labelKey)}</span>
             </Link>
           )
         })}
