@@ -37,7 +37,7 @@ export default function BillingPage() {
   const [topBanner, setTopBanner] = useState("")
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showCheckoutModal, setShowCheckoutModal] = useState(false)
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("monthly")
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("annual")
 
   useEffect(() => {
     fetch("/api/dashboard")
