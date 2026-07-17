@@ -124,7 +124,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
       </button>
 
       {demoLangToast && (
-        <div className="fixed top-4 right-4 bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs shadow-lg z-[999] whitespace-nowrap">
+        <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mb-2 leading-snug">
           {demoLangToast}
         </div>
       )}

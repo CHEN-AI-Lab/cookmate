@@ -203,10 +203,9 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
           )}
 
           {step === 1 && (
-            <div className="text-center py-4">
-              <div className="text-5xl mb-4">🍳</div>
-              <h2 className="text-2xl font-bold text-gray-900">{t("preferenceTitle")}</h2>
-              <p className="text-gray-500 text-sm text-center mt-1" dangerouslySetInnerHTML={{ __html: t.raw("preferenceDesc") }} />
+            <div className="py-4">
+              <h2 className="text-xl font-bold text-gray-900 text-center">{t("preferenceTitle")}</h2>
+              <p className="text-gray-500 text-sm text-center mt-1">{t("preferenceDesc")}</p>
 
               <div className="mt-6">
                 <label className="text-sm font-semibold text-gray-700">{t("dietType")}</label>
@@ -282,11 +281,11 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
           )}
 
           {step === 2 && (
-            <div className="text-center py-4">
-              <div className="text-5xl mb-4">🥦</div>
-              <h2 className="text-2xl font-bold text-gray-900">{t("step2Title")}</h2>
-              <p className="text-gray-500 text-sm mt-1" dangerouslySetInnerHTML={{ __html: t.raw("step2Desc") }} />
-              <div className="mt-5 space-y-3 max-h-64 overflow-y-auto text-left">
+            <div className="py-4">
+              <h2 className="text-xl font-bold text-gray-900 text-center">{t("ingredientTitle")}</h2>
+              <p className="text-gray-500 text-sm text-center mt-1">{t("ingredientDesc")}</p>
+
+              <div className="mt-5 space-y-3 max-h-64 overflow-y-auto">
                 {QUICK_INGREDIENTS.map((group) => (
                   <div key={group.cat}>
                     <p className="text-xs font-semibold text-gray-400 mb-1.5">{ingredientCats[group.cat]}</p>
@@ -317,8 +316,8 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
           {step === 3 && (
             <div className="text-center py-4">
               <div className="text-5xl mb-4">🤖</div>
-              <h2 className="text-2xl font-bold text-gray-900">{t("step3Title")}</h2>
-              <p className="text-gray-500 mt-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.raw("step3Desc") }} />
+              <h2 className="text-xl font-bold text-gray-900">{t("tryAiTitle")}</h2>
+              <p className="text-gray-500 mt-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.raw("tryAiDesc") }} />
               <div className="mt-6 inline-flex items-center gap-2 bg-orange-50 text-[#FF6B35] px-4 py-2 rounded-full text-sm font-medium">
                 {t("tryAiButton")}
               </div>
@@ -331,14 +330,16 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                 <>
                   <div className="text-5xl mb-4">💡</div>
                   <h2 className="text-2xl font-bold text-gray-900">{t("readyTitle")}</h2>
-                  <p className="text-gray-500 mt-3 leading-relaxed">{t("demoCannotSave")}</p>
+                  <p className="text-gray-500 mt-3 leading-relaxed">
+                    {t("demoCannotSave") || "体验用户的数据无法保存。如需保存您的设置和菜谱，请注册账号。"}
+                  </p>
                   <div className="mt-6">
-                    <Link
+                    <a
                       href="/register"
                       className="inline-block bg-[#FF6B35] text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-orange-600 transition-colors"
                     >
-                      {t("freeRegister")}
-                    </Link>
+                      {t("freeRegister") || "免费注册"}
+                    </a>
                   </div>
                 </>
               ) : (
@@ -351,12 +352,11 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
             </div>
           )}
 
-          {/* Actions — hidden for demo users on the last step (register button is in the content) */}
-          {isDemoUser === true && step === STEPS.length - 1 ? null : (
+          {/* Actions */}
           <div className="flex items-center justify-between mt-6">
             <button
               onClick={() => step > 0 && setStep(step - 1)}
-              className={`text-sm font-medium py-2.5 transition-colors ${
+              className={`text-sm font-medium transition-colors ${
                 step > 0 ? "text-gray-500 hover:text-gray-900" : "text-transparent pointer-events-none"
               }`}
             >
@@ -375,7 +375,6 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
               {saving ? t("saving") : step === STEPS.length - 1 ? t("startUsing") : t("next")}
             </button>
           </div>
-        )}
         </div>
       </div>
     </div>
