@@ -82,11 +82,12 @@ export default function DemoOnboarding() {
 
         {/* Buttons */}
                 <div className="flex gap-2 mt-5">
-                  {step > 0 && step < content.length - 1 ? (
+                  {step > 0 && step < content.length - 1 && (
                     <button onClick={prev} className="flex-1 px-4 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
                       {isEn ? "← Back" : "← 上一步"}
                     </button>
-                  ) : step === 0 ? (
+                  )}
+                  {step === 0 && (
                     <button onClick={close} className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
                       {isEn ? "Skip" : "跳过"}
                     </button>
