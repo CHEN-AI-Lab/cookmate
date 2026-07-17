@@ -31,19 +31,7 @@ export function Sidebar({
   const locale = useLocale()
   const router = useRouter()
   const t = useTranslations("nav")
-  const [demoLangToast, setDemoLangToast] = useState("")
   const initial = isDemoUser && (locale === "en" || locale.startsWith("en")) ? "D" : (name?.charAt(0)?.toUpperCase() || "?")
-
-  // Restore toast from sessionStorage after page reload
-  useEffect(() => {
-    const saved = sessionStorage.getItem("demoLangToast")
-    if (saved) {
-      setDemoLangToast(saved)
-      sessionStorage.removeItem("demoLangToast")
-      const timer = setTimeout(() => setDemoLangToast(""), 2500)
-      return () => clearTimeout(timer)
-    }
-  }, [])
 
   return (
     <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-orange-100 h-screen sticky top-0">
@@ -79,27 +67,6 @@ export function Sidebar({
 
       {/* Bottom: user menu dropdown */}
       <div className="px-3 py-3 border-t border-orange-100">
-        {isDemoUser && (
-          <button
-            onClick={() => {
-              const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
-              const msg = nextLocale === "zh-CN"
-                ? "体验用户只能在中文和英文间切换"
-                : "Demo users can only switch between Chinese and English"
-              setDemoLangToast(msg)
-              sessionStorage.setItem("demoLangToast", msg)
-              setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 2500)
-              const pathWithoutLocale = window.location.pathname.replace(
-                new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
-              )
-              router.push(pathWithoutLocale || "/", { locale: nextLocale })
-            }}
-            className="flex items-center gap-2 px-3 py-2 mb-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors w-full text-left"
-          >
-            <span className="text-base">🌐</span>
-            <span>{locale === "zh-CN" ? "English" : "中文"}</span>
-          </button>
-        )}
         {name ? (
           <UserMenu name={name} initial={initial} t={t} isDemoUser={isDemoUser} />
         ) : (
@@ -118,17 +85,13 @@ export function Sidebar({
           </button>
         )}
       </div>
-      {demoLangToast && (
-        <div className="mx-3 mb-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 leading-snug">
-          {demoLangToast}
-        </div>
-      )}
     </aside>
   )
 }
 
 function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: string; t: (key: string) => string; isDemoUser?: boolean }) {
   const [open, setOpen] = useState(false)
+  const [demoLangToast, setDemoLangToast] = useState("")
   const router = useRouter()
   const menuRef = useRef<HTMLDivElement>(null)
   const locale = useLocale()
@@ -159,6 +122,31 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
+      {isDemoUser && (
+        <button
+          onClick={() => {
+            const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
+            const msg = nextLocale === "zh-CN" ? "体验用户只能在中文和英文间切换" : "Demo users can only switch between Chinese and English"
+            setDemoLangToast(msg)
+            sessionStorage.setItem("demoLangToast", msg)
+            setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 2500)
+            const pathWithoutLocale = window.location.pathname.replace(
+              new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
+            )
+            router.push(pathWithoutLocale || "/", { locale: nextLocale })
+          }}
+          className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-sm text-gray-500 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors ml-1"
+          title={locale === "zh-CN" ? "English" : "中文"}
+        >
+          🌐
+        </button>
+      )}
+
+      {demoLangToast && (
+        <div className="fixed top-4 right-4 bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs shadow-lg z-[999] whitespace-nowrap">
+          {demoLangToast}
+        </div>
+      )}
 
       {/* Dropdown */}
       {open && (

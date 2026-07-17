@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from "@cookmate/shared/constants"
 
-const STEPS = ["欢迎", "偏好", "食材", "上手", "完成"]
+const STEPS = ["欢迎", "AI菜谱", "周计划", "食材", "完成"]
 
 const QUICK_INGREDIENTS = [
   { cat: "🥬 蔬菜", items: ["西红柿", "青菜", "白菜", "土豆", "胡萝卜", "洋葱", "大蒜", "姜", "葱"] },
@@ -203,8 +203,9 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
           )}
 
           {step === 1 && (
-            <div className="py-4">
-              <h2 className="text-xl font-bold text-gray-900 text-center">{t("preferenceTitle")}</h2>
+            <div className="text-center py-4">
+              <div className="text-5xl mb-4">🍳</div>
+              <h2 className="text-2xl font-bold text-gray-900">{t("preferenceTitle")}</h2>
               <p className="text-gray-500 text-sm text-center mt-1" dangerouslySetInnerHTML={{ __html: t.raw("preferenceDesc") }} />
 
               <div className="mt-6">
@@ -281,11 +282,19 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
           )}
 
           {step === 2 && (
-            <div className="py-4">
-              <h2 className="text-xl font-bold text-gray-900 text-center">{t("ingredientTitle")}</h2>
+            <div className="text-center py-4">
+              <div className="text-5xl mb-4">📅</div>
+              <h2 className="text-2xl font-bold text-gray-900">{t("ingredientTitle")}</h2>
               <p className="text-gray-500 text-sm text-center mt-1" dangerouslySetInnerHTML={{ __html: t.raw("ingredientDesc") }} />
+            </div>
+          )}
 
-              <div className="mt-5 space-y-3 max-h-64 overflow-y-auto">
+          {step === 3 && (
+            <div className="text-center py-4">
+              <div className="text-5xl mb-4">🥦</div>
+              <h2 className="text-2xl font-bold text-gray-900">{t("tryAiTitle")}</h2>
+              <p className="text-gray-500 text-sm mt-1" dangerouslySetInnerHTML={{ __html: t.raw("tryAiDesc") }} />
+              <div className="mt-5 space-y-3 max-h-64 overflow-y-auto text-left">
                 {QUICK_INGREDIENTS.map((group) => (
                   <div key={group.cat}>
                     <p className="text-xs font-semibold text-gray-400 mb-1.5">{ingredientCats[group.cat]}</p>
@@ -310,17 +319,6 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
               <p className="text-xs text-gray-400 mt-3 text-center">
                 {t("selectedIngredients", { count: selectedIngredients.size })}
               </p>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="text-center py-4">
-              <div className="text-5xl mb-4">🤖</div>
-              <h2 className="text-xl font-bold text-gray-900">{t("tryAiTitle")}</h2>
-              <p className="text-gray-500 mt-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.raw("tryAiDesc") }} />
-              <div className="mt-6 inline-flex items-center gap-2 bg-orange-50 text-[#FF6B35] px-4 py-2 rounded-full text-sm font-medium">
-                {t("tryAiButton")}
-              </div>
             </div>
           )}
 
