@@ -120,7 +120,9 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
   const toggleLanguage = () => {
     if (isDemoUser) {
       const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
-      const msg = t("demoLangToast")
+      const msg = nextLocale === "zh-CN"
+        ? "体验用户只能在中文和英文间切换"
+        : "Demo users can only switch between Chinese and English"
       setDemoLangToast(msg)
       sessionStorage.setItem("demoLangToast", msg)
       setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 2500)
@@ -164,13 +166,15 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             <span className="text-base">⚙️</span>
             <span>{t("settings")}</span>
           </Link>
-          <button
-            onClick={toggleLanguage}
-            className="flex items-center gap-2.5 px-4 py-2 text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] w-full text-left transition-colors"
-          >
-            <span className="text-base">🌐</span>
-            <span>{locale === "zh-CN" ? "English" : "中文"}</span>
-          </button>
+          {isDemoUser && (
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center gap-2.5 px-4 py-2 text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] w-full text-left transition-colors"
+            >
+              <span className="text-base">🌐</span>
+              <span>{locale === "zh-CN" ? "English" : "中文"}</span>
+            </button>
+          )}
           <div className="border-t border-orange-100 my-1" />
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
