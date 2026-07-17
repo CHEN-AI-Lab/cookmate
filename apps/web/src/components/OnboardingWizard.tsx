@@ -24,9 +24,9 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
     fetch("/api/user/profile")
       .then((r) => r.json())
       .then((data) => {
-        if (data.isDemoUser) setIsDemoUser(true)
+        setIsDemoUser(!!data.isDemoUser)
       })
-      .catch(() => {})
+      .catch(() => setIsDemoUser(false))
   }, [])
 
   const dietLabel: Record<string, string> = {
