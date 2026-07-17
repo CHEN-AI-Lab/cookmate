@@ -171,6 +171,13 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             <span className="text-base">🌐</span>
             <span>{locale === "zh-CN" ? "English" : "中文"}</span>
           </button>
+          {demoLangToast && (
+            <div className="px-4 pb-1.5">
+              <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs px-2.5 py-1.5 rounded-lg whitespace-nowrap">
+                {demoLangToast}
+              </div>
+            </div>
+          )}
           <div className="border-t border-orange-100 my-1" />
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
@@ -183,11 +190,6 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             </svg>
             <span>{t("logout")}</span>
           </button>
-        </div>
-      )}
-      {demoLangToast && (
-        <div className="fixed top-16 right-4 bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs shadow-lg z-[100] whitespace-nowrap">
-          {demoLangToast}
         </div>
       )}
     </div>

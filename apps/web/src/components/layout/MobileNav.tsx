@@ -77,7 +77,7 @@ export function MobileNav({
         <LanguageSwitcher isDemoUser={isDemoUser} onDemoToast={showDemoLangToast} />
       </nav>
       {demoLangToast && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs shadow-lg z-[100] whitespace-nowrap">
+        <div className="mx-4 mt-1 bg-amber-50 border border-amber-200 text-amber-700 text-xs px-2.5 py-1.5 rounded-lg whitespace-nowrap text-center">
           {demoLangToast}
         </div>
       )}
