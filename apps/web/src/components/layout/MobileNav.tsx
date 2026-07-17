@@ -2,7 +2,7 @@
 
 import { Link } from "@/i18n/navigation"
 import { usePathname } from "next/navigation"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
 import { useState, useCallback } from "react"
 
@@ -23,12 +23,17 @@ export function MobileNav({
   isDemoUser?: boolean
 }) {
   const pathname = usePathname()
+  const locale = useLocale()
   const t = useTranslations("nav")
   const [demoLangToast, setDemoLangToast] = useState("")
   const showDemoLangToast = useCallback(() => {
-    setDemoLangToast(t("demoLangToast"))
+    const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
+    const msg = nextLocale === "zh-CN"
+      ? "体验用户只能在中文和英文间切换"
+      : "Demo users can only switch between Chinese and English"
+    setDemoLangToast(msg)
     setTimeout(() => setDemoLangToast(""), 2500)
-  }, [])
+  }, [locale])
 
   return (
     <header className="fixed top-0 left-0 right-0 md:hidden bg-white border-b border-orange-100 h-16 z-50 flex items-center justify-between px-4">
