@@ -7,7 +7,7 @@ import { signOut } from "next-auth/react"
 import { useTranslations } from "next-intl"
 import { useLocale } from "next-intl"
 import { useState, useRef, useEffect } from "react"
-import { locales } from "@cookmate/shared/constants"
+import { locales, localeNames } from "@cookmate/shared/constants"
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
 
 const navItems = [
@@ -172,13 +172,23 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             <span className="text-base">⚙️</span>
             <span>{t("settings")}</span>
           </Link>
-          <button
-              onClick={toggleLanguage}
-              className="flex items-center gap-2.5 px-4 py-2 text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] w-full text-left transition-colors"
+          <select
+              value={locale}
+              onChange={(e) => {
+                const nl = e.target.value
+                if (isDemoUser && nl !== "zh-CN" && nl !== "en") {
+                  setDemoLangToast(locale.startsWith("en") ? "Demo users can only switch between Chinese and English" : "体验用户只能在中文和英文间切换")
+                  setTimeout(() => setDemoLangToast(""), 2500)
+                  return
+                }
+                router.push(window.location.pathname.replace(new RegExp(`^/(${locales.join("|")})(/|$)`), "/") || "/", { locale: nl })
+              }}
+              className="w-full bg-transparent border-0 px-4 py-2 text-sm text-gray-600 hover:bg-orange-50 cursor-pointer outline-none"
             >
-              <span className="text-base">🌐</span>
-              <span>{locale === "zh-CN" ? "English" : "中文"}</span>
-            </button>
+              {locales.map((l) => (
+                <option key={l} value={l}>{localeNames[l] || l}</option>
+              ))}
+            </select>
           <div className="border-t border-orange-100 my-1" />
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
