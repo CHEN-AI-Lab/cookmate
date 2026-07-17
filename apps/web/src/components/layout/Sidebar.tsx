@@ -34,6 +34,17 @@ export function Sidebar({
   const [demoLangToast, setDemoLangToast] = useState("")
   const initial = isDemoUser && (locale === "en" || locale.startsWith("en")) ? "D" : (name?.charAt(0)?.toUpperCase() || "?")
 
+  // Restore toast from sessionStorage after page reload
+  useEffect(() => {
+    const saved = sessionStorage.getItem("demoLangToast")
+    if (saved) {
+      setDemoLangToast(saved)
+      sessionStorage.removeItem("demoLangToast")
+      const timer = setTimeout(() => setDemoLangToast(""), 2500)
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
   return (
     <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-orange-100 h-screen sticky top-0">
       {/* Logo */}
@@ -170,6 +181,5 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
         </div>
       )}
     </div>
-    </>
   )
 }
