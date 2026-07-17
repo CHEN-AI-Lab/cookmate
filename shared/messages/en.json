@@ -460,6 +460,7 @@
     "subscriptionManage": "Subscription Management",
     "subscriptionManageDesc": "Manage your subscription status",
     "cancelSubscription": "Cancel Subscription",
+    "subscriptionCancelled": "Cancelled — will downgrade to Free after current period",
     "cancelConfirm": "Are you sure? Pro features remain active until the end of the current billing period, then downgrade to Free.",
     "cancelFailed": "Failed to cancel",
     "cancelling": "Cancelling...",

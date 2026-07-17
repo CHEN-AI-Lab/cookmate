@@ -11,6 +11,7 @@ interface BillingInfo {
   subscriptionExpiryDate?: string | null
   isDemoUser: boolean
   creemConfigured: boolean
+  cancelled: boolean
   orders?: Array<{
     id: string
     orderId: string
@@ -44,6 +45,7 @@ export default function BillingPage() {
           subscriptionExpiryDate: data.subscriptionExpiryDate,
           isDemoUser: !!data.isDemoUser,
           creemConfigured: !!data.creemConfigured,
+          cancelled: !!data.cancelled,
           orders: data.orders || [],
         })
       })
@@ -384,7 +386,7 @@ export default function BillingPage() {
         </div>
       )}
 
-      {!isFree && (
+      {!isFree && !info?.cancelled && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <h3 className="font-bold text-gray-900 mb-2">{t("subscriptionManage")}</h3>
           <p className="text-sm text-gray-500 mb-4">
@@ -400,6 +402,18 @@ export default function BillingPage() {
             </svg>
             {actionLoading === "cancel" ? t("cancelling") : t("cancelSubscription")}
           </button>
+        </div>
+      )}
+
+      {!isFree && info?.cancelled && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <h3 className="font-bold text-gray-900 mb-2">{t("subscriptionManage")}</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            {t("subscriptionManageDesc")}
+          </p>
+          <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 bg-gray-100 rounded-full px-3 py-1.5">
+            {t("subscriptionCancelled")}
+          </span>
         </div>
       )}
 

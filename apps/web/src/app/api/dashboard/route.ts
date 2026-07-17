@@ -53,10 +53,11 @@ export async function GET(req: Request) {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { subscriptionTier: true, subscriptionExpiryDate: true },
+      select: { subscriptionTier: true, subscriptionExpiryDate: true, creemSubscriptionId: true },
     }).catch((err: unknown) => { console.error("findUnique user error:", err); return null })
 
     const tier = await checkSubscription(userId, user)
+    const cancelled = tier === "PRO" && !user?.creemSubscriptionId
 
     // 最近订单
     const orders = await prisma.paymentOrder.findMany({
@@ -71,6 +72,7 @@ export async function GET(req: Request) {
       mealPlanCount,
       todayUsage: usage?.recipeCount ?? 0,
       subscriptionTier: tier,
+      cancelled,
       subscriptionExpiryDate: user?.subscriptionExpiryDate?.toISOString() ?? null,
       stripeConfigured: !!(process.env.STRIPE_SECRET_KEY && process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY),
       paymentConfigured: isAlipayConfigured(),

@@ -460,6 +460,7 @@
     "subscriptionManage": "订阅管理",
     "subscriptionManageDesc": "管理你的订阅状态",
     "cancelSubscription": "取消订阅",
+    "subscriptionCancelled": "已取消，到期后自动降级为免费版",
     "cancelConfirm": "确定要取消订阅吗？取消后当前周期内仍可使用 Pro 功能，到期后降级为免费版。",
     "cancelFailed": "取消失败",
     "cancelling": "取消中...",
