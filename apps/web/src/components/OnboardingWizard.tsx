@@ -17,6 +17,16 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
   const t = useTranslations("onboarding")
   const ts = useTranslations("settings")
   const router = useRouter()
+  const [isDemoUser, setIsDemoUser] = useState(false)
+
+  useEffect(() => {
+    fetch("/api/user/profile")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.isDemoUser) setIsDemoUser(true)
+      })
+      .catch(() => {})
+  }, [])
 
   const dietLabel: Record<string, string> = {
     "不限": ts("dietUnlimited"), "减脂": ts("dietLoseFat"),
@@ -74,7 +84,11 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
       setStep(step + 1)
       return
     }
-    // Complete
+    // Complete — demo users cannot save
+    if (isDemoUser) {
+      window.location.href = "/register"
+      return
+    }
     setSaving(true)
     try {
       const res = await fetch("/api/user/onboarding", {
@@ -125,6 +139,10 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
         {/* Close/skip button */}
         <button
           onClick={async () => {
+            if (isDemoUser) {
+              window.location.href = "/app/dashboard"
+              return
+            }
             const res = await fetch("/api/user/onboarding", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -302,9 +320,29 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
 
           {step === 4 && (
             <div className="text-center py-6">
-              <div className="text-5xl mb-4">🎉</div>
-              <h2 className="text-2xl font-bold text-gray-900">{t("readyTitle")}</h2>
-              <p className="text-gray-500 mt-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.raw("readyDesc") }} />
+              {isDemoUser ? (
+                <>
+                  <div className="text-5xl mb-4">💡</div>
+                  <h2 className="text-2xl font-bold text-gray-900">{t("readyTitle")}</h2>
+                  <p className="text-gray-500 mt-3 leading-relaxed">
+                    {t("demoCannotSave") || "体验用户的数据无法保存。如需保存您的设置和菜谱，请注册账号。"}
+                  </p>
+                  <div className="mt-6">
+                    <a
+                      href="/register"
+                      className="inline-block bg-[#FF6B35] text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-orange-600 transition-colors"
+                    >
+                      {t("freeRegister") || "免费注册"}
+                    </a>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-5xl mb-4">🎉</div>
+                  <h2 className="text-2xl font-bold text-gray-900">{t("readyTitle")}</h2>
+                  <p className="text-gray-500 mt-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.raw("readyDesc") }} />
+                </>
+              )}
             </div>
           )}
 
