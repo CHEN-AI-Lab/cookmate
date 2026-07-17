@@ -355,7 +355,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
           <div className="flex items-center justify-between mt-6">
             <button
               onClick={() => step > 0 && setStep(step - 1)}
-              className={`text-sm font-medium transition-colors ${
+              className={`text-sm font-medium py-2.5 transition-colors ${
                 step > 0 ? "text-gray-500 hover:text-gray-900" : "text-transparent pointer-events-none"
               }`}
             >

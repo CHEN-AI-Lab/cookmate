@@ -29,8 +29,9 @@ export function Sidebar({
 }) {
   const pathname = usePathname()
   const locale = useLocale()
+  const router = useRouter()
   const t = useTranslations("nav")
-  const initial = name?.charAt(0)?.toUpperCase() || "?"
+  const initial = isDemoUser && (locale === "en" || locale.startsWith("en")) ? "D" : (name?.charAt(0)?.toUpperCase() || "?")
 
   return (
     <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-orange-100 h-screen sticky top-0">
