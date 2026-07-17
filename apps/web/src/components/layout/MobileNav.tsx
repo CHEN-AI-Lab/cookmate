@@ -2,9 +2,8 @@
 
 import { Link } from "@/i18n/navigation"
 import { usePathname } from "next/navigation"
-import { useTranslations, useLocale } from "next-intl"
+import { useTranslations } from "next-intl"
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
-import { useState, useCallback, useEffect } from "react"
 
 const navItems = [
   { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
@@ -23,29 +22,7 @@ export function MobileNav({
   isDemoUser?: boolean
 }) {
   const pathname = usePathname()
-  const locale = useLocale()
   const t = useTranslations("nav")
-  const [demoLangToast, setDemoLangToast] = useState("")
-  const showDemoLangToast = useCallback(() => {
-    const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
-    const msg = nextLocale === "zh-CN"
-      ? "体验用户只能在中文和英文间切换"
-      : "Demo users can only switch between Chinese and English"
-    setDemoLangToast(msg)
-    sessionStorage.setItem("demoLangToast", msg)
-    setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 2500)
-  }, [locale])
-
-  // Restore toast from sessionStorage after page reload
-  useEffect(() => {
-    const saved = sessionStorage.getItem("demoLangToast")
-    if (saved) {
-      setDemoLangToast(saved)
-      sessionStorage.removeItem("demoLangToast")
-      const timer = setTimeout(() => setDemoLangToast(""), 2500)
-      return () => clearTimeout(timer)
-    }
-  }, [])
 
   return (
     <header className="fixed top-0 left-0 right-0 md:hidden bg-white border-b border-orange-100 h-16 z-50 flex items-center justify-between px-4">
@@ -74,14 +51,7 @@ export function MobileNav({
             </Link>
           )
         })}
-        <div className="relative">
-        <LanguageSwitcher isDemoUser={isDemoUser} onDemoToast={showDemoLangToast} />
-        {demoLangToast && (
-          <div className="absolute -top-1 right-0 translate-x-1/2 bg-amber-100 text-amber-700 text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap shadow-sm z-50">
-            {demoLangToast}
-          </div>
-        )}
-      </div>
+        <LanguageSwitcher isDemoUser={isDemoUser} />
       </nav>
     </header>
   )
