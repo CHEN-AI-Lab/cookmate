@@ -122,25 +122,6 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
-      {isDemoUser && (
-        <button
-          onClick={() => {
-            const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
-            const msg = nextLocale === "zh-CN" ? "体验用户只能在中文和英文间切换" : "Demo users can only switch between Chinese and English"
-            setDemoLangToast(msg)
-            sessionStorage.setItem("demoLangToast", msg)
-            setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 2500)
-            const pathWithoutLocale = window.location.pathname.replace(
-              new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
-            )
-            router.push(pathWithoutLocale || "/", { locale: nextLocale })
-          }}
-          className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-sm text-gray-500 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors ml-1"
-          title={locale === "zh-CN" ? "English" : "中文"}
-        >
-          🌐
-        </button>
-      )}
 
       {demoLangToast && (
         <div className="fixed top-4 right-4 bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs shadow-lg z-[999] whitespace-nowrap">
@@ -159,6 +140,25 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             <span className="text-base">⚙️</span>
             <span>{t("settings")}</span>
           </Link>
+          {isDemoUser && (
+            <button
+              onClick={() => {
+                const nextLocale = locale === "zh-CN" ? "en" : "zh-CN"
+                const msg = nextLocale === "zh-CN" ? "体验用户只能在中文和英文间切换" : "Demo users can only switch between Chinese and English"
+                setDemoLangToast(msg)
+                sessionStorage.setItem("demoLangToast", msg)
+                setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 2500)
+                const pathWithoutLocale = window.location.pathname.replace(
+                  new RegExp(`^/(${locales.join("|")})(/|$)`), "/"
+                )
+                router.push(pathWithoutLocale || "/", { locale: nextLocale })
+              }}
+              className="flex items-center gap-2.5 px-4 py-2 text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] w-full text-left transition-colors"
+            >
+              <span className="text-base">🌐</span>
+              <span>{locale === "zh-CN" ? "English" : "中文"}</span>
+            </button>
+          )}
           <div className="border-t border-orange-100 my-1" />
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
