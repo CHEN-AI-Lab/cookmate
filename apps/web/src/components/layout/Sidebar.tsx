@@ -118,6 +118,11 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
 
+  // Reset language sub-menu when main menu closes
+  useEffect(() => {
+    if (!open) setLangOpen(false)
+  }, [open])
+
   return (
     <>
       {demoLangToast && (
