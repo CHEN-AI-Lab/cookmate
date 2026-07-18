@@ -236,21 +236,25 @@ export default function BillingPage() {
               >
                 {t("monthly")}
               </button>
-              <button
-                onClick={() => setBillingPeriod("annual")}
-                className={cn(
-                  "px-5 py-1.5 rounded-full text-sm font-medium transition-all",
-                  billingPeriod === "annual"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                )}
-              >
-                {t("annual")}
-              </button>
+              <div className="relative">
+                <span className="absolute -top-2.5 inset-x-0 flex justify-center z-10 pointer-events-none">
+                  <span className="bg-[#FF6B35] text-white text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap">
+                    {t("yearlySaving")}
+                  </span>
+                </span>
+                <button
+                  onClick={() => setBillingPeriod("annual")}
+                  className={cn(
+                    "px-5 py-1.5 rounded-full text-sm font-medium transition-all",
+                    billingPeriod === "annual"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  )}
+                >
+                  {t("annual")}
+                </button>
+              </div>
             </div>
-            <span className="ml-3 text-xs text-green-600 font-medium self-center bg-green-50 px-2 py-0.5 rounded-full whitespace-nowrap">
-              {billingPeriod === "annual" ? t("yearlySaving") : t("yearlySavingAlt")}
-            </span>
           </div>
 
           {/* Cards */}
