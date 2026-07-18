@@ -47,7 +47,7 @@ export default function BillingPage() {
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showCheckoutModal, setShowCheckoutModal] = useState(false)
   const [showDowngradeModal, setShowDowngradeModal] = useState(false)
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("annual")
+  const [selectedPeriod, setSelectedPeriod] = useState<"monthly" | "annual">("annual")
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -120,9 +120,11 @@ export default function BillingPage() {
   const isDemo = info?.isDemoUser
   const currency = locale === "zh-CN" ? "CNY" : "USD"
   const currencySymbol = locale === "zh-CN" ? "¥" : "$"
-  const planPrice = PRICING.get(billingPeriod, currency)
-  const planPriceDisplay = `${currencySymbol}${planPrice.display}`
-  const planPeriodLabel = billingPeriod === "annual"
+  const monthlyPrice = PRICING.get("monthly", currency)
+  const annualPrice = PRICING.get("annual", currency)
+  const checkoutPrice = PRICING.get(selectedPeriod, currency)
+  const checkoutPriceDisplay = `${currencySymbol}${checkoutPrice.display}`
+  const checkoutPeriodLabel = selectedPeriod === "annual"
     ? (locale === "zh-CN" ? "/年" : "/yr")
     : (locale === "zh-CN" ? "/月" : "/mo")
 
@@ -222,36 +224,8 @@ export default function BillingPage() {
             {isFree ? t("selectPlan") : t("extendTitle")}
           </h3>
 
-          {/* Period toggle */}
-          <div className="flex justify-center mb-6">
-            <div className="inline-flex bg-gray-100 rounded-full p-1">
-              <button
-                onClick={() => setBillingPeriod("monthly")}
-                className={cn(
-                  "px-5 py-1.5 rounded-full text-sm font-medium transition-all",
-                  billingPeriod === "monthly"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                )}
-              >
-                {t("monthly")}
-              </button>
-              <button
-                onClick={() => setBillingPeriod("annual")}
-                className={cn(
-                  "px-5 py-1.5 rounded-full text-sm font-medium transition-all",
-                  billingPeriod === "annual"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                )}
-              >
-                {t("annual")}
-              </button>
-            </div>
-          </div>
-
-          {/* Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+          {/* 3 cards: Free, Pro Monthly, Pro Annual */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto items-stretch">
             {/* Free card */}
             <PricingCard
               name="Free"
@@ -267,18 +241,33 @@ export default function BillingPage() {
               loading={false}
             />
 
-            {/* Pro card */}
+            {/* Pro Monthly */}
             <PricingCard
-              name={t("proPlan")}
-              price={planPrice.display}
-              periodLabel={planPeriodLabel}
-              period={billingPeriod === "annual" ? t("yearlyPeriod") : t("monthlyPeriod")}
-              saving={billingPeriod === "annual" ? t("yearlySaving") : undefined}
+              name={t("monthlyPro")}
+              price={monthlyPrice.display}
+              periodLabel={locale === "zh-CN" ? "/月" : "/mo"}
+              period={t("monthlyPeriod")}
+              features={t.raw("proPlanFeatures") as string[]}
+              highlighted={false}
+              isCurrent={false}
+              ctaLabel={isFree ? t("upgradeAction") : t("extendAction")}
+              onCta={() => { setSelectedPeriod("monthly"); setShowCheckoutModal(true) }}
+              disabled={false}
+              loading={false}
+            />
+
+            {/* Pro Annual */}
+            <PricingCard
+              name={t("yearlyPro")}
+              price={annualPrice.display}
+              periodLabel={locale === "zh-CN" ? "/年" : "/yr"}
+              period={t("yearlyPeriod")}
+              saving={t("yearlySaving")}
               features={t.raw("proPlanFeatures") as string[]}
               highlighted={true}
-              isCurrent={!isFree}
+              isCurrent={false}
               ctaLabel={isFree ? t("upgradeAction") : t("extendAction")}
-              onCta={() => setShowCheckoutModal(true)}
+              onCta={() => { setSelectedPeriod("annual"); setShowCheckoutModal(true) }}
               disabled={false}
               loading={false}
             />
@@ -359,9 +348,9 @@ export default function BillingPage() {
 
             <div className="bg-gradient-to-r from-amber-500 to-amber-400 rounded-xl p-4 text-white mb-4 text-center">
               <p className="text-sm text-white/80">{t("proPlan")}</p>
-              <p className="text-2xl font-bold mt-1">{planPriceDisplay}{planPeriodLabel}</p>
+              <p className="text-2xl font-bold mt-1">{checkoutPriceDisplay}{checkoutPeriodLabel}</p>
               <p className="text-xs text-white/70 mt-1">
-                {billingPeriod === "annual" ? t("yearlyPeriod") : t("monthlyPeriod")}
+                {selectedPeriod === "annual" ? t("yearlyPeriod") : t("monthlyPeriod")}
               </p>
             </div>
 
@@ -379,7 +368,7 @@ export default function BillingPage() {
                     const res = await fetch("/api/alipay/create", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ period: billingPeriod }),
+                      body: JSON.stringify({ period: selectedPeriod }),
                     })
                     const data = await res.json()
                     if (data.payUrl) {
@@ -402,14 +391,14 @@ export default function BillingPage() {
                 </svg>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-gray-900 text-sm">{t("alipay")}</p>
-                  <p className="text-xs text-gray-400">{planPriceDisplay}{planPeriodLabel}</p>
+                  <p className="text-xs text-gray-400">{checkoutPriceDisplay}{checkoutPeriodLabel}</p>
                 </div>
                 {paying && <span className="text-xs text-gray-400 shrink-0">{t("redirecting")}</span>}
               </button>
 
               {info?.creemConfigured && (
                 <button
-                  onClick={() => handleCreemUpgrade(billingPeriod)}
+                  onClick={() => handleCreemUpgrade(selectedPeriod)}
                   disabled={actionLoading !== null}
                   className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-gray-100 hover:border-green-400 hover:bg-green-50/50 transition-all disabled:opacity-40 group"
                 >
