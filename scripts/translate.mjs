@@ -1,20 +1,25 @@
 /**
  * AI 翻译脚本 — 自动补翻译，支持翻译记忆库
  *
+ * 主副本路径: /home/ubuntu/workspace/.shared/scripts/translate.mjs
+ * 新建项目时复制到 scripts/translate.mjs 即可
+ *
  * 用法:
- *   node scripts/translate.mjs <lang-code>          # 翻译缺失的 key
- *   node scripts/translate.mjs <lang-code> --learn   # 学习人工纠正的翻译
+ *   node scripts/translate.mjs <lang-code>                     # 从英文翻译
+ *   node scripts/translate.mjs <lang-code> --source <src-lang> # 从指定语言翻译
+ *   node scripts/translate.mjs <lang-code> --learn             # 学习人工纠正
  *
  * 示例:
- *   node scripts/translate.mjs ja       # 翻译日文缺失 key
- *   node scripts/translate.mjs ja --learn  # 记住你手动纠正过的日文翻译
+ *   node scripts/translate.mjs ja           # 英文→日语
+ *   node scripts/translate.mjs zh-TW        # 简体中文→繁体中文（自动检测）
+ *   node scripts/translate.mjs fr           # 英文→法语
+ *   node scripts/translate.mjs zh-TW --learn  # 学习纠正的繁体翻译
  *
- * 原理:
- * 1. en.json 是源文件（唯一维护的）
- * 2. 翻译前先查记忆库 → 有就直接用，没有才调 AI
- * 3. AI 翻译结果自动写入记忆库
- * 4. 记忆库文件: /home/ubuntu/workspace/.shared/translation-memory.json
- * 5. 所有项目共享同一个记忆库
+ * 翻译机制:
+ * - 中文简体（zh-CN）：直接编写，不是翻译来的
+ * - 中文繁体（zh-TW）：从简体中文翻译，不是从英文
+ * - 其他语言（ja/fr/de 等）：从英文翻译
+ * - 中英文同时编写，互不影响
  */
 
 import fs from "node:fs"
@@ -24,20 +29,79 @@ import path from "node:path"
 const SHARED_DIR = "/home/ubuntu/workspace/.shared"
 const MEMORY_FILE = path.join(SHARED_DIR, "translation-memory.json")
 const MESSAGES_DIR = path.resolve("shared/messages")
-const SOURCE_FILE = path.join(MESSAGES_DIR, "en.json")
 
 // ─── 参数解析 ───
 const LANG = process.argv[2]
+const IS_CHECK = LANG === "--check"
 const IS_LEARN = process.argv.includes("--learn")
+const SRC_ARG = process.argv.indexOf("--source")
+const SRC_LANG = SRC_ARG !== -1 ? process.argv[SRC_ARG + 1] : null
 
 if (!LANG) {
-  console.error("用法: node scripts/translate.mjs <lang-code> [--learn]")
+  console.error("用法: node scripts/translate.mjs <lang-code> [--source <src>] [--learn]")
+  console.error("       node scripts/translate.mjs --check")
   console.error("示例: node scripts/translate.mjs ja")
-  console.error("       node scripts/translate.mjs ja --learn")
+  console.error("       node scripts/translate.mjs zh-TW --source zh-CN")
   process.exit(1)
 }
 
+// ─── 源语言自动检测 ───
+// 中文繁体默认从简体中文翻译，其他语言从英文翻译
+const SOURCE_LANG = SRC_LANG || (LANG === "zh-TW" ? "zh-CN" : "en")
+const SOURCE_FILE = path.join(MESSAGES_DIR, `${SOURCE_LANG}.json`)
 const TARGET_FILE = path.join(MESSAGES_DIR, `${LANG}.json`)
+
+// ===== --check 模式：校验所有语言 key 完全一致 =====
+if (IS_CHECK) {
+  let allOk = true
+  const files = fs.readdirSync(MESSAGES_DIR).filter((f) => f.endsWith(".json")).sort()
+  if (files.length < 2) {
+    console.log("✅ 只有一个语言文件，无需校验")
+    process.exit(0)
+  }
+  // 以第一个文件为参考
+  const refKey = files[0].replace(".json", "")
+  const refFile = path.join(MESSAGES_DIR, files[0])
+  const refData = JSON.parse(fs.readFileSync(refFile, "utf-8"))
+  const refCount = countKeys(refData)
+  const refFlat = new Set(flattenKeys(refData).map((k) => k.keyPath))
+
+  console.log(`📋 参考文件: ${files[0]}（${refCount} key）\n`)
+
+  for (const file of files.slice(1)) {
+    const lang = file.replace(".json", "")
+    const data = JSON.parse(fs.readFileSync(path.join(MESSAGES_DIR, file), "utf-8"))
+    const count = countKeys(data)
+    const flat = new Set(flattenKeys(data).map((k) => k.keyPath))
+
+    if (count !== refCount) {
+      console.error(`❌ ${file}: ${count} key（参考: ${refCount} key）相差 ${Math.abs(count - refCount)}`)
+      allOk = false
+    }
+
+    // 对比具体 key 差异
+    const missing = [...refFlat].filter((k) => !flat.has(k))
+    const extra = [...flat].filter((k) => !refFlat.has(k))
+    if (missing.length > 0 || extra.length > 0) {
+      allOk = false
+      if (count === refCount) console.error(`❌ ${file}: key 数量相同但内容不同`)
+      for (const k of missing) console.error(`   缺少: ${k}`)
+      for (const k of extra) console.error(`   多余: ${k}`)
+    }
+
+    if (count === refCount && missing.length === 0 && extra.length === 0) {
+      console.log(`✅ ${file}: ${count} key（一致）`)
+    }
+  }
+
+  if (allOk) {
+    console.log("\n✅ 所有语言文件 key 完全一致")
+    process.exit(0)
+  } else {
+    console.log("\n❌ 存在差异，请修复")
+    process.exit(1)
+  }
+}
 
 // ─── 工具函数 ───
 function countKeys(obj) {
@@ -102,20 +166,19 @@ function saveMemory(memory) {
   fs.writeFileSync(MEMORY_FILE, JSON.stringify(memory, null, 2) + "\n")
 }
 
-function getMemoryKey(lang) {
-  return `en→${lang}`
+function getMemoryKey(sourceLang, targetLang) {
+  return `${sourceLang}→${targetLang}`
 }
 
-function lookupMemory(memory, lang, englishText) {
-  const mem = memory[getMemoryKey(lang)]
+function lookupMemory(memory, sourceLang, targetLang, englishText) {
+  const mem = memory[getMemoryKey(sourceLang, targetLang)]
   if (!mem) return null
   return mem[englishText] || null
 }
 
-function setMemory(memory, lang, englishText, translatedText) {
-  const key = getMemoryKey(lang)
+function setMemory(memory, sourceLang, targetLang, englishText, translatedText) {
+  const key = getMemoryKey(sourceLang, targetLang)
   if (!memory[key]) memory[key] = {}
-  // 只有翻译不同时才更新，避免写入多余记录
   if (memory[key][englishText] !== translatedText) {
     memory[key][englishText] = translatedText
     return true
@@ -126,7 +189,7 @@ function setMemory(memory, lang, englishText, translatedText) {
 // ─── 主流程 ───
 
 // 读取源文件
-const en = JSON.parse(fs.readFileSync(SOURCE_FILE, "utf-8"))
+const source = JSON.parse(fs.readFileSync(SOURCE_FILE, "utf-8"))
 
 // 读取目标文件
 let target = {}
@@ -141,16 +204,16 @@ const memory = loadMemory()
 
 // ===== --learn 模式：扫描人工纠正的翻译，更新记忆库 =====
 if (IS_LEARN) {
-  const enFlat = flattenKeys(en)
+  const sourceFlat = flattenKeys(source)
   let updated = 0
 
-  for (const { keyPath, value: enText } of enFlat) {
+  for (const { keyPath, value: srcText } of sourceFlat) {
     const translated = getNested(target, keyPath)
     if (translated === undefined || translated === null) continue
 
-    const memorized = lookupMemory(memory, LANG, enText)
+    const memorized = lookupMemory(memory, SOURCE_LANG, LANG, srcText)
     if (memorized !== translated) {
-      if (setMemory(memory, LANG, enText, translated)) {
+      if (setMemory(memory, SOURCE_LANG, LANG, srcText, translated)) {
         console.log(`  📝 ${keyPath}: "${memorized || "(无)"}" → "${translated}"`)
         updated++
       }
@@ -178,7 +241,7 @@ function findMissing(src, tgt, prefix = "") {
     }
   }
 }
-findMissing(en, target)
+findMissing(source, target)
 
 if (missing.length === 0) {
   console.log("✅ 没有缺少的翻译，全部已同步")
@@ -190,7 +253,7 @@ const needAI = []
 let memoryHits = 0
 
 for (const item of missing) {
-  const memorized = lookupMemory(memory, LANG, item.text)
+  const memorized = lookupMemory(memory, SOURCE_LANG, LANG, item.text)
   if (memorized !== null) {
     setNested(target, item.keyPath, memorized)
     memoryHits++
@@ -229,8 +292,9 @@ for (const item of needAI) {
   groups[section].push(item)
 }
 
-const LANG_NAME = {
+const LANG_NAME_MAP = {
   "zh-CN": "Chinese (Simplified)",
+  "zh-TW": "Chinese (Traditional)",
   ja: "Japanese",
   ko: "Korean",
   fr: "French",
@@ -244,9 +308,12 @@ const LANG_NAME = {
   th: "Thai",
 }[LANG] || LANG
 
+const SRC_LANG_NAME = SOURCE_LANG === "en" ? "English" : LANG_NAME_MAP[SOURCE_LANG] || SOURCE_LANG
+const TGT_LANG_NAME = LANG_NAME_MAP[LANG] || LANG
+
 for (const [section, items] of Object.entries(groups)) {
   const pairs = items.map((i) => `${i.keyPath}: ${i.text}`).join("\n")
-  const systemPrompt = `You are a professional translator. Translate the following translation keys from English to ${LANG_NAME}.
+  const systemPrompt = `You are a professional translator. Translate the following translation keys from ${SRC_LANG_NAME} to ${TGT_LANG_NAME}.
 
 Rules:
 - Keep the key names (the part before the colon) unchanged
@@ -293,7 +360,7 @@ Rules:
       // 同时写入记忆库
       const originalItem = items.find((i) => i.keyPath === key)
       if (originalItem) {
-        setMemory(memory, LANG, originalItem.text, value)
+        setMemory(memory, SOURCE_LANG, LANG, originalItem.text, value)
       }
     }
   }

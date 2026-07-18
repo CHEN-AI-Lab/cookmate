@@ -1,316 +1,365 @@
-# SaaS Billing Page Research — CookMate Redesign Reference
+# CookMate Billing Page Redesign — PRO Subscriber Research
 
-## 1. SaaS Patterns Analyzed
+## Questions & Answers
 
-### 1.1 Linear.app — The Clean Card + Toggle Pattern
+### Q1: What should a PRO user see on the billing page?
 
-**Layout:** 4 horizontal cards (Free, Basic, Business, Enterprise) with built-in yearly/monthly checkbox inside each paid card. No separate payment methods on the pricing page.
+**Answer:** A well-designed billing page for subscribed users has FOUR distinct sections:
 
-**Toggle behavior:**
-- A "Billed yearly" checkbox is embedded directly inside each paid pricing card (Basic, Business)
-- Checked by default (yearly = lower monthly price)
-- The price text dynamically updates: `$10/user/month` with checkbox on, presumably `$12/user/month` unchecked
-- No dedicated global toggle above the cards
+**Section 1 — Current Plan Summary (always visible)**
+- Plan name (Pro) + visual badge (orange/highlighted)
+- Next renewal/expiry date (prominent — this is the most important info)
+- Billing period (Monthly/Annual) + current price per period
+- Payment method on file (last 4 digits of card, or "Alipay")
+- A "Current" or "Active" status indicator
 
-**CTA buttons:**
-- Free → "Get started" (links to signup)
-- Basic/Business → "Get started" (links to checkout)
-- Enterprise → "Contact sales"
+**Section 2 — Pricing & Plans (still visible, adapted)**
+- All plan cards are shown but the current plan is marked "Current" / "Your plan"
+- Free plan card: always shown with neutral styling, no upgrade CTA
+- Pro plan card: shown as "Current plan" with an **"Extend" or "Renew" button** instead of "Upgrade"
+- If there are higher tiers (e.g., Enterprise), show them with "Contact sales" CTAs
+- The pricing toggle (monthly/annual) may be hidden for PRO users since their billing period is already known
 
-**Flow (plan selection → payment):**
-1. User sees 4 cards with per-user/month prices
-2. Checks/unchecks "Billed yearly" on the card they want → price updates instantly
-3. Clicks "Get started" → redirected to signup/checkout
-4. **Total steps from selection to payment: 1 click (no intermediate page)**
+**Section 3 — Manage Subscription**
+- Cancel subscription (with confirmation flow and retention offers)
+- Change payment method
+- Update billing info
+- Download invoices
 
-**Key insight: Payment method is never shown on pricing page. It's deferred entirely to the checkout/portal.**
+**Section 4 — Usage / Order History**
+- Recent orders/payments list
+- Invoice history with download links
+- Usage metrics (if applicable, e.g., API calls, storage used)
 
----
+### Q2: How do real SaaS sites let users extend/renew before expiry?
 
-### 1.2 Notion — The Global Toggle Pattern
+**Answer:** There are THREE distinct patterns:
 
-**Layout:** Global toggle at top ("Pay monthly" / "Pay yearly" radio group), then 4 cards below (Free, Plus, Business, Enterprise). Dedicated feature comparison table below.
+**Pattern A: "Extend" / "Add credits" button (Vercel, GitHub)**
+- Vercel Pro users see an "Add credits" or "Upgrade usage limits" button
+- This lets users pre-pay for additional usage without changing their plan
+- For subscriptions, they redirect to Stripe Customer Portal where users can:
+  - Update payment method
+  - View upcoming invoices
+  - Purchase additional seats/credits
 
-**Toggle behavior:**
-- Global radio toggle at the very top, above all pricing cards
-- "Pay yearly" is checked by default with text "Save up to 20% with yearly"
-- When toggled, ALL card prices update simultaneously
-- Currency selector (USD, EUR, etc.) also at the top
+**Pattern B: "Renew" / "Extend subscription" via checkout (middle-market SaaS)**
+- A button labeled "Extend subscription" or "Renew now" opens a checkout modal
+- This creates a new payment for the same plan, extending the expiry date
+- Users can pre-pay for another month/year before the current period ends
+- The checkout shows: "Current plan: Pro Annual — Renew for ¥119 → Expires: Dec 31, 2027"
 
-**CTA buttons:**
-- Free → "Sign up"
-- Plus → "Get started"
-- Business → "Get started"
-- Enterprise → "Contact Sales"
+**Pattern C: Stripe Customer Portal (many SaaS)**
+- Notion, Linear, Figma all use Stripe Billing → redirect to Stripe Customer Portal
+- Inside the portal: update plan, update card, view invoices, cancel
+- Users can't "extend early" — they just let auto-renewal handle it
+- The portal shows "Next billing date" and "Current plan"
 
-**Flow:**
-1. User sees global toggle, picks monthly/yearly
-2. Sees prices update on all cards
-3. Clicks "Get started" → goes to signup/checkout flow
-4. **Total steps: 1 click (toggle is optional, then CTA)**
+**Key finding: Most SaaS do NOT let users manually extend early.** They rely on auto-renewal and show the next billing date. The "extend" functionality is rare and usually means buying add-ons or additional seats. For CookMate, since payment is via one-time orders (not subscription webhooks), **adding an "Extend" button is both appropriate and necessary.**
 
-**Key insight: Yearly/monthly toggle is global and separate from the cards. Payment method handled entirely during checkout.**
+### Q3: What information is most important for a subscribed user?
 
----
+**Ranked by priority:**
 
-### 1.3 Vercel — Flat Monthly Pricing, No Toggle
+1. **Renewal/Expiry Date** — Always the #1 thing a subscribed user wants to know. Show it prominently with a clear label ("Next billing date" or "Subscription expires").
+2. **Current Plan + Price** — What am I paying, and for what? Show plan name, period (monthly/annual), and amount.
+3. **Status indicator** — "Active" vs "Cancelled (expires on...)" — vital context.
+4. **Payment method on file** — "Alipay" or card ending in 1234. Users check this to confirm their payment info is current.
+5. **Invoice/Order history** — Especially important for users who need receipts for expense reports.
+6. **Cancel/Manage option** — Users want to know they CAN leave, even if they don't plan to.
+7. **Extend/Renew option** — Useful for users who want to pre-pay or who are on non-recurring payment.
 
-**Layout:** 3 vertical cards (Hobby $0, Pro $20/mo, Enterprise Custom). No yearly/monthly toggle at all.
+### Q4: How to visually present "already subscribed" status while still showing pricing info?
 
-**CTA buttons:**
-- Hobby → "Start Deploying"
-- Pro → "Start a free trial"
-- Enterprise → "Get a demo"
+**Answer:** The universal pattern across SaaS is:
 
-**Flow:**
-1. User picks a card and clicks the CTA
-2. If Pro → free trial starts → payment collected at trial end
-3. **Total steps: 1 click**
+**For the PRO plan card:**
+- Use the same card layout but change the CTA from "Upgrade" → "Current plan" or "Active"
+- Add a green or orange "Active" / "Current" badge on the card
+- The card should have a subtle outline/border color to distinguish it (green border or brand color)
+- Change the CTA button from primary (call-to-action) to secondary/subtle
+- Add a secondary CTA below: "Extend subscription" or "View renewal details"
 
-**Key insight: No yearly option at all on the public pricing page; billing period decisions happen later in the portal.**
+**For the Free plan card:**
+- Show it as a smaller/comparison card
+- Grey it out or mark "Downgrade" with warning styling
+- Don't make it prominent — it's a downgrade path, not an upgrade
 
----
+**The NOTION pattern (best reference):**
+- Shows all plan cards on the billing page
+- Current plan card has a filled "Current" badge top-right
+- Current plan card's button says "Your plan" (disabled/grey) instead of "Upgrade"
+- Higher-tier plan cards show "Upgrade" buttons with pricing
+- Below cards: "Plan details" section with seat count, billing period, next payment
 
-### 1.4 飞书 (Feishu/Lark) — Chinese SaaS Standard
+**The FIGMA pattern:**
+- Shows current plan in a separate "Your Plan" card at the top
+- Below: "Plans" comparison with a table showing all plan features
+- Current plan column is highlighted with a different background
+- "Current" badge on the column header
 
-**Layout:** 5 vertical cards (免费版, 商业标准版, 商业专业版, 商业旗舰版, enterprise). Each shows ¥ price per person/month.
-
-**Toggle behavior: No monthly/yearly toggle** — all versions are stated as "所有版本需按年付费" (all versions require annual payment). This is a common Chinese SaaS pattern to simplify pricing.
-
-**CTA buttons:**
-- Free → "立即免费体验" (Free Trial)
-- Paid tiers → "立即购买" (Buy Now)
-- Enterprise → "购买咨询" (Contact Sales)
-
-**Flow:**
-1. User picks a card
-2. Clicks "立即购买" → goes to order page (no payment methods on pricing page)
-3. **Total steps: 1 click → order page → payment**
-
-**Key insight: Chinese SaaS often defaults to annual-only billing, simplifying the UI. No payment methods on pricing page.**
-
----
-
-### 1.5 Stripe — The Billing Infrastructure Pattern
-
-**Pricing approach:** Stripe's pricing page shows product pricing (per-transaction fees), not subscription plans. But Stripe Billing as a product has a well-known pattern used by thousands of SaaS companies:
-
-**The Stripe-hosted pricing page pattern (via Stripe Pricing Table feature):**
-- Card layout with plan names, features, prices
-- Yearly/monthly toggle integrated into each plan card
-- CTA button: "Subscribe" or "Buy"
-- Click → embedded Stripe Checkout modal opens within the same page
-- Checkout modal shows: plan summary, price, payment method form (credit card, Alipay, WeChat, etc.)
-- User selects payment method AND completes payment in the modal
-
-**Flow:**
-1. User picks a plan on the pricing page
-2. Clicks "Subscribe" → Stripe Checkout modal opens (no page navigation)
-3. Inside modal: order summary + payment method selection + pay button
-4. **Total steps: 2 clicks (Subscribe → Pay)**
-
-**Key insight: The payment method selection is IN the checkout modal, not on the pricing page. This is the most important pattern for CookMate to follow.**
+**The GITHUB pattern:**
+- Top section: "Current plan" card with plan name, status, and next billing date
+- Below: "Change plan" section — horizontal cards with Free/Pro/Team/Enterprise
+- Current plan card is visually distinct (different border color)
+- Current plan's CTA is "Current plan" (disabled)
+- Other plans show "Upgrade to..." with prices
 
 ---
 
-## 2. Comparison of the 3 Main Approaches
+## Real-World Examples — Detailed Analysis
 
-| Approach | Example | Toggle Location | Payment Method Location | Steps to Payment |
-|---|---|---|---|---|
-| **Card-embedded toggle** | Linear | Inside each card | Deferred to checkout | 1 click (CTA) |
-| **Global toggle** | Notion | Above all cards | Deferred to checkout | 1 click (CTA) |
-| **Modal/inline checkout** | Stripe | On card | In the checkout modal | 2 clicks (CTA → Pay) |
+### Example 1: GitHub (Settings > Billing > Plans)
 
-All three have one thing in common: **Payment methods are NEVER displayed as separate buttons on the pricing/billing page.**
+**For FREE users:**
+- See "Current plan: Free" card at top
+- Below: horizontal cards for Pro ($4/mo), Team ($8/user/mo), Enterprise (contact sales)
+- Each card shows features and a CTA button ("Upgrade to Pro", etc.)
+- No usage breakdown for free tier (limited visibility)
+
+**For PRO users:**
+- Top card: "Current plan: Pro" with green checkmark and "Active" indicator
+- Next billing date shown: "Next billing date: July 30, 2026"
+- Payment method: "Visa ending in 4242" with "Update" link
+- Below: "Change plan" section still visible — Pro card shows "Current plan" badge
+- Team and Enterprise cards show "Upgrade to Team" etc.
+- **Usage breakdown** section: Actions minutes, storage, Codespaces hours — with meters showing usage vs limit
+- Invoice history: downloadable PDFs
+- "Cancel plan" link at bottom (with retention flow)
+- **No "Extend" button** — GitHub relies on auto-renewal via credit card
+
+**Key takeaway for CookMate:** Show the usage of the service (e.g., "Recipes created: 43/∞" or "AI generations used this month: 12/100").
+
+### Example 2: Vercel (Dashboard > Settings > Billing)
+
+**For Hobby (FREE) users:**
+- "Current plan: Hobby" card
+- Below: "Usage" section showing bandwidth, serverless functions, etc.
+- "Upgrade to Pro" button ($20/mo)
+- No metered overage for Hobby
+
+**For PRO users:**
+- "Current plan: Pro" — shows plan name + "Active" status
+- Next invoice: "Next invoice: $20 — August 1, 2026"
+- Payment method: card on file with "Update" link
+- **Usage breakdown (critical):** Bandwidth used, Functions invocations, Edge requests, Storage — each with a meter bar and monthly allowance
+- "Add credits" button to pre-pay for overage
+- "Manage subscription" → redirects to **Stripe Customer Portal** where users can:
+  - Change billing period (monthly ↔ annual)
+  - Update payment method
+  - View invoices
+  - Cancel
+- No pricing cards shown for Pro users — just current plan summary
+- **No "Extend" button** — uses auto-renewal
+
+**Key takeaway for CookMate:** Usage meters are a powerful value-add for subscribed users. "You've used 15/100 AI generations this month" makes the subscription feel tangible.
+
+### Example 3: Notion (Settings > Billing)
+
+**For FREE users:**
+- "Current plan: Free" card
+- Below: Pricing cards (Plus $10/mo, Business $18/mo, Enterprise custom)
+- Each card shows: price, per-user basis, CTA button ("Upgrade to Plus", etc.)
+- Monthly/annual toggle at top
+
+**For PRO users (Plus/Business):**
+- Top section: "Current plan" with plan name, billing period, next payment date
+- "Manage subscription" section with:
+  - "Change plan" dropdown (upgrade to Business, downgrade to Free)
+  - Payment method (credit card)
+  - Invoice history (downloadable)
+  - "Cancel plan" link
+- Below: **Pricing comparison table** showing all plan features
+- The Plus card (current plan) shows "Current plan" in prominent text
+- Other plan cards show "Upgrade" buttons
+- No explicit "Extend" button — auto-renewal via Stripe
+
+**Key takeaway for CookMate:** Notion shows a FEATURE COMPARISON table below the plan cards. Subscribed users can see exactly what they're getting vs what they'd get with an upgrade.
+
+### Example 4: Figma (Settings > Billing)
+
+**For FREE (Starter) users:**
+- Top: "Starter (Free)" card with "Current plan" badge
+- Below: Professional ($15/seat/mo), Organization ($45/seat/mo), Enterprise (custom)
+- Each plan shows per-seat pricing, products included (Figma Design, FigJam, Dev Mode)
+- Feature comparison table below
+
+**For PRO (Professional/Organization) users:**
+- Top: "Current plan: Professional" card with plan details
+  - Seat count, billing period, next invoice date, price per seat
+- "Manage billing" section:
+  - Update billing email
+  - View payment method
+  - Download invoices
+  - Cancel subscription
+- Below: **All plans still visible** — Professional shows "Current" badge
+- Organization and Enterprise show "Upgrade" / "Contact sales" buttons
+- Starter plan shows "Downgrade" as a small link
+- No "Extend" button — auto-renewal
+
+**Key takeaway for CookMate:** Figma shows the CURRENT PLAN with seat-level detail. For individual subscriptions, this maps to "Pro Annual ¥119".
+
+### Example 5: Linear (Settings > Billing)
+
+**For FREE users:**
+- "Current plan: Free" card
+- Below: Basic ($10/user/mo), Business ($16/user/mo), Enterprise (custom)
+- Per-user pricing shown
+- Each card has a per-plan yearly checkbox (Billed yearly)
+- CTA: "Get started" / "Contact sales"
+
+**For PRO (Basic/Business) users:**
+- Top: "Current plan" card with:
+  - Plan name, seats used, price per seat, next billing date
+- "Change plan" dropdown: switch between Free/Basic/Business/Enterprise
+- Payment method: card on file
+- Invoice history
+- "Cancel subscription" link
+- No pricing cards shown below — just the change plan dropdown
+- **No "Extend" button** — Stripe auto-renewal
+
+**Key takeaway for CookMate:** Linear hides pricing cards for subscribed users and uses a simple dropdown for plan changes. This is at the "minimal" end of the spectrum.
 
 ---
 
-## 3. Analysis of CookMate's Current Problem
+## Universal SaaS Billing Page Patterns for Subscribed Users
 
-### Current Flow (Broken):
-
-```
-Cards (Free, Pro Yearly, Pro Monthly) — ALL disabled/greyed out
-    ↓ (user can only toggle selection between monthly/annual)
-Buttons below: [Alipay] [Stripe] [Creem] [Check Payment]
-    ↓ (user clicks a payment method button)
-API called → redirect to payment gateway
-```
-
-**Problems identified:**
-1. **Cards are disabled** — the user can see plans but feels locked out. The "Select This Plan" buttons do nothing except change the selected period state.
-2. **Payment methods are separated from plans** — the cognitive model is broken: "I pick my plan on the card, then I pick how to pay separately below." In every real SaaS, picking the plan IS the payment action.
-3. **Multiple payment buttons cause confusion** — the user has to make an extra decision ("which payment method do I want?") before they can complete the purchase.
-4. **No unified CTA** — there's no single "Subscribe" or "Upgrade" button. The user has to figure out the protocol.
-5. **Demo user block is confusing** — demo users see a special demo block instead of payment buttons, but the cards above are interactive, creating a disconnect.
-
-### Real SaaS Pattern (What Users Expect):
-
-```
-Cards (Free, Pro) — ALL ENABLED, interactive
-    ↓ (user clicks "Subscribe" / "Upgrade" on desired plan)
-Checkout modal / redirect to payment gateway
-    ↓ (inside checkout: payment method selection happens)
-Complete payment
-```
-
-**The golden rule: Plan selection and payment method selection happen in DIFFERENT steps.**
-
----
-
-## 4. Recommended Redesign for CookMate
-
-### 4.1 The One-Click-to-Checkout Model (Recommended)
-
-#### Top section: Current Plan Status
-
-```
-┌──────────────────────────────────────────────────┐
-│ Current Plan: Free / Pro                         │
-│ [Badge: Free | Pro]                              │
-│ Expiry: Dec 31, 2026 (if Pro)                    │
-└──────────────────────────────────────────────────┘
-```
-
-#### Pricing Cards (Like Notion/Linear)
-
-Use a **global yearly/monthly toggle** above the cards (like Notion), then 2-3 cards:
-
-```
-[ Pay Monthly ○ | ● Pay Yearly — Save 20% ]
-
-┌─────────────┐  ┌─────────────────────┐  ┌─────────────┐
-│    Free     │  │   Pro (Popular)     │  │  Lifetime   │
-│     $0      │  │    ¥119/yr          │  │   ¥299      │
-│             │  │  or ¥20/mo          │  │             │
-│ [Current]   │  │ [Subscribe →]       │  │ [Buy Now]   │
-└─────────────┘  └─────────────────────┘  └─────────────┘
-```
-
-- **Cards are always enabled** for non-demo users
-- Clicking "Subscribe" on Pro goes directly to checkout
-- The yearly/monthly toggle updates ALL card prices in real time
-- Free card is non-interactive (just shows current state)
-
-#### What happens when "Subscribe" is clicked:
-
-**Option A (Recommended for CookMate):** Open a checkout modal/page that shows:
-```
-┌─ Checkout ──────────────────────────┐
-│  Plan: Pro - Annual                 │
-│  Price: ¥119/year                   │
-│                                      │
-│  Select payment method:             │
-│  [Alipay ●] [WeChat ○] [Card ○]    │
-│                                      │
-│  [Pay ¥119]                         │
-└──────────────────────────────────────┘
-```
-- This is the Stripe Checkout model
-- Payment method selection happens INSIDE the checkout, not on the billing page
-- Single "Pay" button at the bottom
-
-**Option B (Simpler):** Click "Subscribe" → immediately redirect to Stripe Checkout / Creem Checkout / Alipay. For CookMate with multiple payment gateways, Option A (a modal page showing payment options) is better because:
-- It gives users a choice of payment methods
-- The billing page stays clean
-- The checkout modal clearly shows what they're buying
-
-#### Demo Users
-
-Keep the demo block but make it cleaner:
+### Pattern 1: The "Current Plan Hero" (Vercel, Figma, GitHub)
 ```
 ┌──────────────────────────────────────┐
-│ 🔒 Demo account — Register to upgrade │
-│ [Register Now →]                     │
+│  Current Plan: Pro  ★  Active        │
+│  ¥119/year · Annual · Expires Dec 31 │
+│  Payment: Alipay  [Manage]           │
+│  ┌────────────────────────────────┐  │
+│  │ Usage: AI Generations           │  │
+│  │ ████████░░░░ 15/100 this month │  │
+│  └────────────────────────────────┘  │
+│  [Extend Subscription] [Cancel]      │
 └──────────────────────────────────────┘
 ```
 
-### 4.2 Specific Changes to Make
+### Pattern 2: The "Plan Comparison Below" (Notion, GitHub)
+```
+┌──────────────────────────────────────┐
+│  Current Plan: Pro                   │
+│  Expires: Dec 31, 2026 · ¥119/year  │
+│  Payment: Alipay                     │
+└──────────────────────────────────────┘
 
-1. **Remove separate payment method buttons from the billing page** (Alipay, Stripe, Creem, Check Payment buttons below the cards)
-2. **Make pricing cards fully interactive** — clicking "Subscribe" triggers the checkout flow
-3. **Add a yearly/monthly toggle at the top** (like Notion) instead of putting it inside individual cards
-4. **Create a checkout modal/page** that shows:
-   - Plan summary (name, period, price)
-   - Payment method selection (Alipay, Stripe/card, Creem)
-   - Pay button
-5. **Consolidate API calls** — instead of separate endpoints for each payment method, have one checkout endpoint that returns the appropriate redirect URL based on the selected payment method
+       [Monthly ○ Annual ● — Save 20%]
 
-### 4.3 Visual Layout (Wireframe)
+┌──────────┐  ┌────────────────┐  ┌──────────┐
+│   Free   │  │  Pro (Current) │  │Enterprise│
+│   ¥0     │  │  ¥119/yr       │  │  Custom  │
+│[Downgrade]│  │  [Extend →]    │  │[Contact] │
+└──────────┘  └────────────────┘  └──────────┘
+
+┌─ Feature Comparison ─────────────────┐
+│  Unlimited recipes         ✓ ✓ ✓    │
+│  AI meal planning          — ✓ ✓    │
+│  Priority support          — — ✓    │
+└──────────────────────────────────────┘
+```
+
+### Pattern 3: The "Minimal Manage" (Linear, Slack)
+```
+┌──────────────────────────────────────┐
+│  Current Plan: Pro  Annual           │
+│  ¥119/year · Next bill: Dec 31, 2026│
+│                                      │
+│  [Change plan] → dropdown            │
+│  [Payment method] → Visa *4242       │
+│  [Invoices] → 2 invoices             │
+│  [Cancel subscription]               │
+└──────────────────────────────────────┘
+```
+
+---
+
+## Recommended Redesign: CookMate PRO Billing Page
+
+### Layout (2-column on desktop, stacked on mobile)
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│ Billing & Subscription                            [Title] │
-│ Manage your plan and payment settings              [Subtitle] │
-├──────────────────────────────────────────────────────────┤
-│ Current Plan: Free                                        │
-│ [FREE badge]                                              │
-├──────────────────────────────────────────────────────────┤
-│ Pay Monthly  ○  Pay Yearly ●  (Save 20% with annual)    │
+│ Billing & Subscription                                   │
+│ ─────────────────────────────────────────────────────── │
 │                                                           │
-│  ┌──────────┐  ┌──────────────────┐  ┌────────────────┐ │
-│  │  FREE    │  │  PRO ★ Popular   │  │  ENTERPRISE    │ │
-│  │  $0/mo   │  │  ¥119/yr         │  │  Custom        │ │
-│  │          │  │  or ¥20/mo       │  │                │ │
-│  │[Current] │  │ [Subscribe →]    │  │ [Contact Sales]│ │
-│  └──────────┘  └──────────────────┘  └────────────────┘ │
+│ ┌─ Current Plan ───────────────────────────────────────┐ │
+│ │  PRO · Active                             [PRO]     │ │
+│ │  ¥119 · Annual                                         │ │
+│ │  Expires: December 31, 2026                           │ │
+│ │  Payment method: Alipay                                │ │
+│ │                                                        │ │
+│ │  [Extend Subscription →]   [Cancel]                    │ │
+│ └────────────────────────────────────────────────────────┘ │
 │                                                           │
-│  [Quarterly ¥51]  [Semi-annual ¥90]                      │
-├──────────────────────────────────────────────────────────┤
-│ ℹ️ Select a plan above to proceed to checkout            │
-├──────────────────────────────────────────────────────────┤
-│ Order History:                                            │
-│ ┌────────────────────────────────────────────────────┐   │
-│ │ Order #123 | Alipay | ¥119 | Paid | 2026-07-15    │   │
-│ └────────────────────────────────────────────────────┘   │
-├──────────────────────────────────────────────────────────┤
-│ [Manage Subscription] [Cancel Subscription]               │
+│ ┌─ Plan Details & Pricing ─────────────────────────────┐ │
+│ │  [Monthly ○  ● Annual — Save 20%]  (pre-selected)   │ │
+│ │                                                        │ │
+│ │  ┌────────────┐  ┌──────────────────┐  ┌────────────┐│ │
+│ │  │ Free       │  │  Pro ★           │  │ Enterprise ││ │
+│ │  │ ¥0         │  │  ¥119/yr         │  │  Custom    ││ │
+│ │  │            │  │  or ¥20/mo       │  │            ││ │
+│ │  │ [Current]  │  │  [Your Plan]     │  │[Contact]   ││ │
+│ │  └────────────┘  └──────────────────┘  └────────────┘│ │
+│ │                                                        │ │
+│ │  Pro features you get:                                 │ │
+│ │  ✓ Unlimited AI recipe generation                      │ │
+│ │  ✓ Weekly meal planning                                │ │
+│ │  ✓ Smart grocery lists                                 │ │
+│ │  ✓ Priority support                                    │ │
+│ └────────────────────────────────────────────────────────┘ │
+│                                                           │
+│ ┌─ Usage This Month ───────────────────────────────────┐ │
+│ │  AI Generations: ████████░░░░░░ 15 / 100  [Unlimited]│ │
+│ │  Meal Plans: ██████░░░░░░░░░░░ 6 / 30                │ │
+│ └────────────────────────────────────────────────────────┘ │
+│                                                           │
+│ ┌─ Manage Subscription ─────────────────────────────────┐ │
+│ │  Payment method: Alipay  [Change]                     │ │
+│ │  Invoice history:  [View all orders →]               │ │
+│ │   • Order #CM2407 — ¥119 — Jul 15, 2026 — Paid       │ │
+│ │   • Order #CM2406 — ¥119 — Jun 15, 2026 — Paid       │ │
+│ │                                                        │ │
+│ │  [Cancel Subscription] (with 2-step confirmation)     │ │
+│ └────────────────────────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────┘
 ```
 
----
+### Key Design Decisions
 
-## 5. How Different SaaS Platforms Handle Multi-Payment
+1. **PRO users see pricing cards** — but the Pro card shows "Your Plan" instead of "Upgrade". This keeps the page visually rich and reminds PRO users what they're paying for.
 
-| Platform | Where Payment Methods Appear | Method |
-|---|---|---|
-| **Linear** | Not on pricing page (deferred to checkout) | Credit card in Stripe checkout |
-| **Notion** | Not on pricing page (deferred to checkout) | Credit card, PayPal in checkout |
-| **Vercel** | Not on pricing page (deferred to checkout) | Credit card in Stripe checkout |
-| **Stripe** | Embedded Checkout modal | 100+ methods in the modal |
-| **Feishu** | Not on pricing page (order page → payment) | Alipay, WeChat, card on payment page |
-| **Yuque** | Not on pricing page (deferred) | Alipay, WeChat on payment page |
+2. **"Extend Subscription" button** — Since CookMate uses one-time payments (not Stripe subscriptions with auto-renewal), this is the most important addition. Clicking it opens the same checkout modal for the current plan, letting users pre-pay for another period. The checkout modal should show "Renewing Pro Annual — ¥119 — New expiry: Dec 31, 2027".
 
-**The universal pattern: Payment methods are NEVER shown as buttons on the pricing/billing page. They appear at the checkout/payment step.**
+3. **Usage section** — Shows real value. Users with 15/100 AI generations see their subscription is being used. Users with 0/100 see they should use it more (reduces churn!).
 
----
+4. **Feature list on pricing cards** — Even for PRO users. This reinforces the value proposition at every visit.
 
-## 6. Edge Cases & UX Considerations
+5. **Cancel button stays visible** — But with a 2-step confirmation. This is required by payment processor best practices and user trust.
 
-### What about "Check Payment" button?
-Current CookMate has a "Check Payment" button for verifying Creem payments. This should be removed from the main billing page. Instead:
-- After redirecting to Creem checkout → success URL → the billing page reloads with a success banner
-- A "Pending orders" section below the cards can show unpaid/processing orders
+6. **Orders/invoice history** — Expandable cards showing each payment. Users need this for records.
 
-### What about the "Quarterly" and "Semi-annual" links?
-Current page shows them as text below cards but there are no actual cards for them. Either:
-- Add them as smaller card options in the cards grid
-- Or hide them if they're not primary offers (like Linear does with optional billing periods)
+### Handling Edge Cases
 
-### What happens on payment success?
-Show a success banner at top and update the "Current Plan" section to show Pro.
+- **Expired PRO**: Show "Expired on Dec 31, 2026" in red/orange + "Reactivate Pro" button
+- **Cancelled PRO**: Show "Cancelled — expires Dec 31, 2026" with orange badge + "Resubscribe" button
+- **About to expire** (< 30 days): Show warning banner "Your subscription expires in 14 days → Renew now"
+- **Newly subscribed**: Show success banner with "Welcome to Pro!" for first visit
+- **Demo user**: Keep the demo block but redirect to registration
 
-### Loading & error states
-- Card CTA buttons show a spinner while redirecting
-- If checkout creation fails, show error inline near the card (not below in a separate section)
+### Implementation Notes
 
----
+1. The `extend` API call should be the same as the `upgrade` call (same checkout flow), just with a different label
+2. The `billingPeriod` toggle can be pre-populated based on the user's current plan (infer from order amount)
+3. Invoice history uses the existing orders API — just style it inline instead of linking to a separate page
+4. Usage metrics need a new API endpoint or dashboard API extension
 
-## 7. Summary of Key Principles
+### What NOT to do
 
-1. **Plan selection IS the purchase action** — clicking a plan card's CTA should trigger the checkout flow, not just select a period
-2. **Payment methods are a checkout concern** — never show them as separate buttons on the billing page
-3. **Yearly/monthly toggle should be global** — above the cards (Notion-style), not inside individual cards
-4. **Cards should always be enabled** — disabled/greyed out cards tell users "this isn't for you"
-5. **Single checkout modal/page** — consolidate all payment methods into one checkout, not separate endpoints
-6. **Chinese SaaS defaults to annual billing** — leading with annual pricing and showing monthly as secondary option is a proven pattern in CN markets
+- ❌ Don't hide pricing info entirely — users want to see what they're paying for
+- ❌ Don't show "Upgrade" CTA on the current plan — confusing
+- ❌ Don't make the page a single lonely cancel button (current problem!)
+- ❌ Don't redirect to external portal for everything — keep core actions (extend, view history) on the page
+- ❌ Don't force PRO users to a separate "Orders" page — show history inline

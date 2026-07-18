@@ -14,6 +14,7 @@ interface BillingInfo {
   isDemoUser: boolean
   creemConfigured: boolean
   cancelled: boolean
+  todayUsage: number
   orders?: Array<{
     id: string
     orderId: string
@@ -22,6 +23,14 @@ interface BillingInfo {
     status: string
     createdAt: string
   }>
+}
+
+function daysRemaining(expiryStr: string): number {
+  const now = new Date()
+  now.setUTCHours(0, 0, 0, 0)
+  const expiry = new Date(expiryStr)
+  expiry.setUTCHours(0, 0, 0, 0)
+  return Math.max(0, Math.ceil((expiry.getTime() - now.getTime()) / 86400000))
 }
 
 export default function BillingPage() {
@@ -37,6 +46,7 @@ export default function BillingPage() {
   const [topBanner, setTopBanner] = useState("")
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showCheckoutModal, setShowCheckoutModal] = useState(false)
+  const [showDowngradeModal, setShowDowngradeModal] = useState(false)
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("annual")
 
   useEffect(() => {
@@ -50,6 +60,7 @@ export default function BillingPage() {
           isDemoUser: !!data.isDemoUser,
           creemConfigured: !!data.creemConfigured,
           cancelled: !!data.cancelled,
+          todayUsage: data.todayUsage ?? 0,
           orders: data.orders || [],
         })
       })
@@ -78,36 +89,6 @@ export default function BillingPage() {
     }
   }, [refreshKey])
 
-  const handlePaymentSuccess = () => {
-    setRefreshKey((k) => k + 1)
-    setMessage(t("paymentSuccess"))
-  }
-
-  const handleStripeUpgrade = async (tier: string) => {
-    setActionLoading(tier)
-    setError("")
-    try {
-      const res = await fetch("/api/stripe/create-checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || t("createCheckoutFailed"))
-        return
-      }
-      if (data.url) {
-        window.location.href = data.url
-      }
-    } catch (err) {
-      console.error("stripe upgrade error:", err)
-      setError(t("networkError"))
-    } finally {
-      setActionLoading(null)
-    }
-  }
-
   const handleCreemUpgrade = async (period: "monthly" | "annual") => {
     setActionLoading("creem")
     setError("")
@@ -133,30 +114,10 @@ export default function BillingPage() {
     }
   }
 
-  const handleManageSubscription = async () => {
-    setActionLoading("manage")
-    setError("")
-    try {
-      const res = await fetch("/api/stripe/portal", { method: "POST" })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || t("createManageFailed"))
-        return
-      }
-      if (data.url) {
-        window.location.href = data.url
-      }
-    } catch (err) {
-      console.error("manage subscription error:", err)
-      setError(t("networkError"))
-    } finally {
-      setActionLoading(null)
-    }
-  }
-
   if (loading) return <div className="text-center py-16 text-gray-400">{t("loading")}</div>
 
   const isFree = info?.subscriptionTier === "FREE"
+  const isDemo = info?.isDemoUser
   const currency = locale === "zh-CN" ? "CNY" : "USD"
   const currencySymbol = locale === "zh-CN" ? "¥" : "$"
   const planPrice = PRICING.get(billingPeriod, currency)
@@ -165,6 +126,8 @@ export default function BillingPage() {
     ? (locale === "zh-CN" ? "/年" : "/yr")
     : (locale === "zh-CN" ? "/月" : "/mo")
 
+  const daysLeft = info?.subscriptionExpiryDate ? daysRemaining(info.subscriptionExpiryDate) : 0
+
   return (
     <>
       {topBanner && (
@@ -172,7 +135,7 @@ export default function BillingPage() {
           {topBanner}
         </div>
       )}
-      <div className="space-y-8">
+      <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
         <p className="text-gray-500 mt-1 text-sm">{t("subtitle")}</p>
@@ -185,38 +148,81 @@ export default function BillingPage() {
       )}
 
       {/* ── Current Plan Card ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <div className="flex items-center justify-between">
-          <div>
+      <div className={cn(
+        "rounded-2xl border p-6",
+        isFree
+          ? "bg-white border-gray-100 shadow-sm"
+          : info?.cancelled
+            ? "bg-white border-gray-100 shadow-sm"
+            : "bg-gradient-to-br from-orange-50 to-white border-orange-200 shadow-sm"
+      )}>
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
             <p className="text-sm text-gray-500">{t("currentPlan")}</p>
-            <h2 className="text-2xl font-bold text-gray-900 mt-1">
+            <h2 className="text-xl font-bold text-gray-900">
               {isFree ? t("currentPlanFree") : t("currentPlanPro")}
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {isFree ? t("freePlanDesc") : t("proPlanDesc")}
-            </p>
+            {!isFree && (
+              <p className="text-sm text-gray-500">{t("proPlanDesc")}</p>
+            )}
+            {isFree && (
+              <p className="text-sm text-gray-500">{t("freePlanDesc")}</p>
+            )}
           </div>
-          <span
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${
-              isFree
-                ? "bg-gray-100 text-gray-600"
+          <span className={cn(
+            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold",
+            isFree
+              ? "bg-gray-100 text-gray-600"
+              : info?.cancelled
+                ? "bg-gray-100 text-gray-500"
                 : "bg-orange-50 text-[#FF6B35]"
-            }`}
-          >
-            {isFree ? t("freeBadge") : t("proBadge")}
+          )}>
+            {isFree ? t("freeBadge") : info?.cancelled ? t("cancelled") : t("proBadge")}
           </span>
         </div>
-        {!isFree && info?.subscriptionExpiryDate && (
+
+        {!isFree && info?.subscriptionExpiryDate && !info?.cancelled && (
+          <div className="mt-4 flex items-center gap-3">
+            <div className={cn(
+              "text-sm font-medium px-3 py-1 rounded-full",
+              daysLeft <= 7 ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700"
+            )}>
+              {locale === "zh-CN" ? `剩余 ${daysLeft} 天` : `${daysLeft} days left`}
+            </div>
+            <span className="text-xs text-gray-400">
+              {t("expiryDate", { date: new Date(info.subscriptionExpiryDate).toLocaleDateString(locale === "en" ? "en-US" : "zh-CN", { year: "numeric", month: "long", day: "numeric" }) })}
+            </span>
+          </div>
+        )}
+        {!isFree && info?.subscriptionExpiryDate && info?.cancelled && (
           <p className="text-xs text-gray-400 mt-2">
             {t("expiryDate", { date: new Date(info.subscriptionExpiryDate).toLocaleDateString(locale === "en" ? "en-US" : "zh-CN", { year: "numeric", month: "long", day: "numeric" }) })}
           </p>
         )}
+
+        {/* Pro features quick list */}
+        {!isFree && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="flex flex-wrap gap-x-6 gap-y-1.5 text-sm text-gray-600">
+              {(t.raw("proPlanFeatures") as string[]).map((f) => (
+                <span key={f} className="flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  {f}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* ── Pricing Cards (FREE users only) ── */}
-      {isFree && !info?.isDemoUser && (
+      {/* ── Pricing Section (FREE + PRO active users) ── */}
+      {((isFree && !isDemo) || (!isFree && !info?.cancelled)) && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-bold text-gray-900 mb-4 text-center">{t("selectPlan")}</h3>
+          <h3 className="font-bold text-gray-900 mb-4 text-center">
+            {isFree ? t("selectPlan") : t("extendTitle")}
+          </h3>
 
           {/* Period toggle */}
           <div className="flex justify-center mb-6">
@@ -253,6 +259,7 @@ export default function BillingPage() {
 
           {/* Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            {/* Free card */}
             <PricingCard
               name="Free"
               price="0"
@@ -260,12 +267,14 @@ export default function BillingPage() {
               period={t("freeTier")}
               features={t.raw("freePlanFeatures") as string[]}
               highlighted={false}
-              isCurrent={true}
-              ctaLabel={t("inUse")}
-              onCta={() => {}}
-              disabled={true}
+              isCurrent={isFree}
+              ctaLabel={isFree ? t("inUse") : t("downgradeLabel")}
+              onCta={() => { if (!isFree) setShowDowngradeModal(true) }}
+              disabled={isFree}
               loading={false}
             />
+
+            {/* Pro card */}
             <PricingCard
               name={t("proPlan")}
               price={planPrice.display}
@@ -274,8 +283,8 @@ export default function BillingPage() {
               saving={billingPeriod === "annual" ? t("yearlySaving") : undefined}
               features={t.raw("proPlanFeatures") as string[]}
               highlighted={true}
-              isCurrent={false}
-              ctaLabel={t("upgradeAction")}
+              isCurrent={!isFree}
+              ctaLabel={isFree ? t("upgradeAction") : t("extendAction")}
               onCta={() => setShowCheckoutModal(true)}
               disabled={false}
               loading={false}
@@ -285,7 +294,7 @@ export default function BillingPage() {
       )}
 
       {/* ── Demo User Section ── */}
-      {isFree && info?.isDemoUser && (
+      {isFree && isDemo && (
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center">
           <p className="text-lg mb-2">{t("demoBillingTitle")}</p>
           <p className="text-sm text-amber-700 mb-4">
@@ -300,19 +309,19 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* ── PRO: Manage Subscription ── */}
+      {/* ── PRO: Manage Subscription (cancel) ── */}
       {!isFree && !info?.cancelled && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-bold text-gray-900 mb-2">{t("subscriptionManage")}</h3>
-          <p className="text-sm text-gray-500 mb-4">
-            {t("subscriptionManageDesc")}
-          </p>
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-gray-900">{t("subscriptionManage")}</h3>
+            <p className="text-sm text-gray-500 mt-0.5">{t("subscriptionManageDesc")}</p>
+          </div>
           <button
             onClick={() => setShowCancelModal(true)}
             disabled={actionLoading !== null}
-            className="inline-flex items-center justify-center gap-1.5 text-xs text-red-500 border border-red-200 rounded-full px-3 py-1.5 hover:bg-red-50 transition-colors disabled:opacity-40"
+            className="shrink-0 inline-flex items-center justify-center gap-1.5 text-xs text-red-500 border border-red-200 rounded-full px-3 py-1.5 hover:bg-red-50 transition-colors disabled:opacity-40"
           >
-            <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
             {actionLoading === "cancel" ? t("cancelling") : t("cancelSubscription")}
@@ -323,13 +332,27 @@ export default function BillingPage() {
       {/* ── PRO Cancelled ── */}
       {!isFree && info?.cancelled && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-bold text-gray-900 mb-2">{t("subscriptionManage")}</h3>
-          <p className="text-sm text-gray-500 mb-4">
-            {t("subscriptionManageDesc")}
-          </p>
-          <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 bg-gray-100 rounded-full px-3 py-1.5">
-            {t("subscriptionCancelled")}
-          </span>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-gray-900">{t("subscriptionManage")}</h3>
+              <p className="text-sm text-gray-500 mt-0.5">{t("subscriptionManageDesc")}</p>
+            </div>
+            <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 bg-gray-100 rounded-full px-3 py-1.5">
+              {t("subscriptionCancelled")}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Order History Link ── */}
+      {(info?.orders?.length ?? 0) > 0 && (
+        <div className="text-center">
+          <Link
+            href="/app/orders"
+            className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-[#FF6B35] transition-colors"
+          >
+            {t("orderHistory")}
+          </Link>
         </div>
       )}
 
@@ -337,26 +360,22 @@ export default function BillingPage() {
       {showCheckoutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => { setShowCheckoutModal(false); setError("") }}>
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-bold text-lg text-gray-900 mb-4 text-center">{t("checkoutTitle")}</h3>
+            <h3 className="font-bold text-lg text-gray-900 mb-4 text-center">
+              {isFree ? t("checkoutTitle") : t("extendTitle")}
+            </h3>
 
-            {/* Plan summary */}
             <div className="bg-gradient-to-r from-[#FF6B35] to-orange-500 rounded-xl p-4 text-white mb-4 text-center">
               <p className="text-sm text-white/80">{t("proPlan")}</p>
-              <p className="text-2xl font-bold mt-1">
-                {planPriceDisplay}{planPeriodLabel}
-              </p>
+              <p className="text-2xl font-bold mt-1">{planPriceDisplay}{planPeriodLabel}</p>
               <p className="text-xs text-white/70 mt-1">
                 {billingPeriod === "annual" ? t("yearlyPeriod") : t("monthlyPeriod")}
               </p>
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
-                {error}
-              </div>
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">{error}</div>
             )}
 
-            {/* Payment methods */}
             <p className="text-sm font-medium text-gray-700 mb-3">{t("paymentMethods")}</p>
             <div className="space-y-2">
               <button
@@ -474,14 +493,53 @@ export default function BillingPage() {
         </div>
       )}
 
-      {(info?.orders?.length ?? 0) > 0 && (
-        <div className="text-center">
-          <Link
-            href="/app/orders"
-            className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-[#FF6B35] transition-colors"
-          >
-            {t("orderHistory")}
-          </Link>
+      {/* ── Downgrade Confirmation Modal (PRO → Free) ── */}
+      {showDowngradeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowDowngradeModal(false)}>
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center mb-4">
+              <div className="mx-auto w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="font-bold text-lg text-gray-900">{t("cancelSubscription")}</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">{t("cancelConfirm")}</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDowngradeModal(false)}
+                className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                {locale === "en" ? "Keep Pro" : "保留 Pro"}
+              </button>
+              <button
+                onClick={async () => {
+                  setShowDowngradeModal(false)
+                  setActionLoading("cancel")
+                  try {
+                    const res = await fetch("/api/subscription/cancel", { method: "POST" })
+                    const data = await res.json()
+                    if (data.success) {
+                      setTopBanner(data.message)
+                      setTimeout(() => setTopBanner(""), 5000)
+                      setRefreshKey((k) => k + 1)
+                    } else {
+                      setError(data.error || t("cancelFailed"))
+                    }
+                  } catch {
+                    setError(t("networkError"))
+                  } finally {
+                    setActionLoading(null)
+                  }
+                }}
+                disabled={actionLoading === "cancel"}
+                className="flex-1 px-4 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 disabled:bg-gray-300 transition-colors font-medium"
+              >
+                {locale === "en" ? "Downgrade" : "降级到免费版"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
