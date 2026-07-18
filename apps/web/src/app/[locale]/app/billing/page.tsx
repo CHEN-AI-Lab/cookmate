@@ -213,6 +213,7 @@ export default function BillingPage() {
           </div>
         )}
       </div>
+      </div>
 
       {/* ── Pricing Section (FREE + PRO active users) ── */}
       {((isFree && !isDemo) || (!isFree && !info?.cancelled)) && (
