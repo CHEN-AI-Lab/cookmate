@@ -248,9 +248,6 @@ export default function BillingPage() {
                 {t("annual")}
               </button>
             </div>
-            <span className="ml-2 text-[11px] text-amber-600 font-medium bg-amber-50 px-2 py-1 rounded-full whitespace-nowrap self-center">
-              {t("yearlySavingShort")}
-            </span>
           </div>
 
           {/* Cards */}
