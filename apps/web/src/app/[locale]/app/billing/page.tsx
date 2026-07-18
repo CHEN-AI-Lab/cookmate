@@ -248,11 +248,9 @@ export default function BillingPage() {
                 {t("annual")}
               </button>
             </div>
-            {billingPeriod === "annual" && (
-              <span className="ml-3 text-xs text-green-600 font-medium self-center bg-green-50 px-2 py-0.5 rounded-full whitespace-nowrap">
-                {t("yearlySaving")}
-              </span>
-            )}
+            <span className="ml-3 text-xs text-green-600 font-medium self-center bg-green-50 px-2 py-0.5 rounded-full whitespace-nowrap">
+              {billingPeriod === "annual" ? t("yearlySaving") : t("yearlySavingAlt")}
+            </span>
           </div>
 
           {/* Cards */}
