@@ -154,7 +154,7 @@ export default function BillingPage() {
           ? "bg-white border-gray-100 shadow-sm"
           : info?.cancelled
             ? "bg-white border-gray-100 shadow-sm"
-            : "bg-gradient-to-br from-orange-50 to-white border-orange-200 shadow-sm"
+            : "bg-gradient-to-br from-amber-50 to-white border-amber-200 shadow-sm"
       )}>
         <div className="flex items-start justify-between">
           <div className="space-y-1">
@@ -175,7 +175,7 @@ export default function BillingPage() {
               ? "bg-gray-100 text-gray-600"
               : info?.cancelled
                 ? "bg-gray-100 text-gray-500"
-                : "bg-orange-50 text-[#FF6B35]"
+                : "bg-amber-50 text-amber-600"
           )}>
             {isFree ? t("freeBadge") : info?.cancelled ? t("cancelled") : t("proBadge")}
           </span>
@@ -364,7 +364,7 @@ export default function BillingPage() {
               {isFree ? t("checkoutTitle") : t("extendTitle")}
             </h3>
 
-            <div className="bg-gradient-to-r from-[#FF6B35] to-orange-500 rounded-xl p-4 text-white mb-4 text-center">
+            <div className="bg-gradient-to-r from-amber-500 to-amber-400 rounded-xl p-4 text-white mb-4 text-center">
               <p className="text-sm text-white/80">{t("proPlan")}</p>
               <p className="text-2xl font-bold mt-1">{planPriceDisplay}{planPeriodLabel}</p>
               <p className="text-xs text-white/70 mt-1">
@@ -498,14 +498,14 @@ export default function BillingPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowDowngradeModal(false)}>
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
             <div className="text-center mb-4">
-              <div className="mx-auto w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-3">
-                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mx-auto w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
-              <h3 className="font-bold text-lg text-gray-900">{t("cancelSubscription")}</h3>
+              <h3 className="font-bold text-lg text-gray-900">{t("downgradeTitle")}</h3>
             </div>
-            <p className="text-sm text-gray-600 mb-4">{t("cancelConfirm")}</p>
+            <p className="text-sm text-gray-600 mb-4">{t("downgradeConfirm")}</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowDowngradeModal(false)}
@@ -534,9 +534,9 @@ export default function BillingPage() {
                   }
                 }}
                 disabled={actionLoading === "cancel"}
-                className="flex-1 px-4 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 disabled:bg-gray-300 transition-colors font-medium"
+                className="flex-1 px-4 py-2.5 text-sm text-white bg-amber-500 rounded-xl hover:bg-amber-600 disabled:bg-gray-300 transition-colors font-medium"
               >
-                {locale === "en" ? "Downgrade" : "降级到免费版"}
+                {locale === "en" ? "Downgrade to Free" : "降级到免费版"}
               </button>
             </div>
           </div>

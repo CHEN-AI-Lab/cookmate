@@ -90,5 +90,10 @@ export async function GET() {
     })),
   }
 
-  return NextResponse.json(exportData)
+  return new NextResponse(JSON.stringify(exportData, null, 2), {
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Content-Disposition": `attachment; filename="cookmate-export-${new Date().toISOString().split("T")[0]}.json"`,
+    },
+  })
 }

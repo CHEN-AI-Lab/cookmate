@@ -55,7 +55,7 @@ export function PricingCard({
         className={cn(
           "rounded-2xl px-5 py-6 text-center flex flex-col h-full",
           highlighted
-            ? "bg-[#FF6B35] text-white shadow-xl ring-2 ring-[#FF6B35]"
+            ? "bg-amber-500 text-white shadow-xl ring-2 ring-amber-500"
             : "bg-white border border-gray-200"
         )}
       >
@@ -131,10 +131,10 @@ export function PricingCard({
           onClick={onCta}
           disabled={disabled || loading}
           className={cn(
-            "mt-6 w-full py-2.5 rounded-xl text-sm font-semibold transition-all",
-            highlighted
-              ? "bg-white text-[#FF6B35] hover:bg-gray-100 active:scale-[0.98]"
-              : "bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100 active:scale-[0.98]",
+                        "mt-6 w-full py-2.5 rounded-xl text-sm font-semibold transition-all",
+                        highlighted
+                          ? "bg-white text-amber-600 hover:bg-gray-100 active:scale-[0.98]"
+                          : "bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100 active:scale-[0.98]",
             (disabled || loading) && "opacity-50 cursor-not-allowed active:scale-100"
           )}
         >

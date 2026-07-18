@@ -442,6 +442,8 @@
     "extendTitle": "Extend Subscription",
     "extendAction": "Extend",
     "downgradeLabel": "Downgrade",
+    "downgradeTitle": "Downgrade Confirmation",
+    "downgradeConfirm": "Are you sure you want to downgrade to Free? Pro features remain active until the end of the current billing period.",
     "features": "Features",
     "selectPlan": "Choose Your Plan",
     "upgradeNow": "Free to start, upgrade anytime",

@@ -540,103 +540,123 @@ const save = async () => {
         </div>
       </div>
 
-      {/* Data management */}
+      {/* ── Data Management ── */}
       {!profile?.isDemoUser && (
-        <div className="mt-6">
-          <h2 className="font-bold text-[#2D3436] mb-4">{ts("dataManagement")}</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="mt-8">
+          <h2 className="font-bold text-lg text-[#2D3436] mb-4">{ts("dataManagement")}</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
           {/* ── Export Data ── */}
-          <div className="bg-white rounded-2xl border border-orange-50 shadow-sm overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-blue-400 to-blue-200" />
-            <div className="p-5 sm:p-6">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="h-1.5 bg-gradient-to-r from-sky-400 to-sky-200" />
+            <div className="p-6">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 text-lg">📦</div>
+                <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-[#2D3436]">{ts("exportTitle")}</h3>
-                  <p className="text-sm text-gray-500 mt-1">{ts("exportDesc")}</p>
-
-                  <div className="mt-3 bg-gray-50 rounded-xl p-3">
-                    <p className="text-xs font-medium text-gray-600 mb-2">{ts("exportIncludes")}</p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1.5">
-                      {[ts("exportItem1"), ts("exportItem2"), ts("exportItem3"), ts("exportItem4"), ts("exportItem5"), ts("exportItem6")].map((item) => (
-                        <div key={item} className="flex items-center gap-1.5 text-xs text-gray-500">
-                          <span className="text-green-500 shrink-0">✓</span>
-                          <span>{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 mt-3">
-                    <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md font-mono">JSON</span>
-                    <span className="text-xs text-gray-400">{ts("exportFormatHint")}</span>
-                  </div>
+                  <h3 className="font-bold text-gray-900">{ts("exportTitle")}</h3>
+                  <p className="text-sm text-gray-500 mt-0.5">{ts("exportDesc")}</p>
                 </div>
               </div>
-            </div>
-            <div className="px-5 sm:px-6 py-3 bg-gray-50/80 border-t border-gray-100 flex items-center justify-between">
-              <span className="text-xs text-gray-400">{ts("exportNote")}</span>
-              <button
-                onClick={async () => {
-                  try {
-                    const res = await fetch("/api/user/export")
-                    if (!res.ok) { setError(ts("exportFailed")); return }
-                    const blob = await res.blob()
-                    const url = URL.createObjectURL(blob)
-                    const a = document.createElement("a")
-                    a.href = url
-                    a.download = `cookmate-export-${new Date().toISOString().split("T")[0]}.json`
-                    a.click()
-                    URL.revokeObjectURL(url)
-                  } catch { setError(ts("exportFailed")) }
-                }}
-                className="inline-flex items-center gap-1.5 bg-[#FF6B35] text-white text-sm px-5 py-2 rounded-full hover:bg-orange-600 transition-colors font-medium shadow-sm shadow-orange-200"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                {ts("exportButton")}
-              </button>
+
+              <div className="mt-4 bg-gray-50 rounded-xl p-4">
+                <p className="text-xs font-semibold text-gray-600 mb-3 uppercase tracking-wide">{ts("exportIncludes")}</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                  {[ts("exportItem1"), ts("exportItem2"), ts("exportItem3"), ts("exportItem4"), ts("exportItem5"), ts("exportItem6")].map((item) => (
+                    <div key={item} className="flex items-center gap-2 text-xs text-gray-600">
+                      <svg className="w-3.5 h-3.5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-md font-mono font-semibold">JSON</span>
+                  <span className="text-xs text-gray-400">{ts("exportFormatHint")}</span>
+                </div>
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch("/api/user/export")
+                      if (!res.ok) { setError(ts("exportFailed")); return }
+                      const blob = await res.blob()
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement("a")
+                      a.href = url
+                      a.download = `cookmate-export-${new Date().toISOString().split("T")[0]}.json`
+                      a.click()
+                      URL.revokeObjectURL(url)
+                    } catch { setError(ts("exportFailed")) }
+                  }}
+                  className="inline-flex items-center gap-2 bg-sky-500 text-white text-sm px-5 py-2 rounded-full hover:bg-sky-600 transition-colors font-medium shadow-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  {ts("exportButton")}
+                </button>
+              </div>
             </div>
           </div>
 
           {/* ── Delete Account ── */}
           <div className="bg-white rounded-2xl border border-red-100 shadow-sm overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-red-400 to-red-200" />
-            <div className="p-5 sm:p-6">
+            <div className="h-1.5 bg-gradient-to-r from-red-400 to-red-200" />
+            <div className="p-6">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
-                <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
-              </div>
+                  <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-red-600">{ts("deleteTitle")}</h3>
-                  <p className="text-sm text-gray-500 mt-1">{ts("deleteDesc")}</p>
-                  <ul className="mt-2 space-y-1">
-                    <li className="flex items-center gap-1.5 text-xs text-gray-400">
-                      <span className="text-red-400">✕</span>
-                      {ts("deleteItem1")}
-                    </li>
-                    <li className="flex items-center gap-1.5 text-xs text-gray-400">
-                      <span className="text-red-400">✕</span>
-                      {ts("deleteItem2")}
-                    </li>
-                    <li className="flex items-center gap-1.5 text-xs text-gray-400">
-                      <span className="text-red-400">✕</span>
-                      {ts("deleteItem3")}
-                    </li>
-                  </ul>
+                  <p className="text-sm text-gray-500 mt-0.5">{ts("deleteDesc")}</p>
                 </div>
               </div>
-            </div>
-            <div className="px-5 sm:px-6 py-3 bg-red-50/50 border-t border-red-100 flex items-center justify-between">
-              <span className="text-xs text-red-400">{ts("deleteNote")}</span>
-              <button
-                onClick={() => setShowDeleteModal(true)}
-                className="inline-flex items-center gap-1.5 border border-red-300 text-red-600 text-sm px-5 py-2 rounded-full hover:bg-red-50 transition-colors font-medium"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                {ts("deleteButton")}
-              </button>
+
+              <div className="mt-4 bg-red-50/50 rounded-xl p-4 border border-red-100">
+                <p className="text-xs font-semibold text-red-500 mb-3 uppercase tracking-wide">{ts("deleteWarning")}</p>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2 text-xs text-gray-500">
+                    <svg className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    {ts("deleteItem1")}
+                  </li>
+                  <li className="flex items-start gap-2 text-xs text-gray-500">
+                    <svg className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    {ts("deleteItem2")}
+                  </li>
+                  <li className="flex items-start gap-2 text-xs text-gray-500">
+                    <svg className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    {ts("deleteItem3")}
+                  </li>
+                </ul>
+              </div>
+
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-red-100">
+                <span className="text-xs text-red-400">{ts("deleteNote")}</span>
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="inline-flex items-center gap-2 border border-red-300 text-red-600 text-sm px-5 py-2 rounded-full hover:bg-red-50 transition-colors font-medium"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  {ts("deleteButton")}
+                </button>
+              </div>
             </div>
           </div>
+
         </div>
         </div>
       )}
