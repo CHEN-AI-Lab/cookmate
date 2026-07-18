@@ -448,15 +448,19 @@
     "selectPlan": "Choose Your Plan",
     "upgradeNow": "Free to start, upgrade anytime",
     "freePlanFeatures": [
-      "1 AI recommendation per day",
-      "Unlimited pantry items",
-      "AI recipe generation"
+      "1 AI recipe per day",
+      "Basic pantry management",
+      "Save up to 10 recipes"
     ],
     "proPlanFeatures": [
-      "Unlimited AI generation",
-      "Smart meal plan",
-      "Shopping list",
-      "Diet customization"
+      "Unlimited AI recipe generation",
+      "Smart weekly meal plan",
+      "Auto shopping list (sorted by aisle)",
+      "Diet customization",
+      "Full pantry management",
+      "Save unlimited recipes",
+      "Nutrition analysis & tracking",
+      "Priority support"
     ],
     "freeTier": "Free to Use",
     "subscribePro": "Subscribe",
