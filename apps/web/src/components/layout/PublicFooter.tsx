@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/navigation"
 import { useTranslations } from "next-intl"
-import { locales } from "@cookmate/shared/constants"
+import { locales, localeNames } from "@cookmate/shared/constants"
 
 export default function PublicFooter() {
   const tcommon = useTranslations("common")
@@ -85,7 +85,7 @@ export default function PublicFooter() {
                 href={`/${locale}`}
                 className="text-xs px-2 py-1 rounded hover:text-[#FF6B35] transition-colors"
               >
-                {locale === "zh-CN" ? "中文" : "English"}
+                {localeNames[locale] || locale}
               </a>
             ))}
           </div>

@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl"
 import { useLocale } from "next-intl"
 import { useState, useRef, useEffect } from "react"
 import { createPortal } from "react-dom"
-import { locales } from "@cookmate/shared/constants"
+import { locales, localeNames } from "@cookmate/shared/constants"
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
 
 const navItems = [
@@ -195,7 +195,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
                                             }}
                       className={"w-full text-left px-4 py-2 text-sm transition-colors " + (active ? "text-[#FF6B35] bg-orange-50 font-medium" : "text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35]")}
                     >
-                      {l === "zh-CN" ? "中文" : l === "en" ? "English" : l}
+                      {localeNames[l] || l}
                     </button>
                   )
                 })}
