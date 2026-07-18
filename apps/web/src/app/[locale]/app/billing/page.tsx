@@ -148,38 +148,35 @@ export default function BillingPage() {
       )}
 
       {/* ── Current Plan Card ── */}
-      <div className={cn(
-        "rounded-2xl border p-6",
-        isFree
-          ? "bg-white border-gray-100 shadow-sm"
-          : info?.cancelled
-            ? "bg-white border-gray-100 shadow-sm"
-            : "bg-gradient-to-br from-amber-50 to-white border-amber-200 shadow-sm"
-      )}>
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <p className="text-sm text-gray-500">{t("currentPlan")}</p>
-            <h2 className="text-xl font-bold text-gray-900">
-              {isFree ? t("currentPlanFree") : t("currentPlanPro")}
-            </h2>
-            {!isFree && (
-              <p className="text-sm text-gray-500">{t("proPlanDesc")}</p>
-            )}
-            {isFree && (
-              <p className="text-sm text-gray-500">{t("freePlanDesc")}</p>
-            )}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        {!isFree && !info?.cancelled && (
+          <div className="h-1 bg-gradient-to-r from-amber-400 to-amber-200" />
+        )}
+        <div className="p-6">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <p className="text-sm text-gray-500">{t("currentPlan")}</p>
+              <h2 className="text-xl font-bold text-gray-900">
+                {isFree ? t("currentPlanFree") : t("currentPlanPro")}
+              </h2>
+              {!isFree && (
+                <p className="text-sm text-gray-500">{t("proPlanDesc")}</p>
+              )}
+              {isFree && (
+                <p className="text-sm text-gray-500">{t("freePlanDesc")}</p>
+              )}
+            </div>
+            <span className={cn(
+              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold",
+              isFree
+                ? "bg-gray-100 text-gray-600"
+                : info?.cancelled
+                  ? "bg-gray-100 text-gray-500"
+                  : "bg-amber-50 text-amber-600"
+            )}>
+              {isFree ? t("freeBadge") : info?.cancelled ? t("cancelled") : t("proBadge")}
+            </span>
           </div>
-          <span className={cn(
-            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold",
-            isFree
-              ? "bg-gray-100 text-gray-600"
-              : info?.cancelled
-                ? "bg-gray-100 text-gray-500"
-                : "bg-amber-50 text-amber-600"
-          )}>
-            {isFree ? t("freeBadge") : info?.cancelled ? t("cancelled") : t("proBadge")}
-          </span>
-        </div>
 
         {!isFree && info?.subscriptionExpiryDate && !info?.cancelled && (
           <div className="mt-4 flex items-center gap-3">
