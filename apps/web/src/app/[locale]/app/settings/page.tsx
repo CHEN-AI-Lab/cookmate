@@ -265,7 +265,9 @@ const save = async () => {
                   <span className="text-sm font-medium text-[#2D3436]">
                 {profile?.isDemoUser && (locale === "en" || locale.startsWith("en"))
                   ? "Demo Login"
-                  : profile.loginMethod}</span>
+                  : locale.startsWith("zh")
+                    ? profile.loginMethod
+                    : t("loginMethod_" + profile.loginMethod) || profile.loginMethod}</span>
                 </div>
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
                   <span className="text-sm text-gray-500">{ts("phone")}</span>

@@ -19,13 +19,19 @@ const CHANNEL_ICONS: Record<string, string> = {
   creem: `<svg viewBox="0 0 121 121" fill="none" class="w-full h-full"><rect width="121" height="121" rx="16" fill="#151617"/><path d="M22.1102 11C24.1187 11.0001 25.9669 12.0982 26.9281 13.8619L51.2059 58.4106C52.5699 60.9134 55.7048 61.8368 58.2077 60.473C60.7108 59.109 61.6342 55.9742 60.2701 53.4712L41.5466 19.113C39.554 15.4566 42.2004 11 46.3645 11H103.806C107.885 11 110.539 15.2933 108.715 18.9416L65.0579 106.254C63.0356 110.298 57.2654 110.298 55.2431 106.254L11.5863 18.9416C9.76212 15.2933 12.4156 11 15.4946 11H22.1102Z" fill="white"/></svg>`,
 }
 
-function planLabel(amount: number, locale: string): string {
+function planLabel(amount: number, locale: string, t: (key: string) => string): string {
   const yuan = amount / 100
-  const isEn = locale === "en"
-  if (yuan === 119) return isEn ? "Pro Yearly" : "Pro 年付"
-  if (yuan === 20) return isEn ? "Pro Monthly" : "Pro 月付"
-  if (yuan === 51) return isEn ? "Pro Quarterly" : "Pro 季付"
-  if (yuan === 90) return isEn ? "Pro Half-Year" : "Pro 半年付"
+  if (locale === "zh-CN" || locale === "zh-TW") {
+    if (yuan === 119 || yuan === 1699) return locale === "zh-CN" ? "Pro 年付" : "Pro 年付"
+    if (yuan === 20 || yuan === 299) return locale === "zh-CN" ? "Pro 月付" : "Pro 月付"
+    if (yuan === 51 || yuan === 799) return "Pro 季付"
+    if (yuan === 90 || yuan === 1399) return "Pro 半年付"
+    return "Pro"
+  }
+  if (yuan === 119 || yuan === 1699) return t("yearlyPro")
+  if (yuan === 20 || yuan === 299) return t("monthlyPro")
+  if (yuan === 51 || yuan === 799) return t("quarterlyPlan")
+  if (yuan === 90 || yuan === 1399) return t("halfyearPlan")
   return "Pro"
 }
 
@@ -96,7 +102,7 @@ export default function OrdersPage() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-900">{channelLabel[order.channel] || order.channel}</p>
                       <p className="text-xs text-gray-400">
-                        {date.toLocaleDateString(locale === "en" ? "en-US" : "zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                        {date.toLocaleDateString(locale, { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
                       </p>
                     </div>
                   </div>
@@ -119,7 +125,7 @@ export default function OrdersPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-400">{t("plan")}</span>
-                      <span className="text-gray-600 font-semibold">{planLabel(order.amount, locale)}</span>
+                      <span className="text-gray-600 font-semibold">{planLabel(order.amount, locale, t)}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-400">{t("amount")}</span>
@@ -134,7 +140,7 @@ export default function OrdersPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-gray-400">{t("date")}</span>
                       <span className="text-gray-600">
-                        {date.toLocaleDateString(locale === "en" ? "en-US" : "zh-CN", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        {date.toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </span>
                     </div>
                     {order.status === "PENDING" && (
