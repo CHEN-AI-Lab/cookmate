@@ -279,13 +279,6 @@ export async function generateWeeklyPlan(
     return isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences)
   }
 
-  const planClient = new OpenAI({
-      apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
-      baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
-      timeout: 180000,
-      maxRetries: 2,
-    })
-
   const days = isEnglish
     ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     : ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
@@ -321,7 +314,6 @@ export async function generateWeeklyPlan(
     systemPrompt,
     userContent,
     maxTokens: 12000,
-    client: planClient,
   })
 
   try {
