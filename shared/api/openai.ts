@@ -279,11 +279,11 @@ export async function generateWeeklyPlan(
   }
 
   const planClient = new OpenAI({
-    apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
-    baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
-    timeout: 120000,
-    maxRetries: 0,
-  })
+      apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
+      baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
+      timeout: 180000,
+      maxRetries: 2,
+    })
 
   const days = isEnglish
     ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
