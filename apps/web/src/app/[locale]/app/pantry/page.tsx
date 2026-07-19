@@ -219,7 +219,7 @@ export default function PantryPage() {
         </button>
         {quickAddOpen && (
           <div className="px-5 pb-5 space-y-4">
-            {(t.raw("quickAdd") as Array<{category: string; items: string[]}>).map((group) => (
+            {(t.raw("quickAddItems") as Array<{category: string; items: string[]}>).map((group) => (
               <div key={group.category}>
                 <p className="text-sm text-gray-500 mb-2">{catLabels[group.category] || group.category}</p>
                 <div className="flex flex-wrap gap-2">
