@@ -333,11 +333,11 @@
       "🍚 主食粮油": "🍚 Grains & Oil"
     },
     "quickAddItems": [
-      { "category": "🥬 Vegetables", "items": ["Tomato", "Cucumber", "Greens", "Napa Cabbage", "Spinach", "Lettuce", "Broccoli", "Eggplant", "Potato", "Carrot", "Winter Melon", "Wood Ear", "Onion", "Garlic", "Ginger", "Spring Onion", "Chili"] },
+      { "category": "🥬 Vegetables", "items": ["Tomato", "Cucumber", "Greens", "Napa Cabbage", "Spinach", "Lettuce", "Broccoli", "Eggplant", "Potato", "Carrot", "Winter Melon", "Wood Ear", "Chili"] },
       { "category": "🍎 Fruits", "items": ["Apple", "Banana", "Orange", "Lemon", "Strawberry"] },
-      { "category": "🥩 Meat & Eggs", "items": ["Egg", "Chicken Breast", "Chicken Thigh", "Chicken Wing", "Pork Belly", "Pork Loin", "Ribs", "Beef", "Lamb", "Bacon"] },
+      { "category": "🥩 Meat & Eggs", "items": ["Egg", "Chicken Thigh", "Chicken Wing", "Pork Belly", "Ribs", "Beef", "Lamb"] },
       { "category": "🥛 Dairy & Tofu", "items": ["Milk", "Yogurt", "Tofu"] },
-      { "category": "🍚 Grains & Oil", "items": ["Rice", "Noodles", "Flour", "Dried Noodles", "Steamed Bun", "Cooking Oil", "Millet", "Glass Noodles"] }
+      { "category": "🍚 Grains & Oil", "items": ["Rice", "Flour", "Cooking Oil"] }
     ]
   },
   "recipes": {

@@ -331,11 +331,11 @@
       "🍚 主食粮油": "🍚 主食・油"
     },
     "quickAddItems": [
-      { "category": "🥬 野菜", "items": ["Tomato", "Cucumber", "Greens", "Napa Cabbage", "Spinach", "Lettuce", "Broccoli", "Eggplant", "Potato", "Carrot", "Winter Melon", "Wood Ear", "Onion", "Garlic", "Ginger", "Spring Onion", "Chili"] },
+      { "category": "🥬 野菜", "items": ["Tomato", "Cucumber", "Greens", "Napa Cabbage", "Spinach", "Lettuce", "Broccoli", "Eggplant", "Potato", "Carrot", "Winter Melon", "Wood Ear", "Chili"] },
       { "category": "🍎 果物", "items": ["Apple", "Banana", "Orange", "Lemon", "Strawberry"] },
-      { "category": "🥩 肉・卵", "items": ["Egg", "Chicken Breast", "Chicken Thigh", "Chicken Wing", "Pork Belly", "Pork Loin", "Ribs", "Beef", "Lamb", "Bacon"] },
+      { "category": "🥩 肉・卵", "items": ["Egg", "Chicken Thigh", "Chicken Wing", "Pork Belly", "Ribs", "Beef", "Lamb"] },
       { "category": "🥛 乳製品・豆腐", "items": ["Milk", "Yogurt", "Tofu"] },
-      { "category": "🍚 主食・油", "items": ["Rice", "Noodles", "Flour", "Dried Noodles", "Steamed Bun", "Cooking Oil", "Millet", "Glass Noodles"] }
+      { "category": "🍚 主食・油", "items": ["Rice", "Flour", "Cooking Oil"] }
     ],
     "addItem": "アイテム追加",
     "searchIcon": "🔍"
