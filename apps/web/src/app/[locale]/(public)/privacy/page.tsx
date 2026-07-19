@@ -56,6 +56,11 @@ export default async function PrivacyPage() {
           </section>
 
           <section>
+            <h2 className="text-xl font-bold text-[#2D3436] mb-3">{t("dataStorageTitle")}</h2>
+            <p>{t("dataStorageDesc")}</p>
+          </section>
+
+          <section>
             <h2 className="text-xl font-bold text-[#2D3436] mb-3">{t("rightsTitle")}</h2>
             <p>{t("rightsDesc")}</p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
