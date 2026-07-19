@@ -85,7 +85,7 @@ export default function MealPlanPage() {
       if (res.ok && data.plan) {
         setPlan(data.plan)
       } else {
-        setError(data.error || t("generateFailed"))
+        setError(data.detail ? `${data.error} (${data.detail})` : (data.error || t("generateFailed")))
       }
     } catch (err) {
       console.error("generate plan error:", err)
