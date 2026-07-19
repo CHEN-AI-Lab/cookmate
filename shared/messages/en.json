@@ -817,7 +817,7 @@
     "terms": "Terms of Service",
     "contact": "Contact",
     "email": "CookMate@aaigc.online",
-    "copyright": "© 2026 CookMate. All rights reserved."
+    "copyright": "© {year} CookMate. All rights reserved."
   },
   "errors": {
     "loginRequired": "Please log in first",

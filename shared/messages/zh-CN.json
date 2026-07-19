@@ -818,7 +818,7 @@
     "terms": "服务条款",
     "contact": "联系我们",
     "email": "CookMate@aaigc.online",
-    "copyright": "© 2026 CookMate. 保留所有权利。"
+    "copyright": "© {year} CookMate. 保留所有权利。"
   },
   "errors": {
     "loginRequired": "请先登录",

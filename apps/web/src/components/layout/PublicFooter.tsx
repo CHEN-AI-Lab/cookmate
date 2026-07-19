@@ -1,6 +1,5 @@
 import { Link } from "@/i18n/navigation"
 import { useTranslations } from "next-intl"
-import { locales, localeNames } from "@cookmate/shared/constants"
 
 export default function PublicFooter() {
   const tcommon = useTranslations("common")
@@ -75,20 +74,9 @@ export default function PublicFooter() {
           </div>
         </div>
 
-        {/* Language switcher */}
+        {/* Copyright */}
         <div className="mt-8 pt-8 border-t border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-gray-500">{tfooter("copyright")}</p>
-          <div className="flex gap-2">
-            {locales.map((locale) => (
-              <a
-                key={locale}
-                href={`/${locale}`}
-                className="text-xs px-2 py-1 rounded hover:text-[#FF6B35] transition-colors"
-              >
-                {localeNames[locale] || locale}
-              </a>
-            ))}
-          </div>
+          <p className="text-xs text-gray-500">{tfooter("copyright", { year: String(new Date().getFullYear()) })}</p>
         </div>
       </div>
     </footer>
