@@ -823,7 +823,7 @@
     "terms": "服務條款",
     "contact": "聯繫我們",
     "email": "CookMate@aaigc.online",
-    "copyright": "© {year} CookMate. 保留所有權利。"
+    "copyright": "© {year} CookMate 保留所有權利"
   },
   "errors": {
     "loginRequired": "請先登錄",
