@@ -29,26 +29,29 @@ async function callAI(params: {
   userContent: string
   maxTokens: number
   client?: OpenAI
+  skipStructured?: boolean
 }): Promise<string> {
-  const { systemPrompt, userContent, maxTokens, client } = params
+  const { systemPrompt, userContent, maxTokens, client, skipStructured } = params
   const ai = client || getOpenAI()
 
-  // 第一次：带 response_format
-  try {
-    const response = await ai.chat.completions.create({
-      model: getModel(),
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userContent },
-      ],
-      response_format: { type: "json_object" } as const,
-      temperature: 0.7,
-      max_tokens: maxTokens,
-    })
-    const content = response.choices[0]?.message?.content
-    if (content) return cleanJSONResponse(content)
-  } catch (err: unknown) {
-    if (err && typeof err === "object" && "status" in err && (err as { status: number }).status !== 400 && (err as { status: number }).status !== 403) throw err
+  // 第一次：带 response_format（可跳过，用于大输出场景）
+  if (!skipStructured) {
+    try {
+      const response = await ai.chat.completions.create({
+        model: getModel(),
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent },
+        ],
+        response_format: { type: "json_object" } as const,
+        temperature: 0.7,
+        max_tokens: maxTokens,
+      })
+      const content = response.choices[0]?.message?.content
+      if (content) return cleanJSONResponse(content)
+    } catch (err: unknown) {
+      if (err && typeof err === "object" && "status" in err && (err as { status: number }).status !== 400 && (err as { status: number }).status !== 403) throw err
+    }
   }
 
   // 降级：不带 response_format
@@ -314,6 +317,7 @@ export async function generateWeeklyPlan(
     systemPrompt,
     userContent,
     maxTokens: 12000,
+    skipStructured: true,
   })
 
   try {
