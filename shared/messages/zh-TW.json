@@ -617,7 +617,7 @@
     "infoCollect1": "註冊信息：郵箱地址、手機號、用戶名",
     "infoCollect2": "使用數據：飲食偏好、菜系偏好、烹飪記錄",
     "infoCollect3": "設備信息：瀏覽器類型、操作系統、IP 地址",
-    "infoCollect4": "支付信息：支付記錄（實際支付由 Stripe / 支付寶等第三方處理，我們不存儲卡號）",
+    "infoCollect4": "支付信息：支付記錄（實際支付由 Stripe / 支付寶等第三方處理）",
     "usageTitle": "2. 信息使用",
     "usageDesc": "收集的信息用於以下目的：",
     "usage1": "提供和優化 AI 菜譜推薦服務",
@@ -636,7 +636,7 @@
     "rights3": "刪除您的賬號和相關數據",
     "rights4": "導出您的數據（JSON 格式）",
     "rights5": "撤回同意",
-    "contactTitle": "6. 聯繫我們",
+    "contactTitle": "7. 聯繫我們",
     "contactDesc": "如有隱私相關問題，請聯繫：",
     "viewTerms": "查看服務條款 →"
   },

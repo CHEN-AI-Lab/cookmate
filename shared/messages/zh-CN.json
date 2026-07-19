@@ -617,7 +617,7 @@
     "infoCollect1": "注册信息：邮箱地址、手机号、用户名",
     "infoCollect2": "使用数据：饮食偏好、菜系偏好、烹饪记录",
     "infoCollect3": "设备信息：浏览器类型、操作系统、IP 地址",
-    "infoCollect4": "支付信息：支付记录（实际支付由 Stripe / 支付宝等第三方处理，我们不存储卡号）",
+    "infoCollect4": "支付信息：支付记录（实际支付由 Stripe / 支付宝等第三方处理）",
     "usageTitle": "2. 信息使用",
     "usageDesc": "收集的信息用于以下目的：",
     "usage1": "提供和优化 AI 菜谱推荐服务",
@@ -636,7 +636,7 @@
     "rights3": "删除您的账号和相关数据",
     "rights4": "导出您的数据（JSON 格式）",
     "rights5": "撤回同意",
-    "contactTitle": "6. 联系我们",
+    "contactTitle": "7. 联系我们",
     "contactDesc": "如有隐私相关问题，请联系：",
     "viewTerms": "查看服务条款 →"
   },

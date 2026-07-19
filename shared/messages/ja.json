@@ -623,7 +623,7 @@
     "infoCollect1": "アカウント情報：メールアドレス、電話番号、ユーザー名",
     "infoCollect2": "利用データ：食事の好み、料理の好み、調理履歴",
     "infoCollect3": "デバイス情報：ブラウザタイプ、OS、IPアドレス",
-    "infoCollect4": "支払い記録（実際の支払いはStripe/Alipayが処理 — カード番号は保存しません）",
+    "infoCollect4": "支払い記録（実際の支払いはStripe/Alipayが処理）",
     "infoCollectDesc": "サービス提供のために、以下の情報を収集する場合があります：",
     "infoCollectTitle": "1. 収集する情報",
     "rights1": "個人情報の確認と閲覧",

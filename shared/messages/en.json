@@ -617,7 +617,7 @@
     "infoCollect1": "Account information: email address, phone number, username",
     "infoCollect2": "Usage data: dietary preferences, cuisine preferences, cooking history",
     "infoCollect3": "Device information: browser type, operating system, IP address",
-    "infoCollect4": "Payment records (actual payment processed by Stripe/Alipay — we do not store card numbers)",
+    "infoCollect4": "Payment records (actual payment processed by Stripe/Alipay)",
     "usageTitle": "2. How We Use Your Information",
     "usageDesc": "We use the collected information to:",
     "usage1": "Provide and improve AI recipe recommendations",
@@ -636,7 +636,7 @@
     "rights3": "Delete your account and related data",
     "rights4": "Export your data (JSON format)",
     "rights5": "Withdraw consent",
-    "contactTitle": "6. Contact Us",
+    "contactTitle": "7. Contact Us",
     "contactDesc": "For privacy-related inquiries, contact:",
     "viewTerms": "View Terms of Service →"
   },
