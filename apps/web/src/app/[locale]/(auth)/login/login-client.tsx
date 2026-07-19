@@ -383,7 +383,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                   disabled={loading === "email" || countdown > 0 || !email}
                   className="px-4 py-3 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap transition-colors"
                 >
-                  {countdown > 0 ? `${countdown}s` : loading === "email" ? tc('sending') : tc('sendCode')}
+                  {countdown > 0 ? `${countdown}${tc('seconds')}` : loading === "email" ? tc('sending') : tc('sendCode')}
                 </button>
               </div>
             </div>
@@ -489,7 +489,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 disabled={loading === "setup_code" || setupCountdown > 0}
                 className="px-4 py-3 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap"
               >
-                {setupCountdown > 0 ? `${setupCountdown}s` : loading === "setup_code" ? tc('sending') : tc('sendCode')}
+                {setupCountdown > 0 ? `${setupCountdown}${tc('seconds')}` : loading === "setup_code" ? tc('sending') : tc('sendCode')}
               </button>
             </div>
             <div>
