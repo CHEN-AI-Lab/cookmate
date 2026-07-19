@@ -188,7 +188,7 @@ export async function POST(req: Request) {
     console.error("Meal plan generation error:", errMsg, error)
     return NextResponse.json({
       error: err(loc, "requestFailed"),
-      ...(process.env.NODE_ENV !== "production" ? { detail: errMsg } : {}),
+      detail: errMsg,
     }, { status: 500 })
   }
 }
