@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations, useLocale } from "next-intl"
-import { INGREDIENT_LABELS } from "@cookmate/shared/constants/ingredients"
 import { getDemoPantryItems } from "@cookmate/shared/demo-data"
 
 interface PantryItem {
@@ -17,9 +16,7 @@ export default function PantryPage() {
   const t = useTranslations("pantry")
   const tc = useTranslations("common")
   const locale = useLocale()
-  const displayName = (name: string) => locale === "zh-CN" || locale === "zh-TW" ? name : (ingLabels[name] || name)
   const catLabels = t.raw("catLabels") as Record<string, string>
-  const ingLabels = INGREDIENT_LABELS
   const [items, setItems] = useState<PantryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
@@ -64,17 +61,10 @@ export default function PantryPage() {
   const addItem = async (name: string, category?: string) => {
     const trimmed = name.trim()
     if (!trimmed) return
-    // 统一转成中文名存储（英文→中文映射）
-    const trimmedLower = trimmed.toLowerCase()
-    const enToZh: Record<string, string> = {}
-    for (const [zh, en] of Object.entries(ingLabels)) {
-      enToZh[en.toLowerCase()] = zh.toLowerCase()
-    }
-    const chineseName = enToZh[trimmedLower] || trimmed
 
-    // 重复检测：用中文名比较
-    if (items.some((i) => i.name.toLowerCase() === chineseName.toLowerCase())) {
-      setDupDialog(chineseName)
+    // 重复检测
+    if (items.some((i) => i.name.toLowerCase() === trimmed.toLowerCase())) {
+      setDupDialog(trimmed)
       setTimeout(() => setDupDialog(null), 2500)
       setInputName("")
       return
@@ -83,26 +73,26 @@ export default function PantryPage() {
       const res = await fetch("/api/pantry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: chineseName, category: category }),
+        body: JSON.stringify({ name: trimmed, category: category }),
       })
       if (res.ok) {
         const data = await res.json()
         setItems((prev) => [data.item, ...prev])
-        setToast(`${locale.startsWith("zh") ? "已添加 " : "Added "}${displayName(data.item.name)}`)
+        setToast(`${t("added")}${data.item.name}`)
         setTimeout(() => setToast(""), 2000)
       } else {
         const data = await res.json().catch((err) => { console.error("parse pantry response error:", err); return {} })
         if (data.error?.includes("已存在")) {
-          setDupDialog(chineseName)
+          setDupDialog(trimmed)
           setTimeout(() => setDupDialog(null), 2500)
         } else {
-          setError(data.error || "添加失败，请稍后重试")
+          setError(data.error || t("addFailed"))
           setTimeout(() => setError(null), 2500)
         }
       }
     } catch (err) {
       console.error("add item error:", err)
-      setError("网络错误，请稍后重试")
+      setError(tc("networkError"))
       setTimeout(() => setError(null), 2500)
     }
     setInputName("")
@@ -169,7 +159,7 @@ export default function PantryPage() {
                     : "bg-orange-50 text-[#FF6B35] border-orange-200 hover:bg-orange-100"
                 }`}
               >
-                {displayName(item.name)}
+                {item.name}
                 <button onClick={(e) => { e.stopPropagation(); removeItem(item.id) }} className="ml-1 hover:text-red-500">{isDemoUser ? "" : "×"}</button>
               </span>
             ))}

@@ -312,6 +312,8 @@
     "addButton": "追加",
     "demoLockedAdd": "🔒",
     "addDialogTitle": "食材を追加",
+    "added": "追加しました ",
+    "addFailed": "追加に失敗しました。しばらくしてからやり直してください",
     "addItemPlaceholder": "食材名を入力...",
     "searchPlaceholder": "食材を検索...",
     "clickToSelect": "☝️ 食材をタップして選択",

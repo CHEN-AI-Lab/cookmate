@@ -319,6 +319,8 @@
     "loading": "Loading...",
     "alreadyInPantry": "「{name}」is already in your pantry",
     "addDialogTitle": "Add Ingredient",
+    "added": "Added ",
+    "addFailed": "Add failed, please try again later",
     "cancel": "Cancel",
     "add": "Add",
     "demoLockedAdd": "🔒 Sign up to add",

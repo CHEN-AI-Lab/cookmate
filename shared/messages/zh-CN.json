@@ -319,6 +319,8 @@
     "loading": "加载中...",
     "alreadyInPantry": "「{name}」已在食材库中",
     "addDialogTitle": "添加食材",
+    "added": "已添加 ",
+    "addFailed": "添加失败，请稍后重试",
     "cancel": "取消",
     "add": "添加",
     "demoLockedAdd": "🔒 注册后可添加",
