@@ -529,7 +529,10 @@
     "networkError": "Network error",
     "quarterlyPlan": "Quarterly",
     "halfyearPlan": "Half-Year",
-    "paymentSuccess": "✅ Payment successful!"
+    "paymentSuccess": "✅ Payment successful!",
+    "keepPro": "Keep Pro",
+    "downgradeToFree": "Downgrade to Free",
+    "daysLeft": "days left"
   },
   "orders": {
     "title": "📋 Order History",

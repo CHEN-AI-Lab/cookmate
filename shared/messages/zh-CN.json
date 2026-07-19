@@ -529,7 +529,10 @@
     "networkError": "网络错误",
     "quarterlyPlan": "季付",
     "halfyearPlan": "半年付",
-    "paymentSuccess": "✅ 支付成功！"
+    "paymentSuccess": "✅ 支付成功！",
+    "keepPro": "保留 Pro",
+    "downgradeToFree": "降级到免费版",
+    "daysLeft": "天"
   },
   "orders": {
     "title": "📋 订单记录",

@@ -42,7 +42,7 @@ export default function PantryPage() {
   const t = useTranslations("pantry")
   const tc = useTranslations("common")
   const locale = useLocale()
-  const displayName = (name: string) => locale === "en" || locale.startsWith("en") ? (ingLabels[name] || name) : name
+  const displayName = (name: string) => locale === "zh-CN" || locale === "zh-TW" ? name : (ingLabels[name] || name)
   const catLabels = t.raw("catLabels") as Record<string, string>
   const ingLabels = INGREDIENT_LABELS
   const [items, setItems] = useState<PantryItem[]>([])
@@ -114,7 +114,7 @@ export default function PantryPage() {
       if (res.ok) {
         const data = await res.json()
         setItems((prev) => [data.item, ...prev])
-        setToast(`${locale.startsWith("en") ? "Added " : "已添加 "}${displayName(data.item.name)}`)
+        setToast(`${locale.startsWith("zh") ? "已添加 " : "Added "}${displayName(data.item.name)}`)
         setTimeout(() => setToast(""), 2000)
       } else {
         const data = await res.json().catch((err) => { console.error("parse pantry response error:", err); return {} })

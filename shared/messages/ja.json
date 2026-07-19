@@ -527,6 +527,9 @@
     "quarterlyPlan": "3ヶ月",
     "halfyearPlan": "6ヶ月",
     "paymentSuccess": "✅ 支払い成功！",
+    "keepPro": "Proを維持",
+    "downgradeToFree": "無料にダウングレード",
+    "daysLeft": "日残り",
     "manageStripe": "Stripeサブスクリプション管理",
     "noSubscription": "サブスクリプション記録がありません",
     "upgrade": "プランアップグレード"

@@ -414,7 +414,7 @@ const save = async () => {
                 )}
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
                   <span className="text-sm text-gray-500">{ts("registerDate")}</span>
-                  <span className="text-sm font-medium text-[#2D3436]">{new Date(profile.createdAt).toLocaleDateString(locale === "en" ? "en-US" : "zh-CN", { year: "numeric", month: "long", day: "numeric" })}</span>
+                  <span className="text-sm font-medium text-[#2D3436]">{new Date(profile.createdAt).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" })}</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <span className="text-sm text-gray-500">{ts("currentPlan")}</span>

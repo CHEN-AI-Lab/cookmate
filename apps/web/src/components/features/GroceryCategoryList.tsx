@@ -75,7 +75,7 @@ export function GroceryCategoryList({
   const t = useTranslations("grocery")
   const locale = useLocale()
   const catLabels = t.raw("catLabels") as Record<string, string>
-  const displayName = (name: string) => locale === "en" || locale.startsWith("en") ? (INGREDIENT_LABELS[name] || name) : name
+  const displayName = (name: string) => locale === "zh-CN" || locale === "zh-TW" ? name : (INGREDIENT_LABELS[name] || name)
   return (
     <div>
       {/* Summary */}

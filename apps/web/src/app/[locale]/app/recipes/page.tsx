@@ -32,7 +32,7 @@ export default function RecipesPage() {
   const locale = useLocale()
   const tp = useTranslations("pantry")
   const ingLabels = INGREDIENT_LABELS
-  const displayName = (name: string) => locale === "en" || locale.startsWith("en") ? (ingLabels[name] || name) : name
+  const displayName = (name: string) => locale === "zh-CN" || locale === "zh-TW" ? name : (ingLabels[name] || name)
   const router = useRouter()
   const searchParams = useSearchParams()
   const [ingredients, setIngredients] = useState<string[]>(() => {

@@ -186,16 +186,16 @@ export default function BillingPage() {
               "text-sm font-medium px-3 py-1 rounded-full",
               daysLeft <= 7 ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700"
             )}>
-              {locale === "zh-CN" ? `剩余 ${daysLeft} 天` : `${daysLeft} days left`}
+              {locale === "zh-CN" ? `剩余 ${daysLeft} 天` : `${daysLeft} ${t("daysLeft")}`}
             </div>
             <span className="text-xs text-gray-400">
-              {t("expiryDate", { date: new Date(info.subscriptionExpiryDate).toLocaleDateString(locale === "en" ? "en-US" : "zh-CN", { year: "numeric", month: "long", day: "numeric" }) })}
+              {t("expiryDate", { date: new Date(info.subscriptionExpiryDate).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" }) })}
             </span>
           </div>
         )}
         {!isFree && info?.subscriptionExpiryDate && info?.cancelled && (
           <p className="text-xs text-gray-400 mt-2">
-            {t("expiryDate", { date: new Date(info.subscriptionExpiryDate).toLocaleDateString(locale === "en" ? "en-US" : "zh-CN", { year: "numeric", month: "long", day: "numeric" }) })}
+            {t("expiryDate", { date: new Date(info.subscriptionExpiryDate).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" }) })}
           </p>
         )}
 
@@ -443,7 +443,7 @@ export default function BillingPage() {
                 onClick={() => setShowCancelModal(false)}
                 className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
               >
-                {locale === "en" ? "Keep Pro" : "保留 Pro"}
+                {locale === "en" ? "Keep Pro" : t("keepPro")}
               </button>
               <button
                 onClick={async () => {
@@ -493,7 +493,7 @@ export default function BillingPage() {
                 onClick={() => setShowDowngradeModal(false)}
                 className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
               >
-                {locale === "en" ? "Keep Pro" : "保留 Pro"}
+                {locale === "en" ? "Keep Pro" : t("keepPro")}
               </button>
               <button
                 onClick={async () => {
@@ -518,7 +518,7 @@ export default function BillingPage() {
                 disabled={actionLoading === "cancel"}
                 className="flex-1 px-4 py-2.5 text-sm text-white bg-amber-500 rounded-xl hover:bg-amber-600 disabled:bg-gray-300 transition-colors font-medium"
               >
-                {locale === "en" ? "Downgrade to Free" : "降级到免费版"}
+                {locale === "en" ? "Downgrade to Free" : t("downgradeToFree")}
               </button>
             </div>
           </div>
