@@ -313,7 +313,6 @@
     "demoLockedAdd": "🔒",
     "addDialogTitle": "食材を追加",
     "addItemPlaceholder": "食材名を入力...",
-    "quickAdd": "クイック追加",
     "searchPlaceholder": "食材を検索...",
     "clickToSelect": "☝️ 食材をタップして選択",
     "selectedCount": "{count}個を選択中",
@@ -330,13 +329,6 @@
       "🥛 乳品豆制品": "🥛 乳製品・豆製品",
       "🍚 主食粮油": "🍚 主食・油"
     },
-    "quickAddItems": [
-      { "category": "🥬 野菜", "items": ["Tomato", "Cucumber", "Greens", "Napa Cabbage", "Spinach", "Lettuce", "Broccoli", "Eggplant", "Potato", "Carrot", "Winter Melon", "Wood Ear", "Chili"] },
-      { "category": "🍎 果物", "items": ["Apple", "Banana", "Orange", "Lemon", "Strawberry"] },
-      { "category": "🥩 肉・卵", "items": ["Egg", "Chicken Thigh", "Chicken Wing", "Pork Belly", "Ribs", "Beef", "Lamb"] },
-      { "category": "🥛 乳製品・豆腐", "items": ["Milk", "Yogurt", "Tofu"] },
-      { "category": "🍚 主食・油", "items": ["Rice", "Flour", "Cooking Oil"] }
-    ],
     "addItem": "アイテム追加",
     "searchIcon": "🔍"
   },

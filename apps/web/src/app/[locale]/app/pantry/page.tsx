@@ -25,7 +25,6 @@ export default function PantryPage() {
   const [search, setSearch] = useState("")
   const [inputName, setInputName] = useState("")
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [quickAddOpen, setQuickAddOpen] = useState(false)
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dupDialog, setDupDialog] = useState<string | null>(null)
@@ -207,66 +206,6 @@ export default function PantryPage() {
           <span className="text-sm">{t("clickToSelect")}</span>
         </div>
       )}
-
-      {/* 5. Quick add (collapsible, default collapsed) */}
-      <div className="bg-white rounded-2xl shadow-sm border border-orange-50 overflow-hidden">
-        <button
-          onClick={() => setQuickAddOpen(!quickAddOpen)}
-          className="w-full flex items-center justify-between px-5 py-3 text-left"
-        >
-          <span className="font-bold text-[#2D3436] text-sm">{t("quickAdd")}</span>
-          <span className="text-gray-400 text-sm transition-transform">{quickAddOpen ? "▲" : "▼"}</span>
-        </button>
-        {quickAddOpen && (
-          <div className="px-5 pb-5 space-y-4">
-            {(t.raw("quickAddItems") as Array<{category: string; items: string[]}>).map((group) => (
-              <div key={group.category}>
-                <p className="text-sm text-gray-500 mb-2">{catLabels[group.category] || group.category}</p>
-                <div className="flex flex-wrap gap-2">
-                  {group.items.map((item) => {
-                    const alreadyAdded = items.some((i) => i.name.toLowerCase() === item.toLowerCase())
-                    return (
-                      <button
-                        key={item}
-                        onClick={async () => {
-                          if (isDemoUser) {
-                            setDemoToast(t("demoLockedAction"))
-                            setTimeout(() => setDemoToast(""), 3000)
-                            return
-                          }
-                          if (alreadyAdded) {
-                            // 已添加则删除
-                            const toRemove = items.find((i) => i.name.toLowerCase() === item.toLowerCase())
-                            if (toRemove) {
-                              await fetch(`/api/pantry/${toRemove.id}`, { method: "DELETE" })
-                              setItems((prev) => prev.filter((i) => i.id !== toRemove.id))
-                              setSelected((prev) => {
-                                const next = new Set(prev)
-                                next.delete(toRemove.id)
-                                return next
-                              })
-                            }
-                          } else {
-                            // 未添加则添加（始终存中文名）
-                            addItem(item, group.category)
-                          }
-                        }}
-                        className={`px-3 py-1 rounded-full text-sm border transition-colors ${
-                          alreadyAdded
-                            ? "bg-gradient-to-r from-orange-400 to-amber-400 text-white border-transparent"
-                            : "bg-gray-50 text-gray-600 border-gray-200 hover:border-[#FF6B35]"
-                        } ${isDemoUser ? "opacity-50 cursor-not-allowed" : ""}`}
-                      >
-                        {alreadyAdded ? `✓ ${displayName(item)}` : displayName(item)}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* Add dialog modal */}
       {showAddDialog && (

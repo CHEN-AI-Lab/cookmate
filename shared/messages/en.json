@@ -316,7 +316,6 @@
     "selectedCount": "🍳 {count} selected · Cook with these",
     "cancelSelection": "✕ Cancel Selection",
     "clickToSelect": "👆 Click ingredients to select, then cook here",
-    "quickAdd": "⚡ Quick Add Ingredients",
     "loading": "Loading...",
     "alreadyInPantry": "「{name}」is already in your pantry",
     "addDialogTitle": "Add Ingredient",
@@ -331,14 +330,7 @@
       "🥩 肉禽蛋": "🥩 Meat & Eggs",
       "🥛 乳品豆制品": "🥛 Dairy & Soy",
       "🍚 主食粮油": "🍚 Grains & Oil"
-    },
-    "quickAddItems": [
-      { "category": "🥬 Vegetables", "items": ["Tomato", "Cucumber", "Greens", "Napa Cabbage", "Spinach", "Lettuce", "Broccoli", "Eggplant", "Potato", "Carrot", "Winter Melon", "Wood Ear", "Chili"] },
-      { "category": "🍎 Fruits", "items": ["Apple", "Banana", "Orange", "Lemon", "Strawberry"] },
-      { "category": "🥩 Meat & Eggs", "items": ["Egg", "Chicken Thigh", "Chicken Wing", "Pork Belly", "Ribs", "Beef", "Lamb"] },
-      { "category": "🥛 Dairy & Tofu", "items": ["Milk", "Yogurt", "Tofu"] },
-      { "category": "🍚 Grains & Oil", "items": ["Rice", "Flour", "Cooking Oil"] }
-    ]
+    }
   },
   "recipes": {
     "title": "Recipes",
