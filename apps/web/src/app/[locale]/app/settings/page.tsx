@@ -267,7 +267,7 @@ const save = async () => {
                   ? "Demo Login"
                   : locale.startsWith("zh")
                     ? profile.loginMethod
-                    : t("loginMethod_" + profile.loginMethod) || profile.loginMethod}</span>
+                    : ts("loginMethod_" + profile.loginMethod) || profile.loginMethod}</span>
                 </div>
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
                   <span className="text-sm text-gray-500">{ts("phone")}</span>
