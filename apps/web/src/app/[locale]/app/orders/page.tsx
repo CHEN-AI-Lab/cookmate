@@ -37,6 +37,7 @@ function planLabel(amount: number, locale: string, t: (key: string) => string): 
 
 export default function OrdersPage() {
   const t = useTranslations("orders")
+  const tb = useTranslations("billing")
   const locale = useLocale()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -125,7 +126,7 @@ export default function OrdersPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-400">{t("plan")}</span>
-                      <span className="text-gray-600 font-semibold">{planLabel(order.amount, locale, t)}</span>
+                      <span className="text-gray-600 font-semibold">{planLabel(order.amount, locale, tb)}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-400">{t("amount")}</span>

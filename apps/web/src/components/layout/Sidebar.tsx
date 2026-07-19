@@ -169,7 +169,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
               className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
             >
               <span className="text-base">🌐</span>
-              <span className="flex-1 text-left">{locale === "zh-CN" ? "语言" : "Language"}</span>
+              <span className="flex-1 text-left">{t("language")}</span>
               <svg className={`w-3 h-3 text-gray-400 transition-transform ${langOpen ? "rotate-90" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
             {langOpen && (

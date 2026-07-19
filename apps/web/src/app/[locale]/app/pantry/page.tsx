@@ -6,31 +6,6 @@ import { useTranslations, useLocale } from "next-intl"
 import { INGREDIENT_LABELS } from "@cookmate/shared/constants/ingredients"
 import { getDemoPantryItems } from "@cookmate/shared/demo-data"
 
-const QUICK_ADD = [
-  {
-    category: "🥬 蔬菜",
-    items: ["西红柿", "黄瓜", "青菜", "白菜", "菠菜", "生菜", "西兰花", "茄子",
-      "土豆", "胡萝卜", "冬瓜", "木耳",
-      "洋葱", "大蒜", "姜", "葱", "辣椒"],
-  },
-  {
-    category: "🍎 水果",
-    items: ["苹果", "香蕉", "橙子", "柠檬", "草莓"],
-  },
-  {
-    category: "🥩 肉禽蛋",
-    items: ["鸡蛋", "鸡胸肉", "鸡腿", "鸡翅", "五花肉", "猪里脊", "排骨", "牛肉", "羊肉", "培根"],
-  },
-  {
-    category: "🥛 乳品豆制品",
-    items: ["牛奶", "酸奶", "豆腐"],
-  },
-  {
-    category: "🍚 主食粮油",
-    items: ["大米", "面条", "面粉", "挂面", "馒头", "食用油", "小米", "粉丝"],
-  },
-]
-
 interface PantryItem {
   id: string
   name: string
@@ -244,7 +219,7 @@ export default function PantryPage() {
         </button>
         {quickAddOpen && (
           <div className="px-5 pb-5 space-y-4">
-            {QUICK_ADD.map((group) => (
+            {(t.raw("quickAdd") as Array<{category: string; items: string[]}>).map((group) => (
               <div key={group.category}>
                 <p className="text-sm text-gray-500 mb-2">{catLabels[group.category] || group.category}</p>
                 <div className="flex flex-wrap gap-2">
