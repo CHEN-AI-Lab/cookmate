@@ -66,11 +66,12 @@ async function callAI(params: {
   return cleanJSONResponse(content)
 }
 
-/** 清理 AI 响应：去掉 markdown 代码块等非 JSON 杂音 */
+/** 清理 AI 响应：去掉 markdown 代码块、控制字符等非 JSON 杂音 */
 function cleanJSONResponse(content: string): string {
   return content
     .replace(/^\s*```(?:json)?\s*/i, "")
     .replace(/\s*```\s*$/i, "")
+    .replace(/[\x00-\x1F\x7F-\x9F]/g, "") // 去掉控制字符
     .trim()
 }
 
@@ -323,7 +324,12 @@ export async function generateWeeklyPlan(
     client: planClient,
   })
 
-  return JSON.parse(content)
+  try {
+    return JSON.parse(content)
+  } catch {
+    console.error("Invalid JSON from AI, first 500 chars:", content.substring(0, 500))
+    throw new Error("AI returned invalid JSON")
+  }
 }
 
 // ══════════════════════════════════════════
