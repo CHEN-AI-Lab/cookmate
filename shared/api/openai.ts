@@ -109,15 +109,28 @@ export interface RecipeResult {
   difficulty: "easy" | "medium" | "hard"
 }
 
-// ─── Chinese system prompt ───
+// ─── Locale → AI language name mapping ───
+// 告诉 AI 用什么语言回复，加新语言在这里加一行就行
+const LANGUAGE_MAP: Record<string, string> = {
+  'zh-CN': '中文',
+  'zh-TW': '中文',
+  'ja': '日本語',
+  'en': 'English',
+}
 
-const ZH_SYSTEM_PROMPT = `你是 CookMate 的 AI 厨师助手。你的任务是：
+function getLangName(locale?: string): string {
+  return LANGUAGE_MAP[locale || 'zh-CN'] || '中文'
+}
+
+// ─── Dynamic base prompts (language is injected at call time) ───
+
+const SYSTEM_PROMPT_TEMPLATE = `你是 CookMate 的 AI 厨师助手。你的任务是：
 1. 根据用户提供的食材推荐菜谱，**必须只使用用户提供的食材**，不能添加用户没有的主食材（盐、油、酱油等基本调料除外）
 2. 用户还会提供冰箱里的存货清单（"你的冰箱里还有这些食材"），每种存货大约只有1-2份，偶尔用一下就行，不要大量使用。主要还是要用用户提供的新鲜食材。
 3. 每个菜谱需包含：菜名、简介、**食材清单（每项食材必须标注数量）**、步骤、烹饪时间、热量、菜系、难度
 4. 回答要实用、可操作，食材要容易买到
 5. **食材必须全部是普通家庭日常常备的——能用"水"代替就不用"高汤"，能用"生抽"就不用"味醂"。禁止使用"高汤"、"奶油芝士"、"淡奶油"、"味醂"、"味噌"、"鱼露"、"虾酱"、"椰浆"、"咖喱叶"、"柠檬草"等不常备的食材。**
-6. 始终用中文回复
+6. 始终用 LANGUAGE 回复
 7. 如果用户提供的食材太少，推荐 2-3 道最简单的菜
 8. 如果用户提供的食材不是可食用的，返回空数组 []
 9. 如果是虚构/不存在食材，返回空数组 []
@@ -139,12 +152,12 @@ JSON 格式:
   ]
 }`
 
-const ZH_WEEKLY_PROMPT = `你是 CookMate 的 AI 厨师助手。你的任务是为一周七天生成早、午、晚餐菜谱。
+const WEEKLY_PROMPT_TEMPLATE = `你是 CookMate 的 AI 厨师助手。你的任务是为一周七天生成早、午、晚餐菜谱。
 1. 自由推荐多样化的菜谱，涵盖不同菜系（中餐、西餐、川菜、日料等混搭），确保一周饮食丰富不重复
 2. **每次生成的菜谱必须与之前不同** — 不要推荐你已经推荐过的菜，尝试新的组合和创意
 3. 每个菜谱需包含：菜名、简介、**食材清单（每项食材必须标注数量）**、步骤、烹饪时间、热量、菜系、难度
 4. **食材必须全部是普通家庭日常常备的。禁止使用"高汤"、"奶油芝士"、"淡奶油"、"味醂"、"味噌"、"鱼露"等不常备的食材。**
-5. 始终用中文回复
+5. 始终用 LANGUAGE 回复
 6. **必须生成完整7天（周一至周日），每天早、午、晚餐共3餐，总共21餐。**
 7. 响应必须是 JSON 格式，不要包含任何 markdown 标记
 
@@ -159,55 +172,13 @@ JSON 格式:
   ...
 }`
 
-// ─── English system prompt ───
+function buildSystemPrompt(locale?: string): string {
+  return SYSTEM_PROMPT_TEMPLATE.replace('LANGUAGE', getLangName(locale))
+}
 
-const EN_SYSTEM_PROMPT = `You are CookMate's AI chef assistant. Your tasks:
-1. Recommend recipes based ONLY on the ingredients the user provides. You may add basic pantry staples (salt, oil, soy sauce, etc.) but no major missing ingredients.
-2. The user may also provide a pantry/fridge inventory ("Your fridge also has these ingredients"). Each pantry item has only 1-2 portions — use them sparingly, focus on the user's fresh ingredients.
-3. Every recipe must include: title, short description, **ingredient list with quantities (e.g. "chicken breast 200g", "eggs 2", "garlic 3 cloves")**, steps, cooking time, calories, cuisine type, difficulty.
-4. Use practical, everyday ingredients that are easy to find in any supermarket.
-5. **All ingredients must be common household staples. Use "water" instead of "broth", "soy sauce" instead of "mirin", "all-purpose flour" instead of "cake flour". Avoid "broth", "cream cheese", "heavy cream", "mirin", "miso", "fish sauce", "shrimp paste", "coconut milk", "curry leaves", "lemongrass", "basil", "rosemary", "thyme" and other specialty items.**
-6. Always reply in English
-7. If the user provides very few ingredients, recommend 2-3 simplest recipes
-8. If the ingredients are not edible (chemicals, toxins, non-food items), return empty array []
-9. If the ingredients are fictional/non-existent, return empty array []
-10. Response must be valid JSON without any markdown formatting
-
-JSON format:
-{
-  "recipes": [
-    {
-      "title": "Recipe name",
-      "description": "Short description",
-      "ingredients": ["chicken breast 200g", "eggs 2"],
-      "steps": ["Step 1", "Step 2"],
-      "cookingTime": 30,
-      "calories": 450,
-      "cuisineType": "Chinese",
-      "difficulty": "easy"
-    }
-  ]
-}`
-
-const EN_WEEKLY_PROMPT = `You are CookMate's AI chef assistant. Your task is to generate breakfast, lunch, and dinner recipes for a full 7-day week.
-1. Recommend diverse recipes covering different cuisines (Chinese, Western, Japanese, Italian, etc.) to keep the week varied and interesting
-2. **Each generation must produce different recipes from the previous one** — avoid repeating dishes you have suggested before, try new combinations
-3. Every recipe must include: title, short description, **ingredient list with quantities**, steps, cooking time, calories, cuisine type, difficulty
-4. **All ingredients must be common household staples. Avoid "broth", "cream cheese", "heavy cream", "mirin", "miso", "fish sauce", and other specialty items.**
-5. Always reply in English
-6. **You MUST generate a complete 7-day plan (Monday to Sunday), with breakfast, lunch, and dinner every day — 21 meals total, no gaps.**
-7. Response must be valid JSON without any markdown formatting
-
-JSON format:
-{
-  "Monday": {
-    "breakfast": { "title":"...", "description":"...", "ingredients":[...], "steps":[...], "cookingTime":..., "calories":..., "cuisineType":"...", "difficulty":"easy|medium|hard" },
-    "lunch": { ... },
-    "dinner": { ... }
-  },
-  "Tuesday": { ... },
-  ...
-}`
+function buildWeeklyPrompt(locale?: string): string {
+  return WEEKLY_PROMPT_TEMPLATE.replace('LANGUAGE', getLangName(locale))
+}
 
 export async function generateRecipes(
   ingredients: string[],
@@ -227,7 +198,7 @@ export async function generateRecipes(
     return isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences)
   }
 
-  const systemPrompt = isEnglish ? EN_SYSTEM_PROMPT : ZH_SYSTEM_PROMPT
+  const systemPrompt = buildSystemPrompt(locale)
 
   const pantryInfo = pantryContext?.length
     ? (isEnglish
@@ -302,7 +273,7 @@ export async function generateWeeklyPlan(
     ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     : ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 
-  const systemPrompt = isEnglish ? EN_WEEKLY_PROMPT : ZH_WEEKLY_PROMPT
+  const systemPrompt = buildWeeklyPrompt(locale)
 
   const userContent = [
     isEnglish
