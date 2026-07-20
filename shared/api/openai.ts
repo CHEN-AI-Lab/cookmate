@@ -113,7 +113,7 @@ export interface RecipeResult {
 // 告诉 AI 用什么语言回复，加新语言在这里加一行就行
 const LANGUAGE_MAP: Record<string, string> = {
   'zh-CN': '中文',
-  'zh-TW': '中文',
+  'zh-TW': '中文繁体',
   'ja': '日本語',
   'en': 'English',
 }
