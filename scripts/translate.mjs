@@ -7,13 +7,13 @@
  * 用法:
  *   node scripts/translate.mjs <lang-code>                     # 从英文翻译
  *   node scripts/translate.mjs <lang-code> --source <src-lang> # 从指定语言翻译
- *   node scripts/translate.mjs <lang-code> --learn             # 学习人工纠正
+ *   node scripts/translate.mjs <lang-code> --learn             # 学习 git 变动的翻译
  *
  * 示例:
  *   node scripts/translate.mjs ja           # 英文→日语
  *   node scripts/translate.mjs zh-TW        # 简体中文→繁体中文（自动检测）
  *   node scripts/translate.mjs fr           # 英文→法语
- *   node scripts/translate.mjs zh-TW --learn  # 学习纠正的繁体翻译
+ *   node scripts/translate.mjs zh-TW --learn  # 学习当前翻译文件中有 git 变动的 key
  *
  * 翻译机制:
  * - 中文简体（zh-CN）：直接编写，不是翻译来的
@@ -24,6 +24,7 @@
 
 import fs from "node:fs"
 import path from "node:path"
+import { execSync } from "node:child_process"
 
 // ─── 配置 ───
 const SHARED_DIR = "/home/ubuntu/workspace/.shared"
@@ -202,8 +203,27 @@ try {
 
 const memory = loadMemory()
 
-// ===== --learn 模式：扫描人工纠正的翻译，更新记忆库 =====
+// ===== --learn 模式：学习翻译变动（仅学习 git 有变动的 key） =====
 if (IS_LEARN) {
+  // 获取 git 已提交版本，用于检测哪些 key 发生了变动
+  let committedTarget = {}
+  let hasGitVersion = false
+  try {
+    const relativePath = path.relative(process.cwd(), TARGET_FILE)
+    const committed = execSync(`git show HEAD:${relativePath}`, { encoding: "utf-8", timeout: 5000 })
+    committedTarget = JSON.parse(committed)
+    hasGitVersion = true
+    console.log(`  📂 对比 git 已提交版本，仅学习有变动的 key`)
+  } catch {
+    console.log(`  ℹ️  无法获取 git 已提交版本（新文件或未提交），将学习所有 key`)
+  }
+
+  // 扁平化已提交版本，便于快速查找
+  const committedFlat = {}
+  for (const { keyPath, value } of flattenKeys(committedTarget)) {
+    committedFlat[keyPath] = value
+  }
+
   const sourceFlat = flattenKeys(source)
   let updated = 0
 
@@ -211,19 +231,25 @@ if (IS_LEARN) {
     const translated = getNested(target, keyPath)
     if (translated === undefined || translated === null) continue
 
-    const memorized = lookupMemory(memory, SOURCE_LANG, LANG, srcText)
-    if (memorized !== translated) {
-      if (setMemory(memory, SOURCE_LANG, LANG, srcText, translated)) {
-        console.log(`  📝 ${keyPath}: "${memorized || "(无)"}" → "${translated}"`)
-        updated++
+    // 有 git 版本时，只学习有变动的 key（当前值 ≠ 已提交值）
+    if (hasGitVersion) {
+      const committedValue = committedFlat[keyPath]
+      if (committedValue === translated) continue
+      console.log(`  🔄 ${keyPath}: "${committedValue ?? "(无)"}" → "${translated}"`)
+    }
+
+    if (setMemory(memory, SOURCE_LANG, LANG, srcText, translated)) {
+      updated++
+      if (!hasGitVersion) {
+        console.log(`  📝 ${keyPath}: 记忆库已添加`)
       }
     }
   }
 
   saveMemory(memory)
   console.log(`\n✅ 记忆库已更新 ${updated} 条`)
-  if (updated > 0) {
-    console.log(`   位置: ${MEMORY_FILE}`)
+  if (hasGitVersion && updated === 0) {
+    console.log(`   （当前文件与 git 已提交版本一致，无变动可学）`)
   }
   process.exit(0)
 }

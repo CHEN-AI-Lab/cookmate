@@ -253,14 +253,18 @@ export async function generateRecipes(
     .filter(Boolean)
     .join("\n")
 
-  const content = await callAI({
-    systemPrompt,
-    userContent,
-    maxTokens: 2000,
-  })
-
-  const parsed = JSON.parse(content)
-  return parsed.recipes || []
+  try {
+    const content = await callAI({
+      systemPrompt,
+      userContent,
+      maxTokens: 2000,
+    })
+    const parsed = JSON.parse(content)
+    return parsed.recipes || []
+  } catch (err) {
+    console.error("AI recipe generation failed, falling back to mock data:", err)
+    return isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences)
+  }
 }
 
 export async function generateWeeklyPlan(
@@ -282,7 +286,7 @@ export async function generateWeeklyPlan(
   const planClient = new OpenAI({
     apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
     baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
-    timeout: 120000,
+    timeout: 9000, // Vercel Hobby 10s 超时，留 1s 余量
     maxRetries: 0,
   })
 
@@ -317,18 +321,17 @@ export async function generateWeeklyPlan(
     .filter(Boolean)
     .join("\n")
 
-  const content = await callAI({
-    systemPrompt,
-    userContent,
-    maxTokens: 12000,
-    client: planClient,
-  })
-
   try {
+    const content = await callAI({
+      systemPrompt,
+      userContent,
+      maxTokens: 12000,
+      client: planClient,
+    })
     return JSON.parse(content)
-  } catch {
-    console.error("Invalid JSON from AI, first 500 chars:", content.substring(0, 500))
-    throw new Error("AI returned invalid JSON")
+  } catch (err) {
+    console.error("AI weekly plan generation failed, falling back to mock data:", err)
+    return isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences)
   }
 }
 
