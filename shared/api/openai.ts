@@ -1,8 +1,5 @@
 /**
  * OpenAI 兼容 API 客户端
- *
- * 备份：此文件的一份已验证可用的副本存储在 backups/shared-api-openai/openai.ts
- * 如果后续修改导致 AI 生成功能异常，可以用备份文件恢复。
  */
 
 import OpenAI from "openai"
@@ -36,29 +33,33 @@ async function callAI(params: {
   userContent: string
   maxTokens: number
   client?: OpenAI
+  skipStructured?: boolean  // 跳过 json_object 模式，直接走降级（用于大输出场景，避免 reasoning 耗时翻倍）
 }): Promise<string> {
-  const { systemPrompt, userContent, maxTokens, client } = params
+  const { systemPrompt, userContent, maxTokens, client, skipStructured } = params
   const ai = client || getOpenAI()
 
-  // 第一次：带 response_format
-  try {
-    const response = await ai.chat.completions.create({
-      model: getModel(),
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userContent },
-      ],
-      response_format: { type: "json_object" } as const,
-      temperature: 0.7,
-      max_tokens: maxTokens,
-    })
-    const content = response.choices[0]?.message?.content
-    if (content) return cleanJSONResponse(content)
-  } catch (err: unknown) {
-    if (err && typeof err === "object" && "status" in err && (err as { status: number }).status !== 400 && (err as { status: number }).status !== 403) throw err
+  // 第一次：带 response_format（可跳过，用于大输出场景）
+  if (!skipStructured) {
+    try {
+      const response = await ai.chat.completions.create({
+        model: getModel(),
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent },
+        ],
+        response_format: { type: "json_object" } as const,
+        temperature: 0.7,
+        max_tokens: maxTokens,
+      })
+      const content = response.choices[0]?.message?.content
+      if (content) return cleanJSONResponse(content)
+    } catch (err: unknown) {
+      // 400/403 错误（不支持 json_object）才降级重试
+      if (err && typeof err === "object" && "status" in err && (err as { status: number }).status !== 400 && (err as { status: number }).status !== 403) throw err
+    }
   }
 
-  // 降级：不带 response_format
+  // 降级：不带 response_format（商汤、部分代理中转等）
   const response = await ai.chat.completions.create({
     model: getModel(),
     messages: [
@@ -291,11 +292,11 @@ export async function generateWeeklyPlan(
   }
 
   const planClient = new OpenAI({
-    apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
-    baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
-    timeout: 9000, // Vercel Hobby 10s 超时，留 1s 余量
-    maxRetries: 0,
-  })
+      apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
+      baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
+      timeout: 10000, // Vercel Hobby 10s 超时上限
+      maxRetries: 0,
+    })
 
   const days = isEnglish
     ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -334,6 +335,7 @@ export async function generateWeeklyPlan(
       userContent,
       maxTokens: 12000,
       client: planClient,
+      skipStructured: true, // 跳过 json_object，避免 reasoning 耗时翻倍
     })
     return JSON.parse(content)
   } catch (err) {
