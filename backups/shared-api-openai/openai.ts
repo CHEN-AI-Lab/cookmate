@@ -1,10 +1,3 @@
-/**
- * OpenAI 兼容 API 客户端
- *
- * 备份：此文件的一份已验证可用的副本存储在 backups/shared-api-openai/openai.ts
- * 如果后续修改导致 AI 生成功能异常，可以用备份文件恢复。
- */
-
 import OpenAI from "openai"
 
 let openaiInstance: OpenAI | null = null

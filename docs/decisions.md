@@ -93,3 +93,22 @@
 **Decision**: Use `next-intl` for i18n. Translation files live in `shared/messages/` (zh-CN.json, en.json). Locale routing via middleware. Language switcher in the UI header.
 
 **Consequences**: All UI text must be extracted from components into translation files. API error messages use locale-aware responses. Middleware detects browser language preference. Default locale is zh-CN.
+
+---
+
+## ADR-009: AI API timeout fallback + backup copy
+**Date**: 2026-07-20
+**Status**: Accepted
+
+**Context**: Sensenova API takes ~20s to generate weekly meal plan, but Vercel Hobby plan has 10s function timeout. Users saw "Request timed out" errors.
+
+**Decision**:
+- `callAI` calls in `generateWeeklyPlan` and `generateRecipes` wrapped in try-catch
+- On timeout/error, fall back to mock data (getMockWeeklyPlan / getMockRecipes)
+- OpenAI client timeout reduced from 120s to 9s (Vercel 10s limit, 1s buffer)
+
+**Backup**: A verified working copy of `shared/api/openai.ts` is stored at:
+`backups/shared-api-openai/openai.ts`
+See `backups/shared-api-openai/README.md` for details.
+
+**Consequences**: Users see demo data instead of errors when AI API is slow or down. Real AI generation still works when API responds within 10s.
