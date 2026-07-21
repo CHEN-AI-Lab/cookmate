@@ -1,5 +1,5 @@
 /**
- * AI 翻译脚本 — 自动补翻译，支持翻译记忆库（锁定/解锁/备份/统计）
+ * AI 翻译脚本 — 自动补翻译，支持翻译记忆库（锁定/解锁/备份/统计/搜索/导出/导入）
  *
  * 主副本路径: /home/ubuntu/workspace/.shared/scripts/translate.mjs
  * 新建项目时复制到 scripts/translate.mjs 即可
@@ -13,18 +13,24 @@
  *   node scripts/translate.mjs --show-locks                    # 显示所有已锁定条目
  *   node scripts/translate.mjs --restore                       # 从备份恢复记忆库
  *   node scripts/translate.mjs --stats                         # 显示记忆库统计
+ *   node scripts/translate.mjs --search <text>                 # 搜索记忆库
+ *   node scripts/translate.mjs --export <file>                 # 导出记忆库
+ *   node scripts/translate.mjs --import <file>                 # 导入/合并记忆库
  *   node scripts/translate.mjs --check                         # 校验所有语言 key 一致
  *
  * 示例:
- *   node scripts/translate.mjs ja           # 英文→日语
- *   node scripts/translate.mjs zh-TW        # 简体中文→繁体中文（自动检测）
- *   node scripts/translate.mjs fr           # 英文→法语
- *   node scripts/translate.mjs zh-TW --learn  # 学习当前翻译文件中有 git 变动的 key
- *   node scripts/translate.mjs --lock         # 锁定已确认的翻译
- *   node scripts/translate.mjs --unlock       # 解锁条目
- *   node scripts/translate.mjs --show-locks   # 查看已锁定条目
- *   node scripts/translate.mjs --restore      # 从备份恢复
- *   node scripts/translate.mjs --stats        # 查看统计
+ *   node scripts/translate.mjs ja                    # 英文→日语
+ *   node scripts/translate.mjs zh-TW                 # 简体中文→繁体中文（自动检测）
+ *   node scripts/translate.mjs fr                    # 英文→法语
+ *   node scripts/translate.mjs zh-TW --learn         # 学习当前翻译文件中有 git 变动的 key
+ *   node scripts/translate.mjs --lock                # 锁定已确认的翻译
+ *   node scripts/translate.mjs --unlock              # 解锁条目
+ *   node scripts/translate.mjs --show-locks          # 查看已锁定条目
+ *   node scripts/translate.mjs --restore             # 从备份恢复
+ *   node scripts/translate.mjs --stats               # 查看统计
+ *   node scripts/translate.mjs --search egg          # 搜索 "egg" 相关翻译
+ *   node scripts/translate.mjs --export ~/backup.json # 导出到文件
+ *   node scripts/translate.mjs --import ~/team.json  # 导入合并
  *
  * 记忆库格式:
  *   {
@@ -37,7 +43,6 @@
  * 备份文件:
  *   translation-memory.json.bak     ← 最新备份（用于 --restore）
  *   translation-memory.json.bak.1   ← 最近 1 次备份
- *   translation-memory.json.bak.2   ← 最近 2 次备份
  *   ...                             ← 最多保留 5 份
  *   translation-memory.json.bak.5   ← 最近 5 次备份
  *
@@ -68,11 +73,24 @@ const IS_UNLOCK = process.argv.includes("--unlock")
 const IS_SHOW_LOCKS = process.argv.includes("--show-locks")
 const IS_RESTORE = process.argv.includes("--restore")
 const IS_STATS = process.argv.includes("--stats")
+
+const SEARCH_INDEX = process.argv.indexOf("--search")
+const IS_SEARCH = SEARCH_INDEX !== -1
+const SEARCH_TERM = IS_SEARCH ? (process.argv[SEARCH_INDEX + 1] || null) : null
+
+const EXPORT_INDEX = process.argv.indexOf("--export")
+const IS_EXPORT = EXPORT_INDEX !== -1
+const EXPORT_PATH = IS_EXPORT ? (process.argv[EXPORT_INDEX + 1] || null) : null
+
+const IMPORT_INDEX = process.argv.indexOf("--import")
+const IS_IMPORT = IMPORT_INDEX !== -1
+const IMPORT_PATH = IS_IMPORT ? (process.argv[IMPORT_INDEX + 1] || null) : null
+
 const SRC_ARG = process.argv.indexOf("--source")
 const SRC_LANG = SRC_ARG !== -1 ? process.argv[SRC_ARG + 1] : null
 
 // 检查是否独立模式（不需要 <lang-code>）
-const IS_STANDALONE = IS_CHECK || IS_LOCK || IS_UNLOCK || IS_SHOW_LOCKS || IS_RESTORE || IS_STATS
+const IS_STANDALONE = IS_CHECK || IS_LOCK || IS_UNLOCK || IS_SHOW_LOCKS || IS_RESTORE || IS_STATS || IS_SEARCH || IS_EXPORT || IS_IMPORT
 
 if (!LANG && !IS_STANDALONE) {
   console.error("用法: node scripts/translate.mjs <lang-code> [--source <src>] [--learn]")
@@ -82,6 +100,9 @@ if (!LANG && !IS_STANDALONE) {
   console.error("       node scripts/translate.mjs --show-locks")
   console.error("       node scripts/translate.mjs --restore")
   console.error("       node scripts/translate.mjs --stats")
+  console.error("       node scripts/translate.mjs --search <text>")
+  console.error("       node scripts/translate.mjs --export <file>")
+  console.error("       node scripts/translate.mjs --import <file>")
   console.error("示例: node scripts/translate.mjs ja")
   console.error("       node scripts/translate.mjs zh-TW --source zh-CN")
   process.exit(1)
@@ -150,7 +171,6 @@ function loadMemory() {
   try {
     fs.mkdirSync(SHARED_DIR, { recursive: true })
 
-    // 检查文件是否存在且可读
     if (!fs.existsSync(MEMORY_FILE)) {
       return {}
     }
@@ -165,7 +185,6 @@ function loadMemory() {
     const raw = JSON.parse(fs.readFileSync(MEMORY_FILE, "utf-8"))
     return migrateMemory(raw)
   } catch (e) {
-    // JSON 解析失败 → 报错提示，不清空记忆库
     console.error(`\n❌ 记忆库文件损坏或无法读取: ${MEMORY_FILE}`)
     console.error(`   错误: ${e.message}`)
     console.error(`\n💡 尝试用以下命令从备份恢复:`)
@@ -176,8 +195,6 @@ function loadMemory() {
 
 /**
  * 迁移旧格式 + 归一化所有 key
- * 旧格式: { "en→ja": { "egg": "卵" } }
- * 新格式: { "en→ja": { "locked": { "egg": "卵" }, "unlocked": {} } }
  */
 function migrateMemory(memory) {
   let migrated = false
@@ -186,13 +203,11 @@ function migrateMemory(memory) {
   for (const [langKey, entries] of Object.entries(memory)) {
     if (typeof entries !== "object" || entries === null) continue
 
-    // 旧格式迁移：所有条目放入 unlocked
     if (entries.locked === undefined && entries.unlocked === undefined) {
       memory[langKey] = { locked: {}, unlocked: { ...entries } }
       migrated = true
     }
 
-    // 归一化 locked 和 unlocked 中的 key
     const langGroup = memory[langKey]
     for (const groupName of ["locked", "unlocked"]) {
       const group = langGroup[groupName]
@@ -210,7 +225,7 @@ function migrateMemory(memory) {
   }
 
   if (migrated || normalized) {
-    saveMemory(memory, true) // 静默保存（不打印备份信息）
+    saveMemory(memory, true)
     const msgs = []
     if (migrated) msgs.push("旧格式 → locked/unlocked 分组")
     if (normalized) msgs.push("key 已归一化（trim + lowercase）")
@@ -225,7 +240,6 @@ function migrateMemory(memory) {
 function rotateBackups() {
   if (!fs.existsSync(MEMORY_FILE)) return
 
-  // 轮转历史备份：.bak.4 → .bak.5, .bak.3 → .bak.4, ...
   for (let i = MAX_BACKUPS; i >= 2; i--) {
     const oldName = path.join(SHARED_DIR, `translation-memory.json.bak.${i - 1}`)
     const newName = path.join(SHARED_DIR, `translation-memory.json.bak.${i}`)
@@ -234,10 +248,7 @@ function rotateBackups() {
     }
   }
 
-  // 当前文件 → .bak.1
   fs.copyFileSync(MEMORY_FILE, path.join(SHARED_DIR, "translation-memory.json.bak.1"))
-
-  // 同时更新 .bak 为最新备份（用于 --restore）
   fs.copyFileSync(MEMORY_FILE, BACKUP_FILE)
 }
 
@@ -245,7 +256,7 @@ function rotateBackups() {
  * 检查是否有并发写入
  */
 function checkConcurrentModification() {
-  if (memoryLoadedMtime === null) return true // 无法检查，继续
+  if (memoryLoadedMtime === null) return true
 
   try {
     if (fs.existsSync(MEMORY_FILE)) {
@@ -254,25 +265,20 @@ function checkConcurrentModification() {
         console.error("  ⚠️  警告：记忆库在加载后被外部修改！")
         console.error("     本次写入可能覆盖他人的变更")
         console.error("     建议先退出，用 --restore 检查或手动合并")
-        return false // 有冲突
+        return false
       }
     }
   } catch {
     // 忽略 stat 错误
   }
-  return true // 无冲突
+  return true
 }
 
 function saveMemory(memory, silent = false) {
   fs.mkdirSync(SHARED_DIR, { recursive: true })
 
-  // 并发检测
-  const safe = checkConcurrentModification()
-  if (!safe && !silent) {
-    // 继续保存，但警告已打印
-  }
+  checkConcurrentModification()
 
-  // 备份（静默模式下不打印额外信息）
   try {
     rotateBackups()
   } catch (e) {
@@ -286,36 +292,26 @@ function getMemoryKey(sourceLang, targetLang) {
   return `${sourceLang}→${targetLang}`
 }
 
-/**
- * 查找记忆库：先查 locked，再查 unlocked（key 已归一化）
- */
 function lookupMemory(memory, sourceLang, targetLang, sourceText) {
   const langGroup = memory[getMemoryKey(sourceLang, targetLang)]
   if (!langGroup) return null
   const key = normalizeSource(sourceText)
 
-  // 先查 locked
   if (langGroup.locked && langGroup.locked[key] !== undefined) {
     return langGroup.locked[key]
   }
-  // 再查 unlocked
   if (langGroup.unlocked && langGroup.unlocked[key] !== undefined) {
     return langGroup.unlocked[key]
   }
   return null
 }
 
-/**
- * 写入记忆库（始终写入 unlocked，key 已归一化）
- * 如果条目已 locked，跳过不修改
- */
 function setMemory(memory, sourceLang, targetLang, sourceText, translatedText) {
   const key = getMemoryKey(sourceLang, targetLang)
   if (!memory[key]) memory[key] = { locked: {}, unlocked: {} }
 
   const normalizedKey = normalizeSource(sourceText)
 
-  // 已锁定 → 不修改
   if (memory[key].locked && memory[key].locked[normalizedKey] !== undefined) {
     return false
   }
@@ -328,14 +324,24 @@ function setMemory(memory, sourceLang, targetLang, sourceText, translatedText) {
   return false
 }
 
-/**
- * 检查条目是否已锁定（key 已归一化）
- */
 function isLocked(memory, sourceLang, targetLang, sourceText) {
   const langGroup = memory[getMemoryKey(sourceLang, targetLang)]
   if (!langGroup) return false
   const key = normalizeSource(sourceText)
   return langGroup.locked && langGroup.locked[key] !== undefined
+}
+
+/**
+ * 验证 JSON 文件内容是否有效
+ */
+function validateJsonFile(filePath) {
+  try {
+    const content = fs.readFileSync(filePath, "utf-8")
+    JSON.parse(content)
+    return true
+  } catch (e) {
+    return false
+  }
 }
 
 // ===== --check 模式：校验所有语言 key 完全一致 =====
@@ -346,8 +352,6 @@ if (IS_CHECK) {
     console.log("✅ 只有一个语言文件，无需校验")
     process.exit(0)
   }
-  // 以第一个文件为参考
-  const refKey = files[0].replace(".json", "")
   const refFile = path.join(MESSAGES_DIR, files[0])
   const refData = JSON.parse(fs.readFileSync(refFile, "utf-8"))
   const refCount = countKeys(refData)
@@ -356,7 +360,6 @@ if (IS_CHECK) {
   console.log(`📋 参考文件: ${files[0]}（${refCount} key）\n`)
 
   for (const file of files.slice(1)) {
-    const lang = file.replace(".json", "")
     const data = JSON.parse(fs.readFileSync(path.join(MESSAGES_DIR, file), "utf-8"))
     const count = countKeys(data)
     const flat = new Set(flattenKeys(data).map((k) => k.keyPath))
@@ -366,7 +369,6 @@ if (IS_CHECK) {
       allOk = false
     }
 
-    // 对比具体 key 差异
     const missing = [...refFlat].filter((k) => !flat.has(k))
     const extra = [...flat].filter((k) => !refFlat.has(k))
     if (missing.length > 0 || extra.length > 0) {
@@ -447,7 +449,6 @@ if (IS_LOCK) {
       }
     }
 
-    // 清理空的 unlocked
     if (langGroup.unlocked && Object.keys(langGroup.unlocked).length === 0) {
       delete langGroup.unlocked
     }
@@ -515,7 +516,6 @@ if (IS_UNLOCK) {
       }
     }
 
-    // 清理空的 locked
     if (langGroup.locked && Object.keys(langGroup.locked).length === 0) {
       delete langGroup.locked
     }
@@ -549,29 +549,38 @@ if (IS_SHOW_LOCKS) {
   process.exit(0)
 }
 
-// ===== --restore 模式：从备份恢复记忆库 =====
+// ===== --restore 模式：从备份恢复记忆库（带验证） =====
 if (IS_RESTORE) {
-  // 列出可用备份
   console.log("📋 可用备份：")
   const backups = []
   if (fs.existsSync(BACKUP_FILE)) {
     const stat = fs.statSync(BACKUP_FILE)
     const size = (stat.size / 1024).toFixed(1)
-    backups.push({ file: BACKUP_FILE, label: "最新 (latest)", size })
-    console.log(`  [1] 最新备份 (${size} KB)`)
+    const valid = validateJsonFile(BACKUP_FILE)
+    backups.push({ file: BACKUP_FILE, label: "最新 (latest)", size, valid })
+    console.log(`  [1] 最新备份 (${size} KB)${valid ? "" : " ⚠️ 损坏"}`)
   }
   for (let i = 1; i <= MAX_BACKUPS; i++) {
     const bakPath = path.join(SHARED_DIR, `translation-memory.json.bak.${i}`)
     if (fs.existsSync(bakPath)) {
       const stat = fs.statSync(bakPath)
       const size = (stat.size / 1024).toFixed(1)
-      backups.push({ file: bakPath, label: `备份 #${i}`, size })
-      console.log(`  [${backups.length}] 备份 #${i} (${size} KB)`)
+      const valid = validateJsonFile(bakPath)
+      backups.push({ file: bakPath, label: `备份 #${i}`, size, valid })
+      console.log(`  [${backups.length}] 备份 #${i} (${size} KB)${valid ? "" : " ⚠️ 损坏"}`)
     }
   }
 
   if (backups.length === 0) {
     console.error("❌ 没有找到任何备份文件")
+    process.exit(1)
+  }
+
+  const validBackups = backups.filter((b) => b.valid)
+  if (validBackups.length === 0) {
+    console.error("\n❌ 所有备份文件都已损坏，无法恢复")
+    console.error("   记忆库文件本身可能还可用，请检查:")
+    console.error(`   ${MEMORY_FILE}`)
     process.exit(1)
   }
 
@@ -592,12 +601,15 @@ if (IS_RESTORE) {
     process.exit(0)
   }
 
-  let restoreFile = BACKUP_FILE // 默认最新
+  let restoreFile = BACKUP_FILE
 
-  // 支持输入 .bak.3 直接指定版本号
   if (answer.startsWith(".bak") || answer.startsWith("bak")) {
     const verPath = answer.startsWith(".") ? path.join(SHARED_DIR, `translation-memory${answer}`) : path.join(SHARED_DIR, `translation-memory.${answer}`)
     if (fs.existsSync(verPath)) {
+      if (!validateJsonFile(verPath)) {
+        console.error(`❌ 备份文件 ${verPath} 已损坏，无法恢复`)
+        process.exit(1)
+      }
       restoreFile = verPath
     } else {
       console.error(`❌ 未找到备份: ${verPath}`)
@@ -606,6 +618,10 @@ if (IS_RESTORE) {
   } else {
     const idx = parseInt(answer)
     if (!isNaN(idx) && idx >= 1 && idx <= backups.length) {
+      if (!backups[idx - 1].valid) {
+        console.error(`❌ 备份 #${idx} 已损坏，无法恢复`)
+        process.exit(1)
+      }
       restoreFile = backups[idx - 1].file
     } else {
       console.error("❌ 无效的备份编号")
@@ -613,7 +629,6 @@ if (IS_RESTORE) {
     }
   }
 
-  // 确认恢复
   const rl2 = await import("node:readline").then((m) => m.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -631,7 +646,6 @@ if (IS_RESTORE) {
     process.exit(0)
   }
 
-  // 先备份当前记忆库
   try {
     if (fs.existsSync(MEMORY_FILE)) {
       rotateBackups()
@@ -646,13 +660,14 @@ if (IS_RESTORE) {
   process.exit(0)
 }
 
-// ===== --stats 模式：显示记忆库统计 =====
+// ===== --stats 模式：显示记忆库统计（含一致性检查） =====
 if (IS_STATS) {
   const memory = loadMemory()
   let totalEntries = 0
   let totalLocked = 0
   let totalUnlocked = 0
   let langCount = 0
+  const inconsistencies = []
 
   console.log("\n📊 记忆库统计：")
   console.log(`   ${"=".repeat(50)}`)
@@ -674,6 +689,22 @@ if (IS_STATS) {
     console.log(`      总计: ${total} 条`)
     console.log(`      🔒 已锁定: ${locked} (${lockedPct}%)`)
     console.log(`      🔓 未锁定: ${unlocked}`)
+
+    // 一致性检查：同一条源文本在 locked 和 unlocked 中是否有不同翻译
+    if (locked > 0 && unlocked > 0) {
+      for (const [srcText, lockedVal] of Object.entries(langGroup.locked || {})) {
+        const normalizedKey = normalizeSource(srcText)
+        const unlockedVal = langGroup.unlocked ? langGroup.unlocked[normalizedKey] : undefined
+        if (unlockedVal !== undefined && unlockedVal !== lockedVal) {
+          inconsistencies.push({
+            langKey,
+            srcText,
+            lockedVal,
+            unlockedVal,
+          })
+        }
+      }
+    }
   }
 
   if (langCount === 0) {
@@ -686,6 +717,18 @@ if (IS_STATS) {
     console.log(`   合计: ${totalEntries} 条 (${langCount} 个语言对)`)
     console.log(`   🔒 已锁定: ${totalLocked} (${lockedPct}%)`)
     console.log(`   🔓 未锁定: ${totalUnlocked}`)
+  }
+
+  // 一致性检查输出
+  if (inconsistencies.length > 0) {
+    console.log(`\n⚠️  发现 ${inconsistencies.length} 条不一致（locked 和 unlocked 中翻译不同）：`)
+    for (const inc of inconsistencies) {
+      console.log(`   ${inc.langKey}: "${inc.srcText}"`)
+      console.log(`     locked:   "${inc.lockedVal}"`)
+      console.log(`     unlocked: "${inc.unlockedVal}"`)
+    }
+  } else if (langCount > 0) {
+    console.log(`\n✅ 一致性检查通过`)
   }
 
   // 备份文件信息
@@ -708,17 +751,185 @@ if (IS_STATS) {
   process.exit(0)
 }
 
+// ===== --search 模式：搜索记忆库 =====
+if (IS_SEARCH) {
+  const memory = loadMemory()
+  let searchTerm = SEARCH_TERM
+
+  // 如果没有提供搜索词，交互式输入
+  if (!searchTerm) {
+    const rl = await import("node:readline").then((m) => m.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    }))
+    searchTerm = await new Promise((resolve) => {
+      rl.question("🔍 输入搜索关键词: ", (ans) => {
+        rl.close()
+        resolve(ans.trim())
+      })
+    })
+  }
+
+  if (!searchTerm) {
+    console.log("⏹️  已取消")
+    process.exit(0)
+  }
+
+  const term = searchTerm.toLowerCase()
+  let resultCount = 0
+
+  console.log(`\n🔍 搜索 "${searchTerm}" 的记忆库匹配：`)
+  console.log(`   ${"=".repeat(50)}`)
+
+  for (const [langKey, langGroup] of Object.entries(memory)) {
+    if (typeof langGroup !== "object" || langGroup === null) continue
+
+    for (const groupName of ["locked", "unlocked"]) {
+      const group = langGroup[groupName]
+      if (!group || typeof group !== "object") continue
+
+      for (const [srcText, translation] of Object.entries(group)) {
+        if (srcText.toLowerCase().includes(term) || translation.toLowerCase().includes(term)) {
+          resultCount++
+          const lockIcon = groupName === "locked" ? "🔒" : "🔓"
+          console.log(`   ${lockIcon} ${langKey}: "${srcText}" → "${translation}"`)
+        }
+      }
+    }
+  }
+
+  if (resultCount === 0) {
+    console.log("   📭 未找到匹配结果")
+  } else {
+    console.log(`   ${"=".repeat(50)}`)
+    console.log(`   找到 ${resultCount} 条匹配`)
+  }
+
+  process.exit(0)
+}
+
+// ===== --export 模式：导出记忆库 =====
+if (IS_EXPORT) {
+  if (!EXPORT_PATH) {
+    console.error("❌ 请指定导出路径")
+    console.error("   用法: node scripts/translate.mjs --export <filepath>")
+    console.error("   示例: node scripts/translate.mjs --export ~/backup.json")
+    process.exit(1)
+  }
+
+  if (!fs.existsSync(MEMORY_FILE)) {
+    console.error("❌ 记忆库文件不存在，无法导出")
+    process.exit(1)
+  }
+
+  const destPath = path.resolve(EXPORT_PATH)
+  fs.mkdirSync(path.dirname(destPath), { recursive: true })
+  fs.copyFileSync(MEMORY_FILE, destPath)
+
+  const stat = fs.statSync(MEMORY_FILE)
+  console.log(`\n✅ 记忆库已导出`)
+  console.log(`   来源: ${MEMORY_FILE}`)
+  console.log(`   目标: ${destPath}`)
+  console.log(`   大小: ${(stat.size / 1024).toFixed(1)} KB`)
+  process.exit(0)
+}
+
+// ===== --import 模式：导入/合并记忆库 =====
+if (IS_IMPORT) {
+  if (!IMPORT_PATH) {
+    console.error("❌ 请指定导入文件路径")
+    console.error("   用法: node scripts/translate.mjs --import <filepath>")
+    console.error("   示例: node scripts/translate.mjs --import ~/team-memory.json")
+    process.exit(1)
+  }
+
+  const importFile = path.resolve(IMPORT_PATH)
+  if (!fs.existsSync(importFile)) {
+    console.error(`❌ 文件不存在: ${importFile}`)
+    process.exit(1)
+  }
+
+  // 验证导入文件是否有效 JSON
+  if (!validateJsonFile(importFile)) {
+    console.error(`❌ 导入文件不是有效的 JSON 格式: ${importFile}`)
+    process.exit(1)
+  }
+
+  const imported = JSON.parse(fs.readFileSync(importFile, "utf-8"))
+  const current = loadMemory()
+
+  let added = 0
+  let skipped = 0
+  let conflicts = 0
+
+  console.log(`\n📍 导入记忆库: ${IMPORT_PATH}`)
+
+  for (const [langKey, langGroup] of Object.entries(imported)) {
+    if (typeof langGroup !== "object" || langGroup === null) continue
+
+    // 处理旧格式和 new 格式
+    let importLocked = {}
+    let importUnlocked = {}
+    if (langGroup.locked !== undefined || langGroup.unlocked !== undefined) {
+      importLocked = langGroup.locked || {}
+      importUnlocked = langGroup.unlocked || {}
+    } else {
+      // 旧格式：全部作为 unlocked
+      importUnlocked = { ...langGroup }
+    }
+
+    // 确保当前语言组存在
+    if (!current[langKey]) current[langKey] = { locked: {}, unlocked: {} }
+
+    for (const groupName of ["locked", "unlocked"]) {
+      const importGroup = groupName === "locked" ? importLocked : importUnlocked
+      const currentGroup = groupName === "locked" ? current[langKey].locked : current[langKey].unlocked
+
+      for (const [srcText, translation] of Object.entries(importGroup)) {
+        const normalizedKey = normalizeSource(srcText)
+
+        // 检查当前记忆库是否已有此条目
+        const currentLocked = current[langKey].locked ? current[langKey].locked[normalizedKey] : undefined
+        const currentUnlocked = current[langKey].unlocked ? current[langKey].unlocked[normalizedKey] : undefined
+
+        if (currentLocked !== undefined || currentUnlocked !== undefined) {
+          // 已有内容，检查是否一致
+          const currentValue = currentLocked ?? currentUnlocked
+          if (currentValue !== translation) {
+            conflicts++
+            console.log(`  ⚠️  冲突 ${langKey}: "${srcText}"`)
+            console.log(`     当前: "${currentValue}"`)
+            console.log(`     导入: "${translation}"`)
+            console.log(`     保留当前值，未覆盖`)
+          } else {
+            skipped++
+          }
+        } else {
+          // 新增条目
+          currentGroup[normalizedKey] = translation
+          added++
+        }
+      }
+    }
+  }
+
+  saveMemory(current)
+
+  console.log(`\n✅ 导入完成`)
+  console.log(`   ✅ 新增: ${added}`)
+  console.log(`   ⏭️  跳过(已存在): ${skipped}`)
+  if (conflicts > 0) console.log(`   ⚠️  冲突(保留当前值): ${conflicts}`)
+  process.exit(0)
+}
+
 // ===== 以下为需要 <lang-code> 的模式 =====
 // ─── 源语言自动检测 ───
-// 中文繁体默认从简体中文翻译，其他语言从英文翻译
 const SOURCE_LANG = SRC_LANG || (LANG === "zh-TW" ? "zh-CN" : "en")
 const SOURCE_FILE = path.join(MESSAGES_DIR, `${SOURCE_LANG}.json`)
 const TARGET_FILE = path.join(MESSAGES_DIR, `${LANG}.json`)
 
-// 读取源文件
 const source = JSON.parse(fs.readFileSync(SOURCE_FILE, "utf-8"))
 
-// 读取目标文件
 let target = {}
 try {
   target = JSON.parse(fs.readFileSync(TARGET_FILE, "utf-8"))
@@ -731,7 +942,6 @@ const memory = loadMemory()
 
 // ===== --learn 模式：学习翻译变动（跳过已锁定的条目） =====
 if (IS_LEARN) {
-  // 获取 git 已提交版本，用于检测哪些 key 发生了变动
   let committedTarget = {}
   let hasGitVersion = false
   try {
@@ -744,13 +954,11 @@ if (IS_LEARN) {
     console.log(`  ℹ️  无法获取 git 已提交版本（新文件或未提交），将学习所有 key`)
   }
 
-  // 扁平化已提交版本，便于快速查找
   const committedFlat = {}
   for (const { keyPath, value } of flattenKeys(committedTarget)) {
     committedFlat[keyPath] = value
   }
 
-  // 第一遍：收集所有变动，跳过已锁定的
   const changes = []
   const sourceFlat = flattenKeys(source)
   let skippedLocked = 0
@@ -759,19 +967,16 @@ if (IS_LEARN) {
     const translated = getNested(target, keyPath)
     if (translated === undefined || translated === null) continue
 
-    // 跳过已锁定的条目（使用归一化 key 检测）
     if (isLocked(memory, SOURCE_LANG, LANG, srcText)) {
       skippedLocked++
       continue
     }
 
-    // 有 git 版本时，只学习有变动的 key
     if (hasGitVersion) {
       const committedValue = committedFlat[keyPath]
       if (committedValue === translated) continue
       changes.push({ keyPath, srcText, translated, oldValue: committedValue ?? "(无)" })
     } else {
-      // 无 git 版本：学习所有 key（新文件）
       const memorized = lookupMemory(memory, SOURCE_LANG, LANG, srcText)
       if (memorized !== translated) {
         changes.push({ keyPath, srcText, translated, oldValue: memorized ?? "(无)" })
@@ -791,7 +996,6 @@ if (IS_LEARN) {
     process.exit(0)
   }
 
-  // 显示变更摘要
   console.log(`\n📋 以下 ${changes.length} 条翻译将写入记忆库：`)
   for (const { keyPath, srcText, translated, oldValue } of changes) {
     console.log(`  ${keyPath}`)
@@ -800,7 +1004,6 @@ if (IS_LEARN) {
     console.log(`    新值:       "${translated}"`)
   }
 
-  // 确认提示
   const rl = await import("node:readline").then((m) => m.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -818,7 +1021,6 @@ if (IS_LEARN) {
     process.exit(0)
   }
 
-  // 第二遍：确认后写入记忆库（全部写入 unlocked）
   for (const { keyPath, srcText, translated } of changes) {
     setMemory(memory, SOURCE_LANG, LANG, srcText, translated)
   }
@@ -826,7 +1028,6 @@ if (IS_LEARN) {
   saveMemory(memory)
   console.log(`\n✅ 记忆库已更新 ${changes.length} 条`)
 
-  // 提示锁定
   console.log(`\n💡 提示：用 node scripts/translate.mjs --lock 锁定已确认的条目，防止被覆盖`)
   console.log(`      用 node scripts/translate.mjs --stats 查看记忆库统计`)
   process.exit(0)
@@ -852,7 +1053,6 @@ if (missing.length === 0) {
   process.exit(0)
 }
 
-// 先查记忆库，过滤掉已有记录的
 const needAI = []
 let memoryHits = 0
 
@@ -888,7 +1088,6 @@ if (!API_KEY) {
   process.exit(1)
 }
 
-// 按 key 前缀分组批量翻译
 const groups = {}
 for (const item of needAI) {
   const section = item.keyPath.split(".")[0]
@@ -961,7 +1160,6 @@ Rules:
     const value = line.substring(colonIdx + 1).trim()
     if (key && value) {
       setNested(target, key, value)
-      // 同时写入记忆库（unlocked）
       const originalItem = items.find((i) => i.keyPath === key)
       if (originalItem) {
         setMemory(memory, SOURCE_LANG, LANG, originalItem.text, value)
@@ -972,10 +1170,8 @@ Rules:
   console.log(`  ✅ ${section}: ${items.length} 个已翻译`)
 }
 
-// 保存记忆库
 saveMemory(memory)
 
-// 写回翻译文件
 fs.writeFileSync(TARGET_FILE, JSON.stringify(target, null, 2) + "\n")
 console.log(`\n✅ 完成！已写入 ${LANG}.json（共 ${countKeys(target)} 个 key）`)
 console.log(`💾 记忆库已更新: ${MEMORY_FILE}`)
