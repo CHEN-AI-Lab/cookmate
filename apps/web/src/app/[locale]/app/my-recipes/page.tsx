@@ -201,7 +201,10 @@ export default function MyRecipesPage() {
     })
     const data = await res.json()
     if (data.success) {
-      setRecipes((prev) => prev.filter((r) => !toDelete.find((d) => d.id === r.id)))
+      // 删除后重新加载当前页，如果当前页空了则加载上一页
+      const targetPage = filtered.length === toDelete.length ? Math.max(1, page - 1) : page
+      setLoading(true)
+      loadRecipes(targetPage)
       setSelectedIds(new Set())
       setIsSelectMode(false)
       showToast(tr("deleteToast", { count: toDelete.length }))
