@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import { generateWeeklyPlan, normalizeIngredients } from "@cookmate/shared/api/openai"
+import { getStandardDishName } from "@cookmate/shared/constants/dish-names"
 import { checkUsageLimit, incrementUsage } from "@/lib/auth-helpers"
 import type { User } from "@prisma/client"
 
@@ -118,7 +119,7 @@ export async function POST(req: Request) {
         let recipeId: string
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const rawRecipe = recipe as any
-        const dishKey = (rawRecipe.dishKey || rawRecipe.dish_key || rawRecipe.title || "").trim().toLowerCase()
+        const dishKey = getStandardDishName((rawRecipe.dishKey || rawRecipe.dish_key || rawRecipe.title || "").trim().toLowerCase())
         // 先查是否已有标准化菜名，有则直接用，不覆盖
         const existing = await prisma.recipe.findFirst({ where: { userId, dishKey } })
         if (existing) {

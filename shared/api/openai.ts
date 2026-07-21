@@ -3,6 +3,7 @@
  */
 
 import OpenAI from "openai"
+import { getStandardDishName } from "@cookmate/shared/constants/dish-names"
 
 let openaiInstance: OpenAI | null = null
 
@@ -243,7 +244,7 @@ export async function generateRecipes(
     const parsed = JSON.parse(content)
     const recipes = (parsed.recipes || []).map((r: Record<string, unknown>) => ({
       ...r,
-      dishKey: (r.dish_key as string) || (r.dishKey as string) || (r.title as string),
+      dishKey: getStandardDishName(((r.dish_key as string) || (r.dishKey as string) || (r.title as string)).trim().toLowerCase()),
     })) as RecipeResult[]
     return recipes
   } catch (err) {
