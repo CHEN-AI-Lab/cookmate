@@ -119,10 +119,15 @@ export async function POST(req: Request) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const rawRecipe = recipe as any
         const dishKey = (rawRecipe.dishKey || rawRecipe.dish_key || rawRecipe.title || "").trim().toLowerCase()
-        try {
+        // 先查是否已有标准化菜名，有则直接用，不覆盖
+        const existing = await prisma.recipe.findFirst({ where: { userId, dishKey } })
+        if (existing) {
+          recipeId = existing.id
+        } else {
+          // 不存在则新建，标题用标准化名称
           const created = await prisma.recipe.create({
             data: {
-              userId, title: recipe.title, dishKey,
+              userId, title: dishKey, dishKey,
               description: recipe.description || "",
               ingredients: normalizeIngredients(recipe.ingredients).join(", "),
               steps: recipe.steps.join("\n"), cookingTime: recipe.cookingTime || 0,
@@ -131,27 +136,6 @@ export async function POST(req: Request) {
             },
           })
           recipeId = created.id
-        } catch (err: unknown) {
-          const prismaErr = err as { code?: string }
-          if (prismaErr.code === "P2002") {
-            const existing = await prisma.recipe.findFirst({ where: { userId, dishKey } })
-            if (existing) {
-              // Update existing recipe with new AI content (keep starred status)
-              await prisma.recipe.update({
-                where: { id: existing.id },
-                data: {
-                  description: recipe.description || existing.description,
-                  ingredients: normalizeIngredients(recipe.ingredients).join(", "),
-                  steps: recipe.steps.join("\n"),
-                  cookingTime: recipe.cookingTime || existing.cookingTime,
-                  calories: recipe.calories || existing.calories,
-                  cuisineType: recipe.cuisineType || existing.cuisineType,
-                  difficulty: recipe.difficulty || existing.difficulty,
-                },
-              })
-              recipeId = existing.id
-            } else { throw err }
-          } else { throw err }
         }
         slotData.push({ dayOfWeek, mealType, recipeId, note: (recipe.description || "").substring(0, 100) })
       }
