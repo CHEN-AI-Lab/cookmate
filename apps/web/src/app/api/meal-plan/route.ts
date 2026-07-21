@@ -116,7 +116,9 @@ export async function POST(req: Request) {
       const slotData: { dayOfWeek: number; mealType: string; recipeId: string; note: string }[] = []
       for (const { dayOfWeek, mealType, recipe } of slotEntries) {
         let recipeId: string
-        const dishKey = (recipe.dishKey || recipe.title || "").trim().toLowerCase()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rawRecipe = recipe as any
+        const dishKey = (rawRecipe.dishKey || rawRecipe.dish_key || rawRecipe.title || "").trim().toLowerCase()
         try {
           const created = await prisma.recipe.create({
             data: {
