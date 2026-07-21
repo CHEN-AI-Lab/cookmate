@@ -37,7 +37,6 @@ export async function POST(req: Request) {
           data: {
             userId: session.user.id,
             title: normalizedName,
-            dishKey: normalizedName,
             description: description || "",
             ingredients: Array.isArray(ingredients) ? ingredients.join("、") : (ingredients || ""),
             steps: Array.isArray(steps) ? steps.join("\n") : (steps || ""),
@@ -54,7 +53,7 @@ export async function POST(req: Request) {
         const prismaErr = err as { code?: string; message?: string }
         if (prismaErr.code === "P2002") {
           const existing = await prisma.recipe.findFirst({
-            where: { userId: session.user.id, dishKey: normalizedName },
+            where: { userId: session.user.id, title: normalizedName },
           })
           if (existing) {
             const updated = await prisma.recipe.update({
@@ -111,33 +110,28 @@ export async function POST(req: Request) {
     // 保存生成的菜谱到数据库
     const savedRecipes = []
     for (const recipe of recipes) {
-      const dishKey = recipe.dishKey.trim().toLowerCase()
-      // 先查是否已有标准化菜名
-      const existing = await prisma.recipe.findFirst({
-        where: { userId: session.user.id, dishKey },
-      })
-      if (existing) {
-        // 已有相同 dishKey，直接用数据库中的，不覆盖更新
-        savedRecipes.push({ ...recipe, id: existing.id, title: existing.title, dishKey: existing.dishKey })
-        continue
+      const normalizedName = recipe.title.trim().toLowerCase()
+      try {
+        const saved = await prisma.recipe.create({
+          data: {
+            userId: session.user.id,
+            title: normalizedName,
+            description: recipe.description || "",
+            ingredients: normalizeIngredients(recipe.ingredients).join(", "),
+            steps: Array.isArray(recipe.steps) ? recipe.steps.join("\n") : (recipe.steps || ""),
+            cookingTime: recipe.cookingTime ? Number(recipe.cookingTime) : null,
+            calories: recipe.calories ? Number(recipe.calories) : null,
+            cuisineType: recipe.cuisineType || null,
+            difficulty: recipe.difficulty || null,
+            isGenerated: true,
+          },
+        })
+        savedRecipes.push({ ...recipe, id: saved.id })
+      } catch (err: unknown) {
+        const prismaErr = err as { code?: string }
+        if (prismaErr.code === "P2002") continue
+        throw err
       }
-      // 不存在则新建，标题用标准化名称
-      const saved = await prisma.recipe.create({
-        data: {
-          userId: session.user.id,
-          title: dishKey,
-          dishKey,
-          description: recipe.description || "",
-          ingredients: normalizeIngredients(recipe.ingredients).join(", "),
-          steps: Array.isArray(recipe.steps) ? recipe.steps.join("\n") : (recipe.steps || ""),
-          cookingTime: recipe.cookingTime ? Number(recipe.cookingTime) : null,
-          calories: recipe.calories ? Number(recipe.calories) : null,
-          cuisineType: recipe.cuisineType || null,
-          difficulty: recipe.difficulty || null,
-          isGenerated: true,
-        },
-      })
-      savedRecipes.push({ ...recipe, id: saved.id, title: saved.title, dishKey: saved.dishKey })
     }
 
     if (!isMock && !isDev) {

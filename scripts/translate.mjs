@@ -11,6 +11,7 @@
  *   node scripts/translate.mjs --lock                          # 交互式锁定条目
  *   node scripts/translate.mjs --unlock                        # 交互式解锁条目
  *   node scripts/translate.mjs --show-locks                    # 显示所有已锁定条目
+ *   node scripts/translate.mjs --restore                        # 从备份恢复记忆库
  *   node scripts/translate.mjs --check                         # 校验所有语言 key 一致
  *
  * 示例:
@@ -45,6 +46,7 @@ import { execSync } from "node:child_process"
 const SHARED_DIR = "/home/ubuntu/workspace/.shared"
 const MEMORY_FILE = path.join(SHARED_DIR, "translation-memory.json")
 const MESSAGES_DIR = path.resolve("shared/messages")
+const BACKUP_FILE = path.join(SHARED_DIR, "translation-memory.json.bak")
 
 // ─── 参数解析 ───
 const LANG = process.argv[2]
@@ -53,11 +55,12 @@ const IS_LEARN = process.argv.includes("--learn")
 const IS_LOCK = process.argv.includes("--lock") && !process.argv.includes("--unlock")
 const IS_UNLOCK = process.argv.includes("--unlock")
 const IS_SHOW_LOCKS = process.argv.includes("--show-locks")
+const IS_RESTORE = process.argv.includes("--restore")
 const SRC_ARG = process.argv.indexOf("--source")
 const SRC_LANG = SRC_ARG !== -1 ? process.argv[SRC_ARG + 1] : null
 
 // 检查是否独立模式（不需要 <lang-code>）
-const IS_STANDALONE = IS_CHECK || IS_LOCK || IS_UNLOCK || IS_SHOW_LOCKS
+const IS_STANDALONE = IS_CHECK || IS_LOCK || IS_UNLOCK || IS_SHOW_LOCKS || IS_RESTORE
 
 if (!LANG && !IS_STANDALONE) {
   console.error("用法: node scripts/translate.mjs <lang-code> [--source <src>] [--learn]")
@@ -65,6 +68,7 @@ if (!LANG && !IS_STANDALONE) {
   console.error("       node scripts/translate.mjs --lock")
   console.error("       node scripts/translate.mjs --unlock")
   console.error("       node scripts/translate.mjs --show-locks")
+  console.error("       node scripts/translate.mjs --restore")
   console.error("示例: node scripts/translate.mjs ja")
   console.error("       node scripts/translate.mjs zh-TW --source zh-CN")
   process.exit(1)
@@ -154,6 +158,16 @@ function migrateMemory(memory) {
 
 function saveMemory(memory) {
   fs.mkdirSync(SHARED_DIR, { recursive: true })
+
+  // 备份当前文件（如果存在）
+  try {
+    if (fs.existsSync(MEMORY_FILE)) {
+      fs.copyFileSync(MEMORY_FILE, BACKUP_FILE)
+    }
+  } catch (e) {
+    console.error(`  ⚠️  备份失败: ${e.message}`)
+  }
+
   fs.writeFileSync(MEMORY_FILE, JSON.stringify(memory, null, 2) + "\n")
 }
 
@@ -425,6 +439,37 @@ if (IS_SHOW_LOCKS) {
   if (!hasAny) {
     console.log("📭 没有已锁定的条目")
   }
+  process.exit(0)
+}
+
+// ===== --restore 模式：从备份恢复记忆库 =====
+if (IS_RESTORE) {
+  if (!fs.existsSync(BACKUP_FILE)) {
+    console.error("❌ 没有找到备份文件")
+    console.error(`   位置: ${BACKUP_FILE}`)
+    process.exit(1)
+  }
+
+  const rl = await import("node:readline").then((m) => m.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  }))
+
+  const answer = await new Promise((resolve) => {
+    rl.question("⚠️  确认从备份恢复记忆库？当前记忆库将被覆盖 (y/N) ", (ans) => {
+      rl.close()
+      resolve(ans.trim().toLowerCase())
+    })
+  })
+
+  if (answer !== "y" && answer !== "yes") {
+    console.log("\n⏹️  已取消")
+    process.exit(0)
+  }
+
+  fs.copyFileSync(BACKUP_FILE, MEMORY_FILE)
+  console.log("\n✅ 已从备份恢复记忆库")
+  console.log(`   来源: ${BACKUP_FILE}`)
   process.exit(0)
 }
 

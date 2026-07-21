@@ -64,14 +64,14 @@ export async function POST(req: Request) {
     }
 
     if (existing) {
-      // 查找或创建同名菜谱（避免 @@unique([userId, dishKey]) 冲突）
+      // 查找或创建同名菜谱（避免 @@unique([userId, title]) 冲突）
       let recipe = await prisma.recipe.findFirst({
-        where: { userId: session.user.id, dishKey: title.trim().toLowerCase() },
+        where: { userId: session.user.id, title: title.trim() },
       })
       if (!recipe) {
         recipe = await prisma.recipe.create({
           data: {
-            userId: session.user.id, title: title.trim(), dishKey: title.trim().toLowerCase(),
+            userId: session.user.id, title: title.trim(),
             description: description || "", ingredients: ingredients || "", steps: steps || "",
             cookingTime, calories, cuisineType, isGenerated: false, starred: starred ?? false,
           },
@@ -82,16 +82,15 @@ export async function POST(req: Request) {
         data: { recipeId: recipe.id, note: `${title}${description ? ` - ${description}` : ""}` },
       })
     } else {
-      // 先查找是否已存在同名菜谱（避免 @@unique([userId, dishKey]) 冲突）
+      // 先查找是否已存在同名菜谱（避免 @@unique([userId, title]) 冲突）
       let recipe = await prisma.recipe.findFirst({
-        where: { userId: session.user.id, dishKey: title.trim().toLowerCase() },
+        where: { userId: session.user.id, title: title.trim() },
       })
       if (!recipe) {
         recipe = await prisma.recipe.create({
           data: {
             userId: session.user.id,
             title: title.trim(),
-            dishKey: title.trim().toLowerCase(),
             description: description || "",
             ingredients: ingredients || "",
             steps: steps || "",
