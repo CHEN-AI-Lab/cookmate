@@ -224,33 +224,70 @@ if (IS_LEARN) {
     committedFlat[keyPath] = value
   }
 
+  // 第一遍：收集所有变动，不修改记忆库
+  const changes = []
   const sourceFlat = flattenKeys(source)
-  let updated = 0
 
   for (const { keyPath, value: srcText } of sourceFlat) {
     const translated = getNested(target, keyPath)
     if (translated === undefined || translated === null) continue
 
-    // 有 git 版本时，只学习有变动的 key（当前值 ≠ 已提交值）
+    // 有 git 版本时，只学习有变动的 key
     if (hasGitVersion) {
       const committedValue = committedFlat[keyPath]
       if (committedValue === translated) continue
-      console.log(`  🔄 ${keyPath}: "${committedValue ?? "(无)"}" → "${translated}"`)
-    }
-
-    if (setMemory(memory, SOURCE_LANG, LANG, srcText, translated)) {
-      updated++
-      if (!hasGitVersion) {
-        console.log(`  📝 ${keyPath}: 记忆库已添加`)
+      changes.push({ keyPath, srcText, translated, oldValue: committedValue ?? "(无)" })
+    } else {
+      // 无 git 版本：学习所有 key（新文件）
+      const memorized = lookupMemory(memory, SOURCE_LANG, LANG, srcText)
+      if (memorized !== translated) {
+        changes.push({ keyPath, srcText, translated, oldValue: memorized ?? "(无)" })
       }
     }
   }
 
-  saveMemory(memory)
-  console.log(`\n✅ 记忆库已更新 ${updated} 条`)
-  if (hasGitVersion && updated === 0) {
-    console.log(`   （当前文件与 git 已提交版本一致，无变动可学）`)
+  if (changes.length === 0) {
+    console.log(`\n✅ 无变动可学，记忆库未更新`)
+    if (hasGitVersion) {
+      console.log(`   （当前文件与 git 已提交版本一致）`)
+    }
+    process.exit(0)
   }
+
+  // 显示变更摘要
+  console.log(`\n📋 以下 ${changes.length} 条翻译将写入记忆库：`)
+  for (const { keyPath, srcText, translated, oldValue } of changes) {
+    console.log(`  ${keyPath}`)
+    console.log(`    源文:       "${srcText}"`)
+    console.log(`    旧记忆库:   "${oldValue}"`)
+    console.log(`    新值:       "${translated}"`)
+  }
+
+  // 确认提示
+  const rl = await import("node:readline").then((m) => m.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  }))
+
+  const answer = await new Promise((resolve) => {
+    rl.question(`\n确认学习到记忆库？(y/N) `, (ans) => {
+      rl.close()
+      resolve(ans.trim().toLowerCase())
+    })
+  })
+
+  if (answer !== "y" && answer !== "yes") {
+    console.log(`\n⏹️  已取消，记忆库未更改`)
+    process.exit(0)
+  }
+
+  // 第二遍：确认后写入记忆库
+  for (const { keyPath, srcText, translated } of changes) {
+    setMemory(memory, SOURCE_LANG, LANG, srcText, translated)
+  }
+
+  saveMemory(memory)
+  console.log(`\n✅ 记忆库已更新 ${changes.length} 条`)
   process.exit(0)
 }
 

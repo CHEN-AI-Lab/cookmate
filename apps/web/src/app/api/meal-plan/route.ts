@@ -116,10 +116,12 @@ export async function POST(req: Request) {
       const slotData: { dayOfWeek: number; mealType: string; recipeId: string; note: string }[] = []
       for (const { dayOfWeek, mealType, recipe } of slotEntries) {
         let recipeId: string
+        const dishKey = (recipe.dishKey || recipe.title || "").trim().toLowerCase()
         try {
           const created = await prisma.recipe.create({
             data: {
-              userId, title: recipe.title, description: recipe.description || "",
+              userId, title: recipe.title, dishKey,
+              description: recipe.description || "",
               ingredients: normalizeIngredients(recipe.ingredients).join(", "),
               steps: recipe.steps.join("\n"), cookingTime: recipe.cookingTime || 0,
               calories: recipe.calories || 0, cuisineType: recipe.cuisineType || "",
@@ -130,7 +132,7 @@ export async function POST(req: Request) {
         } catch (err: unknown) {
           const prismaErr = err as { code?: string }
           if (prismaErr.code === "P2002") {
-            const existing = await prisma.recipe.findFirst({ where: { userId, title: recipe.title } })
+            const existing = await prisma.recipe.findFirst({ where: { userId, dishKey } })
             if (existing) {
               // Update existing recipe with new AI content (keep starred status)
               await prisma.recipe.update({

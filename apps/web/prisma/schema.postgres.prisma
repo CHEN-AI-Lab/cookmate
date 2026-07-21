@@ -91,6 +91,7 @@ model Recipe {
   id           String   @id @default(cuid())
   userId       String
   title        String
+  dishKey      String   // 标准化菜名，用于去重（如"水煮蛋"、"煎蛋"）
   description  String?
   ingredients  String
   steps        String
@@ -107,7 +108,7 @@ model Recipe {
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   mealSlots MealSlot[]
 
-  @@unique([userId, title])
+  @@unique([userId, dishKey])
 }
 
 model MealPlan {

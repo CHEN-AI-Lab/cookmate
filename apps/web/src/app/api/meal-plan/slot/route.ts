@@ -48,7 +48,7 @@ export async function PATCH(req: Request) {
     } else {
       // 没有 Recipe 则创建
       const recipe = await prisma.recipe.create({
-        data: { userId: session.user.id, title, ingredients: ingredients || "", steps: steps || "", cookingTime, calories, cuisineType, isGenerated: false },
+        data: { userId: session.user.id, title, dishKey: title.trim().toLowerCase(), ingredients: ingredients || "", steps: steps || "", cookingTime, calories, cuisineType, isGenerated: false },
       }).catch((err: unknown) => { console.error("create recipe error:", err); return null })
       if (recipe) {
         await prisma.mealSlot.update({

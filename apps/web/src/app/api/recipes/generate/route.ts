@@ -37,6 +37,7 @@ export async function POST(req: Request) {
           data: {
             userId: session.user.id,
             title: normalizedName,
+            dishKey: normalizedName,
             description: description || "",
             ingredients: Array.isArray(ingredients) ? ingredients.join("、") : (ingredients || ""),
             steps: Array.isArray(steps) ? steps.join("\n") : (steps || ""),
@@ -53,7 +54,7 @@ export async function POST(req: Request) {
         const prismaErr = err as { code?: string; message?: string }
         if (prismaErr.code === "P2002") {
           const existing = await prisma.recipe.findFirst({
-            where: { userId: session.user.id, title: normalizedName },
+            where: { userId: session.user.id, dishKey: normalizedName },
           })
           if (existing) {
             const updated = await prisma.recipe.update({
@@ -110,12 +111,14 @@ export async function POST(req: Request) {
     // 保存生成的菜谱到数据库
     const savedRecipes = []
     for (const recipe of recipes) {
+      const dishKey = recipe.dishKey.trim().toLowerCase()
       const normalizedName = recipe.title.trim().toLowerCase()
       try {
         const saved = await prisma.recipe.create({
           data: {
             userId: session.user.id,
             title: normalizedName,
+            dishKey,
             description: recipe.description || "",
             ingredients: normalizeIngredients(recipe.ingredients).join(", "),
             steps: Array.isArray(recipe.steps) ? recipe.steps.join("\n") : (recipe.steps || ""),
