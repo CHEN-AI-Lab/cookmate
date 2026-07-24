@@ -71,6 +71,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: e("请至少提供一种食材", "Please provide at least one ingredient") }, { status: 400 })
     }
 
+    if (ingredients.length > 20) {
+      return NextResponse.json({ error: e("食材最多 20 种", "Maximum 20 ingredients allowed") }, { status: 400 })
+    }
+
     // 风险管控
     const invalid = ingredients.filter((i: string) =>
       BLACKLIST.some((b) => i.toLowerCase().includes(b.toLowerCase()))

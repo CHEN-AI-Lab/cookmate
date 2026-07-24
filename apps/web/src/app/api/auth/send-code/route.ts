@@ -10,11 +10,25 @@ function isEmail(val: string) {
 export async function POST(req: Request) {
   const loc = getLocaleFromCookie(req)
   try {
-    const { email } = await req.json()
+    const { email, purpose } = await req.json()
 
     if (!email || !isEmail(email)) {
       return NextResponse.json({ error: err(loc, "invalidEmail") }, { status: 400 })
     }
+
+    // 根据 purpose 检查用户状态
+    if (purpose === "login") {
+      const user = await prisma.user.findUnique({ where: { email } })
+      if (!user) {
+        return NextResponse.json({ error: err(loc, "emailNotRegistered") }, { status: 404 })
+      }
+    } else if (purpose === "register") {
+      const user = await prisma.user.findUnique({ where: { email } })
+      if (user) {
+        return NextResponse.json({ error: err(loc, "emailAlreadyRegistered") }, { status: 409 })
+      }
+    }
+    // purpose 未指定 = 兼容旧行为（不检查）
 
     // 检查是否 2 分钟内已发过
     const recent = await prisma.verificationCode.findFirst({

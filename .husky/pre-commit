@@ -1,7 +1,40 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+# pre-commit hook: 自动学习翻译 + 可选自动翻译
+# 1. 翻译文件（ja/zh-TW）被修改 → 自动 --learn 到记忆库
+# 2. 源语言文件（en/zh-CN）新增 key → 询问是否自动翻译其他语言
 
-# Lightweight pre-commit check: structure + tests only
-cd "$(dirname "$0")/.."
-bash scripts/check-structure.sh
-pnpm test
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM || true)
+
+# 检查翻译文件（非源语言）是否有变动 → 自动学习
+TRANS_FILES=$(echo "$STAGED_FILES" | grep '^shared/messages/' | grep -v 'en\.json$' | grep -v 'zh-CN\.json$' || true)
+if [ -n "$TRANS_FILES" ]; then
+  echo "📝 检测到翻译文件变动，正在更新记忆库..."
+  for FILE in $TRANS_FILES; do
+    LANG=$(basename "$FILE" .json)
+    echo "   → $LANG"
+    node scripts/translate.mjs "$LANG" --learn --yes 2>&1 | sed 's/^/     /'
+  done
+fi
+
+# 检查源语言文件（en/zh-CN）是否有变动 → 自动同步中英文对应关系 + 询问是否自动翻译
+SOURCE_FILES=$(echo "$STAGED_FILES" | grep '^shared/messages/\(en\|zh-CN\)\.json$' || true)
+if [ -n "$SOURCE_FILES" ]; then
+  echo "📝 检测到源语言文件变动，正在同步中英文对应关系..."
+  node scripts/translate.mjs --sync 2>&1 | sed 's/^/     /'
+  echo ""
+
+  echo "📝 检测到源语言文件新增了 key，需要翻译其他语言"
+  read -p "   是否立即自动翻译所有语言？(y/N) " ANSWER
+  case "$ANSWER" in
+    [yY]|[yY][eE][sS])
+      echo "   🌐 正在翻译所有语言..."
+      node scripts/translate.mjs --all 2>&1 | sed 's/^/     /'
+      echo "   ✅ 翻译完成"
+      # 重新暂存被翻译更新的文件
+      git add shared/messages/*.json 2>/dev/null || true
+      ;;
+    *)
+      echo "   💡 跳过翻译，后续可手动执行: node scripts/translate.mjs --all"
+      ;;
+  esac
+fi

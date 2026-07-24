@@ -40,10 +40,12 @@ providers.push(
     credentials: {
       phone: { label: "手机号", type: "text" },
       code: { label: "验证码", type: "text" },
+      agreeTerms: { label: "同意条款", type: "text" },
     },
     async authorize(credentials) {
       const phone = credentials?.phone as string
       const code = credentials?.code as string
+      const agreeTerms = credentials?.agreeTerms === "true"
 
       if (!phone || !code) return null
 
@@ -69,8 +71,10 @@ providers.push(
       // 查找或创建用户
       let user = await prisma.user.findUnique({ where: { phone } })
       if (!user) {
+        // 新用户注册 → 必须同意条款
+        if (!agreeTerms) return null
         user = await prisma.user.create({
-          data: { phone, name: `用户${phone.slice(-4)}` },
+          data: { phone, name: `用户${phone.slice(-4)}`, termsAgreedAt: new Date() },
         })
       }
 
@@ -87,10 +91,12 @@ providers.push(
     credentials: {
       email: { label: "邮箱", type: "text" },
       code: { label: "验证码", type: "text" },
+      agreeTerms: { label: "同意条款", type: "text" },
     },
     async authorize(credentials) {
       const email = credentials?.email as string
       const code = credentials?.code as string
+      const agreeTerms = credentials?.agreeTerms === "true"
 
       if (!email || !code) return null
 
@@ -116,8 +122,10 @@ providers.push(
       // 查找或创建用户
       let user = await prisma.user.findUnique({ where: { email } })
       if (!user) {
+        // 新用户注册 → 必须同意条款
+        if (!agreeTerms) return null
         user = await prisma.user.create({
-          data: { email, name: email.split("@")[0] },
+          data: { email, name: email.split("@")[0], termsAgreedAt: new Date() },
         })
       }
 
@@ -238,7 +246,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   providers,
   callbacks: {
-    async signIn() {
+    async signIn({ user, account }) {
+      // OAuth 首次登录时，设置 termsAgreedAt
+      if (account?.type === "oauth" && user.id && user.id !== "demo-user-id") {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { termsAgreedAt: true },
+        })
+        if (dbUser && !dbUser.termsAgreedAt) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { termsAgreedAt: new Date() },
+          })
+        }
+      }
       return true
     },
     async session({ session, token }) {

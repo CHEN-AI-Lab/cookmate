@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server"
 import { signIn } from "@/lib/auth"
+import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 
 export async function POST(req: Request) {
+  const loc = getLocaleFromCookie(req)
   try {
-    const { phone, email, code } = await req.json()
+    const { phone, email, code, agreeTerms } = await req.json()
     const identifier = phone || email
     if (!identifier || !code) {
-      return NextResponse.json({ error: "请输入验证码" }, { status: 400 })
+      return NextResponse.json({ error: err(loc, "emptyPhoneAndCode") }, { status: 400 })
     }
 
     const provider = phone ? "phone" : "email"
@@ -16,12 +18,13 @@ export async function POST(req: Request) {
       phone: phone || "",
       email: email || "",
       code,
+      agreeTerms: agreeTerms ? "true" : "false",
       redirect: false,
     })
 
     if (result?.error) {
       return NextResponse.json(
-        { error: result.error === "CredentialsSignin" ? "验证码错误或已过期" : result.error },
+        { error: result.error === "CredentialsSignin" ? err(loc, "verifyFailed") : result.error },
         { status: 401 }
       )
     }
@@ -29,6 +32,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
     console.error("Verify code error:", error)
-    return NextResponse.json({ error: "验证失败" }, { status: 500 })
+    return NextResponse.json({ error: err(loc, "sendFailed") }, { status: 500 })
   }
 }

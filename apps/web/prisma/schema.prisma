@@ -25,6 +25,7 @@ model User {
   cuisinePref    String?  @default("不限")
   servingSize    Int      @default(2)
   onboardingCompleted Boolean @default(false)
+  termsAgreedAt  DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

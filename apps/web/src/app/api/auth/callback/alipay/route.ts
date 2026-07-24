@@ -103,7 +103,7 @@ export async function GET(req: Request) {
     if (existingAccount) {
       userId = existingAccount.userId
     } else {
-      const newUser = await prisma.user.create({ data: { name: alipayNick } })
+      const newUser = await prisma.user.create({ data: { name: alipayNick, termsAgreedAt: new Date() } })
       await prisma.account.create({
         data: { userId: newUser.id, type: "oauth", provider: "alipay", providerAccountId: alipayUserId },
       })

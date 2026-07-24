@@ -166,7 +166,13 @@
     "registering": "Registering...",
     "passwordOptionalLabel": "Set Password (Optional)",
     "passwordOptionalPlaceholder": "At least 8 characters (optional)",
-    "autoRegisterHint": "New users will be automatically registered after verification"
+    "autoRegisterHint": "New users will be automatically registered after verification",
+    "agreeTerms": "I have read and agree to the {terms} and {privacy}",
+    "agreeTermsShort": "I agree to the Terms of Service and Privacy Policy",
+    "continueOAuth": "By continuing, you agree to our {terms} and {privacy}",
+    "noAccount": "Don't have an account?",
+    "emailRegistered": "This email is already registered",
+    "emailNotRegistered": "This email is not registered"
   },
   "validation": {
     "invalidPhone": "Please enter a valid 11-digit phone number",
@@ -175,6 +181,8 @@
     "emptyPhone": "Please enter your phone number",
     "emptyCode": "Please enter the verification code",
     "emptyEmail": "Please enter your email",
+    "emptyPhoneAndCode": "Please enter phone number and verification code",
+    "emptyEmailAndCode": "Please enter email and verification code",
     "emptyPassword": "Please enter your password",
     "passwordTooShort": "Password must be at least 8 characters",
     "passwordMismatch": "Passwords do not match",
@@ -194,6 +202,7 @@
     "setupFailed": "Setup failed, please try again",
     "oauthNotConfigured": "This login method is not configured yet",
     "emailNotRegistered": "This email is not registered",
+    "emailAlreadyRegistered": "This email is already registered. Please log in instead.",
     "email": "Email"
   },
   "dashboard": {
@@ -853,7 +862,11 @@
     "emailQuotaExceeded": "Daily email quota exceeded, please try again later",
     "smsNotAvailable": "Phone login is not available yet. Please use email or password to log in.",
     "sendFailed": "Failed to send",
-    "emailNotRegistered": "This email is not registered"
+    "emailNotRegistered": "This email is not registered",
+    "emailAlreadyRegistered": "This email is already registered. Please log in instead.",
+    "emptyPhoneAndCode": "Please enter phone number and verification code",
+    "emptyEmailAndCode": "Please enter email and verification code",
+    "verifyFailed": "Verification failed"
   },
   "settings": {
     "title": "Settings",

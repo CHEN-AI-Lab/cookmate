@@ -20,7 +20,7 @@ function getOpenAI() {
 }
 
 function getModel(): string {
-  return process.env.AI_MODEL || "deepseek-v4-flash"
+  return process.env.AI_MODEL || ""
 }
 
 function hasAIKey(): boolean {

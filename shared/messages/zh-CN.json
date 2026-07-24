@@ -166,7 +166,13 @@
     "demoLoginDesc": "无需注册，立即体验",
     "redirectingTo": "正在跳转到 {provider} 登录...",
     "demoVersion": "体验演示版",
-    "autoRegisterHint": "未注册用户验证后将自动创建账号"
+    "autoRegisterHint": "未注册用户验证后将自动创建账号",
+    "agreeTerms": "我已阅读并同意 {terms} 和 {privacy}",
+    "agreeTermsShort": "我已阅读并同意《服务条款》和《隐私政策》",
+    "continueOAuth": "继续即表示您同意我们的 {terms} 和 {privacy}",
+    "noAccount": "还没有账号？",
+    "emailRegistered": "该邮箱已注册",
+    "emailNotRegistered": "该邮箱未注册"
   },
   "validation": {
     "invalidPhone": "请输入正确的11位手机号",
@@ -175,6 +181,8 @@
     "emptyPhone": "请输入手机号",
     "emptyCode": "请输入验证码",
     "emptyEmail": "请输入邮箱",
+    "emptyPhoneAndCode": "请输入手机号和验证码",
+    "emptyEmailAndCode": "请输入邮箱和验证码",
     "emptyPassword": "请输入密码",
     "passwordTooShort": "密码至少 8 位",
     "passwordMismatch": "两次密码不一致",
@@ -194,6 +202,7 @@
     "setupFailed": "设置失败，请重试",
     "oauthNotConfigured": "该登录方式尚未配置，上线后即可使用",
     "emailNotRegistered": "该邮箱未注册",
+    "emailAlreadyRegistered": "该邮箱已注册，请直接登录",
     "email": "邮箱"
   },
   "dashboard": {
@@ -854,7 +863,11 @@
     "emailQuotaExceeded": "今日邮件发送额度已用完，请稍后再试",
     "smsNotAvailable": "手机号登录暂未开放，请使用邮箱或密码登录",
     "sendFailed": "发送失败",
-    "emailNotRegistered": "该邮箱未注册"
+    "emailNotRegistered": "该邮箱未注册",
+    "emailAlreadyRegistered": "该邮箱已注册，请直接登录",
+    "emptyPhoneAndCode": "请输入手机号和验证码",
+    "emptyEmailAndCode": "请输入邮箱和验证码",
+    "verifyFailed": "验证失败"
   },
   "settings": {
     "title": "设置",

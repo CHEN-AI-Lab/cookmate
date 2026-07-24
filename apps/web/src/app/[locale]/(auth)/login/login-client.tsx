@@ -125,16 +125,20 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       const res = await fetch("/api/auth/send-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, purpose: "login" }),
       })
       const data = await res.json()
       if (!res.ok) {
         setError(data.error || tv('sendFailed'))
-        // 429 = 2分钟内已有验证码，显示输入框让用户输入旧码
+        // 429 = 2分钟内已有验证码
         if (res.status === 429) {
           setEmailCodeSent(true)
           if (data.remainingSeconds) setCountdown(data.remainingSeconds)
           if (data.devCode) setEmailCode(data.devCode)
+        }
+        // 404 = 邮箱未注册
+        if (res.status === 404) {
+          // 显示错误提示，不切换状态
         }
         return
       }
@@ -580,7 +584,15 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           </button>
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-4">{t('autoRegisterHint')}</p>
+        <p className="text-center text-xs text-gray-400 mt-4">
+          {t.rich('continueOAuth', {
+            terms: (chunks) => <Link href="/terms" className="text-[#FF6B35] hover:underline" target="_blank">{chunks}</Link>,
+            privacy: (chunks) => <Link href="/privacy" className="text-[#FF6B35] hover:underline" target="_blank">{chunks}</Link>,
+          })}
+        </p>
+        <p className="text-center text-sm text-gray-400 mt-2">
+          {t('noAccount')}<Link href="/register" className="text-[#FF6B35] hover:underline ml-1">{t('registerAction')}</Link>
+        </p>
       </div>
     </div>
     </>
