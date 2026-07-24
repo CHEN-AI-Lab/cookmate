@@ -167,9 +167,9 @@
     "redirectingTo": "正在跳转到 {provider} 登录...",
     "demoVersion": "体验演示版",
     "autoRegisterHint": "未注册用户验证后将自动创建账号",
-    "agreeTerms": "我已阅读并同意 {terms} 和 {privacy}",
+    "agreeTerms": "我已阅读并同意 <terms>《服务条款》</terms> 和 <privacy>《隐私政策》</privacy>",
     "agreeTermsShort": "我已阅读并同意《服务条款》和《隐私政策》",
-    "continueOAuth": "继续即表示您同意我们的 {terms} 和 {privacy}",
+    "continueOAuth": "继续即表示您同意我们的 <terms>《服务条款》</terms> 和 <privacy>《隐私政策》</privacy>",
     "noAccount": "还没有账号？",
     "emailRegistered": "该邮箱已注册",
     "emailNotRegistered": "该邮箱未注册"

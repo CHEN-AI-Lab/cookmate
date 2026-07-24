@@ -167,9 +167,9 @@
     "passwordOptionalLabel": "Set Password (Optional)",
     "passwordOptionalPlaceholder": "At least 8 characters (optional)",
     "autoRegisterHint": "New users will be automatically registered after verification",
-    "agreeTerms": "I have read and agree to the {terms} and {privacy}",
+    "agreeTerms": "I have read and agree to the <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>",
     "agreeTermsShort": "I agree to the Terms of Service and Privacy Policy",
-    "continueOAuth": "By continuing, you agree to our {terms} and {privacy}",
+    "continueOAuth": "By continuing, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>",
     "noAccount": "Don't have an account?",
     "emailRegistered": "This email is already registered",
     "emailNotRegistered": "This email is not registered"
