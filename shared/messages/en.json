@@ -864,6 +864,7 @@
     "sendFailed": "Failed to send",
     "emailNotRegistered": "This email is not registered",
     "emailAlreadyRegistered": "This email is already registered. Please log in instead.",
+    "agreeTermsRequired": "Please agree to the Terms of Service and Privacy Policy first",
     "emptyPhoneAndCode": "Please enter phone number and verification code",
     "emptyEmailAndCode": "Please enter email and verification code",
     "verifyFailed": "Verification failed"
