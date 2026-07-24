@@ -23,6 +23,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   const [oauthProvider, setOauthProvider] = useState<string | null>(null)
   const [agreeTerms, setAgreeTerms] = useState(false)
   const [termsError, setTermsError] = useState("")
+  const [shakeKey, setShakeKey] = useState(0)
 
   useEffect(() => {
     if (countdown > 0) {
@@ -128,8 +129,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
 
   const handleOAuth = async (provider: string) => {
       if (!agreeTerms) {
-        setTermsError("")
-        setTimeout(() => setTermsError(tv('agreeTermsRequired')), 0)
+        setShakeKey(k => k + 1)
         return
       }
       setTermsError("")
@@ -148,6 +148,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   return (
     <>
       <OAuthLoadingOverlay provider={oauthProvider} />
+      <style>{`@keyframes shakeX{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}`}</style>
       <div className="min-h-screen bg-[#FFF8F0] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
         <div className="text-center mb-8">
@@ -250,7 +251,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
         </div>
 
         {/* Terms checkbox */}
-        <div className="mt-4">
+        <div key={shakeKey} className="mt-4" style={{ animation: shakeKey > 0 ? 'shakeX 0.4s ease-in-out' : undefined }}>
           <label className="flex items-start gap-2 cursor-pointer">
             <input
               type="checkbox"
