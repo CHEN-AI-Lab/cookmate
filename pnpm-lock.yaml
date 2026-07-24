@@ -52,7 +52,7 @@ importers:
         version: 7.0.13
       openai:
         specifier: ^6.38.0
-        version: 6.41.0(zod@4.4.3)
+        version: 6.41.0(zod@3.25.76)
       react:
         specifier: ^19.0.0
         version: 19.2.4
@@ -66,8 +66,8 @@ importers:
         specifier: ^3.6.0
         version: 3.6.0
       zod:
-        specifier: ^4.4.3
-        version: 4.4.3
+        specifier: ^3.23.0
+        version: 3.25.76
     devDependencies:
       '@playwright/test':
         specifier: ^1.61.1
@@ -3265,9 +3265,6 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.4.3:
-    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
-
 snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
@@ -4942,8 +4939,8 @@ snapshots:
       '@babel/parser': 7.29.7
       eslint: 9.39.4(jiti@2.7.0)
       hermes-parser: 0.25.1
-      zod: 4.4.3
-      zod-validation-error: 4.0.2(zod@4.4.3)
+      zod: 3.25.76
+      zod-validation-error: 4.0.2(zod@3.25.76)
     transitivePeerDependencies:
       - supports-color
 
@@ -5657,10 +5654,6 @@ snapshots:
   openai@6.41.0(zod@3.25.76):
     optionalDependencies:
       zod: 3.25.76
-
-  openai@6.41.0(zod@4.4.3):
-    optionalDependencies:
-      zod: 4.4.3
 
   optionator@0.9.4:
     dependencies:
@@ -6425,10 +6418,8 @@ snapshots:
 
   yocto-queue@1.2.2: {}
 
-  zod-validation-error@4.0.2(zod@4.4.3):
+  zod-validation-error@4.0.2(zod@3.25.76):
     dependencies:
-      zod: 4.4.3
+      zod: 3.25.76
 
   zod@3.25.76: {}
-
-  zod@4.4.3: {}
