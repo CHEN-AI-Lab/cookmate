@@ -301,7 +301,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
         <div className="mt-3">
           <button
             onClick={() => handleOAuth("demo")}
-            disabled={loading !== null || !agreeTerms}
+            disabled={loading !== null}
             className="w-full bg-gradient-to-r from-[#FF6B35] to-orange-400 text-white rounded-xl py-3 font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {loading === "demo" ? t('loggingIn') : `🚀 ${t('demoVersion')}`}
