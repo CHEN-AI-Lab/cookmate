@@ -23,7 +23,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   const [oauthProvider, setOauthProvider] = useState<string | null>(null)
   const [agreeTerms, setAgreeTerms] = useState(false)
   const [termsError, setTermsError] = useState("")
-  const [shakeKey, setShakeKey] = useState(0)
+  const [shaking, setShaking] = useState(false)
 
   useEffect(() => {
     if (countdown > 0) {
@@ -31,6 +31,13 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
     }
     return () => clearTimeout(timerRef.current ?? undefined)
   }, [countdown])
+
+  useEffect(() => {
+    if (shaking) {
+      const t = setTimeout(() => setShaking(false), 400)
+      return () => clearTimeout(t)
+    }
+  }, [shaking])
 
   const sendCode = async () => {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -82,7 +89,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
       return
     }
     if (!agreeTerms) {
-      setShakeKey(k => k + 1)
+      setShaking(true)
       setTermsError(tv('agreeTermsRequired'))
       return
     }
@@ -129,7 +136,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
 
   const handleOAuth = async (provider: string) => {
       if (!agreeTerms) {
-        setShakeKey(k => k + 1)
+        setShaking(true)
         setTermsError(tv('agreeTermsRequired'))
         return
       }
@@ -252,21 +259,23 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
         </div>
 
         {/* Terms checkbox */}
-        <div key={shakeKey} className="mt-4" style={{ animation: shakeKey > 0 ? 'shakeX 0.4s ease-in-out' : undefined }}>
-          <label className="flex items-start gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={agreeTerms}
-              onChange={(e) => { setAgreeTerms(e.target.checked); if (e.target.checked) setTermsError("") }}
-              className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#FF6B35] focus:ring-[#FF6B35]"
-            />
-            <span className="text-xs text-gray-500 leading-relaxed">
-              {t.rich('agreeTerms', {
-                terms: (chunks) => <Link href="/terms" className="text-[#FF6B35] hover:underline" target="_blank">{chunks}</Link>,
-                privacy: (chunks) => <Link href="/privacy" className="text-[#FF6B35] hover:underline" target="_blank">{chunks}</Link>,
-              })}
-            </span>
-          </label>
+        <div className="mt-4">
+          <div className={shaking ? 'animate-shake' : ''} style={{ animation: shaking ? 'shakeX 0.4s ease-in-out' : undefined }}>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={agreeTerms}
+                onChange={(e) => { setAgreeTerms(e.target.checked); if (e.target.checked) setTermsError("") }}
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#FF6B35] focus:ring-[#FF6B35]"
+              />
+              <span className="text-xs text-gray-500 leading-relaxed">
+                {t.rich('agreeTerms', {
+                  terms: (chunks) => <Link href="/terms" className="text-[#FF6B35] hover:underline" target="_blank">{chunks}</Link>,
+                  privacy: (chunks) => <Link href="/privacy" className="text-[#FF6B35] hover:underline" target="_blank">{chunks}</Link>,
+                })}
+              </span>
+            </label>
+          </div>
           {termsError && (
             <p className="text-xs text-red-500 mt-1 ml-6">{termsError}</p>
           )}
