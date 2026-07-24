@@ -427,6 +427,11 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 )}
               </>
             )}
+            {!emailCodeSent && error && tab === "email" && (
+              <div className="text-xs rounded-xl px-3 py-2 bg-red-50 border border-red-200 text-red-600">
+                {error}
+              </div>
+            )}
             {!emailCodeSent && (
               <p className="text-xs text-gray-400 text-center">{t('sendCodeHint')}</p>
             )}

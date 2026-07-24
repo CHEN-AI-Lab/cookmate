@@ -82,8 +82,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
       return
     }
     if (!agreeTerms) {
-      setError(t('agreeTermsShort'))
-      setErrorType('error')
+      setShakeKey(k => k + 1)
       return
     }
     if (password && password !== confirmPassword) {
@@ -239,7 +238,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
           {emailCodeSent && (
             <button
               onClick={handleEmailRegister}
-              disabled={loading === "email" || !emailCode || !agreeTerms}
+              disabled={loading === "email" || !emailCode}
               className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
             >
               {loading === "email" ? t('registering') : t('registerAction')}
