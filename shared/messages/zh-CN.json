@@ -203,6 +203,7 @@
     "oauthNotConfigured": "该登录方式尚未配置，上线后即可使用",
     "emailNotRegistered": "该邮箱未注册",
     "emailAlreadyRegistered": "该邮箱已注册，请直接登录",
+    "agreeTermsRequired": "请先勾选同意服务条款和隐私政策",
     "email": "邮箱"
   },
   "dashboard": {
@@ -867,8 +868,7 @@
     "emailAlreadyRegistered": "该邮箱已注册，请直接登录",
     "emptyPhoneAndCode": "请输入手机号和验证码",
     "emptyEmailAndCode": "请输入邮箱和验证码",
-    "verifyFailed": "验证失败",
-    "agreeTermsRequired": "请先勾选同意服务条款和隐私政策"
+    "verifyFailed": "验证失败"
   },
   "settings": {
     "title": "设置",

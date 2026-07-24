@@ -203,6 +203,7 @@
     "oauthNotConfigured": "This login method is not configured yet",
     "emailNotRegistered": "This email is not registered",
     "emailAlreadyRegistered": "This email is already registered. Please log in instead.",
+    "agreeTermsRequired": "Please agree to the Terms of Service and Privacy Policy first",
     "email": "Email"
   },
   "dashboard": {
@@ -866,8 +867,7 @@
     "emailAlreadyRegistered": "This email is already registered. Please log in instead.",
     "emptyPhoneAndCode": "Please enter phone number and verification code",
     "emptyEmailAndCode": "Please enter email and verification code",
-    "verifyFailed": "Verification failed",
-    "agreeTermsRequired": "Please agree to the Terms of Service and Privacy Policy first"
+    "verifyFailed": "Verification failed"
   },
   "settings": {
     "title": "Settings",
