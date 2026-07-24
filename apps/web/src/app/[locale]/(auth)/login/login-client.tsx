@@ -315,10 +315,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   }
 
   const handleOAuth = async (provider: string) => {
-    // 切到其他登录方式前先退出当前会话
-    if (provider !== "demo") {
-      await signOut({ redirect: false })
-    }
     setOauthProvider(provider)
     setError("")
     try {
