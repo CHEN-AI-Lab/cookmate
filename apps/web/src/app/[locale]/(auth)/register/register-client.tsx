@@ -128,7 +128,8 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
 
   const handleOAuth = async (provider: string) => {
       if (!agreeTerms) {
-        setTermsError(tv('agreeTermsRequired'))
+        setTermsError("")
+        setTimeout(() => setTermsError(tv('agreeTermsRequired')), 0)
         return
       }
       setTermsError("")
