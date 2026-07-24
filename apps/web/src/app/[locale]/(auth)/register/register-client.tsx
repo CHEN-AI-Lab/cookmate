@@ -22,6 +22,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [oauthProvider, setOauthProvider] = useState<string | null>(null)
   const [agreeTerms, setAgreeTerms] = useState(false)
+  const [termsError, setTermsError] = useState("")
 
   useEffect(() => {
     if (countdown > 0) {
@@ -127,10 +128,10 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
 
   const handleOAuth = async (provider: string) => {
       if (!agreeTerms) {
-        setError(tv('agreeTermsRequired'))
-        setErrorType('error')
+        setTermsError(tv('agreeTermsRequired'))
         return
       }
+      setTermsError("")
       setOauthProvider(provider)
     setError("")
     setErrorType('error')
@@ -253,7 +254,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
             <input
               type="checkbox"
               checked={agreeTerms}
-              onChange={(e) => setAgreeTerms(e.target.checked)}
+              onChange={(e) => { setAgreeTerms(e.target.checked); if (e.target.checked) setTermsError("") }}
               className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#FF6B35] focus:ring-[#FF6B35]"
             />
             <span className="text-xs text-gray-500 leading-relaxed">
@@ -263,6 +264,9 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
               })}
             </span>
           </label>
+          {termsError && (
+            <p className="text-xs text-red-500 mt-1 ml-6">{termsError}</p>
+          )}
         </div>
 
         <div className="my-6 flex items-center gap-4">
