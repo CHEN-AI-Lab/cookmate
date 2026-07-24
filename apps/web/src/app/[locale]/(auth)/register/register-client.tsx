@@ -83,6 +83,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
     }
     if (!agreeTerms) {
       setShakeKey(k => k + 1)
+      setTermsError(tv('agreeTermsRequired'))
       return
     }
     if (password && password !== confirmPassword) {
@@ -129,6 +130,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   const handleOAuth = async (provider: string) => {
       if (!agreeTerms) {
         setShakeKey(k => k + 1)
+        setTermsError(tv('agreeTermsRequired'))
         return
       }
       setTermsError("")
