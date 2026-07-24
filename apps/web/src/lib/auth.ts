@@ -249,15 +249,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account }) {
       // OAuth 首次登录时，设置 termsAgreedAt
       if (account?.type === "oauth" && user.id && user.id !== "demo-user-id") {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { termsAgreedAt: true },
-        })
-        if (dbUser && !dbUser.termsAgreedAt) {
-          await prisma.user.update({
+        try {
+          const dbUser = await prisma.user.findUnique({
             where: { id: user.id },
-            data: { termsAgreedAt: new Date() },
+            select: { termsAgreedAt: true },
           })
+          if (dbUser && !dbUser.termsAgreedAt) {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { termsAgreedAt: new Date() },
+            })
+          }
+        } catch (e) {
+          console.error("signIn callback error:", e)
         }
       }
       return true
