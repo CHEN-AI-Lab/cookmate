@@ -318,9 +318,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     setOauthProvider(provider)
     setError("")
     try {
-      if (isLoggedIn) {
-        await signOut({ redirect: false })
-      }
       await signIn(provider, { callbackUrl: "/app/dashboard" })
     } catch {
       setError(tv('oauthNotConfigured'))
