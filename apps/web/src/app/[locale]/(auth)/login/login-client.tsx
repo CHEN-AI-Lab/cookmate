@@ -1,6 +1,6 @@
 "use client"
 
-import { signIn, signOut } from "next-auth/react"
+import { signIn, signOut, getProviders } from "next-auth/react"
 import { useState, useEffect, useRef } from "react"
 import PasswordInput from "@/components/ui/PasswordInput"
 import Link from "next/link"
@@ -318,8 +318,12 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     setOauthProvider(provider)
     setError("")
     try {
+      // Debug: log available providers
+      getProviders().then(p => console.log('[OAuth] providers:', JSON.stringify(Object.keys(p || {})))).catch(e => console.error('[OAuth] getProviders error:', e))
       if (isLoggedIn) await signOut({ redirect: false })
+      console.log('[OAuth] calling signIn with provider:', provider)
       const result = await signIn(provider, { redirect: false, callbackUrl: "/app/dashboard" })
+      console.log('[OAuth] signIn result:', JSON.stringify(result))
       if (result?.error) {
         setError(result.error === "OAuthSignin" ? tv('oauthNotConfigured') : result.error)
         setOauthProvider(null)
@@ -327,9 +331,13 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       }
       // 无错误才跳转
       if (result?.url) {
+        console.log('[OAuth] redirecting to:', result.url)
         window.location.href = result.url
+      } else {
+        console.log('[OAuth] no url in result, result is:', result)
       }
-    } catch {
+    } catch (e) {
+      console.error('[OAuth] handleOAuth error:', e)
       setError(tv('oauthNotConfigured'))
       setOauthProvider(null)
     }
