@@ -37,6 +37,12 @@ export default async function HomePage() {
           >
             {thero("cta")}
           </Link>
+          <Link
+            href="/login"
+            className="bg-white text-[#FF6B35] px-8 py-3 rounded-full text-lg font-medium border-2 border-[#FF6B35] hover:bg-orange-50 transition-colors"
+          >
+            🚀 {thero("tryDemo")}
+          </Link>
           <a
             href="#how"
             className="text-gray-600 px-8 py-3 rounded-full text-lg border border-gray-200 hover:border-[#FF6B35] hover:text-[#FF6B35] transition-colors"
