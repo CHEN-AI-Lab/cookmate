@@ -145,7 +145,16 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
     setError("")
     setErrorType('error')
     try {
-      await signIn(provider, { callbackUrl: "/app/dashboard" })
+      const result = await signIn(provider, { redirect: false, callbackUrl: "/app/dashboard" })
+      if (result?.error) {
+        setError(result.error === "OAuthSignin" ? tv('oauthNotConfigured') : result.error)
+        setErrorType('error')
+        setOauthProvider(null)
+        return
+      }
+      if (result?.url) {
+        window.location.href = result.url
+      }
     } catch {
       setError(tv('oauthNotConfigured'))
       setErrorType('error')
