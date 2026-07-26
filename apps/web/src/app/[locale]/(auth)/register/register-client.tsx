@@ -25,6 +25,13 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   const [termsError, setTermsError] = useState("")
   const [shaking, setShaking] = useState(false)
 
+  // 已登录用户直接跳转（解决已打开页面不触发服务端 redirect 的问题）
+  useEffect(() => {
+    if (isLoggedIn) {
+      window.location.href = "/app/dashboard"
+    }
+  }, [isLoggedIn])
+
   useEffect(() => {
     if (countdown > 0) {
       timerRef.current = setTimeout(() => setCountdown(countdown - 1), 1000)
@@ -170,6 +177,11 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
     setError("")
     setErrorType('error')
     try {
+      // 先退出当前登录（正式用户或 demo 用户）
+      if (isLoggedIn) {
+        await signOut({ redirect: false })
+      }
+      // 再设置 demo cookie
       const res = await fetch("/api/auth/demo-login", { method: "POST" })
       const data = await res.json()
       if (!res.ok) {

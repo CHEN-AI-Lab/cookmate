@@ -33,6 +33,13 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   const [setupCountdown, setSetupCountdown] = useState(0)
   const [emailMsg, setEmailMsg] = useState("")
 
+  // 已登录用户直接跳转（解决已打开页面不触发服务端 redirect 的问题）
+  useEffect(() => {
+    if (isLoggedIn) {
+      window.location.href = "/app/dashboard"
+    }
+  }, [isLoggedIn])
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const alipayAuth = params.get("alipay_auth")
@@ -341,6 +348,11 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     setLoading("demo")
     setError("")
     try {
+      // 先退出当前登录（正式用户或 demo 用户）
+      if (isLoggedIn) {
+        await signOut({ redirect: false })
+      }
+      // 再设置 demo cookie
       const res = await fetch("/api/auth/demo-login", { method: "POST" })
       const data = await res.json()
       if (!res.ok) {
