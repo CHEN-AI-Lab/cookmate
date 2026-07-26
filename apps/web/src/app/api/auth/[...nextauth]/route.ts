@@ -1,6 +1,6 @@
 import { handlers } from "@/lib/auth"
 import type { NextRequest } from "next/server"
-import { hasDemoCookie, DEMO_SESSION, buildClearDemoCookieHeader } from "@/lib/demo-cookie"
+import { hasDemoCookie, DEMO_SESSION, buildClearDemoCookieHeader } from "@cookmate/shared/utils/demo-cookie"
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url)

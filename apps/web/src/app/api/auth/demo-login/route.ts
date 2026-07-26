@@ -6,7 +6,7 @@
  * linked to real OAuth accounts through NextAuth's session mechanism.
  */
 import { NextResponse } from "next/server"
-import { buildSetDemoCookieHeader, DEMO_SESSION } from "@/lib/demo-cookie"
+import { buildSetDemoCookieHeader, DEMO_SESSION } from "@cookmate/shared/utils/demo-cookie"
 
 export async function POST() {
   try {
