@@ -571,6 +571,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           </button>
         </div>
 
+        {tab === "email" && (
         <div className="mt-3">
           <button
             onClick={() => handleOAuth("demo")}
@@ -580,6 +581,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
             {loading === "demo" ? t('loggingIn') : t('demoVersion')}
           </button>
         </div>
+      )}
 
         <p className="text-center text-xs text-gray-400 mt-4">
           {t.rich('continueOAuth', {
