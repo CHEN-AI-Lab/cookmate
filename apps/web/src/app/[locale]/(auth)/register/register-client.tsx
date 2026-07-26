@@ -165,6 +165,26 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
     }
   }
 
+  const handleDemoLogin = async () => {
+    setLoading("demo")
+    setError("")
+    setErrorType('error')
+    try {
+      const res = await fetch("/api/auth/demo-login", { method: "POST" })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || tv('oauthNotConfigured'))
+        return
+      }
+      window.location.href = "/app/dashboard"
+    } catch {
+      setError(tv('oauthNotConfigured'))
+      setErrorType('error')
+    } finally {
+      setLoading(null)
+    }
+  }
+
   return (
     <>
       <OAuthLoadingOverlay provider={oauthProvider} />
@@ -320,7 +340,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
 
         <div className="mt-3">
           <button
-            onClick={() => handleOAuth("demo")}
+            onClick={handleDemoLogin}
             disabled={loading !== null}
             className="w-full bg-gradient-to-r from-[#FF6B35] to-orange-400 text-white rounded-xl py-3 font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
           >

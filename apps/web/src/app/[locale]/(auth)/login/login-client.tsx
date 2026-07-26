@@ -337,6 +337,25 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     }
   }
 
+  const handleDemoLogin = async () => {
+    setLoading("demo")
+    setError("")
+    try {
+      const res = await fetch("/api/auth/demo-login", { method: "POST" })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || tv('oauthNotConfigured'))
+        return
+      }
+      // 刷新 session 后跳转
+      window.location.href = "/app/dashboard"
+    } catch {
+      setError(tv('oauthNotConfigured'))
+    } finally {
+      setLoading(null)
+    }
+  }
+
   return (
     <>
       <OAuthLoadingOverlay provider={oauthProvider} />
@@ -585,7 +604,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
 
         <div className="mt-3">
           <button
-            onClick={() => handleOAuth("demo")}
+            onClick={handleDemoLogin}
             disabled={loading !== null}
             className="w-full bg-gradient-to-r from-[#FF6B35] to-orange-400 text-white rounded-xl py-3 font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
           >

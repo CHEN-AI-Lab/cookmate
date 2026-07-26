@@ -29,6 +29,8 @@ import { prisma } from "@/lib/prisma"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import AlipayProvider from "@/lib/providers/alipay"
 import WeChatProvider from "@/lib/providers/wechat"
+import { hasDemoCookie, DEMO_SESSION } from "@/lib/demo-cookie"
+import { cookies } from "next/headers"
 
 const providers = []
 
@@ -224,24 +226,11 @@ providers.push(
   })
 )
 
-// 本地体验登录 — 始终可用，不依赖数据库
-providers.push(
-  Credentials({
-    id: "demo",
-    name: "体验登录",
-    credentials: {},
-    async authorize() {
-      return {
-        id: "demo-user-id",
-        email: "demo@cookmate.local",
-        name: "体验用户",
-        phone: "",
-      }
-    },
-  })
-)
+// 本地体验登录 — 已迁移到独立 cookie 机制，不经过 NextAuth
+// 防止体验用户 session 被用于关联真实 OAuth 账号
+// 见 /api/auth/demo-login 和 lib/demo-cookie.ts
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const { handlers: nextAuthHandlers, auth: nextAuthAuth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   providers,
@@ -309,3 +298,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     newUser: "/app/dashboard",
   },
 })
+
+// 包装 auth() 函数：先检查真实 session，再检查 demo cookie
+export async function auth() {
+  // 真实 session 优先
+  const session = await nextAuthAuth()
+  if (session) return session
+
+  // 检查 demo cookie
+  const cookieStore = await cookies()
+  if (hasDemoCookie(cookieStore.toString())) {
+    return DEMO_SESSION
+  }
+
+  return null
+}
+
+export { signIn, signOut }
+export const handlers = nextAuthHandlers
