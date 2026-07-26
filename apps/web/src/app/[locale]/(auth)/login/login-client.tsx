@@ -318,7 +318,19 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     setOauthProvider(provider)
     setError("")
     try {
-      await signIn(provider, { callbackUrl: "/app/dashboard" })
+      if (isLoggedIn) {
+        await signOut({ redirect: false })
+      }
+      const result = await signIn(provider, { redirect: false, callbackUrl: "/app/dashboard" })
+      if (result?.error) {
+        setError(result.error === "OAuthSignin" ? tv('oauthNotConfigured') : result.error)
+        setOauthProvider(null)
+        return
+      }
+      // 无错误才跳转
+      if (result?.url) {
+        window.location.href = result.url
+      }
     } catch {
       setError(tv('oauthNotConfigured'))
       setOauthProvider(null)
@@ -571,7 +583,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           </button>
         </div>
 
-        {tab === "email" && (
         <div className="mt-3">
           <button
             onClick={() => handleOAuth("demo")}
@@ -581,7 +592,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
             {loading === "demo" ? t('loggingIn') : t('demoVersion')}
           </button>
         </div>
-      )}
 
         <p className="text-center text-xs text-gray-400 mt-4">
           {t.rich('continueOAuth', {
