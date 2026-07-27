@@ -200,7 +200,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
       <OAuthLoadingOverlay provider={oauthProvider} />
       <style>{`@keyframes shakeX{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}`}</style>
       <div className="min-h-screen bg-gradient-to-br from-[#FFF8F0] to-[#FFE8D6] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full ring-1 ring-orange-100/50">
         <div className="text-center mb-8">
           <Link href="/" className="text-2xl">🍳</Link>
           <h1 className="text-2xl font-bold text-[#2D3436] mt-2">{t('registerTitle')}</h1>
