@@ -241,10 +241,9 @@ export async function generateRecipes(
     const parsed = JSON.parse(content)
     return parsed.recipes || []
   } catch (err) {
-    console.error("AI recipe generation failed:", err)
-    // AI 彻底失败时，告知用户 AI 不可用，不要降级到 mock 数据
-    // 因为 mock 数据覆盖不全，用户看到空结果会误以为是食材问题
-    throw err
+    console.error("AI recipe generation failed, falling back to mock data:", err)
+    // AI 失败时降级到 mock 数据，确保用户至少能获得一些推荐
+    return isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences)
   }
 }
 
