@@ -586,6 +586,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           </div>
         )}
 
+        {tab === "email" && (<>
         {/* 社交账号登录 */}
         <div className="my-6 flex items-center gap-4">
           <div className="flex-1 h-px bg-gray-200" />
@@ -613,7 +614,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         </div>
 
         <div className="mt-3">
-          {tab === "email" && (
           <button
             onClick={handleDemoLogin}
             disabled={loading !== null}
@@ -621,8 +621,8 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           >
             {loading === "demo" ? t('loggingIn') : t('demoVersion')}
           </button>
-          )}
         </div>
+        </>)}
 
         <p className="text-center text-xs text-gray-400 mt-4">
           {t.rich('continueOAuth', {
