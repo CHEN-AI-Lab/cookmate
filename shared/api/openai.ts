@@ -27,6 +27,42 @@ function hasAIKey(): boolean {
   return !!(process.env.AI_API_KEY || process.env.OPENAI_API_KEY)
 }
 
+/**
+ * 强制关闭推理/思考模式所需的参数
+ *
+ * 不同 AI 模型/提供商使用不同的参数名控制思考模式：
+ *   - OpenAI o1/o3 系列: reasoning_effort
+ *   - Anthropic Claude: thinking 块
+ *   - DeepSeek R1: reasoning_effort / reasoning 参数
+ *   - 其他兼容模型: 各种布尔开关
+ *
+ * 此函数返回多组参数，多种方式兜底尝试，确保无论接入什么模型都尽可能关闭思考模式。
+ * 切换模型时无需修改此函数，只需验证新模型是否支持其中某个参数组合。
+ * 如果 AI 模型默认是思考模式，必须关闭后再进行后续查询和输出。
+ */
+function disableThinkingParams(): Record<string, unknown> {
+  return {
+    // OpenAI o-series / DeepSeek R1: 设为 'none' 关闭 reasoning
+    reasoning_effort: 'none',
+    extra_body: {
+      // 方式 1: Anthropic 风格 thinking 块 — 设为 disabled
+      thinking: { type: "disabled" },
+      // 方式 2: 布尔开关 — 直接关掉
+      reasoning: false,
+      // 方式 3: 显式启用/禁用参数
+      enable_thinking: false,
+      // 方式 4: 负向开关 — 要求不推理
+      disable_reasoning: true,
+      no_reasoning: true,
+      // 方式 5: 模式参数 — 设为 off
+      reasoning_mode: "off",
+      // 方式 6: 其他命名变体
+      think: false,
+      thinking_enabled: false,
+    },
+  }
+}
+
 /** 通用 AI 调用：先用 json_object 模式，不支持则自动降级 */
 async function callAI(params: {
   systemPrompt: string
@@ -50,7 +86,8 @@ async function callAI(params: {
         response_format: { type: "json_object" } as const,
         temperature: 0.7,
         max_tokens: maxTokens,
-      })
+        ...disableThinkingParams(),
+      } as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming)
       const content = response.choices[0]?.message?.content
       if (content) return cleanJSONResponse(content)
     } catch (err: unknown) {
@@ -68,7 +105,8 @@ async function callAI(params: {
     ],
     temperature: 0.7,
     max_tokens: maxTokens,
-  })
+    ...disableThinkingParams(),
+  } as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming)
   const content = response.choices[0]?.message?.content
   if (!content) throw new Error("AI 没有返回内容")
   return cleanJSONResponse(content)
