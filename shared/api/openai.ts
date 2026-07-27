@@ -239,7 +239,11 @@ export async function generateRecipes(
       maxTokens: 2000,
     })
     const parsed = JSON.parse(content)
-    return parsed.recipes || []
+    const aiRecipes = parsed.recipes || []
+    if (aiRecipes.length > 0) return aiRecipes
+    // AI 返回空结果，降级用 mock 数据
+    console.warn("AI returned empty recipes, falling back to mock data")
+    return isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences)
   } catch (err) {
     console.error("AI recipe generation failed, falling back to mock data:", err)
     return isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences)
