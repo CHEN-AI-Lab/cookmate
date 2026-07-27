@@ -391,7 +391,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         )}
 
         {/* 登录方式切换标签 */}
-        <div className="min-h-[420px]">
+        <div className="min-h-[300px]">
         <div className="flex mb-6 bg-gray-100 rounded-xl p-1">
           <button
             onClick={() => setTab("email")}
