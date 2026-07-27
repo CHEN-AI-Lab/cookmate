@@ -349,6 +349,7 @@
     "servings": "人数",
     "addIngredientBtn": "+ 追加",
     "addToPlan": "📅 献立に追加",
+    "addToPlanDesc": "「{title}」を献立に追加",
     "addToPlanTitle": "📅 {title}を追加",
     "addedToPlan": "✅ {day}{meal}に追加しました",
     "addedToPlanWithTitle": "✅ {title}を{day}{meal}に追加しました",
