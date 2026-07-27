@@ -373,6 +373,7 @@
     "irreversible": "此操作不可恢復",
     "cancel": "取消",
     "confirmDeleteAction": "確認刪除",
+    "confirmDeleteDesc": "確定要刪除「{title}」嗎？",
     "addToPlanTitle": "📅 加入 {title}",
     "confirmAdd": "確認加入",
     "addedToPlanWithTitle": "✅ 已加入 {title} 到 {day}{meal}",

@@ -367,6 +367,7 @@
     "confirmAdd": "追加確認",
     "confirmDelete": "削除確認",
     "confirmDeleteAction": "削除を確認",
+    "confirmDeleteDesc": "「{title}」を削除してもよろしいですか？",
     "deleteCount": "{count}個のレシピを削除中",
     "deleteFailed": "削除に失敗しました",
     "deleteSelected": "選択したものを削除",

@@ -384,6 +384,7 @@
     "irreversible": "This action cannot be undone",
     "cancel": "Cancel",
     "confirmDeleteAction": "Confirm Delete",
+    "confirmDeleteDesc": "Are you sure you want to delete \"{title}\"?",
     "addToPlanTitle": "📅 Add {title}",
     "confirmAdd": "Confirm Add",
     "addedToPlanWithTitle": "✅ Added {title} to {day}{meal}",
