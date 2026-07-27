@@ -9,7 +9,7 @@ export const defaultLocale: Locale = 'en'
 // Display names for each locale in its own language
 export const localeNames: Record<string, string> = {
   'zh-CN': '简体中文',
-  'zh-TW': '繁體中文',
+  'zh-TW': '繁体中文',
   'ja': '日本語',
   'en': 'English',
 }
