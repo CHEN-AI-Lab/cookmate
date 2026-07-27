@@ -411,7 +411,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         </div>
 
         {/* 邮箱登录 */}
-        <div className="min-h-[400px]">
         {tab === "email" && (
           <div className="space-y-4">
             <div>
@@ -624,7 +623,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           </button>
         </div>
         </>)}
-        </div>
 
         <p className="text-center text-xs text-gray-400 mt-4">
           {t.rich('continueOAuth', {
