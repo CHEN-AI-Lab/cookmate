@@ -367,6 +367,7 @@
     "unstar": "取消收藏",
     "star": "收藏",
     "addToPlan": "📅 加入周计划",
+    "addToPlanDesc": "将「{title}」加入周计划",
     "inPantry": "食材库有",
     "minutes": "分钟",
     "caloriesShort": "卡",
