@@ -391,7 +391,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         )}
 
         {/* 登录方式切换标签 */}
-        <div className="min-h-[300px]">
         <div className="flex mb-6 bg-gray-100 rounded-xl p-1">
           <button
             onClick={() => setTab("email")}
@@ -587,15 +586,14 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           </div>
         )}
 
-        {tab === "email" && (<>
         {/* 社交账号登录 */}
-        <div className="my-6 flex items-center gap-4">
+        <div className={`my-6 flex items-center gap-4 ${tab === "password" ? "invisible" : ""}`}>
           <div className="flex-1 h-px bg-gray-200" />
           <span className="text-sm text-gray-400">{t('socialLogin')}</span>
           <div className="flex-1 h-px bg-gray-200" />
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className={`grid grid-cols-2 gap-2 ${tab === "password" ? "invisible" : ""}`}>
           <button
             onClick={() => handleOAuth("google")}
             disabled={loading !== null}
@@ -614,7 +612,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           </button>
         </div>
 
-        <div className="mt-3">
+        <div className={`mt-3 ${tab === "password" ? "invisible" : ""}`}>
           <button
             onClick={handleDemoLogin}
             disabled={loading !== null}
@@ -622,9 +620,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           >
             {loading === "demo" ? t('loggingIn') : t('demoVersion')}
           </button>
-        </div>
-        </>)}
-
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-4">
