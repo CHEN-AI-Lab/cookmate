@@ -18,7 +18,7 @@ describe('cn', () => {
 
 describe('locales config', () => {
   it('has zh-CN, zh-TW, ja and en', () => {
-    expect(locales).toEqual(['zh-CN', 'zh-TW', 'ja', 'en'])
+    expect(locales).toEqual(['en', 'zh-CN', 'zh-TW', 'ja'])
   })
 
   it('default is en', () => {
