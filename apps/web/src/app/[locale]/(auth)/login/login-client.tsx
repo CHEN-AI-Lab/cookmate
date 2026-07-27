@@ -348,10 +348,8 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     setLoading("demo")
     setError("")
     try {
-      // 先退出当前登录（正式用户或 demo 用户）
-      if (isLoggedIn) {
-        await signOut({ redirect: false })
-      }
+      // 先退出当前登录（不管 isLoggedIn 是否准确，都清理 session）
+      await signOut({ redirect: false })
       // 再设置 demo cookie
       const res = await fetch("/api/auth/demo-login", { method: "POST" })
       const data = await res.json()
