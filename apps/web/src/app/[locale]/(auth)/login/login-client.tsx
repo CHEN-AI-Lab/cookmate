@@ -391,6 +391,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         )}
 
         {/* 登录方式切换标签 */}
+        <div className="min-h-[420px]">
         <div className="flex mb-6 bg-gray-100 rounded-xl p-1">
           <button
             onClick={() => setTab("email")}
@@ -623,6 +624,8 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           </button>
         </div>
         </>)}
+
+        </div>
 
         <p className="text-center text-xs text-gray-400 mt-4">
           {t.rich('continueOAuth', {
