@@ -427,7 +427,7 @@
     "errorAddFailed": "Failed to add",
     "errorReplaceFailed": "Failed to replace",
     "demoCannotGenerate": "🔒 Demo users cannot generate recipes. Please sign up.",
-    "emptyGenerated": "AI couldn't generate recipes for these ingredients. Try adding more or different ones.",
+    "emptyGenerated": "AI couldn't generate recipes right now. Please try again later.",
     "emptyHasPantry": "👆 Click ingredients from the pantry above or type them in to get AI-recommended recipes",
     "emptyDefault": "Add ingredients and let AI recommend recipes for you",
     "prevPage": "Previous",
