@@ -30,33 +30,34 @@ function hasAIKey(): boolean {
 /**
  * 强制关闭推理/思考模式所需的参数
  *
- * 不同 AI 模型/提供商使用不同的参数名控制思考模式：
- *   - OpenAI o1/o3 系列: reasoning_effort
- *   - Anthropic Claude: thinking 块
- *   - DeepSeek R1: reasoning_effort / reasoning 参数
- *   - 其他兼容模型: 各种布尔开关
+ * 当前使用的 Sensenova API：
+ *   - sensenova-6.7-flash-lite: reasoning_effort: "none"
+ *   - deepseek-v4-flash（通过 Sensenova 接入）: reasoning_effort: "none"
+ * 参考文档：https://platform.sensenova.cn/docs
  *
- * 此函数返回多组参数，多种方式兜底尝试，确保无论接入什么模型都尽可能关闭思考模式。
- * 切换模型时无需修改此函数，只需验证新模型是否支持其中某个参数组合。
- * 如果 AI 模型默认是思考模式，必须关闭后再进行后续查询和输出。
+ * 注意：Sensenova 提供的 DeepSeek 模型用 reasoning_effort: "none" 关闭思考，
+ * 但 DeepSeek 官方 API 用的是不同的参数（如 thinking: { type: "disabled" }）。
+ * extra_body 里的参数是为后期更换 API 提供商时的兜底，不要删。
  */
 function disableThinkingParams(): Record<string, unknown> {
   return {
-    // OpenAI o-series / DeepSeek R1: 设为 'none' 关闭 reasoning
+    // Sensenova API（含 DeepSeek V4 Flash）: reasoning_effort: "none"
     reasoning_effort: 'none',
+    // 以下为后期更换 API 提供商时的兜底参数
+    // 不同 API 的关闭思考方式不同（thinking/reasoning/enable_thinking 等），
+    // 多写几种方式，换 API 时无需改代码
     extra_body: {
-      // 方式 1: Anthropic 风格 thinking 块 — 设为 disabled
+      // Anthropic 风格
       thinking: { type: "disabled" },
-      // 方式 2: 布尔开关 — 直接关掉
+      // 布尔开关型
       reasoning: false,
-      // 方式 3: 显式启用/禁用参数
       enable_thinking: false,
-      // 方式 4: 负向开关 — 要求不推理
+      // 负向开关型
       disable_reasoning: true,
       no_reasoning: true,
-      // 方式 5: 模式参数 — 设为 off
+      // 模式参数型
       reasoning_mode: "off",
-      // 方式 6: 其他命名变体
+      // 其他命名变体
       think: false,
       thinking_enabled: false,
     },
