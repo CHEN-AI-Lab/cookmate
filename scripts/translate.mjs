@@ -8,6 +8,7 @@
  *   node scripts/translate.mjs <lang-code>                     # 从英文翻译
  *   node scripts/translate.mjs <lang-code> --source <src-lang> # 从指定语言翻译
  *   node scripts/translate.mjs <lang-code> --learn             # 学习 git 变动的翻译
+ *   node scripts/translate.mjs --add <lang-code>               # 新增语言（自动检测源语言）
  *   node scripts/translate.mjs --lock                          # 交互式锁定条目
  *   node scripts/translate.mjs --unlock                        # 交互式解锁条目
  *   node scripts/translate.mjs --show-locks                    # 显示所有已锁定条目
@@ -23,6 +24,8 @@
  *   node scripts/translate.mjs zh-TW                 # 简体中文→繁体中文（自动检测）
  *   node scripts/translate.mjs fr                    # 英文→法语
  *   node scripts/translate.mjs zh-TW --learn         # 学习当前翻译文件中有 git 变动的 key
+ *   node scripts/translate.mjs --add zh-TW           # 新增繁体中文（自动检测源语言为 zh-CN）
+ *   node scripts/translate.mjs --add ja              # 新增日语（自动检测源语言为 en）
  *   node scripts/translate.mjs --lock                # 锁定已确认的翻译
  *   node scripts/translate.mjs --unlock              # 解锁条目
  *   node scripts/translate.mjs --show-locks          # 查看已锁定条目
@@ -67,6 +70,26 @@ const MAX_BACKUPS = 5
 // 源语言（直接手写，不是翻译目标）
 const SOURCE_LANGUAGES = ["zh-CN", "en"]
 
+// ─── 自动加载共享 global.env 文件（支持 dotenv 格式，无需 npm 依赖） ───
+const ENV_FILE = path.join(SHARED_DIR, "global.env")
+if (fs.existsSync(ENV_FILE)) {
+  const envContent = fs.readFileSync(ENV_FILE, "utf-8")
+  for (const line of envContent.split("\n")) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith("#")) continue
+    const eqIdx = trimmed.indexOf("=")
+    if (eqIdx === -1) continue
+    const key = trimmed.slice(0, eqIdx).trim()
+    let value = trimmed.slice(eqIdx + 1).trim()
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1)
+    }
+    if (key && !process.env[key]) {
+      process.env[key] = value
+    }
+  }
+}
+
 // ─── 参数解析 ───
 const LANG = process.argv[2]
 const IS_CHECK = process.argv.includes("--check")
@@ -79,6 +102,10 @@ const IS_STATS = process.argv.includes("--stats")
 const IS_YES = process.argv.includes("--yes")
 const IS_ALL = process.argv.includes("--all")
 const IS_SYNC = process.argv.includes("--sync")
+
+const ADD_INDEX = process.argv.indexOf("--add")
+const IS_ADD = ADD_INDEX !== -1
+const ADD_LANG = IS_ADD ? (process.argv[ADD_INDEX + 1] || null) : null
 
 const SEARCH_INDEX = process.argv.indexOf("--search")
 const IS_SEARCH = SEARCH_INDEX !== -1
@@ -96,7 +123,7 @@ const SRC_ARG = process.argv.indexOf("--source")
 const SRC_LANG = SRC_ARG !== -1 ? process.argv[SRC_ARG + 1] : null
 
 // 检查是否独立模式（不需要 <lang-code>）
-const IS_STANDALONE = IS_CHECK || IS_LOCK || IS_UNLOCK || IS_SHOW_LOCKS || IS_RESTORE || IS_STATS || IS_SEARCH || IS_EXPORT || IS_IMPORT || IS_ALL || IS_SYNC
+const IS_STANDALONE = IS_CHECK || IS_LOCK || IS_UNLOCK || IS_SHOW_LOCKS || IS_RESTORE || IS_STATS || IS_SEARCH || IS_EXPORT || IS_IMPORT || IS_ALL || IS_SYNC || IS_ADD
 
 if (!LANG && !IS_STANDALONE) {
   console.error("用法: node scripts/translate.mjs <lang-code> [--source <src>] [--learn]")
@@ -108,11 +135,14 @@ if (!LANG && !IS_STANDALONE) {
   console.error("       node scripts/translate.mjs --stats")
   console.error("       node scripts/translate.mjs --all")
   console.error("       node scripts/translate.mjs --sync")
+  console.error("       node scripts/translate.mjs --add <lang-code>")
   console.error("       node scripts/translate.mjs --search <text>")
   console.error("       node scripts/translate.mjs --export <file>")
   console.error("       node scripts/translate.mjs --import <file>")
   console.error("示例: node scripts/translate.mjs ja")
   console.error("       node scripts/translate.mjs zh-TW --source zh-CN")
+  console.error("       node scripts/translate.mjs --add zh-TW")
+  console.error("       node scripts/translate.mjs --add ja")
   process.exit(1)
 }
 
@@ -169,6 +199,57 @@ function flattenKeys(obj, prefix = "") {
  */
 function normalizeSource(text) {
   return String(text).trim().toLowerCase()
+}
+
+/**
+ * 检查目标翻译文件是否已完整（file exists + all keys present + 没有英文占位符）
+ * @param {string} sourceFile - 源语言文件路径
+ * @param {string} targetFile - 目标语言文件路径
+ * @param {string|null} sourceLang - 源语言代码（用于检测英文占位符）
+ * @param {string|null} targetLang - 目标语言代码（用于检测英文占位符）
+ * @returns {{ exists: boolean, complete: boolean, sourceCount: number, targetCount: number, placeholderCount: number }}
+ */
+function checkTargetStatus(sourceFile, targetFile, sourceLang = null, targetLang = null) {
+  if (!fs.existsSync(targetFile)) {
+    return { exists: false, complete: false, sourceCount: 0, targetCount: 0, placeholderCount: 0 }
+  }
+  try {
+    const source = JSON.parse(fs.readFileSync(sourceFile, "utf-8"))
+    const target = JSON.parse(fs.readFileSync(targetFile, "utf-8"))
+    const srcCount = countKeys(source)
+    const tgtCount = countKeys(target)
+    // 关键：key 数量一致且每个 key 在 target 中都有值
+    if (srcCount !== tgtCount) {
+      return { exists: true, complete: false, sourceCount: srcCount, targetCount: tgtCount, placeholderCount: 0 }
+    }
+    // 扁平化对比 key 路径
+    const srcPaths = new Set(flattenKeys(source).map((k) => k.keyPath))
+    const tgtPaths = new Set(flattenKeys(target).map((k) => k.keyPath))
+    let allPresent = [...srcPaths].every((p) => tgtPaths.has(p))
+
+    // 检测英文占位符：目标值等于源值（未翻译的复制品），但跳过空字符串和数组
+    let placeholderCount = 0
+    if (allPresent && sourceLang && targetLang && !SOURCE_LANGUAGES.includes(targetLang)) {
+      const srcFlat = flattenKeys(source)
+      const tgtFlat = flattenKeys(target)
+      const tgtMap = {}
+      for (const { keyPath, value } of tgtFlat) {
+        tgtMap[keyPath] = value
+      }
+      for (const { keyPath, value: srcVal } of srcFlat) {
+        if (tgtMap[keyPath] !== undefined && String(tgtMap[keyPath]) === String(srcVal) && String(srcVal).trim() !== "") {
+          placeholderCount++
+        }
+      }
+      if (placeholderCount > 0) {
+        allPresent = false // 有占位符，需要重新翻译
+      }
+    }
+
+    return { exists: true, complete: allPresent, sourceCount: srcCount, targetCount: tgtCount, placeholderCount }
+  } catch {
+    return { exists: true, complete: false, sourceCount: 0, targetCount: 0, placeholderCount: 0 }
+  }
 }
 
 // 记录加载时的文件修改时间，用于并发检测
@@ -988,10 +1069,45 @@ if (IS_ALL) {
     process.exit(0)
   }
 
-  console.log(`🌐 将翻译 ${languages.length} 种语言: ${languages.join(", ")}\n`)
-  process.env.AI_SILENT = "1" // 减少日志输出
+  const sourceLang = "en"
+  const sourceFile = path.join(MESSAGES_DIR, `${sourceLang}.json`)
+  let needTranslate = []
+  let alreadyComplete = []
 
   for (const lang of languages) {
+    const srcLang = lang === "zh-TW" ? "zh-CN" : sourceLang
+    const src = lang === "zh-TW" ? path.join(MESSAGES_DIR, "zh-CN.json") : sourceFile
+    const tgt = path.join(MESSAGES_DIR, `${lang}.json`)
+    const status = checkTargetStatus(src, tgt, srcLang, lang)
+    if (status.complete) {
+      alreadyComplete.push({ lang, count: status.targetCount })
+    } else {
+      needTranslate.push({ lang, placeholderCount: status.placeholderCount })
+    }
+  }
+
+  if (alreadyComplete.length > 0) {
+    console.log(`⏭️  已跳过 ${alreadyComplete.length} 个已完整翻译的文件:`)
+    for (const { lang, count } of alreadyComplete) {
+      console.log(`   ${lang}.json（${count} key，已完整）`)
+    }
+    console.log()
+  }
+
+  if (needTranslate.length === 0) {
+    console.log("✅ 所有语言文件均已完整翻译，无需操作")
+    process.exit(0)
+  }
+
+  console.log(`🌐 需要翻译 ${needTranslate.length} 种语言:\n`)
+  for (const { lang, placeholderCount } of needTranslate) {
+    const extra = placeholderCount > 0 ? `（其中 ${placeholderCount} 条是英文占位符，需重新翻译）` : ""
+    console.log(`   ${lang}${extra}`)
+  }
+  console.log()
+  process.env.AI_SILENT = "1" // 减少日志输出
+
+  for (const { lang } of needTranslate) {
     console.log(`─── ${lang} ───`)
     try {
       execSync(`node scripts/translate.mjs ${lang} --yes`, { stdio: "inherit", timeout: 120000 })
@@ -1002,6 +1118,62 @@ if (IS_ALL) {
   }
 
   console.log("✅ 所有语言翻译完成")
+  process.exit(0)
+}
+
+// ===== --add 模式：新增语言 =====
+if (IS_ADD) {
+  if (!ADD_LANG) {
+    console.error("❌ 请指定要新增的语言代码")
+    console.error("   用法: node scripts/translate.mjs --add <lang-code>")
+    console.error("   示例: node scripts/translate.mjs --add zh-TW")
+    console.error("   示例: node scripts/translate.mjs --add ja")
+    process.exit(1)
+  }
+
+  if (SOURCE_LANGUAGES.includes(ADD_LANG)) {
+    console.error(`❌ ${ADD_LANG} 是源语言（直接手写），不能通过 --add 新增`)
+    process.exit(1)
+  }
+
+  // 自动检测源语言
+  const addSourceLang = ADD_LANG === "zh-TW" ? "zh-CN" : "en"
+  const addSourceFile = path.join(MESSAGES_DIR, `${addSourceLang}.json`)
+
+  if (!fs.existsSync(addSourceFile)) {
+    console.error(`❌ 源语言文件 ${addSourceLang}.json 不存在`)
+    console.error(`   请先创建 ${addSourceLang}.json`)
+    process.exit(1)
+  }
+
+  const addTargetFile = path.join(MESSAGES_DIR, `${ADD_LANG}.json`)
+
+  // 检查是否已完整翻译
+  const status = checkTargetStatus(addSourceFile, addTargetFile, addSourceLang, ADD_LANG)
+  if (status.complete) {
+    console.log(`⏭️  ${ADD_LANG}.json 已存在且完整翻译（${status.targetCount} key），无需操作`)
+    process.exit(0)
+  }
+
+  if (status.exists) {
+    const placeholderExtra = status.placeholderCount > 0
+      ? `（其中 ${status.placeholderCount} 条是英文占位符，需重新翻译）`
+      : ""
+    console.log(`📂 ${ADD_LANG}.json 已存在（${status.targetCount} key），但源文件有 ${status.sourceCount} key${placeholderExtra}，需要补充翻译`)
+  } else {
+    console.log(`🆕 新建 ${ADD_LANG}.json（从 ${addSourceLang}.json 翻译）`)
+  }
+
+  // 调用翻译子进程
+  const cmd = `node scripts/translate.mjs ${ADD_LANG} --yes --source ${addSourceLang}`
+  try {
+    execSync(cmd, { stdio: "inherit", timeout: 120000 })
+  } catch (e) {
+    console.error(`  ❌ ${ADD_LANG} 翻译失败`)
+    process.exit(1)
+  }
+
+  console.log(`✅ ${ADD_LANG} 新增完成`)
   process.exit(0)
 }
 
@@ -1224,23 +1396,43 @@ if (IS_SOURCE_LANG) {
   process.exit(0)
 }
 const missing = []
+let placeholderFoundCount = 0
 function findMissing(src, tgt, prefix = "") {
   for (const k of Object.keys(src)) {
     const keyPath = prefix ? `${prefix}.${k}` : k
     if (typeof src[k] === "object" && src[k] !== null && !Array.isArray(src[k])) {
       if (!tgt[k] || typeof tgt[k] !== "object") tgt[k] = {}
       findMissing(src[k], tgt[k], keyPath)
+    } else if (Array.isArray(src[k])) {
+      // 数组处理：以 JSON 格式传给 AI，保留数组结构
+      if (tgt[k] === undefined) {
+        missing.push({ keyPath, text: JSON.stringify(src[k]), isArray: true })
+      } else if (!IS_SOURCE_LANG && Array.isArray(tgt[k]) && JSON.stringify(tgt[k]) === JSON.stringify(src[k])) {
+        delete tgt[k]
+        missing.push({ keyPath, text: JSON.stringify(src[k]), isArray: true })
+        placeholderFoundCount++
+      }
     } else if (tgt[k] === undefined) {
       missing.push({ keyPath, text: String(src[k]) })
+    } else if (!IS_SOURCE_LANG && String(tgt[k]) === String(src[k]) && String(src[k]).trim() !== "") {
+      // 仅非空字符串才视为英文占位符（空字符串是故意留空的）
+      delete tgt[k]
+      missing.push({ keyPath, text: String(src[k]) })
+      placeholderFoundCount++
     }
   }
 }
 findMissing(source, target)
 
 if (missing.length === 0) {
-  console.log("✅ 没有缺少的翻译，全部已同步")
+  console.log(`⏭️  ${LANG}.json 已完整翻译（${countKeys(target)} key，无需操作）`)
   process.exit(0)
 }
+
+const missingMsg = placeholderFoundCount > 0
+  ? `（其中 ${placeholderFoundCount} 条英文占位符需重新翻译）`
+  : ""
+console.log(`🔍 发现 ${missing.length} 条待翻译${missingMsg}`)
 
 const needAI = []
 let memoryHits = 0
@@ -1313,6 +1505,7 @@ Rules:
 - Preserve any {placeholder} variables exactly as-is (e.g. {name}, {count}, {title})
 - Preserve HTML tags if present
 - Return the translations in the exact same format: key: translated_value
+- If the value is a JSON array (e.g. ["a", "b", "c"]), translate each element and return it as a JSON array: key: ["translated_a", "translated_b", "translated_c"]
 - Do NOT translate pricing numbers, currency symbols, or technical terms like URLs`
 
   const response = await fetch(`${API_BASE}/chat/completions`, {
@@ -1348,10 +1541,17 @@ Rules:
     const key = line.substring(0, colonIdx).trim()
     const value = line.substring(colonIdx + 1).trim()
     if (key && value) {
-      setNested(target, key, value)
+      // 尝试解析 JSON 数组（AI 返回的数组格式）
+      let parsedValue
+      try {
+        parsedValue = JSON.parse(value)
+      } catch {
+        parsedValue = value
+      }
+      setNested(target, key, parsedValue)
       const originalItem = items.find((i) => i.keyPath === key)
       if (originalItem) {
-        setMemory(memory, SOURCE_LANG, LANG, originalItem.text, value)
+        setMemory(memory, SOURCE_LANG, LANG, originalItem.text, typeof parsedValue === 'string' ? parsedValue : JSON.stringify(parsedValue))
       }
     }
   }

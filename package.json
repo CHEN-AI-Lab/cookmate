@@ -18,8 +18,11 @@
     "test": "pnpm --filter cookmate-web test",
     "test:watch": "pnpm --filter cookmate-web test:watch",
     "test:shared": "cd shared && npx vitest run",
+    "test:light": "cd shared && npx vitest run --pool=forks --poolOptions.forks.singleFork --maxWorkers=1",
     "lint": "pnpm --filter cookmate-web lint",
     "lint:shared": "pnpm --filter @cookmate/shared lint",
+    "check:json": "python3 scripts/check-json.py",
+    "check:light": "pnpm check:json && pnpm test:light",
     "check": "bash scripts/check.sh",
     "postinstall": "pnpm --filter cookmate-web postinstall"
   },
