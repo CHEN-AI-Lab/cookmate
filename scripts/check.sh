@@ -26,6 +26,7 @@ check() {
 }
 
 check "Structure check" "bash scripts/check-structure.sh"
+check "Migration safety" "bash scripts/check-migration-safety.sh"
 check "Lint" "cd apps/web && pnpm lint"
 check "Translation keys parity" "python3 scripts/check-translations.py"
 check "TypeScript compile" "cd apps/web && npx tsc --noEmit"

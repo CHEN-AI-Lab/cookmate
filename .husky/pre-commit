@@ -5,6 +5,22 @@
 
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM || true)
 
+# 检查迁移文件是否有危险操作
+MIG_FILES=$(echo "$STAGED_FILES" | grep '^apps/web/prisma/migrations/' | grep 'migration.sql$' || true)
+if [ -n "$MIG_FILES" ]; then
+  echo "🔒 检测到迁移文件变动，输出变更内容供审查..."
+  echo "=========================================="
+  for FILE in $MIG_FILES; do
+    echo "--- $FILE ---"
+    git diff --cached "$FILE" 2>/dev/null || git show HEAD:"$FILE" 2>/dev/null
+    echo ""
+  done
+  echo "=========================================="
+  echo "⚠️  请确认上述迁移 SQL 无误后再提交。"
+  echo "🔒 正在检查迁移安全性..."
+  bash scripts/check-migration-safety.sh || exit 1
+fi
+
 # 检查翻译文件（非源语言）是否有变动 → 自动学习
 TRANS_FILES=$(echo "$STAGED_FILES" | grep '^shared/messages/' | grep -v 'en\.json$' | grep -v 'zh-CN\.json$' || true)
 if [ -n "$TRANS_FILES" ]; then

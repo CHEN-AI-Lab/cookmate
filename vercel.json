@@ -1,5 +1,5 @@
 {
   "framework": "nextjs",
   "installCommand": "pnpm install",
-  "buildCommand": "pnpm run build"
+  "buildCommand": "bash scripts/check-migration-safety.sh && pnpm --filter cookmate-web exec -- prisma migrate deploy --schema=prisma/schema.prisma && pnpm run build"
 }
