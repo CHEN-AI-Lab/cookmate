@@ -12,7 +12,7 @@
 
 set -euo pipefail
 
-MIGRATIONS_DIR="apps/web/prisma/migrations"
+MIGRATIONS_DIR="prisma/migrations"
 
 if [ ! -d "$MIGRATIONS_DIR" ]; then
   echo "ℹ️  没有 prisma/migrations 目录，跳过检查。"

@@ -6,7 +6,7 @@
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM || true)
 
 # 检查迁移文件是否有危险操作
-MIG_FILES=$(echo "$STAGED_FILES" | grep '^apps/web/prisma/migrations/' | grep 'migration.sql$' || true)
+MIG_FILES=$(echo "$STAGED_FILES" | grep '^prisma/migrations/' | grep 'migration.sql$' || true)
 if [ -n "$MIG_FILES" ]; then
   echo "🔒 检测到迁移文件变动，输出变更内容供审查..."
   echo "=========================================="
