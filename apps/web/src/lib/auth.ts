@@ -31,6 +31,7 @@ import AlipayProvider from "@/lib/providers/alipay"
 import WeChatProvider from "@/lib/providers/wechat"
 import { hasDemoCookie, DEMO_SESSION } from "@cookmate/shared/utils/demo-cookie"
 import { cookies } from "next/headers"
+import { checkLoginRateLimit, recordLoginAttempt } from "@/lib/login-rate-limit"
 
 const providers = []
 
@@ -153,16 +154,29 @@ providers.push(
 
       // 支持邮箱或手机号登录
       const isPhone = /^1\d{10}$/.test(account)
+      const rateKey = `password:${account.toLowerCase()}`
+
+      // 检查是否被锁定
+      const rateCheck = checkLoginRateLimit(rateKey)
+      if (!rateCheck.allowed) return null
+
       const user = isPhone
         ? await prisma.user.findUnique({ where: { phone: account } })
         : await prisma.user.findUnique({ where: { email: account } })
 
-      if (!user?.passwordHash) return null
+      if (!user?.passwordHash) {
+        recordLoginAttempt(rateKey, false)
+        return null
+      }
 
       const bcrypt = await import("bcryptjs")
       const valid = await bcrypt.compare(password, user.passwordHash)
-      if (!valid) return null
+      if (!valid) {
+        recordLoginAttempt(rateKey, false)
+        return null
+      }
 
+      recordLoginAttempt(rateKey, true)
       return { id: user.id, name: user.name, email: user.email!, loginMethod: isPhone ? "phone" : "email" }
     },
   })

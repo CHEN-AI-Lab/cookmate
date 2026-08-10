@@ -871,7 +871,9 @@
     "emailAlreadyRegistered": "This email is already registered. Please log in instead.",
     "emptyPhoneAndCode": "Please enter phone number and verification code",
     "emptyEmailAndCode": "Please enter email and verification code",
-    "verifyFailed": "Verification failed"
+    "verifyFailed": "Verification failed",
+    "accountLocked": "Too many failed attempts. Your account is locked for {minutes} minutes.",
+    "attemptsRemaining": "({count} attempt(s) remaining)"
   },
   "settings": {
     "title": "Settings",

@@ -872,7 +872,9 @@
     "emailAlreadyRegistered": "该邮箱已注册，请直接登录",
     "emptyPhoneAndCode": "请输入手机号和验证码",
     "emptyEmailAndCode": "请输入邮箱和验证码",
-    "verifyFailed": "验证失败"
+    "verifyFailed": "验证失败",
+    "accountLocked": "登录失败次数过多，账号已锁定，请 {minutes} 分钟后再试。",
+    "attemptsRemaining": "（还剩 {count} 次机会）"
   },
   "settings": {
     "title": "设置",

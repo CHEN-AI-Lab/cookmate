@@ -857,7 +857,9 @@
     "emailQuotaExceeded": "今日郵件發送額度已用完，請稍後再試",
     "smsNotAvailable": "手機號登錄暫未開放，請使用郵箱或密碼登錄",
     "sendFailed": "發送失敗",
-    "emailNotRegistered": "該郵箱未註冊"
+    "emailNotRegistered": "該郵箱未註冊",
+    "accountLocked": "登入失敗次數過多，帳號已鎖定，請 {minutes} 分鐘後再試。",
+    "attemptsRemaining": "（還剩 {count} 次機會）"
   },
   "settings": {
     "title": "設置",

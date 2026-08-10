@@ -854,7 +854,9 @@
     "setPasswordFirst": "先にパスワードを設定してください",
     "smsNotAvailable": "電話番号ログインはまだ利用できません。メールまたはパスワードでログインしてください。",
     "updateFailed": "更新に失敗しました",
-    "userNotFound": "ユーザーが見つかりません"
+    "userNotFound": "ユーザーが見つかりません",
+    "accountLocked": "ログイン試行回数が多すぎます。アカウントは{minutes}分間ロックされています。",
+    "attemptsRemaining": "（残り{count}回）"
   },
   "settings": {
     "title": "設定",

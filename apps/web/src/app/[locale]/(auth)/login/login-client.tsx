@@ -11,6 +11,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   const t = useTranslations('auth')
   const tv = useTranslations('validation')
   const tc = useTranslations('common')
+  const te = useTranslations('errors')
   const [tab, setTab] = useState<"email" | "password">("email")
   const [phone, setPhone] = useState("")
   const [code, setCode] = useState("")
@@ -227,13 +228,35 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         return
       }
 
+      // 检查是否被锁定
+      const lockRes = await fetch(`/api/auth/check-lockout?account=${encodeURIComponent(email)}`)
+      const lockData = await lockRes.json()
+      if (lockData.locked) {
+        setError(te('accountLocked').replace('{minutes}', String(lockData.minutesRemaining)))
+        setLoading(null)
+        return
+      }
+
       const result = await signIn("password", {
         account: email,
         password,
         redirect: false,
       })
       if (result?.error) {
-        setError(tv('wrongPassword'))
+        // 检查剩余次数
+        try {
+          const remainRes = await fetch(`/api/auth/check-lockout?account=${encodeURIComponent(email)}`)
+          const remainData = await remainRes.json()
+          if (remainData.locked) {
+            setError(te('accountLocked').replace('{minutes}', String(remainData.minutesRemaining)))
+          } else if (remainData.remaining < 3) {
+            setError(`${tv('wrongPassword')} ${te('attemptsRemaining').replace('{count}', String(remainData.remaining))}`)
+          } else {
+            setError(tv('wrongPassword'))
+          }
+        } catch {
+          setError(tv('wrongPassword'))
+        }
       } else {
         window.location.href = result?.url || "/app/dashboard"
       }
