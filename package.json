@@ -27,6 +27,7 @@
     "postinstall": "pnpm --filter cookmate-web postinstall"
   },
   "devDependencies": {
+    "@prisma/client": "^5.22.0",
     "vitest": "^4.1.10"
   }
 }
