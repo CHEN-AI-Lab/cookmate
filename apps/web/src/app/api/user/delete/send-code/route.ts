@@ -6,7 +6,7 @@ import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import { sendEmail } from "@cookmate/shared/utils/email"
 
 function emailT(locale: string, zh: string, en: string): string {
-  return locale === "zh-CN" || locale.startsWith("zh") ? zh : en
+  return locale === "zh-CN" ? zh : en
 }
 
 export async function POST(req: Request) {

@@ -5,7 +5,7 @@ import { isDemoUser } from "@/lib/auth-helpers"
 import { err } from "@cookmate/shared/utils/locale"
 
 function emailT(locale: string, zh: string, en: string): string {
-  return locale === "zh-CN" || locale.startsWith("zh") ? zh : en
+  return locale === "zh-CN" ? zh : en
 }
 
 export async function POST(req: Request) {

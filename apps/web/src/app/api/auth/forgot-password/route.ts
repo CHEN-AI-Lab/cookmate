@@ -5,7 +5,7 @@ import { sendEmail } from "@cookmate/shared/utils/email"
 import bcrypt from "bcryptjs"
 
 function emailT(locale: string, zh: string, en: string): string {
-  return locale === "zh-CN" || locale.startsWith("zh") ? zh : en
+  return locale === "zh-CN" ? zh : en
 }
 
 function isEmail(val: string) {
