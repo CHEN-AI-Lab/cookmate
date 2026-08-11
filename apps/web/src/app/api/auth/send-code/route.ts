@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
+import { getLocaleFromCookie, err, e } from "@cookmate/shared/utils/locale"
 import { sendEmail } from "@cookmate/shared/utils/email"
 
 function isEmail(val: string) {
@@ -61,13 +61,17 @@ export async function POST(req: Request) {
     const isDev = process.env.NODE_ENV === "development"
 
     if (!isDev) {
-      const result = await sendEmail(email, "CookMate 登录验证码", `<div style="font-family:sans-serif;padding:24px;max-width:400px">
+      const subject = e(loc, "CookMate 登录验证码", "CookMate login code")
+      const title = e(loc, "登录验证码", "Login verification code")
+      const desc = e(loc, "请输入以下验证码完成登录：", "Enter the code below to log in:")
+      const expireWarning = e(loc, "验证码 5 分钟内有效，请勿泄露给他人。", "This code expires in 5 minutes. Do not share it with anyone.")
+      const result = await sendEmail(email, subject, `<div style="font-family:sans-serif;padding:24px;max-width:400px">
         <h2 style="color:#FF6B35">🍳 CookMate</h2>
-        <p style="color:#333">您的验证码是：</p>
+        <p style="color:#333">${desc}</p>
         <div style="font-size:32px;font-weight:bold;color:#FF6B35;letter-spacing:8px;text-align:center;padding:16px;background:#FFF8F0;border-radius:12px;margin:16px 0">
           ${code}
         </div>
-        <p style="color:#999;font-size:12px">验证码 5 分钟内有效，请勿泄露给他人。</p>
+        <p style="color:#999;font-size:12px">${expireWarning}</p>
       </div>`)
       if (result.quotaExceeded) {
         return NextResponse.json({ error: err(loc, "emailQuotaExceeded") }, { status: 429 })
