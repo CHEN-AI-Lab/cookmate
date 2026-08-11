@@ -2,7 +2,11 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { isDemoUser } from "@/lib/auth-helpers"
-import { t, err } from "@cookmate/shared/utils/locale"
+import { err } from "@cookmate/shared/utils/locale"
+
+function emailT(locale: string, zh: string, en: string): string {
+  return locale === "zh-CN" || locale.startsWith("zh") ? zh : en
+}
 
 export async function POST(req: Request) {
   try {
@@ -45,12 +49,12 @@ export async function POST(req: Request) {
           body: JSON.stringify({
             from: "CookMate <noreply@aaigc.online>",
             to: email,
-            subject: t(l, "CookMate 邮箱绑定验证码", "CookMate email verification code"),
+            subject: emailT(l, "CookMate 邮箱绑定验证码", "CookMate email verification code"),
             html: `<div style="font-family:sans-serif;padding:24px;max-width:400px">
               <h2 style="color:#FF6B35">🍳 CookMate</h2>
-              <p style="color:#333">${t(l, "绑定邮箱的验证码是：", "Enter the code below to verify your email:")}</p>
+              <p style="color:#333">${emailT(l, "绑定邮箱的验证码是：", "Enter the code below to verify your email:")}</p>
               <div style="font-size:32px;font-weight:bold;color:#FF6B35;letter-spacing:8px;text-align:center;padding:16px;background:#FFF8F0;border-radius:12px;margin:16px 0">${code}</div>
-              <p style="color:#999;font-size:12px">${t(l, "验证码 5 分钟内有效。", "This code expires in 5 minutes.")}</p>
+              <p style="color:#999;font-size:12px">${emailT(l, "验证码 5 分钟内有效。", "This code expires in 5 minutes.")}</p>
             </div>`,
           }),
         })

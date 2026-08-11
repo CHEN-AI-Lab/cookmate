@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getLocaleFromCookie, err, e } from "@cookmate/shared/utils/locale"
+import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import { sendEmail } from "@cookmate/shared/utils/email"
 import bcrypt from "bcryptjs"
+
+function emailT(locale: string, zh: string, en: string): string {
+  return locale === "zh-CN" || locale.startsWith("zh") ? zh : en
+}
 
 function isEmail(val: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
@@ -46,9 +50,9 @@ export async function POST(req: Request) {
 
     const isDev = process.env.NODE_ENV === "development"
     if (!isDev) {
-      const subject = e(loc, "CookMate 密码重置", "CookMate password reset")
-      const desc = e(loc, "您正在重置密码，验证码是：", "You are resetting your password. Enter the code below:")
-      const expireWarning = e(loc, "验证码 5 分钟内有效，请勿泄露给他人。", "This code expires in 5 minutes. Do not share it with anyone.")
+      const subject = emailT(loc, "CookMate 密码重置", "CookMate password reset")
+      const desc = emailT(loc, "您正在重置密码，验证码是：", "You are resetting your password. Enter the code below:")
+      const expireWarning = emailT(loc, "验证码 5 分钟内有效，请勿泄露给他人。", "This code expires in 5 minutes. Do not share it with anyone.")
       const result = await sendEmail(email, subject, `<div style="font-family:sans-serif;padding:24px;max-width:400px">
         <h2 style="color:#FF6B35">🍳 CookMate</h2>
         <p style="color:#333">${desc}</p>

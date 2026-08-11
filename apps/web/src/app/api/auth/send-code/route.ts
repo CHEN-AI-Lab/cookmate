@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getLocaleFromCookie, err, e } from "@cookmate/shared/utils/locale"
+import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import { sendEmail } from "@cookmate/shared/utils/email"
+
+function emailT(locale: string, zh: string, en: string): string {
+  return locale === "zh-CN" || locale.startsWith("zh") ? zh : en
+}
 
 function isEmail(val: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
@@ -61,10 +65,10 @@ export async function POST(req: Request) {
     const isDev = process.env.NODE_ENV === "development"
 
     if (!isDev) {
-      const subject = e(loc, "CookMate 登录验证码", "CookMate login code")
-      const title = e(loc, "登录验证码", "Login verification code")
-      const desc = e(loc, "请输入以下验证码完成登录：", "Enter the code below to log in:")
-      const expireWarning = e(loc, "验证码 5 分钟内有效，请勿泄露给他人。", "This code expires in 5 minutes. Do not share it with anyone.")
+      const subject = emailT(loc, "CookMate 登录验证码", "CookMate login code")
+      const title = emailT(loc, "登录验证码", "Login verification code")
+      const desc = emailT(loc, "请输入以下验证码完成登录：", "Enter the code below to log in:")
+      const expireWarning = emailT(loc, "验证码 5 分钟内有效，请勿泄露给他人。", "This code expires in 5 minutes. Do not share it with anyone.")
       const result = await sendEmail(email, subject, `<div style="font-family:sans-serif;padding:24px;max-width:400px">
         <h2 style="color:#FF6B35">🍳 CookMate</h2>
         <p style="color:#333">${desc}</p>

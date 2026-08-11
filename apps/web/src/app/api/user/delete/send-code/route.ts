@@ -2,8 +2,12 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { isDemoUser } from "@/lib/auth-helpers"
-import { getLocaleFromCookie, err, e } from "@cookmate/shared/utils/locale"
+import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import { sendEmail } from "@cookmate/shared/utils/email"
+
+function emailT(locale: string, zh: string, en: string): string {
+  return locale === "zh-CN" || locale.startsWith("zh") ? zh : en
+}
 
 export async function POST(req: Request) {
   const session = await auth()
@@ -40,9 +44,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, devCode: code })
   }
 
-  const subject = e(loc, "CookMate 账号删除确认验证码", "CookMate account deletion confirmation")
-  const desc = e(loc, "您正在申请删除 CookMate 账号。验证码是：", "You are requesting to delete your CookMate account. Enter the code below:")
-  const expireWarning = e(loc, "验证码 5 分钟内有效。如非本人操作，请忽略此邮件。", "This code expires in 5 minutes. If you did not request this, please ignore this email.")
+  const subject = emailT(loc, "CookMate 账号删除确认验证码", "CookMate account deletion confirmation")
+  const desc = emailT(loc, "您正在申请删除 CookMate 账号。验证码是：", "You are requesting to delete your CookMate account. Enter the code below:")
+  const expireWarning = emailT(loc, "验证码 5 分钟内有效。如非本人操作，请忽略此邮件。", "This code expires in 5 minutes. If you did not request this, please ignore this email.")
   const result = await sendEmail(
     email,
     subject,
