@@ -66,7 +66,6 @@ export async function POST(req: Request) {
 
     if (!isDev) {
       const subject = emailT(loc, "CookMate 登录验证码", "CookMate login code")
-      const title = emailT(loc, "登录验证码", "Login verification code")
       const desc = emailT(loc, "请输入以下验证码完成登录：", "Enter the code below to log in:")
       const expireWarning = emailT(loc, "验证码 5 分钟内有效，请勿泄露给他人。", "This code expires in 5 minutes. Do not share it with anyone.")
       const result = await sendEmail(email, subject, `<div style="font-family:sans-serif;padding:24px;max-width:400px">
