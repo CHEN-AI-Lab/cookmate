@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       if (body.period === "annual" || body.period === "monthly") period = body.period
     } catch { /* 默认 monthly */ }
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL
 
     // 按周期选择对应的 Creem 产品 ID
     const productId = period === "annual"
