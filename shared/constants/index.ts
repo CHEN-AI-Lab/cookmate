@@ -26,6 +26,11 @@ export const SUBSCRIPTION_TIERS = ['free', 'pro', 'family'] as const;
 
 export const MAX_DAILY_FREE_RECOMMENDATIONS = 1;
 
+export const WORKER_URL =
+  (typeof process !== 'undefined' &&
+    (process as any).env?.NEXT_PUBLIC_WORKER_URL) ||
+  'https://stats.aaigc.workers.dev'
+
 export const API_ROUTES = {
   recipes: '/api/recipes',
   generateRecipe: '/api/recipes/generate',

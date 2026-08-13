@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
+import VisitTracker from "@/components/VisitTracker"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -24,6 +25,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           />
         )}
         {children}
+        <VisitTracker />
       </body>
     </html>
   )
