@@ -3,6 +3,10 @@
 import { useEffect } from 'react'
 import { WORKER_URL, FALLBACK_URL } from '../constants'
 
+// Which environment is this deployment? Vercel sets NEXT_PUBLIC_VERCEL_ENV automatically
+const ENV =
+  (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_VERCEL_ENV) || 'development'
+
 export function useVisitTracking(project: string, page?: string | null, tool?: string) {
   useEffect(() => {
     const payload = JSON.stringify({
@@ -10,6 +14,8 @@ export function useVisitTracking(project: string, page?: string | null, tool?: s
       page: page === null ? undefined : page || window.location.pathname,
       tool: tool || null,
       type: tool ? 'tool' : 'page',
+      env: ENV,
+      platform: 'web',
     })
 
     // Try Worker first (foreign users), fallback to insights API (Chinese users)

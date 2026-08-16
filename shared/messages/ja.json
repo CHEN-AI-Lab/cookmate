@@ -195,7 +195,8 @@
     "setPasswordFailed": "パスワードの設定に失敗しました",
     "setupFailed": "設定に失敗しました。やり直してください",
     "verifyFailed": "認証に失敗しました",
-    "wrongPassword": "メールアドレス/電話番号またはパスワードが正しくありません"
+    "wrongPassword": "メールアドレス/電話番号またはパスワードが正しくありません",
+    "agreeTermsRequired": "利用規約とプライバシーポリシーに同意してください"
   },
   "dashboard": {
     "welcomeBack": "おかえりなさい、{name}さん",

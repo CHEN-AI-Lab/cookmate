@@ -195,7 +195,8 @@
     "setupFailed": "設置失敗，請重試",
     "oauthNotConfigured": "該登錄方式尚未配置，上線後即可使用",
     "emailNotRegistered": "該郵箱未註冊",
-    "email": "郵箱"
+    "email": "郵箱",
+    "agreeTermsRequired": "請先勾選同意《服務條款》和《隱私政策》"
   },
   "dashboard": {
     "welcomeBack": "👋 歡迎回來",
