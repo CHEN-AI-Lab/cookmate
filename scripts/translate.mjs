@@ -61,7 +61,9 @@ import path from "node:path"
 import { execSync } from "node:child_process"
 
 // ─── 配置 ───
-const SHARED_DIR = "/home/ubuntu/workspace/.shared"
+// Resolve workspace root relative to this script (scripts/ → .. → workspace)
+const WORKSPACE_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..")
+const SHARED_DIR = path.join(WORKSPACE_ROOT, ".shared")
 const MEMORY_FILE = path.join(SHARED_DIR, "translation-memory.json")
 const MESSAGES_DIR = path.resolve("shared/messages")
 const BACKUP_FILE = path.join(SHARED_DIR, "translation-memory.json.bak")
