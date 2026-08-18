@@ -61,4 +61,3 @@
 ## 已知问题
 - 支付宝支付待商户注册（PayJS 集成）
 - 营养计算为估算值
-- pre-commit 测试门禁需修复 pipefail 问题（见 .husky/pre-commit:18）

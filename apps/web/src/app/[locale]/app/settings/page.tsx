@@ -30,7 +30,6 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false)
   const [showSaved, setShowSaved] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [deleteEmail, setDeleteEmail] = useState("")
   const [deleteCode, setDeleteCode] = useState("")
   const [codeSent, setCodeSent] = useState(false)
   const [sendingCode, setSendingCode] = useState(false)
@@ -181,7 +180,7 @@ const save = async () => {
       const res = await fetch("/api/user/delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: deleteEmail, code: deleteCode }),
+        body: JSON.stringify({ email: profile?.email, code: deleteCode }),
       })
       const data = await res.json()
       if (data.success) {
@@ -664,7 +663,7 @@ const save = async () => {
 
       {/* Delete confirmation modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => { setShowDeleteModal(false); setDeleteEmail(""); setDeleteCode(""); setCodeSent(false); setDeleteError("") }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => { setShowDeleteModal(false); setDeleteCode(""); setCodeSent(false); setDeleteError("") }}>
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
@@ -684,12 +683,9 @@ const save = async () => {
                 <label className="text-xs text-gray-500 mb-1 block">{ts("deleteEmailLabel")}</label>
                 <input
                   type="email"
-                  placeholder={ts("deleteEmailPlaceholder")}
-                  value={deleteEmail}
-                  onChange={(e) => setDeleteEmail(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200"
-                  disabled={codeSent}
-                  autoFocus
+                  value={profile?.email || ""}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+                  disabled
                 />
               </div>
 
@@ -712,7 +708,7 @@ const save = async () => {
 
             <div className="flex gap-2 mt-4">
               <button
-                onClick={() => { setShowDeleteModal(false); setDeleteEmail(""); setDeleteCode(""); setCodeSent(false); setDeleteError("") }}
+                onClick={() => { setShowDeleteModal(false); setDeleteCode(""); setCodeSent(false); setDeleteError("") }}
                 className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
               >
                 {tc("cancel")}
@@ -720,7 +716,7 @@ const save = async () => {
               {!codeSent ? (
                 <button
                   onClick={handleSendDeleteCode}
-                  disabled={sendingCode || !deleteEmail}
+                  disabled={sendingCode || !profile?.email}
                   className="flex-1 px-4 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 disabled:bg-gray-300 transition-colors font-medium"
                 >
                   {sendingCode ? ts("sendingCode") : ts("sendDeleteCode")}
