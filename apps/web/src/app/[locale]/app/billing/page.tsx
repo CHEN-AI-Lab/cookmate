@@ -40,7 +40,7 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [error, setError] = useState("")
-  const [message, setMessage] = useState("")
+  const [message] = useState("")
   const [refreshKey, setRefreshKey] = useState(0)
   const [paying, setPaying] = useState(false)
   const [topBanner, setTopBanner] = useState("")
@@ -87,7 +87,7 @@ export default function BillingPage() {
     } else if (params.get("canceled") === "true") {
       window.history.replaceState({}, "", window.location.pathname)
     }
-  }, [refreshKey])
+  }, [refreshKey, t])
 
   const handleCreemUpgrade = async (period: "monthly" | "annual") => {
     setActionLoading("creem")

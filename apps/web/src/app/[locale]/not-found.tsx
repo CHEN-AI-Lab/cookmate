@@ -3,7 +3,6 @@ import { useTranslations } from "next-intl"
 
 export default function LocaleNotFound() {
   const t = useTranslations("error")
-  const tcommon = useTranslations("common")
 
   return (
     <div className="min-h-screen bg-[#FFF8F0] flex items-center justify-center">

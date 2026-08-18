@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { WORKER_URL, FALLBACK_URL } from '../constants'
 
-// Which environment is this deployment? Vercel sets NEXT_PUBLIC_VERCEL_ENV automatically
+// Environment is exposed via next.config.ts env (maps VERCEL_ENV → NEXT_PUBLIC_VERCEL_ENV)
 const ENV =
   (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_VERCEL_ENV) || 'development'
 

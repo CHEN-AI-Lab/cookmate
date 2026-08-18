@@ -41,7 +41,6 @@ function diffColor(d: string) {
 
 export function RecipeCard({
   recipe,
-  index,
   isStarred,
   onToggleStar,
   onAddToPlan,

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
-import { CATEGORIES, classifyIngredient, isStaple, decomposeDishName, normalizeIngredientName, STAPLE_EXCLUSIONS } from "@cookmate/shared/utils/grocery-categories"
+import { CATEGORIES, classifyIngredient, isStaple, decomposeDishName, normalizeIngredientName } from "@cookmate/shared/utils/grocery-categories"
 
 // ====== 中文数字映射 ======
 const CHINESE_NUMBERS: Record<string, string> = {
@@ -142,9 +142,6 @@ export async function GET(req: Request) {
     const pantryItems = await prisma.pantryItem.findMany({
       where: { userId: session.user.id },
     }).catch((err: unknown) => { console.error("findMany pantry items error:", err); return [] })
-    const pantryNames: string[] = pantryItems.map((i) => i.name)
-
-    // 将食材库名称也归一化，用于精确匹配（必须在 ingredientsWithStatus 之前定义）
     const pantryNormalized = pantryItems.map((i) => ({
       original: i.name,
       normalized: normalizeIngredientName(i.name),

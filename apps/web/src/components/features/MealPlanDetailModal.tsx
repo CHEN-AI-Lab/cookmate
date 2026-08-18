@@ -43,7 +43,7 @@ export function MealPlanDetailModal({
   onNavigateTo,
 }: MealPlanDetailModalProps) {
   const t = useTranslations("mealPlan")
-  const tc = useTranslations("common")
+
 
   if (!open) return null
 

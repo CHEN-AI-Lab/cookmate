@@ -15,7 +15,8 @@ FAIL=0
 check() {
   local name="$1" cmd="$2"
   printf "  ▸ %-40s ... " "$name"
-  if eval "$cmd" 2>/dev/null > /tmp/check-output.txt; then
+  # 在子 shell 中执行，避免 eval 内 cd 副作用污染主 shell 的 cwd 影响后续检查项
+  if (eval "$cmd") 2>/dev/null > /tmp/check-output.txt; then
     echo "✅"
     PASS=$((PASS+1))
   else
@@ -30,7 +31,8 @@ check "Migration safety" "bash scripts/check-migration-safety.sh"
 check "Lint" "cd apps/web && pnpm lint"
 check "Translation keys parity" "python3 scripts/check-translations.py"
 check "TypeScript compile" "cd apps/web && npx tsc --noEmit"
-check "Tests" "pnpm test"
+check "Tests (web)" "pnpm test"
+check "Tests (shared)" "cd shared && npx vitest run"
 
 echo ""
 echo "═══════════════════════════════════════════"

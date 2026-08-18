@@ -1,4 +1,3 @@
-import { auth } from "@/lib/auth"
 import { getTranslations } from "next-intl/server"
 import PublicNavbar from "@/components/layout/PublicNavbar"
 import PublicFooter from "@/components/layout/PublicFooter"
@@ -11,9 +10,7 @@ export const metadata: Metadata = {
 }
 
 export default async function BlogPage() {
-  const session = await auth()
   const t = await getTranslations('blog')
-  const ctaHref = session ? "/app/dashboard" : "/register"
 
   const POSTS = [
     {
@@ -60,7 +57,7 @@ export default async function BlogPage() {
 
   return (
     <div className="min-h-screen bg-[#FFF8F0]">
-      <PublicNavbar ctaHref={ctaHref} session={!!session} />
+      <PublicNavbar />
 
       <section className="max-w-[1400px] mx-auto px-8 pt-20 pb-12 text-center">
         <h1 className="text-4xl sm:text-5xl font-bold text-[#2D3436]">

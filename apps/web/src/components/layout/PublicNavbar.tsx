@@ -4,15 +4,8 @@ import { Link } from "@/i18n/navigation"
 import { useTranslations } from "next-intl"
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
 
-export default function PublicNavbar({
-  ctaHref,
-  session,
-}: {
-  ctaHref?: string
-  session?: boolean
-}) {
+export default function PublicNavbar() {
   const tnav = useTranslations("nav")
-  const link = ctaHref || (session ? "/app/dashboard" : "/register")
 
   return (
     <header className="border-b border-orange-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">

@@ -4,8 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { generateRecipes, normalizeIngredients } from "@cookmate/shared/api/openai"
 import { checkUsageLimit, incrementUsage } from "@/lib/auth-helpers"
 import {
-  BLACKLIST, NON_FOOD, TOXIC, PROTECTED, DRUGS,
-  ILLEGAL, FICTIONAL, ADDITIVES, getBlockReason,
+  BLACKLIST, getBlockReason,
 } from "@cookmate/shared/constants/ingredients"
 
 /** 根据 locale 返回对应语言的错误消息 */

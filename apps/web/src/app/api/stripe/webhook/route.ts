@@ -49,8 +49,6 @@ export async function POST(req: Request) {
 
         // 根据订阅状态更新用户
         const status = subscription.status
-        const items = subscription.items?.data || []
-        const priceId = items[0]?.price?.id || ""
 
         const userTier = status === "active" || status === "trialing" ? "PRO" : "FREE"
 

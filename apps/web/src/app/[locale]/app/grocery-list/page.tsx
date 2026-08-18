@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useTranslations } from "next-intl"
-import { GroceryCategoryList } from "@/components/features/GroceryCategoryList"
 import { getDemoGroceryList } from "@cookmate/shared/demo-data"
 
 interface IngredientItem {
@@ -19,16 +18,8 @@ interface CategoryGroup {
 
 export default function GroceryListPage() {
   const tg = useTranslations("grocery")
-  const tc = useTranslations("common")
   const catLabels = tg.raw("catLabels") as Record<string, string>
   // Category name translation lookup (API returns Chinese names)
-  const getCatLabel = useCallback((name: string): string => {
-    try {
-      return tg(`catLabels.${name}`)
-    } catch {
-      return name
-    }
-  }, [tg])
   const [categories, setCategories] = useState<CategoryGroup[]>([])
   const [loading, setLoading] = useState(true)
   const [total, setTotal] = useState(0)
@@ -263,8 +254,13 @@ export default function GroceryListPage() {
       })
       .catch((err) => console.error("load grocery list error:", err))
       .finally(() => setLoading(false))
+      // 闭包使用 manualItems/categories 是 setChecked 函数式更新，读取当前渲染最新值即可；
+      // 若加入依赖数组会因 loadData 内部 setManualItems 触发回调重建 → 无限请求循环
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days])
 
+  // 依赖 [days] 而非 [loadData]，避免 loadData 内部 setManualItems/setCategories 触发回调重建导致无限请求循环
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadData() }, [days])
 
   // Check demo user status and pre-fill demo data if needed

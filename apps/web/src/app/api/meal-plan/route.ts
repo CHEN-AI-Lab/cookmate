@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import { generateWeeklyPlan, normalizeIngredients } from "@cookmate/shared/api/openai"
 import { checkUsageLimit, incrementUsage } from "@/lib/auth-helpers"
-import type { User } from "@prisma/client"
+
 
 /** 根据 locale 返回对应语言的错误消息 */
 function errMsg(locale: string, zh: string, en: string): string {
@@ -162,7 +162,7 @@ export async function POST(req: Request) {
       console.error("Failed to save meal plan to DB (returning generated data only):", err)
       const mealTypeKeys = ["breakfast", "lunch", "dinner"] as const
       const slots = Object.entries(weekPlan).flatMap(([dayName, meals]) =>
-        mealTypeKeys.map((mealType, idx) => ({
+        mealTypeKeys.map((mealType) => ({
           id: `${dayName}-${mealType}`,
           dayOfWeek: dayMap[dayName] ?? 0,
           mealType,

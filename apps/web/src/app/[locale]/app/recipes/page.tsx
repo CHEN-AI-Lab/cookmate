@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import { INGREDIENT_LABELS } from "@cookmate/shared/constants/ingredients"
 import { RecipeCard } from "@/components/features/RecipeCard"
@@ -30,10 +30,8 @@ export default function RecipesPage() {
   const t = useTranslations("recipes")
   const tmeal = useTranslations("mealPlan")
   const locale = useLocale()
-  const tp = useTranslations("pantry")
   const ingLabels = INGREDIENT_LABELS
   const displayName = (name: string) => locale === "zh-CN" || locale === "zh-TW" ? name : (ingLabels[name] || name)
-  const router = useRouter()
   const searchParams = useSearchParams()
   const [ingredients, setIngredients] = useState<string[]>(() => {
     const fromUrl = searchParams.get("ingredients")
@@ -281,15 +279,6 @@ export default function RecipesPage() {
       setError(t("networkError"))
     } finally {
       setLoading(false)
-    }
-  }
-
-  const diffColor = (d: string) => {
-    switch (d) {
-      case "easy": return "text-green-600 bg-green-50"
-      case "medium": return "text-yellow-600 bg-yellow-50"
-      case "hard": return "text-red-600 bg-red-50"
-      default: return "text-gray-600 bg-gray-50"
     }
   }
 

@@ -21,4 +21,5 @@ jobs:
       - run: bash scripts/check-migration-safety.sh
       - run: pnpm lint
       - run: pnpm test
+      - run: pnpm test:shared
       - run: pnpm build

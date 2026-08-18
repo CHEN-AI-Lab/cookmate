@@ -60,6 +60,7 @@ export default function AlipayProvider<P extends AlipayProfile>(
 
     userinfo: {
       url: apiBase,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- mock 回调签名必须匹配 OAuth provider 类型
       async request(_ctx: { clientId: string; tokens: { access_token?: string; openid?: string } }) {
           // Mock：返回固定用户信息
           return {

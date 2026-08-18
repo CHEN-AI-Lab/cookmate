@@ -9,7 +9,6 @@ import { useLocale } from "next-intl"
 import { useState, useRef, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { locales, localeNames } from "@cookmate/shared/constants"
-import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
 
 const navItems = [
   { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
@@ -29,7 +28,6 @@ export function Sidebar({
   isDemoUser?: boolean
 }) {
   const pathname = usePathname()
-  const locale = useLocale()
   const t = useTranslations("nav")
   const initial = name?.charAt(0)?.toUpperCase() || "?"
 
@@ -92,37 +90,37 @@ export function Sidebar({
 function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: string; t: (key: string) => string; isDemoUser?: boolean }) {
   const [open, setOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
-  const [demoLangToast, setDemoLangToast] = useState("")
+  const [demoLangToast, setDemoLangToast] = useState(() => {
+    if (typeof window === "undefined") return ""
+    const saved = sessionStorage.getItem("demoLangToast")
+    if (saved) {
+      sessionStorage.removeItem("demoLangToast")
+      return saved
+    }
+    return ""
+  })
   const router = useRouter()
   const menuRef = useRef<HTMLDivElement>(null)
   const locale = useLocale()
 
-  // Restore toast from sessionStorage after page reload
+  // Auto-dismiss toast after 2.5s
   useEffect(() => {
-    const saved = sessionStorage.getItem("demoLangToast")
-    if (saved) {
-      setDemoLangToast(saved)
-      sessionStorage.removeItem("demoLangToast")
-      const timer = setTimeout(() => setDemoLangToast(""), 2500)
-      return () => clearTimeout(timer)
-    }
-  }, [])
+    if (!demoLangToast) return
+    const timer = setTimeout(() => setDemoLangToast(""), 2500)
+    return () => clearTimeout(timer)
+  }, [demoLangToast])
 
-  // Close on click outside
+  // Close on click outside — also close lang sub-menu
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setOpen(false)
+        setLangOpen(false)
       }
     }
     document.addEventListener("mousedown", handleClick)
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
-
-  // Reset language sub-menu when main menu closes
-  useEffect(() => {
-    if (!open) setLangOpen(false)
-  }, [open])
 
   return (
     <>
@@ -138,7 +136,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
     <div ref={menuRef} className="relative">
       {/* Avatar button */}
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => { if (open) setLangOpen(false); setOpen(!open) }}
         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-orange-50 w-full text-left transition-colors"
       >
         <span className="flex items-center justify-center w-7 h-7 rounded-full bg-orange-100 text-[#FF6B35] text-xs font-bold shrink-0">
@@ -155,7 +153,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
         <div className="absolute bottom-full left-0 right-0 mb-1 bg-white border border-orange-100 rounded-xl shadow-lg py-1.5 text-sm">
           <Link
             href="/app/settings"
-            onClick={() => setOpen(false)}
+            onClick={() => { setOpen(false); setLangOpen(false) }}
             className="flex items-center gap-2.5 px-4 py-2 text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
           >
             <span className="text-base">⚙️</span>

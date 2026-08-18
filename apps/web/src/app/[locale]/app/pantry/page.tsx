@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useTranslations, useLocale } from "next-intl"
+import { useTranslations } from "next-intl"
 import { getDemoPantryItems } from "@cookmate/shared/demo-data"
 
 interface PantryItem {
@@ -15,15 +15,13 @@ export default function PantryPage() {
   const router = useRouter()
   const t = useTranslations("pantry")
   const tc = useTranslations("common")
-  const locale = useLocale()
-  const catLabels = t.raw("catLabels") as Record<string, string>
   const [items, setItems] = useState<PantryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [inputName, setInputName] = useState("")
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [showAddDialog, setShowAddDialog] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [, setError] = useState<string | null>(null)
   const [dupDialog, setDupDialog] = useState<string | null>(null)
   const [isDemoUser, setIsDemoUser] = useState(false)
   const [demoToast, setDemoToast] = useState("")

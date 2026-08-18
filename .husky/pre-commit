@@ -5,6 +5,26 @@
 
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM || true)
 
+# ===== 质量门禁：结构检查 + 测试（铁律，统一入口）=====
+# 结构检查（多端目录合规）
+echo "🔍 运行结构检查..."
+bash scripts/check-structure.sh || {
+  echo "❌ 结构检查未通过，请修复后再提交。"
+  exit 1
+}
+
+# 单元测试（web + shared 快速门禁）
+echo "🧪 运行单元测试（apps/web）..."
+pnpm --filter cookmate-web test 2>&1 | tail -5 || {
+  echo "❌ apps/web 测试未通过，请修复后再提交。"
+  exit 1
+}
+echo "🧪 运行单元测试（shared）..."
+(cd shared && npx vitest run 2>&1 | tail -5) || {
+  echo "❌ shared 测试未通过，请修复后再提交。"
+  exit 1
+}
+
 # 检查迁移文件是否有危险操作
 MIG_FILES=$(echo "$STAGED_FILES" | grep '^prisma/migrations/' | grep 'migration.sql$' || true)
 if [ -n "$MIG_FILES" ]; then
@@ -40,7 +60,12 @@ if [ -n "$SOURCE_FILES" ]; then
   echo ""
 
   echo "📝 检测到源语言文件新增了 key，需要翻译其他语言"
-  read -p "   是否立即自动翻译所有语言？(y/N) " ANSWER
+  if [ -t 0 ]; then
+    read -p "   是否立即自动翻译所有语言？(y/N) " ANSWER
+  else
+    echo "   (非交互环境，跳过翻译)"
+    ANSWER="n"
+  fi
   case "$ANSWER" in
     [yY]|[yY][eE][sS])
       echo "   🌐 正在翻译所有语言..."

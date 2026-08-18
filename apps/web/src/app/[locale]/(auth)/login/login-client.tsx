@@ -13,8 +13,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   const tc = useTranslations('common')
   const te = useTranslations('errors')
   const [tab, setTab] = useState<"email" | "password">("email")
-  const [phone, setPhone] = useState("")
-  const [code, setCode] = useState("")
   const [email, setEmail] = useState("")
   const [emailCode, setEmailCode] = useState("")
   const [emailCodeSent, setEmailCodeSent] = useState(false)
@@ -30,7 +28,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   const [setupCode, setSetupCode] = useState("")
   const [setupNewPassword, setSetupNewPassword] = useState("")
   const [setupConfirmPassword, setSetupConfirmPassword] = useState("")
-  const [setupCodeSent, setSetupCodeSent] = useState(false)
+  const [, setSetupCodeSent] = useState(false)
   const [setupCountdown, setSetupCountdown] = useState(0)
   const [emailMsg, setEmailMsg] = useState("")
 
@@ -62,65 +60,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
       return () => clearTimeout(t)
     }
   }, [setupCountdown])
-
-  const sendCode = async () => {
-    if (!/^1\d{10}$/.test(phone)) {
-      setError(tv('invalidPhone'))
-      return
-    }
-    setLoading("send")
-    setError("")
-    try {
-      const res = await fetch("/api/auth/send-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || tv('sendFailed'))
-        return
-      }
-      if (data.devCode) {
-        setCode(data.devCode)
-        setError(tv('devCodeAutoFill', { code: data.devCode }))
-      } else {
-        setError(tv('codeSent'))
-        setTimeout(() => setError(""), 3000)
-      }
-    } catch {
-      setError(tv('networkError'))
-    } finally {
-      setLoading(null)
-    }
-  }
-
-  const handlePhoneLogin = async () => {
-    if (!phone || !code) {
-      setError(tv('emptyPhoneAndCode'))
-      return
-    }
-    setLoading("phone")
-    setError("")
-    try {
-      if (isLoggedIn) await signOut({ redirect: false })
-      const res = await fetch("/api/auth/verify-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, code }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || tv('verifyFailed'))
-        return
-      }
-      window.location.href = "/app/dashboard"
-    } catch {
-      setError(tv('networkError'))
-    } finally {
-      setLoading(null)
-    }
-  }
 
   const handleEmailLogin = async () => {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {

@@ -31,19 +31,13 @@ interface MealPlan {
   slots: MealSlot[]
 }
 
-const MEAL_TYPES = ["breakfast", "lunch", "dinner"]
-
 export default function MealPlanPage() {
   const t = useTranslations("mealPlan")
   const locale = useLocale()
   const tc = useTranslations("common")
-  const tr = useTranslations("recipes")
   const DAY_LABELS = [t("monday"), t("tuesday"), t("wednesday"), t("thursday"), t("friday"), t("saturday"), t("sunday")]
   const MEAL_LABELS: Record<string, string> = {
     breakfast: t("breakfast"), lunch: t("lunch"), dinner: t("dinner"),
-  }
-  const MEAL_EMOJIS: Record<string, string> = {
-    breakfast: "🌅", lunch: "☀️", dinner: "🌙",
   }
   const [plan, setPlan] = useState<MealPlan | null>(null)
   const [loading, setLoading] = useState(true)
@@ -74,7 +68,7 @@ export default function MealPlanPage() {
         }
       })
       .catch((err) => console.error("load profile error:", err))
-  }, [])
+  }, [locale])
 
   const generatePlan = async () => {
     setGenerating(true)

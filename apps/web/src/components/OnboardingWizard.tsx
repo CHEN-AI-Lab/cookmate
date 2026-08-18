@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from "@cookmate/shared/constants"
@@ -17,7 +16,7 @@ const QUICK_INGREDIENTS = [
 export default function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
   const t = useTranslations("onboarding")
   const ts = useTranslations("settings")
-  const router = useRouter()
+
   const [isDemoUser, setIsDemoUser] = useState<boolean | null>(null)
 
   useEffect(() => {

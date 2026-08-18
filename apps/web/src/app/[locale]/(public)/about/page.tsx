@@ -1,4 +1,3 @@
-import { auth } from "@/lib/auth"
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import PublicNavbar from "@/components/layout/PublicNavbar"
@@ -11,13 +10,11 @@ export const metadata: Metadata = {
 }
 
 export default async function AboutPage() {
-  const session = await auth()
-  const ctaHref = session ? "/app/dashboard" : "/register"
   const t = await getTranslations("about")
 
   return (
     <div className="min-h-screen bg-[#FFF8F0]">
-      <PublicNavbar ctaHref={ctaHref} session={!!session} />
+      <PublicNavbar />
 
       <section className="max-w-[1400px] mx-auto px-8 pt-20 pb-16 text-center">
         <h1 className="text-4xl sm:text-5xl font-bold text-[#2D3436]">{t("title")}</h1>
@@ -55,7 +52,7 @@ export default async function AboutPage() {
             <h2 className="text-2xl font-bold text-[#2D3436] mb-4">{t("ctaTitle")}</h2>
             <p className="text-gray-600 mb-6">{t("ctaDesc")}</p>
             <Link
-              href={ctaHref}
+              href="/register"
               className="inline-block bg-[#FF6B35] text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200"
             >
               {t("ctaButton")}

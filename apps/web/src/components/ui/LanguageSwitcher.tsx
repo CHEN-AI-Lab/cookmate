@@ -15,19 +15,23 @@ export default function LanguageSwitcher({
   const pathname = usePathname()
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [toast, setToast] = useState("")
-  const ref = useRef<HTMLDivElement>(null)
-
-  // Restore toast from sessionStorage after page reload
-  useEffect(() => {
+  const [toast, setToast] = useState(() => {
+    if (typeof window === "undefined") return ""
     const saved = sessionStorage.getItem("demoLangToast")
     if (saved) {
-      setToast(saved)
       sessionStorage.removeItem("demoLangToast")
-      const timer = setTimeout(() => setToast(""), 2500)
-      return () => clearTimeout(timer)
+      return saved
     }
-  }, [])
+    return ""
+  })
+  const ref = useRef<HTMLDivElement>(null)
+
+  // Auto-dismiss toast after 2.5s
+  useEffect(() => {
+    if (!toast) return
+    const timer = setTimeout(() => setToast(""), 2500)
+    return () => clearTimeout(timer)
+  }, [toast])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {

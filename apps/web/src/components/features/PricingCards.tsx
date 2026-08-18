@@ -5,7 +5,6 @@ import { PricingCard } from "./PricingCard"
 
 export function PricingCards() {
   const t = useTranslations("billing")
-  const tc = useTranslations("common")
 
   return (
     <section id="pricing" className="py-16 bg-white">

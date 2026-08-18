@@ -124,7 +124,7 @@ export default function MyRecipesPage() {
       }
     }
     init()
-  }, [])
+  }, [locale])
 
   useEffect(() => {
     fetch("/api/user/profile")
@@ -142,7 +142,7 @@ export default function MyRecipesPage() {
         }
       })
       .catch((err) => console.error("load profile error:", err))
-  }, [])
+  }, [locale])
 
   const toggleStar = async (recipeId: string) => {
     if (isDemoUser) {

@@ -49,7 +49,6 @@ export default function SettingsPage() {
   const [bindEmailCode, setBindEmailCode] = useState("")
   const [bindCodeSent, setBindCodeSent] = useState(false)
   const [bindLoading, setBindLoading] = useState(false)
-  const [bindCountdown, setBindCountdown] = useState(0)
   const [bindError, setBindError] = useState("")
     const [accountMsg, setAccountMsg] = useState("")
     const [globalToast, setGlobalToast] = useState("")

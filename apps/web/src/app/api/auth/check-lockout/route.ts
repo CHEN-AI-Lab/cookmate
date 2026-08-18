@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { checkLoginRateLimit } from "@/lib/login-rate-limit"
+import { checkLoginRateLimit } from "@cookmate/shared/utils/login-rate-limit"
 
 // GET /api/auth/check-lockout?account=xxx
 export async function GET(req: Request) {

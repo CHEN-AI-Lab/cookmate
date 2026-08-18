@@ -3,7 +3,6 @@ import { signIn, signOut } from "next-auth/react"
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
-import PasswordInput from "@/components/ui/PasswordInput"
 import OAuthLoadingOverlay from "@/components/ui/OAuthLoadingOverlay"
 
 export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: boolean; userName?: string }) {

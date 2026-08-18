@@ -17,7 +17,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#FFF8F0]">
-      <PublicNavbar ctaHref={ctaHref} session={!!session} />
+      <PublicNavbar />
 
       {/* Hero */}
       <section className="max-w-[1400px] mx-auto px-8 pt-20 pb-16 text-center">

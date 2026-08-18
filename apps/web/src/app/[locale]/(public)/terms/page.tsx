@@ -1,4 +1,3 @@
-import { auth } from "@/lib/auth"
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import PublicNavbar from "@/components/layout/PublicNavbar"
@@ -11,13 +10,11 @@ export const metadata: Metadata = {
 }
 
 export default async function TermsPage() {
-  const session = await auth()
-  const ctaHref = session ? "/app/dashboard" : "/register"
   const t = await getTranslations("terms")
 
   return (
     <div className="min-h-screen bg-[#FFF8F0]">
-      <PublicNavbar ctaHref={ctaHref} session={!!session} />
+      <PublicNavbar />
 
       <section className="max-w-3xl mx-auto px-8 pt-20 pb-16">
         <h1 className="text-4xl sm:text-5xl font-bold text-[#2D3436]">{t("title")}</h1>

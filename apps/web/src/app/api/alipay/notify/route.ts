@@ -11,9 +11,7 @@ export async function POST(req: Request) {
     }
 
     const outTradeNo = params.out_trade_no
-    const tradeNo = params.trade_no
     const tradeStatus = params.trade_status
-    const totalAmount = params.total_amount
     const appId = params.app_id
 
     // 验证 app_id

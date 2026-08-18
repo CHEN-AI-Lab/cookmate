@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { isDemoUser } from "@/lib/auth-helpers"
-import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
+import { err } from "@cookmate/shared/utils/locale"
 
 export async function GET() {
   try {

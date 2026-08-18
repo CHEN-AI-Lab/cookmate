@@ -31,7 +31,7 @@ import AlipayProvider from "@/lib/providers/alipay"
 import WeChatProvider from "@/lib/providers/wechat"
 import { hasDemoCookie, DEMO_SESSION } from "@cookmate/shared/utils/demo-cookie"
 import { cookies } from "next/headers"
-import { checkLoginRateLimit, recordLoginAttempt } from "@/lib/login-rate-limit"
+import { checkLoginRateLimit, recordLoginAttempt } from "@cookmate/shared/utils/login-rate-limit"
 
 const providers = []
 
