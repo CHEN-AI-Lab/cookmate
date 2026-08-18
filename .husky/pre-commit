@@ -1,5 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 # pre-commit hook: 自动学习翻译 + 可选自动翻译
+set -o pipefail
 # 1. 翻译文件（ja/zh-TW）被修改 → 自动 --learn 到记忆库
 # 2. 源语言文件（en/zh-CN）新增 key → 询问是否自动翻译其他语言
 
