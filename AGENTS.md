@@ -48,6 +48,7 @@ cookmate/
 6. **所有外部 API key 通过环境变量注入，不上传**
 7. **通用代码必须放 shared/，不放在 apps/web/src/lib/ 下**
 8. **修改前先诊断，诊断完必须修复**
+9. **Prisma 必须使用最新稳定版** — 所有项目铁律（2026-08 起），`prisma` 和 `@prisma/client` 必须同版本。Vercel 完全兼容 Prisma 7（官方有专用部署指南）。升级走官方 upgrade guide，逐步验证（`prisma validate` → `tsc --noEmit` → `pnpm test` → `pnpm build` → `bash scripts/check.sh`），禁止参考旧项目版本
 
 ## 日常命令
 
