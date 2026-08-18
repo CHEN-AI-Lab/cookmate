@@ -13,6 +13,8 @@ import {
   bindPhoneSchema,
   FAKE_PHONES,
   COMMON_PASSWORDS,
+  translateValidationError,
+  translateZodErrors,
 } from '@cookmate/shared/validators'
 
 describe('phoneSchema', () => {
@@ -205,5 +207,29 @@ describe('bindPhoneSchema', () => {
       password: 'Ab1',
     })
     expect(result.success).toBe(false)
+  })
+})
+
+describe('translateValidationError', () => {
+  it('translates known keys to Chinese', () => {
+    expect(translateValidationError('invalid_phone', 'zh-CN')).toContain('手机')
+  })
+
+  it('translates known keys to English', () => {
+    expect(translateValidationError('invalid_phone', 'en')).toContain('phone')
+  })
+
+  it('returns key for unknown keys', () => {
+    expect(translateValidationError('no_such_key', 'zh-CN')).toBe('no_such_key')
+  })
+})
+
+describe('translateZodErrors', () => {
+  it('maps zod errors to translated messages', () => {
+    const errors = [{ message: 'invalid_phone' }, { message: 'password_too_short' }]
+    const translated = translateZodErrors(errors, 'zh-CN')
+    expect(translated).toHaveLength(2)
+    expect(translated[0]).toContain('手机')
+    expect(translated[1]).toContain('8')
   })
 })

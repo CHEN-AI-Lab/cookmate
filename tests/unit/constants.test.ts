@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { MEAL_TYPES, DIETARY_PREFERENCES, DIFFICULTY_LEVELS, SUBSCRIPTION_TIERS, MAX_DAILY_FREE_RECOMMENDATIONS, API_ROUTES, APP_NAME } from '@cookmate/shared/constants'
+import { apiError, API_ERRORS } from '@cookmate/shared/constants/api-errors'
+import { PRICING } from '@cookmate/shared/constants/pricing'
+import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from '@cookmate/shared/constants/preferences'
 
 describe('APP_NAME', () => {
   it('is CookMate', () => {
@@ -81,5 +84,61 @@ describe('API_ROUTES', () => {
     expect(API_ROUTES.pantry).toBe('/api/pantry')
     expect(API_ROUTES.user).toBe('/api/user')
     expect(API_ROUTES.settings).toBe('/api/settings')
+  })
+})
+
+describe('apiError', () => {
+  it('returns English for en locale', () => {
+    expect(apiError('loginRequired', 'en')).toContain('log in')
+  })
+
+  it('returns Chinese for zh locale', () => {
+    expect(apiError('loginRequired', 'zh-CN')).toContain('登录')
+  })
+
+  it('handles en- prefixed locales', () => {
+    expect(apiError('userNotFound', 'en-US')).toBe(API_ERRORS.userNotFound.en)
+  })
+
+  it('returns key for invalid keys', () => {
+    // @ts-expect-error - testing invalid key at runtime
+    expect(apiError('no_such_key', 'en')).toBe('no_such_key')
+  })
+})
+
+describe('PRICING', () => {
+  it('has 4 plans with both currencies', () => {
+    const plans = PRICING.plans
+    for (const period of ['monthly', 'quarterly', 'semiannual', 'annual'] as const) {
+      expect(plans[period].cny.amount).toBeGreaterThan(0)
+      expect(plans[period].usd.amount).toBeGreaterThan(0)
+      expect(plans[period].cny.display).toBeTruthy()
+    }
+  })
+
+  it('get() returns CNY by default', () => {
+    expect(PRICING.get('monthly')).toBe(PRICING.plans.monthly.cny)
+  })
+
+  it('get() returns USD when requested', () => {
+    expect(PRICING.get('annual', 'USD')).toBe(PRICING.plans.annual.usd)
+  })
+
+  it('annual plans cost less per period than monthly', () => {
+    expect(PRICING.plans.annual.cny.amount).toBeLessThan(PRICING.plans.monthly.cny.amount * 12)
+  })
+})
+
+describe('preferences', () => {
+  it('has diet options', () => {
+    expect(DIET_OPTIONS.length).toBeGreaterThan(3)
+  })
+
+  it('has cuisine options', () => {
+    expect(CUISINE_OPTIONS.length).toBeGreaterThan(3)
+  })
+
+  it('has serving sizes 1-6', () => {
+    expect(SERVING_SIZE_OPTIONS).toEqual([1, 2, 3, 4, 5, 6])
   })
 })

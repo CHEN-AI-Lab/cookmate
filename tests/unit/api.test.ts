@@ -15,6 +15,26 @@ describe('alipay-pay - generateOrderId', () => {
   })
 })
 
+describe('generateOrderId - channel prefixes', () => {
+  it('prefixes with CK + channel code', () => {
+    expect(generateOrderId('alipay')).toMatch(/^CKAL\d{8}[0-9A-F]{8}$/)
+    expect(generateOrderId('creem')).toMatch(/^CKCR\d{8}[0-9A-F]{8}$/)
+    expect(generateOrderId('stripe')).toMatch(/^CKST\d{8}[0-9A-F]{8}$/)
+  })
+
+  it('uses XX prefix for unknown channels', () => {
+    expect(generateOrderId('unknown')).toMatch(/^CKXX\d{8}[0-9A-F]{8}$/)
+  })
+
+  it('contains today\'s date', () => {
+    const d = new Date()
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    expect(generateOrderId('stripe')).toContain(`${y}${m}${day}`)
+  })
+})
+
 describe('alipay-pay - isAlipayConfigured', () => {
   it('returns false when env vars are not set', () => {
     // In test env, no Alipay env vars are set

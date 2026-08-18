@@ -13,15 +13,10 @@ bash scripts/check-structure.sh || {
   exit 1
 }
 
-# 单元测试（web + shared 快速门禁）
-echo "🧪 运行单元测试（apps/web）..."
+# 单元测试（web vitest 已包含根目录 tests/unit + shared 测试）
+echo "🧪 运行单元测试..."
 pnpm --filter cookmate-web test 2>&1 | tail -5 || {
-  echo "❌ apps/web 测试未通过，请修复后再提交。"
-  exit 1
-}
-echo "🧪 运行单元测试（shared）..."
-(cd shared && npx vitest run 2>&1 | tail -5) || {
-  echo "❌ shared 测试未通过，请修复后再提交。"
+  echo "❌ 单元测试未通过，请修复后再提交。"
   exit 1
 }
 
