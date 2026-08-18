@@ -15,10 +15,12 @@
     "check:json": "python3 scripts/check-json.py",
     "check:light": "pnpm check:json && pnpm test:light",
     "check": "bash scripts/check.sh",
-    "postinstall": "pnpm --filter cookmate-web postinstall"
+    "postinstall": "pnpm --filter cookmate-web postinstall",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@prisma/client": "^6.19.3",
+    "husky": "^9.1.7",
     "prisma": "^6.19.3",
     "vitest": "^4.1.10"
   }

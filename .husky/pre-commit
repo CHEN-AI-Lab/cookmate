@@ -15,11 +15,15 @@ bash scripts/check-structure.sh || {
 }
 
 # 单元测试（web vitest 已包含根目录 tests/unit + shared 测试）
+# 注意：脚本由 .husky/_/h 以 `sh -e` 执行，命令替换失败会触发 set -e 直接退出，
+# 导致后面的 if 分支不执行。用 `&& ... || TEST_STATUS=$?` 模式避免 set -e 吞掉输出。
 echo "🧪 运行单元测试..."
-pnpm --filter cookmate-web test 2>&1 | tail -5 || {
+TEST_OUTPUT=$(pnpm --filter cookmate-web test 2>&1) && TEST_STATUS=0 || TEST_STATUS=$?
+if [ $TEST_STATUS -ne 0 ]; then
+  echo "$TEST_OUTPUT" | tail -5
   echo "❌ 单元测试未通过，请修复后再提交。"
   exit 1
-}
+fi
 
 # 检查迁移文件是否有危险操作
 MIG_FILES=$(echo "$STAGED_FILES" | grep '^prisma/migrations/' | grep 'migration.sql$' || true)
