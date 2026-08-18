@@ -7,7 +7,7 @@ echo "=== CookMate Docker Entrypoint ==="
 # Run database migrations
 echo "▸ Running database migrations..."
 cd /app/apps/web
-npx prisma db push --skip-generate 2>&1 || echo "⚠️ Migration skipped (no changes needed)"
+npx prisma migrate deploy --schema=../../prisma/schema.prisma 2>&1 || echo "⚠️ No pending migrations"
 cd /app
 
 # Start Next.js
