@@ -201,7 +201,7 @@ const save = async () => {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#2D3436]">{ts("title")}</h1>
+        <h1 className="text-2xl font-bold text-text-primary">{ts("title")}</h1>
         <p className="text-sm text-gray-400 mt-1">{ts("subtitle")}</p>
       </div>
 
@@ -214,7 +214,7 @@ const save = async () => {
           </p>
           <Link
             href="/register"
-            className="inline-block bg-[#FF6B35] text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-all"
+            className="inline-block bg-accent text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-all"
           >
             {tc("freeRegister")}
           </Link>
@@ -225,17 +225,17 @@ const save = async () => {
         {/* Left column: Account info + Plan */}
         <div className="h-full">
           <div className="bg-white rounded-2xl shadow-sm border border-orange-50 overflow-hidden h-full">
-            <div className="h-1 bg-gradient-to-r from-[#FF6B35] to-orange-300" />
+            <div className="h-1 bg-gradient-to-r from-accent to-orange-300" />
             <div className="p-5 sm:p-6">
             <div className="flex items-center gap-2 mb-5">
               <span className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center text-sm shrink-0">👤</span>
-              <h2 className="font-bold text-[#2D3436]">{ts("profile")}</h2>
+              <h2 className="font-bold text-text-primary">{ts("profile")}</h2>
             </div>
             {profile ? (
                           <div className="space-y-3">
                             <div className="flex items-center justify-between py-2 border-b border-gray-50">
                               <span className="text-sm text-gray-500">{ts("username")}</span>
-                              <span className="text-sm font-medium text-[#2D3436]">
+                              <span className="text-sm font-medium text-text-primary">
                                 {editingName ? (
                                   <div className="flex items-center gap-2">
                                     <input
@@ -243,24 +243,24 @@ const save = async () => {
                                       value={editNameValue}
                                       onChange={(e) => setEditNameValue(e.target.value)}
                                       maxLength={30}
-                                      className="border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-[#FF6B35] w-32"
+                                      className="border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-accent w-32"
                                       autoFocus
                                       onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setEditingName(false) }}
                                     />
-                                    <button onClick={saveName} className="text-xs text-[#FF6B35] hover:underline">{ts("saveName")}</button>
+                                    <button onClick={saveName} className="text-xs text-accent hover:underline">{ts("saveName")}</button>
                                     <button onClick={() => setEditingName(false)} className="text-xs text-gray-400 hover:text-gray-600">{ts("cancelName")}</button>
                                   </div>
                                 ) : (
                                   <>
                                     {profile?.isDemoUser && (locale === "en" || locale.startsWith("en")) ? "Demo User" : profile.name || ts("notSet")}
-                                    <button onClick={() => { if (profile?.isDemoUser) { setGlobalToast(ts("demoToast")); setTimeout(() => setGlobalToast(""), 3000); return } setEditNameValue(profile.name || ""); setEditingName(true) }} className="ml-2 text-[#FF6B35] text-xs hover:underline disabled:text-gray-300 disabled:cursor-not-allowed">{ts("editName")}</button>
+                                    <button onClick={() => { if (profile?.isDemoUser) { setGlobalToast(ts("demoToast")); setTimeout(() => setGlobalToast(""), 3000); return } setEditNameValue(profile.name || ""); setEditingName(true) }} className="ml-2 text-accent text-xs hover:underline disabled:text-gray-300 disabled:cursor-not-allowed">{ts("editName")}</button>
                                   </>
                                 )}
                               </span>
                             </div>
                             <div className="flex items-center justify-between py-2 border-b border-gray-50">
                               <span className="text-sm text-gray-500">{ts("loginMethod")}</span>
-                  <span className="text-sm font-medium text-[#2D3436]">
+                  <span className="text-sm font-medium text-text-primary">
                 {profile?.isDemoUser && (locale === "en" || locale.startsWith("en"))
                   ? "Demo Login"
                   : locale.startsWith("zh")
@@ -269,7 +269,7 @@ const save = async () => {
                 </div>
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
                   <span className="text-sm text-gray-500">{ts("phone")}</span>
-                  <span className="text-sm font-medium text-[#2D3436]">
+                  <span className="text-sm font-medium text-text-primary">
                     {profile.phone ? profile.phone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2") : ts("notBound")}
                     {!profile.phone && (
                       <button
@@ -281,7 +281,7 @@ const save = async () => {
                           }
                           setShowBindPhone(!showBindPhone)
                         }}
-                        className="ml-2 text-[#FF6B35] text-xs hover:underline"
+                        className="ml-2 text-accent text-xs hover:underline"
                       >
                         {ts("bindAction")}
                       </button>
@@ -298,13 +298,13 @@ const save = async () => {
                                       type="tel" maxLength={11} placeholder={ts("bindPhonePlaceholder")}
                                       value={bindPhone}
                                       onChange={(e) => setBindPhone(e.target.value.replace(/\D/g, ""))}
-                                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
+                                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent"
                                     />
                                     <PasswordInput
                                                           placeholder={ts("bindPasswordPlaceholder")}
                                                           value={bindCode}
                                                           onChange={setBindCode}
-                                                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
+                                                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent"
                                                         />
                                     <div className="flex gap-2">
                                       <button
@@ -338,7 +338,7 @@ const save = async () => {
                                         finally { setBindLoading(false) }
                                       }}
                                       disabled={bindLoading || !bindPhone || !bindCode}
-                                      className="flex-1 bg-[#FF6B35] text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
+                                      className="flex-1 bg-accent text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
                                     >
                                       {bindLoading ? ts("bindLoading") : ts("bindConfirm")}
                                     </button>
@@ -349,17 +349,17 @@ const save = async () => {
                                 )}
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
                                   <span className="text-sm text-gray-500">{ts("email")}</span>
-                                  <span className="text-sm font-medium text-[#2D3436]">
+                                  <span className="text-sm font-medium text-text-primary">
                                     {profile.email || ts("notBound")}
                                     {!profile.email && !showBindEmail && (
-                                      <button onClick={() => { if (profile?.isDemoUser) { setGlobalToast(ts("demoToast")); setTimeout(() => setGlobalToast(""), 3000); return } setShowBindEmail(true) }} className="ml-2 text-[#FF6B35] text-xs hover:underline">{ts("bindAction")}</button>
+                                      <button onClick={() => { if (profile?.isDemoUser) { setGlobalToast(ts("demoToast")); setTimeout(() => setGlobalToast(""), 3000); return } setShowBindEmail(true) }} className="ml-2 text-accent text-xs hover:underline">{ts("bindAction")}</button>
                                                                         )}
                                   </span>
                                 </div>
                                 {showBindEmail && (
                                                   <div className="py-3 border-b border-gray-50 space-y-3">
                                                     <div className="flex gap-2">
-                                                      <input type="email" placeholder={ts("bindEmailPlaceholder")} value={bindEmail} onChange={(e) => setBindEmail(e.target.value)} className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]" />
+                                                      <input type="email" placeholder={ts("bindEmailPlaceholder")} value={bindEmail} onChange={(e) => setBindEmail(e.target.value)} className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent" />
                                                       <button onClick={sendBindEmailCode} disabled={bindCodeSent || !bindEmail || !/^[^\s]+@[^\s]+\.[^\s]+$/.test(bindEmail)}
                                                         className="px-3 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap"
                                                       >{bindCodeSent ? ts("codeSent") : ts("getCode")}</button>
@@ -367,10 +367,10 @@ const save = async () => {
                                                     </div>
                                                     {bindCodeSent && (
                                                       <>
-                                                        <input type="text" maxLength={6} placeholder={ts("bindCodePlaceholder")} value={bindEmailCode} onChange={(e) => setBindEmailCode(e.target.value.replace(/\D/g, ""))} className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]" />
+                                                        <input type="text" maxLength={6} placeholder={ts("bindCodePlaceholder")} value={bindEmailCode} onChange={(e) => setBindEmailCode(e.target.value.replace(/\D/g, ""))} className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent" />
                                                         <button onClick={confirmBindEmail}
                                                           disabled={bindLoading || !bindEmailCode || bindEmailCode.length < 6}
-                                                          className="w-full bg-[#FF6B35] text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
+                                                          className="w-full bg-accent text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
                                                         >{bindLoading ? ts("bindLoading") : ts("bindConfirm")}</button>
                                                         {accountMsg && <p className={`text-xs ${accountMsg.startsWith("✅") ? "text-green-600" : "text-red-500"}`}>{accountMsg}</p>}
                                                       </>
@@ -379,7 +379,7 @@ const save = async () => {
                                                 )}
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
                   <span className="text-sm text-gray-500">{ts("password")}</span>
-                  <span className="text-sm font-medium text-[#2D3436]">
+                  <span className="text-sm font-medium text-text-primary">
                     {profile.hasPassword ? ts("hasPassword") : ts("noPassword")}
                     <button
                       onClick={() => {
@@ -390,7 +390,7 @@ const save = async () => {
                         }
                         setShowPasswordForm(!showPasswordForm)
                       }}
-                      className="ml-2 text-[#FF6B35] text-xs hover:underline"
+                      className="ml-2 text-accent text-xs hover:underline"
                     >
                       {profile.hasPassword ? ts("modify") : ts("set")}
                     </button>
@@ -414,7 +414,7 @@ const save = async () => {
                 )}
                 <div className="flex items-center justify-between py-2 border-b border-gray-50">
                   <span className="text-sm text-gray-500">{ts("registerDate")}</span>
-                  <span className="text-sm font-medium text-[#2D3436]">{new Date(profile.createdAt).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" })}</span>
+                  <span className="text-sm font-medium text-text-primary">{new Date(profile.createdAt).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" })}</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <span className="text-sm text-gray-500">{ts("currentPlan")}</span>
@@ -428,7 +428,7 @@ const save = async () => {
             ) : (
               <p className="text-sm text-gray-400">{ts("profileLoading")}</p>
             )}
-            <Link href="/app/billing" className="inline-block mt-5 w-full text-center bg-gradient-to-r from-[#FF6B35] to-orange-400 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
+            <Link href="/app/billing" className="inline-block mt-5 w-full text-center bg-gradient-to-r from-accent to-orange-400 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
               {settings.subscriptionTier === "PRO" ? ts("manageSubscription") : ts("upgradePlan")}
             </Link>
           </div>
@@ -441,7 +441,7 @@ const save = async () => {
                     <div className="p-5 sm:p-6">
                     <div className="flex items-center gap-2 mb-5">
                       <span className="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center text-sm shrink-0">🥗</span>
-                      <h2 className="font-bold text-[#2D3436]">{ts("dietPreferences")}</h2>
+                      <h2 className="font-bold text-text-primary">{ts("dietPreferences")}</h2>
                     </div>
                   <div className="space-y-5">
             <div>
@@ -453,7 +453,7 @@ const save = async () => {
                     onClick={() => setSettings({ ...settings, dietType: opt })}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                       settings.dietType === opt
-                        ? "bg-[#FF6B35] text-white"
+                        ? "bg-accent text-white"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     }`}
                   >
@@ -480,7 +480,7 @@ const save = async () => {
                       }}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
                         selected
-                          ? "bg-[#FF6B35] text-white"
+                          ? "bg-accent text-white"
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
@@ -504,7 +504,7 @@ const save = async () => {
                     onClick={() => setSettings({ ...settings, servingSize: n })}
                     className={`w-10 h-10 rounded-full text-sm font-semibold transition-all ${
                       settings.servingSize === n
-                        ? "bg-[#FF6B35] text-white"
+                        ? "bg-accent text-white"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     }`}
                   >
@@ -525,7 +525,7 @@ const save = async () => {
                 save()
               }}
               disabled={saving || settings.cuisinePref.length === 0}
-              className="bg-[#FF6B35] text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all"
+              className="bg-accent text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all"
             >
               {saving ? ts("saving") : ts("saveSettings")}
             </button>
@@ -543,7 +543,7 @@ const save = async () => {
       {/* ── Data Management ── */}
       {!profile?.isDemoUser && (
         <div className="mt-8">
-          <h2 className="font-bold text-lg text-[#2D3436] mb-4">{ts("dataManagement")}</h2>
+          <h2 className="font-bold text-lg text-text-primary mb-4">{ts("dataManagement")}</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
           {/* ── Export Data ── */}
@@ -738,7 +738,7 @@ const save = async () => {
 
       {/* Global toast */}
       {globalToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#2D3436] text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-bg-inverse text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
           {globalToast}
         </div>
       )}
@@ -788,7 +788,7 @@ function PasswordForm({ hasPassword, onClose, ts, tv, locale }: { hasPassword: b
           placeholder={ts("passwordFormPlaceholder")}
           value={newPassword}
           onChange={setNewPassword}
-          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35] mt-1"
+          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent mt-1"
         />
       </div>
       <div>
@@ -797,14 +797,14 @@ function PasswordForm({ hasPassword, onClose, ts, tv, locale }: { hasPassword: b
           placeholder={ts("passwordFormConfirmPlaceholder")}
           value={confirm}
           onChange={setConfirm}
-          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35] mt-1"
+          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent mt-1"
         />
       </div>
       <div className="flex items-center gap-2">
         <button
           onClick={handleSubmit}
           disabled={saving || !newPassword || !confirm}
-          className="bg-[#FF6B35] text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300 transition-all whitespace-nowrap"
+          className="bg-accent text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300 transition-all whitespace-nowrap"
         >
           {saving ? ts("passwordFormSaving") : (hasPassword ? ts("passwordFormModify") : ts("passwordFormSet"))}
         </button>

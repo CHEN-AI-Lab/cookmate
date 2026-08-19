@@ -16,13 +16,13 @@ export default function AppError({
     <div className="min-h-[50vh] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-sm border border-orange-50 p-8 max-w-md w-full text-center">
         <span className="text-5xl">😵</span>
-        <h2 className="text-lg font-bold text-[#2D3436] mt-4">{t("loadFailed")}</h2>
+        <h2 className="text-lg font-bold text-text-primary mt-4">{t("loadFailed")}</h2>
         <p className="text-gray-500 mt-2 text-sm">
           {t("loadFailedDesc")}
         </p>
         <button
           onClick={reset}
-          className="mt-4 bg-[#FF6B35] text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-colors"
+          className="mt-4 bg-accent text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-colors"
         >
           {t("reload")}
         </button>

@@ -56,11 +56,11 @@ export default async function BlogPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#FFF8F0]">
+    <div className="min-h-screen bg-bg-brand">
       <PublicNavbar />
 
       <section className="max-w-[1400px] mx-auto px-8 pt-20 pb-12 text-center">
-        <h1 className="text-4xl sm:text-5xl font-bold text-[#2D3436]">
+        <h1 className="text-4xl sm:text-5xl font-bold text-text-primary">
           {t('title')}
         </h1>
         <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">

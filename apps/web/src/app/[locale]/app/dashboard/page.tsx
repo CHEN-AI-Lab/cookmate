@@ -57,7 +57,7 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{td("welcomeBack")}</h1>
             <p className="text-gray-500 mt-1 text-sm">{td("welcomeDesc")}</p>
           </div>
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-[#FF6B35] text-xs font-semibold rounded-full">
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-accent text-xs font-semibold rounded-full">
             {stats?.subscriptionTier === "PRO" ? td("proUser") : td("freeUser")}
           </span>
         </div>
@@ -72,7 +72,7 @@ export default function DashboardPage() {
               </div>
               <Link
                 href="/register"
-                className="bg-[#FF6B35] text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-all shrink-0"
+                className="bg-accent text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-all shrink-0"
               >
                 {tc("freeRegister")}
               </Link>

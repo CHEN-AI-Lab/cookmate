@@ -39,11 +39,11 @@ export function ManualAddSection({
               }
             }}
             placeholder="手动添加物品..."
-            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
+            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
           />
           <button
             onClick={onAddItem}
-            className="bg-[#FF6B35] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors shrink-0"
+            className="bg-accent text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors shrink-0"
           >
             添加
           </button>
@@ -89,7 +89,7 @@ export function ManualAddSection({
             {manualItems.map((name) => (
               <span
                 key={name}
-                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-orange-50 text-[#FF6B35] border border-orange-200"
+                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-orange-50 text-accent border border-orange-200"
               >
                 {name}
                 <button

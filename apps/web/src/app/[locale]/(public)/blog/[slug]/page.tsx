@@ -37,11 +37,11 @@ export default async function BlogPostPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#FFF8F0]">
+    <div className="min-h-screen bg-bg-brand">
       <article className="max-w-3xl mx-auto px-8 pt-20 pb-16">
         <Link
           href="/blog"
-          className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-[#FF6B35] transition-colors mb-8"
+          className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-accent transition-colors mb-8"
         >
           ← Back to Blog
         </Link>
@@ -53,7 +53,7 @@ export default async function BlogPostPage({
             <span>⏱ {readTime}</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl font-bold text-[#2D3436] leading-tight">
+          <h1 className="text-3xl sm:text-4xl font-bold text-text-primary leading-tight">
             {title}
           </h1>
 
@@ -62,7 +62,7 @@ export default async function BlogPostPage({
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="bg-orange-50 text-[#FF6B35] rounded-full px-3 py-1 text-xs font-medium"
+                  className="bg-orange-50 text-accent rounded-full px-3 py-1 text-xs font-medium"
                 >
                   {tag}
                 </span>

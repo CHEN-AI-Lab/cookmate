@@ -164,11 +164,11 @@ export default function MealPlanPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-[#2D3436]">{t("title")}</h1>
+        <h1 className="text-2xl font-bold text-text-primary">{t("title")}</h1>
         <button
           onClick={generatePlan}
           disabled={generating || isDemoUser}
-          className="bg-[#FF6B35] text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 disabled:opacity-50"
+          className="bg-accent text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 disabled:opacity-50"
         >
           {generating ? t("generating") : isDemoUser ? t("demoLocked") : t("generate")}
         </button>
@@ -217,7 +217,7 @@ export default function MealPlanPage() {
             <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mx-auto mb-2 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
             </svg>
-            <p className="text-sm text-[#2D3436] font-medium mb-1">{t("confirmDeleteTitle")}</p>
+            <p className="text-sm text-text-primary font-medium mb-1">{t("confirmDeleteTitle")}</p>
             <p className="text-sm text-gray-500">{t("confirmDeleteDesc", { title: detail && plan ? getSlot(detail.day, detail.meal)?.recipe?.title || "" : "" })}</p>
             <p className="text-xs text-gray-400 mt-2">{t("irreversible")}</p>
             <div className="flex gap-2 mt-4">
@@ -229,7 +229,7 @@ export default function MealPlanPage() {
       )}
 
       {starToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#2D3436] text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-bg-inverse text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
           {starToast}
         </div>
       )}

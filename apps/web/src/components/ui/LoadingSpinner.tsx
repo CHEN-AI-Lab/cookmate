@@ -17,7 +17,7 @@ export default function LoadingSpinner({
       <div
         className={cn(
           "fixed inset-0 z-50 flex flex-col items-center justify-center",
-          "bg-[#FFF8F0]",
+          "bg-bg-brand",
           className,
         )}
       >
@@ -33,7 +33,7 @@ export default function LoadingSpinner({
   return (
     <div className={cn("flex flex-col items-center justify-center gap-2", className)}>
       <svg
-        className="h-6 w-6 animate-spin text-[#FF6B35]"
+        className="h-6 w-6 animate-spin text-accent"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"

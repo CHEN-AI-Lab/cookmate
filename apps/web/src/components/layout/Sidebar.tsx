@@ -39,7 +39,7 @@ export function Sidebar({
         className="flex items-center gap-2 px-6 h-16 border-b border-orange-100"
       >
         <span className="text-2xl">🍳</span>
-        <span className="text-xl font-bold text-[#2D3436]">CookMate</span>
+        <span className="text-xl font-bold text-text-primary">CookMate</span>
       </Link>
 
       {/* Navigation */}
@@ -52,8 +52,8 @@ export function Sidebar({
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-orange-100 text-[#FF6B35]"
-                  : "text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35]"
+                  ? "bg-orange-100 text-accent"
+                  : "text-gray-600 hover:bg-orange-50 hover:text-accent"
               }`}
             >
               <span className="text-lg">{item.icon}</span>
@@ -70,7 +70,7 @@ export function Sidebar({
         ) : (
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors w-full text-left font-medium"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:bg-orange-50 hover:text-accent transition-colors w-full text-left font-medium"
           >
             <span className="flex items-center justify-center w-7 h-7 shrink-0">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -139,7 +139,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
         onClick={() => { if (open) setLangOpen(false); setOpen(!open) }}
         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-orange-50 w-full text-left transition-colors"
       >
-        <span className="flex items-center justify-center w-7 h-7 rounded-full bg-orange-100 text-[#FF6B35] text-xs font-bold shrink-0">
+        <span className="flex items-center justify-center w-7 h-7 rounded-full bg-orange-100 text-accent text-xs font-bold shrink-0">
           {initial}
         </span>
         <span className="truncate flex-1">{isDemoUser && (locale === "en" || locale.startsWith("en")) ? "Demo User" : name}</span>
@@ -154,7 +154,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
           <Link
             href="/app/settings"
             onClick={() => { setOpen(false); setLangOpen(false) }}
-            className="flex items-center gap-2.5 px-4 py-2 text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+            className="flex items-center gap-2.5 px-4 py-2 text-gray-600 hover:bg-orange-50 hover:text-accent transition-colors"
           >
             <span className="text-base">⚙️</span>
             <span>{t("settings")}</span>
@@ -164,7 +164,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
           <div className="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setLangOpen(!langOpen) }}
-              className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors"
+              className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-600 hover:bg-orange-50 hover:text-accent transition-colors"
             >
               <span className="text-base">🌐</span>
               <span className="flex-1 text-left">{t("language")}</span>
@@ -191,7 +191,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
                                               }
                                               router.push(window.location.pathname.replace(new RegExp("^/(?:" + locales.join("|") + ")(/|$)"), "/") || "/", { locale: l })
                                             }}
-                      className={"w-full text-left px-4 py-2 text-sm transition-colors " + (active ? "text-[#FF6B35] bg-orange-50 font-medium" : "text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35]")}
+                      className={"w-full text-left px-4 py-2 text-sm transition-colors " + (active ? "text-accent bg-orange-50 font-medium" : "text-gray-600 hover:bg-orange-50 hover:text-accent")}
                     >
                       {localeNames[l] || l}
                     </button>

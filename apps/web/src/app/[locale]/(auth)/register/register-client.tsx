@@ -198,11 +198,11 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
     <>
       <OAuthLoadingOverlay provider={oauthProvider} />
       <style>{`@keyframes shakeX{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}`}</style>
-      <div className="min-h-screen bg-gradient-to-br from-[#FFF8F0] to-[#FFE8D6] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-bg-brand to-[#FFE8D6] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full ring-1 ring-orange-100/50">
         <div className="text-center mb-8">
           <Link href="/" className="text-2xl">🍳</Link>
-          <h1 className="text-2xl font-bold text-[#2D3436] mt-2">{t('registerTitle')}</h1>
+          <h1 className="text-2xl font-bold text-text-primary mt-2">{t('registerTitle')}</h1>
           <p className="text-gray-500 mt-1">{t('registerSubtitle')}</p>
         </div>
 
@@ -239,7 +239,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
                 placeholder={t('emailPlaceholder')}
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setEmailCodeSent(false) }}
-                className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white"
+                className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 bg-white"
               />
               <button
                 onClick={sendCode}
@@ -260,7 +260,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
                   placeholder={t('codePlaceholder')}
                   value={emailCode}
                   onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, ""))}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 bg-white mt-1.5"
                 />
               </div>
               <div>
@@ -270,7 +270,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
                   placeholder={t('passwordOptionalPlaceholder')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 bg-white mt-1.5"
                 />
               </div>
               <div>
@@ -280,7 +280,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
                   placeholder={t('confirmPasswordPlaceholder')}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 bg-white mt-1.5"
                 />
               </div>
             </>
@@ -289,7 +289,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
             <button
               onClick={handleEmailRegister}
               disabled={loading === "email" || !emailCode}
-              className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
+              className="w-full bg-accent text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all"
             >
               {loading === "email" ? t('registering') : t('registerAction')}
             </button>
@@ -307,12 +307,12 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
                 type="checkbox"
                 checked={agreeTerms}
                 onChange={(e) => { setAgreeTerms(e.target.checked); if (e.target.checked) setTermsError("") }}
-                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#FF6B35] focus:ring-[#FF6B35]"
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent"
               />
               <span className="text-xs text-gray-500 leading-relaxed">
                 {t.rich('agreeTerms', {
-                  terms: (chunks) => <Link href="/terms" className="text-[#FF6B35] hover:underline" target="_blank">{chunks}</Link>,
-                  privacy: (chunks) => <Link href="/privacy" className="text-[#FF6B35] hover:underline" target="_blank">{chunks}</Link>,
+                  terms: (chunks) => <Link href="/terms" className="text-accent hover:underline" target="_blank">{chunks}</Link>,
+                  privacy: (chunks) => <Link href="/privacy" className="text-accent hover:underline" target="_blank">{chunks}</Link>,
                 })}
               </span>
             </label>
@@ -351,14 +351,14 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
           <button
             onClick={handleDemoLogin}
             disabled={loading !== null}
-            className="w-full bg-gradient-to-r from-[#FF6B35] to-orange-400 text-white rounded-xl py-3 font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="w-full bg-gradient-to-r from-accent to-orange-400 text-white rounded-xl py-3 font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {loading === "demo" ? t('loggingIn') : `🚀 ${t('demoVersion')}`}
           </button>
         </div>
 
         <div className="mt-6 p-4 bg-orange-50 rounded-xl">
-          <p className="text-sm text-[#FF6B35] font-medium">{t('freePlanIncludes')}</p>
+          <p className="text-sm text-accent font-medium">{t('freePlanIncludes')}</p>
           <ul className="mt-2 text-sm text-gray-600 space-y-1">
             <li>{t('freePlanAIRecipe')}</li>
             <li>{t('freePlanPantry')}</li>
@@ -366,7 +366,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
         </div>
 
         <p className="text-center text-sm text-gray-400 mt-6">
-          {t('hasAccount')}<Link href="/login" className="text-[#FF6B35] hover:underline">{t('loginAction')}</Link>
+          {t('hasAccount')}<Link href="/login" className="text-accent hover:underline">{t('loginAction')}</Link>
         </p>
       </div>
     </div>

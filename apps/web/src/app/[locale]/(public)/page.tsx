@@ -16,15 +16,15 @@ export default async function HomePage() {
   const tcta = await getTranslations("ctaBanner")
 
   return (
-    <div className="min-h-screen bg-[#FFF8F0]">
+    <div className="min-h-screen bg-bg-brand">
       <PublicNavbar />
 
       {/* Hero */}
       <section className="max-w-[1400px] mx-auto px-8 pt-20 pb-16 text-center">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#2D3436] leading-tight">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-text-primary leading-tight">
           {thero("title")}
           <br />
-          <span className="text-[#FF6B35]">{thero("titleHighlight")}</span>
+          <span className="text-accent">{thero("titleHighlight")}</span>
         </h1>
         <p className="mt-4 text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
           {thero("subtitle")}
@@ -34,18 +34,18 @@ export default async function HomePage() {
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             href={ctaHref}
-            className="bg-[#FF6B35] text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200"
+            className="bg-accent text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200"
           >
             {thero("cta")}
           </Link>
           <DemoLoginButton
-            className="bg-white text-[#FF6B35] px-8 py-3 rounded-full text-lg font-medium border-2 border-[#FF6B35] hover:bg-orange-50 transition-colors cursor-pointer"
+            className="bg-white text-accent px-8 py-3 rounded-full text-lg font-medium border-2 border-accent hover:bg-orange-50 transition-colors cursor-pointer"
           >
             🚀 {thero("tryDemo")}
           </DemoLoginButton>
           <a
             href="#how"
-            className="text-gray-600 px-8 py-3 rounded-full text-lg border border-gray-200 hover:border-[#FF6B35] hover:text-[#FF6B35] transition-colors"
+            className="text-gray-600 px-8 py-3 rounded-full text-lg border border-gray-200 hover:border-accent hover:text-accent transition-colors"
           >
             {thero("howItWorks")}
           </a>
@@ -59,7 +59,7 @@ export default async function HomePage() {
               {thero.raw("demoIngredients").map((item: string) => (
                 <span
                   key={item}
-                  className="bg-orange-50 text-[#FF6B35] px-3 py-1 rounded-full text-sm border border-orange-200"
+                  className="bg-orange-50 text-accent px-3 py-1 rounded-full text-sm border border-orange-200"
                 >
                   {item}
                 </span>
@@ -67,14 +67,14 @@ export default async function HomePage() {
             </div>
             <Link
               href={session ? "/app/recipes" : "/register"}
-              className="inline-block bg-[#FF6B35] text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-colors"
+              className="inline-block bg-accent text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-colors"
             >
               🍳 {thero("demoRecipe")}
             </Link>
           </div>
           {/* Result preview */}
           <div className="mt-6 p-4 bg-gray-50 rounded-xl text-left">
-            <p className="text-sm font-medium text-[#2D3436]">{thero("demoRecipe")}</p>
+            <p className="text-sm font-medium text-text-primary">{thero("demoRecipe")}</p>
             <p className="text-lg font-bold mt-1">{thero("demoRecipeName")}</p>
             <p className="text-sm text-gray-500 mt-1">{thero("demoRecipeMeta")}</p>
             <p className="text-sm text-gray-600 mt-2">
@@ -87,7 +87,7 @@ export default async function HomePage() {
       {/* How it works */}
       <section id="how" className="py-16 bg-white">
         <div className="max-w-[1400px] mx-auto px-8">
-          <h2 className="text-3xl font-bold text-center text-[#2D3436]">{thow("title")}</h2>
+          <h2 className="text-3xl font-bold text-center text-text-primary">{thow("title")}</h2>
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { emoji: "🥦", titleKey: "step1Title", descKey: "step1Desc" },
@@ -96,7 +96,7 @@ export default async function HomePage() {
             ].map((step) => (
               <div key={step.titleKey} className="text-center p-6">
                 <span className="text-5xl">{step.emoji}</span>
-                <h3 className="mt-4 text-xl font-bold text-[#2D3436]">{thow(step.titleKey)}</h3>
+                <h3 className="mt-4 text-xl font-bold text-text-primary">{thow(step.titleKey)}</h3>
                 <p className="mt-2 text-gray-500">{thow(step.descKey)}</p>
               </div>
             ))}
@@ -105,16 +105,16 @@ export default async function HomePage() {
       </section>
 
       {/* Features */}
-      <section className="py-16 bg-[#FFF8F0]">
+      <section className="py-16 bg-bg-brand">
         <div className="max-w-[1400px] mx-auto px-8">
-          <h2 className="text-3xl font-bold text-center text-[#2D3436]">{tfeatures("title")}</h2>
+          <h2 className="text-3xl font-bold text-center text-text-primary">{tfeatures("title")}</h2>
           <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {["aiRecipe", "mealPlan", "grocery", "diet", "pantry", "recipes"].map((key) => {
               const feature = tfeatures.raw(key) as { emoji: string; title: string; desc: string }
               return (
                 <div key={key} className="bg-white rounded-2xl p-6 shadow-sm border border-orange-50">
                   <span className="text-3xl">{feature.emoji}</span>
-                  <h3 className="mt-3 font-bold text-[#2D3436]">{feature.title}</h3>
+                  <h3 className="mt-3 font-bold text-text-primary">{feature.title}</h3>
                   <p className="mt-1 text-sm text-gray-500">{feature.desc}</p>
                 </div>
               )
@@ -134,7 +134,7 @@ export default async function HomePage() {
               { value: "satisfaction", label: "satisfactionLabel" },
             ].map((s) => (
               <div key={s.label}>
-                <p className="text-3xl md:text-4xl font-bold text-[#FF6B35]">
+                <p className="text-3xl md:text-4xl font-bold text-accent">
                   {tstats(s.value)}
                 </p>
                 <p className="mt-1 text-sm text-gray-500">{tstats(s.label)}</p>
@@ -145,9 +145,9 @@ export default async function HomePage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-16 bg-[#FFF8F0]">
+      <section className="py-16 bg-bg-brand">
         <div className="max-w-[1400px] mx-auto px-8">
-          <h2 className="text-3xl font-bold text-center text-[#2D3436]">{ttestimonials("title")}</h2>
+          <h2 className="text-3xl font-bold text-center text-text-primary">{ttestimonials("title")}</h2>
           <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
               <div
@@ -155,11 +155,11 @@ export default async function HomePage() {
                 className="bg-white rounded-2xl p-6 shadow-sm border border-orange-50 flex flex-col"
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-[#FF6B35]/10 flex items-center justify-center text-lg font-bold text-[#FF6B35]">
+                  <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-lg font-bold text-accent">
                     {ttestimonials(`item${i}Name`).charAt(0)}
                   </div>
                   <div>
-                    <p className="font-medium text-[#2D3436] text-sm">{ttestimonials(`item${i}Name`)}</p>
+                    <p className="font-medium text-text-primary text-sm">{ttestimonials(`item${i}Name`)}</p>
                     <p className="text-xs text-gray-400">{ttestimonials(`item${i}Role`)}</p>
                   </div>
                 </div>
@@ -173,13 +173,13 @@ export default async function HomePage() {
       </section>
 
       {/* CTA Banner */}
-      <section className="py-20 bg-[#2D3436]">
+      <section className="py-20 bg-bg-inverse">
         <div className="max-w-[1400px] mx-auto px-8 text-center">
           <h2 className="text-3xl font-bold text-white">{tcta("title")}</h2>
           <p className="mt-3 text-gray-400 text-lg">{tcta("subtitle")}</p>
           <Link
             href={ctaHref}
-            className="mt-8 inline-block bg-[#FF6B35] text-white px-10 py-3.5 rounded-full text-lg font-medium hover:bg-orange-600 transition-colors shadow-lg shadow-orange-800/30"
+            className="mt-8 inline-block bg-accent text-white px-10 py-3.5 rounded-full text-lg font-medium hover:bg-orange-600 transition-colors shadow-lg shadow-orange-800/30"
           >
             {tcta("button")}
           </Link>

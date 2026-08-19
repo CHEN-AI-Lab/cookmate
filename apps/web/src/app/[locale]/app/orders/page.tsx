@@ -164,13 +164,13 @@ export default function OrdersPage() {
       )}
 
       <div className="text-center">
-        <Link href="/app/billing" className="text-sm text-gray-400 hover:text-[#FF6B35] transition-colors">
+        <Link href="/app/billing" className="text-sm text-gray-400 hover:text-accent transition-colors">
           {t("backToBilling")}
         </Link>
       </div>
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#2D3436] text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-bg-inverse text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
           ✅ {toast}
         </div>
       )}
@@ -182,7 +182,7 @@ export default function OrdersPage() {
             <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
               <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             </div>
-            <p className="font-bold text-[#2D3436] text-lg mb-2">{t("deleteConfirm")}</p>
+            <p className="font-bold text-text-primary text-lg mb-2">{t("deleteConfirm")}</p>
             <p className="text-sm text-gray-500 mb-6">{t("deleteConfirmHint")}</p>
             <div className="flex gap-3">
               <button onClick={() => setDeleteTarget(null)} className="flex-1 px-4 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors font-medium">{t("cancel")}</button>

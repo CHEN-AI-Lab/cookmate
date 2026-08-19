@@ -45,7 +45,7 @@ export function PricingCard({
       {/* Recommended badge */}
       {saving && highlighted && (
         <div className="absolute -top-3 inset-x-0 flex justify-center z-10">
-          <span className="bg-[#FF6B35] text-white text-[11px] font-semibold px-3 py-1 rounded-full shadow-md tracking-wide">
+          <span className="bg-accent text-white text-[11px] font-semibold px-3 py-1 rounded-full shadow-md tracking-wide">
             {saving}
           </span>
         </div>

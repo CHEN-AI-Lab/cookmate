@@ -116,7 +116,7 @@ export default function PantryPage() {
   return (
     <div>
       {/* 1. Title */}
-      <h1 className="text-2xl font-bold text-[#2D3436] mb-4">{t("title")}</h1>
+      <h1 className="text-2xl font-bold text-text-primary mb-4">{t("title")}</h1>
 
 {/* 2. Search row */}
       <div className="mb-2">
@@ -127,7 +127,7 @@ export default function PantryPage() {
               type="text" value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("searchPlaceholder")}
-              className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-[#FF6B35]"
+              className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent"
             />
           </div>
           <button
@@ -142,7 +142,7 @@ export default function PantryPage() {
 
       {/* 3. My ingredients */}
       <div className="mb-2">
-        <h2 className="font-bold text-[#2D3436] mb-3">{t("myItems", { count: filtered.length })}</h2>
+        <h2 className="font-bold text-text-primary mb-3">{t("myItems", { count: filtered.length })}</h2>
         {filtered.length === 0 ? (
           <p className="text-gray-400 text-sm">{t("empty")}</p>
         ) : (
@@ -154,7 +154,7 @@ export default function PantryPage() {
                 className={`px-3 py-1 rounded-full text-sm border flex items-center gap-1 cursor-pointer transition-colors ${
                   selected.has(item.id)
                     ? "bg-gradient-to-r from-orange-400 to-amber-400 text-white border-transparent"
-                    : "bg-orange-50 text-[#FF6B35] border-orange-200 hover:bg-orange-100"
+                    : "bg-orange-50 text-accent border-orange-200 hover:bg-orange-100"
                 }`}
               >
                 {item.name}
@@ -205,14 +205,14 @@ export default function PantryPage() {
             className="bg-white rounded-2xl p-6 w-80 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-[#2D3436] mb-4">{t("addDialogTitle")}</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">{t("addDialogTitle")}</h3>
             <input
               type="text"
               value={inputName}
               onChange={(e) => setInputName(e.target.value)}
               onKeyDown={async (e) => { if (e.key === "Enter") { await addItem(inputName); setShowAddDialog(false) } }}
               placeholder={t("addItemPlaceholder")}
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#FF6B35] mb-4"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent mb-4"
               autoFocus
             />
             <div className="flex gap-2">
@@ -236,7 +236,7 @@ export default function PantryPage() {
                     {/* 重复添加提示 */}
                     {dupDialog && (
                       <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setDupDialog(null)}>
-                        <div className="bg-[#2D3436] text-white px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="bg-bg-inverse text-white px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center" onClick={(e) => e.stopPropagation()}>
                           <span>{t("alreadyInPantry", { name: dupDialog })}</span>
                         </div>
                       </div>
@@ -244,7 +244,7 @@ export default function PantryPage() {
 
       {/* Demo user toast */}
       {demoToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#2D3436] text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-bg-inverse text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
           {demoToast}
         </div>
       )}

@@ -53,7 +53,7 @@ export function PantryList({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="搜索食材..."
-              className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-[#FF6B35]"
+              className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent"
             />
           </div>
           <button
@@ -74,7 +74,7 @@ export function PantryList({
 
       {/* My ingredients */}
       <div className="mb-2">
-        <h2 className="font-bold text-[#2D3436] mb-3">
+        <h2 className="font-bold text-text-primary mb-3">
           📦 我的食材 ({filtered.length})
         </h2>
         {filtered.length === 0 ? (
@@ -94,7 +94,7 @@ export function PantryList({
                 className={`px-3 py-1 rounded-full text-sm border flex items-center gap-1 cursor-pointer transition-colors ${
                   selectedIds.has(item.id)
                     ? "bg-gradient-to-r from-orange-400 to-amber-400 text-white border-transparent"
-                    : "bg-orange-50 text-[#FF6B35] border-orange-200 hover:bg-orange-100"
+                    : "bg-orange-50 text-accent border-orange-200 hover:bg-orange-100"
                 }`}
               >
                 {item.name}
@@ -148,7 +148,7 @@ export function PantryList({
                       className={`px-3 py-1 rounded-full text-sm border transition-colors ${
                         alreadyAdded
                           ? "bg-gradient-to-r from-orange-400 to-amber-400 text-white border-transparent"
-                          : "bg-gray-50 text-gray-600 border-gray-200 hover:border-[#FF6B35]"
+                          : "bg-gray-50 text-gray-600 border-gray-200 hover:border-accent"
                       }`}
                     >
                       {alreadyAdded ? `✓ ${item}` : item}

@@ -3,11 +3,19 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --color-bg-brand: #FFF8F0;
+  --color-bg-inverse: #2D3436;
+  --color-text-primary: #2D3436;
+  --color-accent: #FF6B35;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-bg-brand: var(--color-bg-brand);
+  --color-bg-inverse: var(--color-bg-inverse);
+  --color-text-primary: var(--color-text-primary);
+  --color-accent: var(--color-accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

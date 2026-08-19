@@ -284,7 +284,7 @@ export default function BillingPage() {
           </p>
           <Link
             href="/register"
-            className="inline-block bg-[#FF6B35] text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-orange-600 transition-all"
+            className="inline-block bg-accent text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-orange-600 transition-all"
           >
             {t("demoBillingRegister")}
           </Link>
@@ -331,7 +331,7 @@ export default function BillingPage() {
         <div className="text-center">
           <Link
             href="/app/orders"
-            className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-[#FF6B35] transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-accent transition-colors"
           >
             {t("orderHistory")}
           </Link>

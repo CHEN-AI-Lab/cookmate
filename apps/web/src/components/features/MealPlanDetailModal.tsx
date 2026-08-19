@@ -80,7 +80,7 @@ export function MealPlanDetailModal({
           <div className="space-y-3">
             {/* Title + Star */}
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-[#2D3436] text-lg">
+              <h3 className="font-bold text-text-primary text-lg">
                 {slot?.recipe?.title}
               </h3>
               {slot?.recipe?.id && (
@@ -119,7 +119,7 @@ export function MealPlanDetailModal({
             {/* Ingredients */}
             {slot?.recipe?.ingredients && (
               <div>
-                <p className="text-sm font-semibold text-[#2D3436] mb-1">
+                <p className="text-sm font-semibold text-text-primary mb-1">
                   {t("ingredients")}
                 </p>
                 <p className="text-sm text-gray-600">
@@ -131,7 +131,7 @@ export function MealPlanDetailModal({
             {/* Steps */}
             {slot?.recipe?.steps && (
               <div>
-                <p className="text-sm font-semibold text-[#2D3436] mb-1">
+                <p className="text-sm font-semibold text-text-primary mb-1">
                   {t("steps")}
                 </p>
                 <div className="text-sm text-gray-600 space-y-1">

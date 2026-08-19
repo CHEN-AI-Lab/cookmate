@@ -6,6 +6,9 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     include: ['../../tests/unit/**/*.test.ts', '../../shared/tests/**/*.test.ts'],
+    pool: 'forks',
+    maxWorkers: 1,
+    maxConcurrency: 5,
   },
   resolve: {
     alias: {

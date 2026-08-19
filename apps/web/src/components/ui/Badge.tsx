@@ -6,7 +6,7 @@ const variantStyles = {
   success: "bg-green-100 text-green-700",
   warning: "bg-yellow-100 text-yellow-700",
   danger: "bg-red-100 text-red-700",
-  brand: "bg-[#FFF0E6] text-[#FF6B35]",
+  brand: "bg-[#FFF0E6] text-accent",
 } as const
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {

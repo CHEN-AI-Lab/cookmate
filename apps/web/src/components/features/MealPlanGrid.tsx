@@ -52,7 +52,7 @@ export function MealPlanGrid({ plan, onSlotClick }: MealPlanGridProps) {
           key={day}
           className="bg-white rounded-2xl shadow-sm border border-orange-50 overflow-hidden"
         >
-          <div className="bg-orange-50 px-4 py-2 font-bold text-[#2D3436] text-sm">{day}</div>
+          <div className="bg-orange-50 px-4 py-2 font-bold text-text-primary text-sm">{day}</div>
           <div className="grid grid-cols-3 divide-x divide-gray-100">
             {MEAL_TYPES.map((meal) => {
               const slot = plan.slots.find(
@@ -69,7 +69,7 @@ export function MealPlanGrid({ plan, onSlotClick }: MealPlanGridProps) {
                   </p>
                   {slot?.recipe ? (
                     <div className="flex items-center justify-between gap-1">
-                        <p className="text-sm font-medium text-[#2D3436] truncate min-w-0">
+                        <p className="text-sm font-medium text-text-primary truncate min-w-0">
                           {slot.recipe.title}
                         </p>
                         <div className="flex items-center gap-2 shrink-0">

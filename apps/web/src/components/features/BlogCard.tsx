@@ -26,7 +26,7 @@ export function BlogCard({
     >
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-2 flex-1">
-          <h2 className="font-bold text-lg text-[#2D3436] group-hover:text-[#FF6B35] transition-colors">
+          <h2 className="font-bold text-lg text-text-primary group-hover:text-accent transition-colors">
             {title}
           </h2>
           <div className="flex flex-wrap items-center gap-2 text-sm text-gray-400">
@@ -40,7 +40,7 @@ export function BlogCard({
                   {tags.map((tag) => (
                     <span
                       key={tag}
-                      className="bg-orange-50 text-[#FF6B35] rounded-full px-2 py-0.5 text-xs"
+                      className="bg-orange-50 text-accent rounded-full px-2 py-0.5 text-xs"
                     >
                       {tag}
                     </span>
@@ -53,7 +53,7 @@ export function BlogCard({
             {description}
           </p>
         </div>
-        <span className="text-gray-300 group-hover:text-[#FF6B35] transition-colors text-xl shrink-0 mt-1">
+        <span className="text-gray-300 group-hover:text-accent transition-colors text-xl shrink-0 mt-1">
           →
         </span>
       </div>

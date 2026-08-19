@@ -18,7 +18,7 @@ export default function PublicFooter() {
   ] as const
 
   return (
-    <footer className="bg-[#2D3436] text-gray-400">
+    <footer className="bg-bg-inverse text-gray-400">
       <div className="max-w-[1400px] mx-auto px-8 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           {/* Brand */}
@@ -35,7 +35,7 @@ export default function PublicFooter() {
             <ul className="space-y-2">
               {links.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="hover:text-[#FF6B35] transition-colors">
+                  <Link href={link.href} className="hover:text-accent transition-colors">
                     {tfooter(link.labelKey)}
                   </Link>
                 </li>
@@ -51,7 +51,7 @@ export default function PublicFooter() {
             <ul className="space-y-2">
               {legalLinks.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="hover:text-[#FF6B35] transition-colors">
+                  <Link href={link.href} className="hover:text-accent transition-colors">
                     {tfooter(link.labelKey)}
                   </Link>
                 </li>
@@ -66,7 +66,7 @@ export default function PublicFooter() {
             </p>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href={`mailto:${tfooter("email")}`} className="hover:text-[#FF6B35] transition-colors">
+                <a href={`mailto:${tfooter("email")}`} className="hover:text-accent transition-colors">
                   {tfooter("email")}
                 </a>
               </li>

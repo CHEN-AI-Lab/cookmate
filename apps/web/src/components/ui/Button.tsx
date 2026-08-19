@@ -4,9 +4,9 @@ import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react"
 import { cn } from "@cookmate/shared/utils"
 
 const variantStyles = {
-  default: "bg-[#FF6B35] text-white hover:bg-[#e55a2b] shadow-sm",
-  primary: "bg-[#FF6B35] text-white hover:bg-[#e55a2b] shadow-sm",
-  outline: "border border-[#FF6B35] text-[#FF6B35] hover:bg-[#FFF8F0]",
+  default: "bg-accent text-white hover:bg-[#e55a2b] shadow-sm",
+  primary: "bg-accent text-white hover:bg-[#e55a2b] shadow-sm",
+  outline: "border border-accent text-accent hover:bg-bg-brand",
   ghost: "text-gray-600 hover:bg-gray-100",
   destructive: "bg-red-500 text-white hover:bg-red-600 shadow-sm",
 } as const
@@ -44,7 +44,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         className={cn(
           "inline-flex items-center justify-center rounded-xl font-medium transition-colors duration-150",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B35] focus-visible:ring-offset-2",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
           "disabled:pointer-events-none disabled:opacity-50",
           variantStyles[variant],
           sizeStyles[size],

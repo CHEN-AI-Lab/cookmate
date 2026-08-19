@@ -29,7 +29,7 @@ export function MobileNav({
       {/* Left: Logo */}
       <Link href="/app/dashboard" className="flex items-center gap-2">
         <span className="text-xl">🍳</span>
-        <span className="text-base font-bold text-[#2D3436]">CookMate</span>
+        <span className="text-base font-bold text-text-primary">CookMate</span>
       </Link>
 
       {/* Right: Icon-only nav links */}
@@ -42,8 +42,8 @@ export function MobileNav({
               href={item.href}
               className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg transition-colors ${
                 isActive
-                  ? "text-[#FF6B35]"
-                  : "text-gray-400 hover:text-[#FF6B35]"
+                  ? "text-accent"
+                  : "text-gray-400 hover:text-accent"
               }`}
             >
               <span className="text-lg">{item.icon}</span>

@@ -25,7 +25,7 @@ export default async function AppLayout({ children, params }: { children: React.
   }
 
   return (
-    <div className="min-h-screen bg-[#FFF8F0] flex">
+    <div className="min-h-screen bg-bg-brand flex">
       <OnboardingGuard onboardingCompleted={onboardingCompleted} isDemoUser={isDemoUser} locale={locale} />
       <Sidebar name={session.user.name} isDemoUser={isDemoUser} />
       <MobileNav isDemoUser={isDemoUser} />

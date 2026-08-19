@@ -58,11 +58,11 @@ export default function DemoOnboarding() {
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 p-4">
       <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
         <div className="text-4xl mb-3">{content[step].icon}</div>
-        <h3 className="font-bold text-lg text-[#2D3436] mb-2">{content[step].title}</h3>
+        <h3 className="font-bold text-lg text-text-primary mb-2">{content[step].title}</h3>
         <p className="text-sm text-gray-500 leading-relaxed">
           {content[step].desc}
           {step === content.length - 1 && content[step].action && (
-            <Link href="/register" className="text-[#FF6B35] hover:underline font-medium" onClick={close}>
+            <Link href="/register" className="text-accent hover:underline font-medium" onClick={close}>
               {content[step].action}
             </Link>
           )}
@@ -74,7 +74,7 @@ export default function DemoOnboarding() {
             <div
               key={i}
               className={`w-2 h-2 rounded-full transition-colors ${
-                i === step ? "bg-[#FF6B35]" : "bg-gray-200"
+                i === step ? "bg-accent" : "bg-gray-200"
               }`}
             />
           ))}
@@ -93,7 +93,7 @@ export default function DemoOnboarding() {
                     </button>
                   )}
                   {step < content.length - 1 ? (
-                    <button onClick={next} className="flex-1 px-4 py-2.5 text-sm text-white bg-[#FF6B35] rounded-xl hover:bg-orange-600 font-medium transition-colors">
+                    <button onClick={next} className="flex-1 px-4 py-2.5 text-sm text-white bg-accent rounded-xl hover:bg-orange-600 font-medium transition-colors">
                       {isEn ? "Next →" : "下一步 →"}
                     </button>
                   ) : (
@@ -101,7 +101,7 @@ export default function DemoOnboarding() {
                       <button onClick={close} className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
                         {isEn ? "Later" : "稍后"}
                       </button>
-                      <Link href="/register" onClick={close} className="flex-1 px-4 py-2.5 text-sm text-center text-white bg-[#FF6B35] rounded-xl hover:bg-orange-600 font-medium transition-colors">
+                      <Link href="/register" onClick={close} className="flex-1 px-4 py-2.5 text-sm text-center text-white bg-accent rounded-xl hover:bg-orange-600 font-medium transition-colors">
                         {isEn ? "Free Sign Up" : "免费注册"}
                       </Link>
                     </div>

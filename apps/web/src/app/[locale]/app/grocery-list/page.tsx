@@ -299,7 +299,7 @@ export default function GroceryListPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-[#2D3436] mb-6">{tg("title")}</h1>
+      <h1 className="text-2xl font-bold text-text-primary mb-6">{tg("title")}</h1>
 
       {categories.length === 0 && manualItems.length === 0 ? (
         <div className="text-center py-16">
@@ -332,7 +332,7 @@ export default function GroceryListPage() {
                     setDays(n)
                   }}
                   className={`px-2.5 py-1 rounded-md transition-colors ${
-                    days === n ? "bg-white text-[#FF6B35] font-medium shadow-sm" : "text-gray-500 hover:text-gray-700"
+                    days === n ? "bg-white text-accent font-medium shadow-sm" : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
                   {tg("lastNDays", { n })}
@@ -346,13 +346,13 @@ export default function GroceryListPage() {
                 <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">{catLabels[cat.name] || cat.name}</h3>
                 <div className="flex flex-wrap gap-x-6 gap-y-1">
                   {cat.items.map((item, i) => (
-                    <label key={i} className="text-sm flex items-center gap-1.5 cursor-pointer hover:text-[#FF6B35] transition-colors group">
-                      <input type="checkbox" checked={checked.has(item.name)} onChange={() => toggleCheck(item.name)} className="rounded accent-[#FF6B35] w-3.5 h-3.5 shrink-0" />
+                    <label key={i} className="text-sm flex items-center gap-1.5 cursor-pointer hover:text-accent transition-colors group">
+                      <input type="checkbox" checked={checked.has(item.name)} onChange={() => toggleCheck(item.name)} className="rounded accent-accent w-3.5 h-3.5 shrink-0" />
                       <span
                         className={`${
                           item.inPantry ? "text-green-600" : checked.has(item.name) ? "text-gray-300 line-through" : "text-gray-600"
                         } cursor-pointer ${
-                          item.sources && item.sources.length > 0 ? "border-b border-dashed border-gray-300 hover:border-[#FF6B35]" : ""
+                          item.sources && item.sources.length > 0 ? "border-b border-dashed border-gray-300 hover:border-accent" : ""
                         }`}
                         onClick={(e) => {
                           e.preventDefault()
@@ -366,7 +366,7 @@ export default function GroceryListPage() {
                         <span className="text-[10px] text-green-500 bg-green-50 px-1 rounded shrink-0">{tg("inPantry")}</span>
                       )}
                       {item.sources && item.sources.length > 0 && (
-                        <span className="text-[10px] text-[#FF6B35] opacity-0 group-hover:opacity-100 transition-opacity shrink-0">🔍</span>
+                        <span className="text-[10px] text-accent opacity-0 group-hover:opacity-100 transition-opacity shrink-0">🔍</span>
                       )}
                     </label>
                   ))}
@@ -379,8 +379,8 @@ export default function GroceryListPage() {
                 <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">{tg("manualAdd")}</h3>
                 <div className="flex flex-wrap gap-x-6 gap-y-1">
                   {manualItems.map((name, i) => (
-                    <label key={i} className="text-sm flex items-center gap-1.5 cursor-pointer hover:text-[#FF6B35] transition-colors">
-                      <input type="checkbox" checked={checked.has(name)} onChange={() => toggleCheck(name)} className="rounded accent-[#FF6B35] w-3.5 h-3.5" />
+                    <label key={i} className="text-sm flex items-center gap-1.5 cursor-pointer hover:text-accent transition-colors">
+                      <input type="checkbox" checked={checked.has(name)} onChange={() => toggleCheck(name)} className="rounded accent-accent w-3.5 h-3.5" />
                       <span className={`${checked.has(name) ? "text-gray-300 line-through" : "text-gray-600"}`}>
                         {name}
                       </span>
@@ -426,11 +426,11 @@ export default function GroceryListPage() {
             onChange={(e) => setNewItem(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addManualItem() } }}
             placeholder={tg("addPlaceholder")}
-            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
+            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
           />
           <button
             onClick={addManualItem}
-            className="bg-[#FF6B35] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors shrink-0"
+            className="bg-accent text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors shrink-0"
           >
             {tg("addButton")}
           </button>
@@ -462,7 +462,7 @@ export default function GroceryListPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-[#2D3436]">
+              <h3 className="text-lg font-bold text-text-primary">
                 {tg("sourceOf", { name: sourceDialog.name })}
               </h3>
               <button
@@ -475,7 +475,7 @@ export default function GroceryListPage() {
             <div className="space-y-3">
               {sourceDialog.sources.map((src, i) => (
                 <div key={i} className="flex items-center justify-between bg-orange-50 rounded-xl px-4 py-3">
-                  <span className="text-sm font-medium text-[#2D3436]">{src.title}</span>
+                  <span className="text-sm font-medium text-text-primary">{src.title}</span>
                   <span className="text-sm text-gray-500">{src.quantity}</span>
                 </div>
               ))}
@@ -502,7 +502,7 @@ export default function GroceryListPage() {
 
       {/* Demo user toast */}
       {demoToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#2D3436] text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-bg-inverse text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
           {demoToast}
         </div>
       )}

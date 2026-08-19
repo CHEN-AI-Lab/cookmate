@@ -133,7 +133,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
         {/* Progress bar */}
         <div className="h-1 bg-gray-100">
           <div
-            className="h-full bg-[#FF6B35] transition-all duration-500 ease-out"
+            className="h-full bg-accent transition-all duration-500 ease-out"
             style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
           />
         </div>
@@ -168,11 +168,11 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
             <div key={s} className="flex items-center gap-1">
               <div
                 className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  i <= step ? "bg-[#FF6B35]" : "bg-gray-200"
+                  i <= step ? "bg-accent" : "bg-gray-200"
                 }`}
               />
               {i < STEPS.length - 1 && (
-                <div className={`w-6 h-0.5 ${i < step ? "bg-[#FF6B35]" : "bg-gray-200"}`} />
+                <div className={`w-6 h-0.5 ${i < step ? "bg-accent" : "bg-gray-200"}`} />
               )}
             </div>
           ))}
@@ -215,7 +215,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                       onClick={() => setDietType(opt)}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                         dietType === opt
-                          ? "bg-[#FF6B35] text-white"
+                          ? "bg-accent text-white"
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
@@ -241,7 +241,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                         }}
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
                           selected
-                            ? "bg-[#FF6B35] text-white"
+                            ? "bg-accent text-white"
                             : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                         }`}
                       >
@@ -267,7 +267,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                       onClick={() => setServingSize(n)}
                       className={`w-10 h-10 rounded-full text-sm font-semibold transition-all ${
                         servingSize === n
-                          ? "bg-[#FF6B35] text-white"
+                          ? "bg-accent text-white"
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
@@ -295,7 +295,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                           onClick={() => toggleIngredient(item)}
                           className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
                             selectedIngredients.has(item)
-                              ? "bg-[#FF6B35]/10 text-[#FF6B35] border border-[#FF6B35]/30"
+                              ? "bg-accent/10 text-accent border border-accent/30"
                               : "bg-gray-50 text-gray-600 border border-gray-100 hover:bg-gray-100"
                           }`}
                         >
@@ -317,7 +317,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
               <div className="text-5xl mb-4">🤖</div>
               <h2 className="text-xl font-bold text-gray-900">{t("tryAiTitle")}</h2>
               <p className="text-gray-500 mt-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.raw("tryAiDesc") }} />
-              <div className="mt-6 inline-flex items-center gap-2 bg-orange-50 text-[#FF6B35] px-4 py-2 rounded-full text-sm font-medium">
+              <div className="mt-6 inline-flex items-center gap-2 bg-orange-50 text-accent px-4 py-2 rounded-full text-sm font-medium">
                 {t("tryAiButton")}
               </div>
             </div>
@@ -333,7 +333,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                   <div className="mt-6">
                     <Link
                       href="/register"
-                      className="inline-block bg-[#FF6B35] text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-orange-600 transition-colors"
+                      className="inline-block bg-accent text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-orange-600 transition-colors"
                     >
                       {t("freeRegister")}
                     </Link>
@@ -367,7 +367,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
               className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
                 !canNext() || saving
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-[#FF6B35] text-white hover:bg-orange-600"
+                  : "bg-accent text-white hover:bg-orange-600"
               }`}
             >
               {saving ? t("saving") : step === STEPS.length - 1 ? t("startUsing") : t("next")}

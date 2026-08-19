@@ -111,13 +111,13 @@ export function GroceryCategoryList({
                 {cat.items.map((item, i) => (
                   <label
                     key={i}
-                    className="text-sm flex items-center gap-1.5 cursor-pointer hover:text-[#FF6B35] transition-colors group"
+                    className="text-sm flex items-center gap-1.5 cursor-pointer hover:text-accent transition-colors group"
                   >
                     <input
                       type="checkbox"
                       checked={checked.has(item.name)}
                       onChange={() => onToggleCheck(item.name)}
-                      className="rounded accent-[#FF6B35] w-3.5 h-3.5 shrink-0"
+                      className="rounded accent-accent w-3.5 h-3.5 shrink-0"
                     />
                     <span
                       className={`${
@@ -128,7 +128,7 @@ export function GroceryCategoryList({
                             : "text-gray-600"
                       } cursor-pointer ${
                         item.sources && item.sources.length > 0
-                          ? "border-b border-dashed border-gray-300 hover:border-[#FF6B35]"
+                          ? "border-b border-dashed border-gray-300 hover:border-accent"
                           : ""
                       }`}
                       onClick={(e) => {
@@ -152,7 +152,7 @@ export function GroceryCategoryList({
                       </span>
                     )}
                     {item.sources && item.sources.length > 0 && (
-                      <span className="text-[10px] text-[#FF6B35] opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      <span className="text-[10px] text-accent opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                         🔍
                       </span>
                     )}

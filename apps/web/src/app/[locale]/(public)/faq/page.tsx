@@ -23,11 +23,11 @@ export default async function FAQPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#FFF8F0]">
+    <div className="min-h-screen bg-bg-brand">
       <PublicNavbar />
 
       <section className="max-w-3xl mx-auto px-8 pt-20 pb-16">
-        <h1 className="text-4xl sm:text-5xl font-bold text-[#2D3436]">{t("title")}</h1>
+        <h1 className="text-4xl sm:text-5xl font-bold text-text-primary">{t("title")}</h1>
         <p className="mt-3 text-lg text-gray-500">{t("subtitle")}</p>
 
         <div className="mt-10 space-y-4">
@@ -36,7 +36,7 @@ export default async function FAQPage() {
               key={item.q}
               className="bg-white rounded-2xl border border-orange-50 shadow-sm overflow-hidden group"
             >
-              <summary className="px-6 py-4 cursor-pointer font-medium text-[#2D3436] hover:text-[#FF6B35] transition-colors list-none flex items-center justify-between">
+              <summary className="px-6 py-4 cursor-pointer font-medium text-text-primary hover:text-accent transition-colors list-none flex items-center justify-between">
                 <span>{t(item.q)}</span>
                 <span className="text-gray-300 group-open:rotate-180 transition-transform text-lg">▼</span>
               </summary>

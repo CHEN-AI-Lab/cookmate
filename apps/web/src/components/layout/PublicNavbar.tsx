@@ -12,20 +12,20 @@ export default function PublicNavbar() {
       <div className="max-w-[1400px] mx-auto px-8 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <span className="text-2xl">🍳</span>
-          <span className="text-xl font-bold text-[#2D3436]">CookMate</span>
+          <span className="text-xl font-bold text-text-primary">CookMate</span>
         </Link>
 
         <nav className="hidden sm:flex items-center gap-6 text-sm text-gray-600">
-          <Link href="/#how" className="hover:text-[#FF6B35]">
+          <Link href="/#how" className="hover:text-accent">
             {tnav("howToUse")}
           </Link>
-          <Link href="/pricing" className="hover:text-[#FF6B35]">
+          <Link href="/pricing" className="hover:text-accent">
             {tnav("pricing")}
           </Link>
-          <Link href="/about" className="hover:text-[#FF6B35]">
+          <Link href="/about" className="hover:text-accent">
             {tnav("about")}
           </Link>
-          <Link href="/faq" className="hover:text-[#FF6B35]">
+          <Link href="/faq" className="hover:text-accent">
             {tnav("faq")}
           </Link>
         </nav>
@@ -34,7 +34,7 @@ export default function PublicNavbar() {
           <LanguageSwitcher />
           <Link
             href="/login"
-            className="text-[#FF6B35] font-medium hover:text-orange-600 text-sm"
+            className="text-accent font-medium hover:text-orange-600 text-sm"
           >
             {tnav("login")}
           </Link>

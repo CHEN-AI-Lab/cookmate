@@ -331,11 +331,11 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   return (
     <>
       <OAuthLoadingOverlay provider={oauthProvider} />
-      <div className="min-h-screen bg-gradient-to-br from-[#FFF8F0] to-[#FFE8D6] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-bg-brand to-[#FFE8D6] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full ring-1 ring-orange-100/50">
         <div className="text-center mb-8">
           <Link href="/" className="text-2xl hover:scale-105 transition-transform inline-block">🍳</Link>
-          <h1 className="text-2xl font-bold text-[#2D3436] mt-2">{t('loginTitle')}</h1>
+          <h1 className="text-2xl font-bold text-text-primary mt-2">{t('loginTitle')}</h1>
           <p className="text-gray-500 mt-1">{t('loginSubtitle')}</p>
         </div>
 
@@ -357,7 +357,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           <button
             onClick={() => setTab("email")}
             className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
-              tab === "email" ? "bg-white text-[#2D3436] shadow-sm" : "text-gray-500 hover:text-gray-700"
+              tab === "email" ? "bg-white text-text-primary shadow-sm" : "text-gray-500 hover:text-gray-700"
             }`}
           >
             {t('tabEmail')}
@@ -365,7 +365,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           <button
             onClick={() => setTab("password")}
             className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
-              tab === "password" ? "bg-white text-[#2D3436] shadow-sm" : "text-gray-500 hover:text-gray-700"
+              tab === "password" ? "bg-white text-text-primary shadow-sm" : "text-gray-500 hover:text-gray-700"
             }`}
           >
             {t('tabPassword')}
@@ -383,7 +383,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                   placeholder={t('emailPlaceholder')}
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); setEmailCodeSent(false) }}
-                  className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white"
+                  className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 bg-white"
                 />
                 <button
                   onClick={handleEmailLogin}
@@ -404,13 +404,13 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                     placeholder={t('codePlaceholder')}
                     value={emailCode}
                     onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, ""))}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 bg-white mt-1.5"
                   />
                 </div>
                 <button
                   onClick={handleEmailVerify}
                   disabled={loading === "email_login" || !emailCode}
-                  className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all active:scale-[0.98]"
+                  className="w-full bg-accent text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all active:scale-[0.98]"
                 >
                   {loading === "email_login" ? t('loggingIn') : t('loginRegisterAction')}
                 </button>
@@ -449,7 +449,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 placeholder={t('accountPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 bg-white mt-1.5"
               />
             </div>
             <div>
@@ -458,18 +458,18 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 placeholder={t('passwordPlaceholder')}
                 value={password}
                 onChange={setPassword}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35]/20 bg-white mt-1.5"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 bg-white mt-1.5"
               />
             </div>            <button
               onClick={handlePasswordLogin}
               disabled={loading === "password" || !email || !password}
-              className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all active:scale-[0.98]"
+              className="w-full bg-accent text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all active:scale-[0.98]"
             >
               {loading === "password" ? t('loggingIn') : t('loginAction')}
             </button>
             <button
               onClick={() => { setPasswordSetupMode(true); setError(""); setPassword(""); setSetupNewPassword(""); setSetupConfirmPassword(""); setSetupCode(""); setSetupCodeSent(false) }}
-              className="w-full text-xs text-gray-400 hover:text-[#FF6B35] transition-colors"
+              className="w-full text-xs text-gray-400 hover:text-accent transition-colors"
             >
               {t('forgotPassword')}
             </button>          </div>        )}
@@ -484,7 +484,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 placeholder={t('emailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent bg-white mt-1.5"
               />
             </div>
             <div className="flex gap-2">
@@ -493,7 +493,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 placeholder={t('codePlaceholder')}
                 value={setupCode}
                 onChange={(e) => setSetupCode(e.target.value.replace(/\D/g, ""))}
-                className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white"
+                className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent bg-white"
                 maxLength={6}
               />
               <button
@@ -510,7 +510,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 placeholder={t('passwordPlaceholderSetup')}
                 value={setupNewPassword}
                 onChange={setSetupNewPassword}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent bg-white mt-1.5"
               />
             </div>
             <div>
@@ -519,13 +519,13 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 placeholder={t('confirmPasswordPlaceholder')}
                 value={setupConfirmPassword}
                 onChange={setSetupConfirmPassword}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF6B35] bg-white mt-1.5"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent bg-white mt-1.5"
               />
             </div>
             <button
               onClick={handleSetupPassword}
               disabled={loading === "setup_submit" || !setupCode || !setupNewPassword || !setupConfirmPassword}
-              className="w-full bg-[#FF6B35] text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all active:scale-[0.98]"
+              className="w-full bg-accent text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-gray-500 transition-all active:scale-[0.98]"
             >
               {loading === "setup_submit" ? t('loggingIn') : t('setupPassword')}
             </button>
@@ -579,7 +579,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           <button
             onClick={handleDemoLogin}
             disabled={loading !== null}
-            className="w-full bg-gradient-to-r from-[#FF6B35] to-orange-400 text-white rounded-xl py-3 font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="w-full bg-gradient-to-r from-accent to-orange-400 text-white rounded-xl py-3 font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {loading === "demo" ? t('loggingIn') : t('demoVersion')}
           </button>
@@ -588,12 +588,12 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
 
         <p className="text-center text-xs text-gray-400 mt-4">
           {t.rich('continueOAuth', {
-            terms: (chunks) => <Link href="/terms" className="text-[#FF6B35] hover:underline" target="_blank">{chunks}</Link>,
-            privacy: (chunks) => <Link href="/privacy" className="text-[#FF6B35] hover:underline" target="_blank">{chunks}</Link>,
+            terms: (chunks) => <Link href="/terms" className="text-accent hover:underline" target="_blank">{chunks}</Link>,
+            privacy: (chunks) => <Link href="/privacy" className="text-accent hover:underline" target="_blank">{chunks}</Link>,
           })}
         </p>
         <p className="text-center text-sm text-gray-400 mt-2">
-          {t('noAccount')}<Link href="/register" className="text-[#FF6B35] hover:underline ml-1">{t('registerAction')}</Link>
+          {t('noAccount')}<Link href="/register" className="text-accent hover:underline ml-1">{t('registerAction')}</Link>
         </p>
       </div>
     </div>

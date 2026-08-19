@@ -71,7 +71,7 @@ export function RecipeCard({
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <span className="text-xl">🍽️</span>
-              <h3 className="text-lg font-bold text-[#2D3436]">{recipe.title}</h3>
+              <h3 className="text-lg font-bold text-text-primary">{recipe.title}</h3>
               <button
                 onClick={(e) => {
                   e.stopPropagation()
@@ -114,11 +114,11 @@ export function RecipeCard({
       {expanded && (
         <div className="px-6 pb-6 border-t border-gray-100">
           <div className="mt-4">
-            <p className="text-sm font-medium text-[#2D3436] mb-2">{t("ingredients")}</p>
+            <p className="text-sm font-medium text-text-primary mb-2">{t("ingredients")}</p>
             <ul className="space-y-1">
               {recipe.ingredients.map((ing, i) => (
                 <li key={i} className="text-sm text-gray-600 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B35]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                   {ing}
                   {isFromPantry(ing.split(" ")[0]) && (
                     <span className="text-[10px] text-green-500 bg-green-50 px-1 rounded">
@@ -130,11 +130,11 @@ export function RecipeCard({
             </ul>
           </div>
           <div className="mt-4">
-            <p className="text-sm font-medium text-[#2D3436] mb-2">{t("instructions")}</p>
+            <p className="text-sm font-medium text-text-primary mb-2">{t("instructions")}</p>
             <ol className="space-y-2">
               {recipe.steps.map((step, i) => (
                 <li key={i} className="text-sm text-gray-600 flex gap-2">
-                  <span className="text-[#FF6B35] font-bold shrink-0">{i + 1}.</span>
+                  <span className="text-accent font-bold shrink-0">{i + 1}.</span>
                   <span>{step}</span>
                 </li>
               ))}
@@ -142,7 +142,7 @@ export function RecipeCard({
           </div>
           <button
             onClick={() => onAddToPlan(recipe)}
-            className="mt-4 bg-orange-50 text-[#FF6B35] px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-100 transition-colors"
+            className="mt-4 bg-orange-50 text-accent px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-100 transition-colors"
           >
             {t("addToPlan")}
           </button>

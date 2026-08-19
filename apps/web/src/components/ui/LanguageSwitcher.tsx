@@ -68,7 +68,7 @@ export default function LanguageSwitcher({
     <div ref={ref} className="relative inline-block">
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-[#FF6B35] hover:bg-orange-50 transition-colors"
+          className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:text-accent hover:bg-orange-50 transition-colors"
           title={localeNames[locale] || locale}
         >
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -88,8 +88,8 @@ export default function LanguageSwitcher({
                   onClick={() => switchLocale(l)}
                   className={`w-full text-left px-4 py-2 text-sm transition-colors ${
                     active
-                      ? "text-[#FF6B35] bg-orange-50 font-medium"
-                      : "text-gray-600 hover:bg-orange-50 hover:text-[#FF6B35]"
+                      ? "text-accent bg-orange-50 font-medium"
+                      : "text-gray-600 hover:bg-orange-50 hover:text-accent"
                   }`}
                 >
                   {localeNames[l] || l}

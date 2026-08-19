@@ -289,7 +289,7 @@ export default function MyRecipesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-[#2D3436]">{tr("myRecipes")}</h1>
+        <h1 className="text-2xl font-bold text-text-primary">{tr("myRecipes")}</h1>
         <div className="flex gap-2 items-center">
           {isSelectMode ? (
             <>
@@ -315,7 +315,7 @@ export default function MyRecipesPage() {
               </button>
               <button
                 onClick={() => { setIsSelectMode(false); setSelectedIds(new Set()); }}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#FF6B35] text-white hover:bg-orange-600 transition-colors"
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-accent text-white hover:bg-orange-600 transition-colors"
               >
                 {tr("done")}
               </button>
@@ -338,7 +338,7 @@ export default function MyRecipesPage() {
                 <button
                   onClick={() => { setFilter("all"); setLoading(true); loadRecipes(1, "all") }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    filter === "all" ? "bg-white text-[#2D3436] shadow-sm" : "text-gray-500 hover:text-gray-700"
+                    filter === "all" ? "bg-white text-text-primary shadow-sm" : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
                   {tr("all", { count: totalCount })}
@@ -346,7 +346,7 @@ export default function MyRecipesPage() {
                 <button
                   onClick={() => { setFilter("starred"); setLoading(true); loadRecipes(1, "starred") }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    filter === "starred" ? "bg-white text-[#2D3436] shadow-sm" : "text-gray-500 hover:text-gray-700"
+                    filter === "starred" ? "bg-white text-text-primary shadow-sm" : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
                   {tr("starredFilter", { count: starredCount })}
@@ -382,7 +382,7 @@ export default function MyRecipesPage() {
                   <div className="flex items-start gap-2 flex-1 min-w-0">
                     {isSelectMode && (
                       <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 mt-0.5 ${
-                        isSelected ? "bg-[#FF6B35] border-[#FF6B35]" : "border-gray-300"
+                        isSelected ? "bg-accent border-accent" : "border-gray-300"
                       }`}>
                         {isSelected && <span className="text-white text-xs">✓</span>}
                       </div>
@@ -390,7 +390,7 @@ export default function MyRecipesPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-xl">🍽️</span>
-                        <h3 className="font-bold text-[#2D3436] truncate">{recipe.title}</h3>
+                        <h3 className="font-bold text-text-primary truncate">{recipe.title}</h3>
                         {recipe.starred && <span className="text-amber-400 text-xs shrink-0">⭐</span>}
                       </div>
                       {recipe.description && (
@@ -434,11 +434,11 @@ export default function MyRecipesPage() {
               {expandedId === recipe.id && (
                 <div className="px-4 pb-4 border-t border-gray-100">
                   <div className="mt-3">
-                    <p className="text-sm font-medium text-[#2D3436] mb-1">{tr("ingredients")}</p>
+                    <p className="text-sm font-medium text-text-primary mb-1">{tr("ingredients")}</p>
                     <p className="text-sm text-gray-600">{recipe.ingredients}</p>
                   </div>
                   <div className="mt-3">
-                    <p className="text-sm font-medium text-[#2D3436] mb-1">{tr("instructions")}</p>
+                    <p className="text-sm font-medium text-text-primary mb-1">{tr("instructions")}</p>
                     <div className="text-sm text-gray-600 space-y-1">
                       {recipe.steps.split("\n").map((step, i) => (
                         <p key={i}>{i + 1}. {step}</p>
@@ -447,7 +447,7 @@ export default function MyRecipesPage() {
                   </div>
                   <button
                     onClick={() => isDemoUser ? showToast(tr("demoToast")) : setAddDialog({ recipeId: recipe.id, title: recipe.title })}
-                    className="mt-4 bg-orange-50 text-[#FF6B35] px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-100 transition-colors"
+                    className="mt-4 bg-orange-50 text-accent px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-100 transition-colors"
                   >
                     {tr("addToPlan")}
                   </button>
@@ -464,7 +464,7 @@ export default function MyRecipesPage() {
           <button
             onClick={() => { if (page > 1) { setLoading(true); loadRecipes(page - 1) } }}
             disabled={page <= 1}
-            className="px-3 py-2 rounded-xl text-sm border border-gray-200 hover:border-[#FF6B35] hover:text-[#FF6B35] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-2 rounded-xl text-sm border border-gray-200 hover:border-accent hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             ←
           </button>
@@ -474,7 +474,7 @@ export default function MyRecipesPage() {
           <button
             onClick={() => { if (page < totalPage) { setLoading(true); loadRecipes(page + 1) } }}
             disabled={page >= totalPage}
-            className="px-3 py-2 rounded-xl text-sm border border-gray-200 hover:border-[#FF6B35] hover:text-[#FF6B35] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-2 rounded-xl text-sm border border-gray-200 hover:border-accent hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             →
           </button>
@@ -494,7 +494,7 @@ export default function MyRecipesPage() {
                   if (n >= 1 && n <= totalPage) { setLoading(true); loadRecipes(n); setJumpPage("") }
                 }
               }}
-              className="w-14 text-center border border-gray-200 rounded-xl px-2 py-2 text-sm focus:outline-none focus:border-[#FF6B35]"
+              className="w-14 text-center border border-gray-200 rounded-xl px-2 py-2 text-sm focus:outline-none focus:border-accent"
             />
             <span className="text-xs text-gray-400">/ {totalPage}</span>
           </div>
@@ -506,7 +506,7 @@ export default function MyRecipesPage() {
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setDeleteDialog(null)}>
           <div className="bg-white rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
             <p className="text-lg mb-2">⚠️</p>
-            <p className="text-sm text-[#2D3436] font-medium mb-1">{tr("confirmDelete")}</p>
+            <p className="text-sm text-text-primary font-medium mb-1">{tr("confirmDelete")}</p>
             <p className="text-sm text-gray-500">
               {tr("deleteCount", { count: deleteDialog.length })}
               {deleteDialog.length === 1 ? `「${deleteDialog[0].title}」` : ""}
@@ -523,7 +523,7 @@ export default function MyRecipesPage() {
       {addDialog && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setAddDialog(null)}>
           <div className="bg-white rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full" onClick={(e) => e.stopPropagation()}>
-            <p className="font-bold text-[#2D3436] mb-3 text-sm">{tr("addToPlanTitle", { title: addDialog.title })}</p>
+            <p className="font-bold text-text-primary mb-3 text-sm">{tr("addToPlanTitle", { title: addDialog.title })}</p>
             <div className="flex gap-2">
               <select value={addDay} onChange={(e) => setAddDay(e.target.value)}
                 className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm"
@@ -547,7 +547,7 @@ export default function MyRecipesPage() {
                   const recipe = recipes.find((r) => r.id === addDialog.recipeId)
                   if (recipe) addToPlan(recipe)
                 }}
-                className="flex-1 bg-[#FF6B35] text-white py-2 rounded-xl text-sm"
+                className="flex-1 bg-accent text-white py-2 rounded-xl text-sm"
               >
                 {tr("confirmAdd")}
               </button>
@@ -557,7 +557,7 @@ export default function MyRecipesPage() {
       )}
 
       {addMsg && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#2D3436] text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-bg-inverse text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
           {addMsg}
         </div>
       )}
@@ -566,19 +566,19 @@ export default function MyRecipesPage() {
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setConflictData(null)}>
           <div className="bg-white rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
             <p className="text-lg mb-2">⚠️</p>
-            <p className="text-sm text-[#2D3436] font-medium mb-1">{tr("slotConflict")}</p>
+            <p className="text-sm text-text-primary font-medium mb-1">{tr("slotConflict")}</p>
             <p className="text-sm text-gray-500">{tr("slotConflictDesc", { day: dayLabel[addDay], meal: mealLabel[addMeal], title: conflictData.existingTitle })}</p>
             <p className="text-xs text-gray-400 mt-2">{tr("slotConflictReplace", { title: conflictData.recipe.title })}</p>
             <div className="flex gap-2 mt-4">
               <button onClick={() => setConflictData(null)} className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl text-sm">{tr("cancel")}</button>
-              <button onClick={confirmOverwrite} className="flex-1 bg-[#FF6B35] text-white py-2 rounded-xl text-sm">{tr("replace")}</button>
+              <button onClick={confirmOverwrite} className="flex-1 bg-accent text-white py-2 rounded-xl text-sm">{tr("replace")}</button>
             </div>
           </div>
         </div>
       )}
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#2D3436] text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50 transition-all">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-bg-inverse text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50 transition-all">
           {toast}
         </div>
       )}
