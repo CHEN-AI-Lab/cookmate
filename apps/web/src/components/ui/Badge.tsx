@@ -3,10 +3,10 @@ import { cn } from "@cookmate/shared/utils"
 
 const variantStyles = {
   default: "bg-surface text-text-primary",
-  success: "bg-green-100 text-success",
+  success: "bg-success/10 text-success",
   warning: "bg-yellow-100 text-yellow-700",
-  danger: "bg-red-100 text-red-700",
-  brand: "bg-[#FFF0E6] text-accent",
+  danger: "bg-error/10 text-error",
+  brand: "bg-accent/10 text-accent",
 } as const
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
