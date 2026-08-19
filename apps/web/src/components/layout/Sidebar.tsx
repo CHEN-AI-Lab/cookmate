@@ -200,7 +200,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
               </div>
             )}
           </div>
-          <div className="border-t border-orange-100 my-1" />
+          <div className="border-t border-border my-1" />
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
             className="flex items-center gap-2.5 px-4 py-2 text-text-secondary hover:bg-surface hover:text-error w-full text-left transition-colors"

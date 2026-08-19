@@ -284,7 +284,7 @@ export default function MyRecipesPage() {
 
   const filtered = recipes
 
-  if (loading) return <div className="text-center py-16 text-gray-400">{tr("loading")}</div>
+  if (loading) return <div className="text-center py-16 text-text-secondary">{tr("loading")}</div>
 
   return (
     <div>
@@ -293,23 +293,23 @@ export default function MyRecipesPage() {
         <div className="flex gap-2 items-center">
           {isSelectMode ? (
             <>
-              <span className="text-sm text-gray-500">{tr("selectedCount", { count: selectedIds.size })}</span>
+              <span className="text-sm text-text-secondary">{tr("selectedCount", { count: selectedIds.size })}</span>
               <button
                 onClick={selectAll}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-surface text-text-primary hover:bg-border transition-colors"
               >
                 {tr("selectAll")}
               </button>
               <button
                 onClick={deselectAll}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-surface text-text-primary hover:bg-border transition-colors"
               >
                 {tr("deselectAll")}
               </button>
               <button
                 onClick={() => setDeleteDialog(filtered.filter((r) => selectedIds.has(r.id)))}
                 disabled={selectedIds.size === 0}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-error/10 text-error border border-error/25 hover:bg-error/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {tr("deleteSelected")}
               </button>
@@ -330,15 +330,15 @@ export default function MyRecipesPage() {
                   }
                   setIsSelectMode(true)
                 }}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-surface text-text-primary hover:bg-border transition-colors"
               >
                 {tr("multiSelect")}
               </button>
-              <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+              <div className="flex gap-1 bg-surface rounded-xl p-1">
                 <button
                   onClick={() => { setFilter("all"); setLoading(true); loadRecipes(1, "all") }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    filter === "all" ? "bg-white text-text-primary shadow-sm" : "text-gray-500 hover:text-gray-700"
+                    filter === "all" ? "bg-white text-text-primary shadow-sm" : "text-text-secondary hover:text-text-primary"
                   }`}
                 >
                   {tr("all", { count: totalCount })}
@@ -346,7 +346,7 @@ export default function MyRecipesPage() {
                 <button
                   onClick={() => { setFilter("starred"); setLoading(true); loadRecipes(1, "starred") }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    filter === "starred" ? "bg-white text-text-primary shadow-sm" : "text-gray-500 hover:text-gray-700"
+                    filter === "starred" ? "bg-white text-text-primary shadow-sm" : "text-text-secondary hover:text-text-primary"
                   }`}
                 >
                   {tr("starredFilter", { count: starredCount })}
@@ -360,10 +360,10 @@ export default function MyRecipesPage() {
       {filtered.length === 0 ? (
         <div className="text-center py-16">
           <span className="text-5xl">{filter === "starred" ? "⭐" : "🍽️"}</span>
-          <p className="mt-4 text-gray-500">
+          <p className="mt-4 text-text-secondary">
             {filter === "starred" ? tr("noStarred") : tr("noRecipes")}
           </p>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-text-secondary mt-1">
             {tr("starHint")}
           </p>
         </div>
@@ -372,8 +372,8 @@ export default function MyRecipesPage() {
           {filtered.map((recipe) => {
             const isSelected = selectedIds.has(recipe.id)
             return (
-              <div key={recipe.id} className={`bg-white rounded-2xl shadow-sm border overflow-hidden ${
-                recipe.starred ? "border-amber-200" : "border-gray-100"
+              <div key={recipe.id} className={`bg-card rounded-2xl shadow-sm border overflow-hidden ${
+                recipe.starred ? "border-amber-200" : "border-border"
               }`}>
                 <button
                   onClick={() => isSelectMode ? toggleSelect(recipe.id) : setExpandedId(expandedId === recipe.id ? null : recipe.id)}
@@ -394,14 +394,14 @@ export default function MyRecipesPage() {
                         {recipe.starred && <span className="text-amber-400 text-xs shrink-0">⭐</span>}
                       </div>
                       {recipe.description && (
-                        <p className="text-sm text-gray-500 mt-0.5 truncate">{recipe.description}</p>
+                        <p className="text-sm text-text-secondary mt-0.5 truncate">{recipe.description}</p>
                       )}
-                      <div className="flex flex-wrap gap-2 mt-1.5 text-xs text-gray-400">
+                      <div className="flex flex-wrap gap-2 mt-1.5 text-xs text-text-secondary">
                         {recipe.cookingTime && <span>⏱ {recipe.cookingTime}{tr("minutes")}</span>}
                         {recipe.calories && <span>🔥 {recipe.calories}{tr("caloriesShort")}</span>}
                         {recipe.cuisineType && <span>{locale === "en" || locale.startsWith("en") ? (CUISINE_LABELS[recipe.cuisineType] || recipe.cuisineType) : recipe.cuisineType}</span>}
                         {recipe.difficulty && (
-                          <span className="px-1.5 py-0.5 rounded bg-gray-50">{diffLabel(recipe.difficulty)}</span>
+                          <span className="px-1.5 py-0.5 rounded bg-surface">{diffLabel(recipe.difficulty)}</span>
                         )}
                       </div>
                     </div>
@@ -410,7 +410,7 @@ export default function MyRecipesPage() {
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleStar(recipe.id) }}
                       className={`transition-colors text-lg ${
-                        recipe.starred ? "text-amber-400" : "text-gray-300 hover:text-amber-400"
+                        recipe.starred ? "text-amber-400" : "text-text-secondary hover:text-amber-400"
                       }`}
                       title={recipe.starred ? tr("unstar") : tr("star")}
                     >
@@ -419,7 +419,7 @@ export default function MyRecipesPage() {
                     {!isSelectMode && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setDeleteDialog([recipe]) }}
-                        className="text-gray-300 hover:text-red-500 transition-colors"
+                        className="text-text-secondary hover:text-error transition-colors"
                         title={tr("delete")}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -427,19 +427,19 @@ export default function MyRecipesPage() {
                       </svg>
                       </button>
                     )}
-                    <span className="text-gray-300">{expandedId === recipe.id ? "▲" : "▼"}</span>
+                    <span className="text-text-secondary">{expandedId === recipe.id ? "▲" : "▼"}</span>
                   </div>
                 </button>
 
               {expandedId === recipe.id && (
-                <div className="px-4 pb-4 border-t border-gray-100">
+                <div className="px-4 pb-4 border-t border-border">
                   <div className="mt-3">
                     <p className="text-sm font-medium text-text-primary mb-1">{tr("ingredients")}</p>
-                    <p className="text-sm text-gray-600">{recipe.ingredients}</p>
+                    <p className="text-sm text-text-secondary">{recipe.ingredients}</p>
                   </div>
                   <div className="mt-3">
                     <p className="text-sm font-medium text-text-primary mb-1">{tr("instructions")}</p>
-                    <div className="text-sm text-gray-600 space-y-1">
+                    <div className="text-sm text-text-secondary space-y-1">
                       {recipe.steps.split("\n").map((step, i) => (
                         <p key={i}>{i + 1}. {step}</p>
                       ))}
@@ -447,7 +447,7 @@ export default function MyRecipesPage() {
                   </div>
                   <button
                     onClick={() => isDemoUser ? showToast(tr("demoToast")) : setAddDialog({ recipeId: recipe.id, title: recipe.title })}
-                    className="mt-4 bg-orange-50 text-accent px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-100 transition-colors"
+                    className="mt-4 bg-surface text-accent px-4 py-2 rounded-xl text-sm font-medium hover:bg-surface transition-colors"
                   >
                     {tr("addToPlan")}
                   </button>
@@ -464,17 +464,17 @@ export default function MyRecipesPage() {
           <button
             onClick={() => { if (page > 1) { setLoading(true); loadRecipes(page - 1) } }}
             disabled={page <= 1}
-            className="px-3 py-2 rounded-xl text-sm border border-gray-200 hover:border-accent hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-2 rounded-xl text-sm border border-border hover:border-accent hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             ←
           </button>
 
-          <span className="text-sm text-gray-400">{page} / {totalPage}</span>
+          <span className="text-sm text-text-secondary">{page} / {totalPage}</span>
 
           <button
             onClick={() => { if (page < totalPage) { setLoading(true); loadRecipes(page + 1) } }}
             disabled={page >= totalPage}
-            className="px-3 py-2 rounded-xl text-sm border border-gray-200 hover:border-accent hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-2 rounded-xl text-sm border border-border hover:border-accent hover:text-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             →
           </button>
@@ -494,9 +494,9 @@ export default function MyRecipesPage() {
                   if (n >= 1 && n <= totalPage) { setLoading(true); loadRecipes(n); setJumpPage("") }
                 }
               }}
-              className="w-14 text-center border border-gray-200 rounded-xl px-2 py-2 text-sm focus:outline-none focus:border-accent"
+              className="w-14 text-center border border-border rounded-xl px-2 py-2 text-sm focus:outline-none focus:border-accent"
             />
-            <span className="text-xs text-gray-400">/ {totalPage}</span>
+            <span className="text-xs text-text-secondary">/ {totalPage}</span>
           </div>
         </div>
       )}
@@ -504,17 +504,17 @@ export default function MyRecipesPage() {
       {/* Delete confirmation dialog */}
       {deleteDialog && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setDeleteDialog(null)}>
-          <div className="bg-white rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-card rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
             <p className="text-lg mb-2">⚠️</p>
             <p className="text-sm text-text-primary font-medium mb-1">{tr("confirmDelete")}</p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-text-secondary">
               {tr("deleteCount", { count: deleteDialog.length })}
               {deleteDialog.length === 1 ? `「${deleteDialog[0].title}」` : ""}
             </p>
-            <p className="text-xs text-gray-400 mt-2">{tr("irreversible")}</p>
+            <p className="text-xs text-text-secondary mt-2">{tr("irreversible")}</p>
             <div className="flex gap-2 mt-4">
-              <button onClick={() => setDeleteDialog(null)} className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl text-sm">{tr("cancel")}</button>
-              <button onClick={deleteRecipes} className="flex-1 bg-red-500 text-white py-2 rounded-xl text-sm">{tr("confirmDeleteAction")}</button>
+              <button onClick={() => setDeleteDialog(null)} className="flex-1 bg-surface text-text-secondary py-2 rounded-xl text-sm">{tr("cancel")}</button>
+              <button onClick={deleteRecipes} className="flex-1 bg-error text-white py-2 rounded-xl text-sm">{tr("confirmDeleteAction")}</button>
             </div>
           </div>
         </div>
@@ -522,18 +522,18 @@ export default function MyRecipesPage() {
 
       {addDialog && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setAddDialog(null)}>
-          <div className="bg-white rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-card rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full" onClick={(e) => e.stopPropagation()}>
             <p className="font-bold text-text-primary mb-3 text-sm">{tr("addToPlanTitle", { title: addDialog.title })}</p>
             <div className="flex gap-2">
               <select value={addDay} onChange={(e) => setAddDay(e.target.value)}
-                className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                className="flex-1 border border-border rounded-xl px-3 py-2 text-sm"
               >
                 {DAY_KEYS.map((key) => (
                   <option key={key} value={key}>{dayLabel[key]}</option>
                 ))}
               </select>
               <select value={addMeal} onChange={(e) => setAddMeal(e.target.value)}
-                className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                className="flex-1 border border-border rounded-xl px-3 py-2 text-sm"
               >
                 {MEAL_KEYS.map((key) => (
                   <option key={key} value={key}>{mealLabel[key]}</option>
@@ -541,7 +541,7 @@ export default function MyRecipesPage() {
               </select>
             </div>
             <div className="flex gap-2 mt-3">
-              <button onClick={() => setAddDialog(null)} className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl text-sm">{tr("cancel")}</button>
+              <button onClick={() => setAddDialog(null)} className="flex-1 bg-surface text-text-secondary py-2 rounded-xl text-sm">{tr("cancel")}</button>
               <button
                 onClick={() => {
                   const recipe = recipes.find((r) => r.id === addDialog.recipeId)
@@ -564,13 +564,13 @@ export default function MyRecipesPage() {
 
       {conflictData && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setConflictData(null)}>
-          <div className="bg-white rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-card rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
             <p className="text-lg mb-2">⚠️</p>
             <p className="text-sm text-text-primary font-medium mb-1">{tr("slotConflict")}</p>
-            <p className="text-sm text-gray-500">{tr("slotConflictDesc", { day: dayLabel[addDay], meal: mealLabel[addMeal], title: conflictData.existingTitle })}</p>
-            <p className="text-xs text-gray-400 mt-2">{tr("slotConflictReplace", { title: conflictData.recipe.title })}</p>
+            <p className="text-sm text-text-secondary">{tr("slotConflictDesc", { day: dayLabel[addDay], meal: mealLabel[addMeal], title: conflictData.existingTitle })}</p>
+            <p className="text-xs text-text-secondary mt-2">{tr("slotConflictReplace", { title: conflictData.recipe.title })}</p>
             <div className="flex gap-2 mt-4">
-              <button onClick={() => setConflictData(null)} className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl text-sm">{tr("cancel")}</button>
+              <button onClick={() => setConflictData(null)} className="flex-1 bg-surface text-text-secondary py-2 rounded-xl text-sm">{tr("cancel")}</button>
               <button onClick={confirmOverwrite} className="flex-1 bg-accent text-white py-2 rounded-xl text-sm">{tr("replace")}</button>
             </div>
           </div>
