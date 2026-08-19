@@ -357,7 +357,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
           </button>
         </div>
 
-        <div className="mt-6 p-4 bg-orange-50 rounded-xl">
+        <div className="mt-6 p-4 bg-surface rounded-xl">
           <p className="text-sm text-accent font-medium">{t('freePlanIncludes')}</p>
           <ul className="mt-2 text-sm text-text-secondary space-y-1">
             <li>{t('freePlanAIRecipe')}</li>

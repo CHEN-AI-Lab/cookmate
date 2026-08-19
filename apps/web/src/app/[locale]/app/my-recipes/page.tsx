@@ -338,7 +338,7 @@ export default function MyRecipesPage() {
                 <button
                   onClick={() => { setFilter("all"); setLoading(true); loadRecipes(1, "all") }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    filter === "all" ? "bg-white text-text-primary shadow-sm" : "text-text-secondary hover:text-text-primary"
+                    filter === "all" ? "bg-card text-text-primary shadow-sm" : "text-text-secondary hover:text-text-primary"
                   }`}
                 >
                   {tr("all", { count: totalCount })}
@@ -346,7 +346,7 @@ export default function MyRecipesPage() {
                 <button
                   onClick={() => { setFilter("starred"); setLoading(true); loadRecipes(1, "starred") }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    filter === "starred" ? "bg-white text-text-primary shadow-sm" : "text-text-secondary hover:text-text-primary"
+                    filter === "starred" ? "bg-card text-text-primary shadow-sm" : "text-text-secondary hover:text-text-primary"
                   }`}
                 >
                   {tr("starredFilter", { count: starredCount })}

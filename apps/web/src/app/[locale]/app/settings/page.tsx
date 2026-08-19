@@ -269,7 +269,7 @@ const save = async () => {
             <div className="h-1 bg-gradient-to-r from-accent to-orange-300" />
             <div className="p-5 sm:p-6">
             <div className="flex items-center gap-2 mb-5">
-              <span className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center text-sm shrink-0">👤</span>
+              <span className="w-7 h-7 rounded-lg bg-surface flex items-center justify-center text-sm shrink-0">👤</span>
               <h2 className="font-bold text-text-primary">{ts("profile")}</h2>
             </div>
             {profile ? (
