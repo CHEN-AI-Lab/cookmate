@@ -295,7 +295,7 @@ export default function GroceryListPage() {
     }
   }
 
-  if (loading) return <div className="text-center py-16 text-gray-400">{tg("loading")}</div>
+  if (loading) return <div className="text-center py-16 text-text-secondary">{tg("loading")}</div>
 
   return (
     <div>
@@ -304,22 +304,22 @@ export default function GroceryListPage() {
       {categories.length === 0 && manualItems.length === 0 ? (
         <div className="text-center py-16">
           <span className="text-5xl">📋</span>
-          <p className="mt-4 text-gray-500">{tg("empty")}</p>
-          <p className="text-sm text-gray-400 mt-1">{tg("emptyHint")}</p>
+          <p className="mt-4 text-text-secondary">{tg("empty")}</p>
+          <p className="text-sm text-text-secondary mt-1">{tg("emptyHint")}</p>
         </div>
       ) : (
         <>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3 text-sm">
-              <span className="text-gray-400">{tg("totalItems", { count: total + manualItems.length })}</span>
+              <span className="text-text-secondary">{tg("totalItems", { count: total + manualItems.length })}</span>
               {inPantryCount > 0 && (
-                <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded-full">
+                <span className="bg-green-50 text-success px-2 py-0.5 rounded-full">
                   {tg("inPantryCount", { count: inPantryCount })}
                 </span>
               )}
             </div>
             {/* 天数选择器 */}
-            <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5 text-xs">
+            <div className="flex gap-1 bg-surface rounded-lg p-0.5 text-xs">
               {[3, 5, 7].map((n) => (
                 <button
                   key={n}
@@ -332,7 +332,7 @@ export default function GroceryListPage() {
                     setDays(n)
                   }}
                   className={`px-2.5 py-1 rounded-md transition-colors ${
-                    days === n ? "bg-white text-accent font-medium shadow-sm" : "text-gray-500 hover:text-gray-700"
+                    days === n ? "bg-card text-accent font-medium shadow-sm" : "text-text-secondary hover:text-text-primary"
                   }`}
                 >
                   {tg("lastNDays", { n })}
@@ -342,15 +342,15 @@ export default function GroceryListPage() {
           </div>
           <div className="space-y-0">
             {categories.map((cat) => (
-              <div key={cat.name} className="border-b border-gray-100 py-2 last:border-b-0">
-                <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">{catLabels[cat.name] || cat.name}</h3>
+              <div key={cat.name} className="border-b border-border py-2 last:border-b-0">
+                <h3 className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1">{catLabels[cat.name] || cat.name}</h3>
                 <div className="flex flex-wrap gap-x-6 gap-y-1">
                   {cat.items.map((item, i) => (
                     <label key={i} className="text-sm flex items-center gap-1.5 cursor-pointer hover:text-accent transition-colors group">
                       <input type="checkbox" checked={checked.has(item.name)} onChange={() => toggleCheck(item.name)} className="rounded accent-accent w-3.5 h-3.5 shrink-0" />
                       <span
                         className={`${
-                          item.inPantry ? "text-green-600" : checked.has(item.name) ? "text-gray-300 line-through" : "text-gray-600"
+                          item.inPantry ? "text-success" : checked.has(item.name) ? "text-text-secondary line-through" : "text-text-secondary"
                         } cursor-pointer ${
                           item.sources && item.sources.length > 0 ? "border-b border-dashed border-gray-300 hover:border-accent" : ""
                         }`}
@@ -360,10 +360,10 @@ export default function GroceryListPage() {
                         }}
                       >
                         {item.name}
-                        {item.quantity && <span className="text-gray-400 font-normal"> ({item.quantity})</span>}
+                        {item.quantity && <span className="text-text-secondary font-normal"> ({item.quantity})</span>}
                       </span>
                       {item.inPantry && (
-                        <span className="text-[10px] text-green-500 bg-green-50 px-1 rounded shrink-0">{tg("inPantry")}</span>
+                        <span className="text-[10px] text-success bg-green-50 px-1 rounded shrink-0">{tg("inPantry")}</span>
                       )}
                       {item.sources && item.sources.length > 0 && (
                         <span className="text-[10px] text-accent opacity-0 group-hover:opacity-100 transition-opacity shrink-0">🔍</span>
@@ -375,16 +375,16 @@ export default function GroceryListPage() {
             ))}
             {/* 手动添加的食材 */}
             {manualItems.length > 0 && (
-              <div className="border-b border-gray-100 py-2 last:border-b-0">
-                <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">{tg("manualAdd")}</h3>
+              <div className="border-b border-border py-2 last:border-b-0">
+                <h3 className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1">{tg("manualAdd")}</h3>
                 <div className="flex flex-wrap gap-x-6 gap-y-1">
                   {manualItems.map((name, i) => (
                     <label key={i} className="text-sm flex items-center gap-1.5 cursor-pointer hover:text-accent transition-colors">
                       <input type="checkbox" checked={checked.has(name)} onChange={() => toggleCheck(name)} className="rounded accent-accent w-3.5 h-3.5" />
-                      <span className={`${checked.has(name) ? "text-gray-300 line-through" : "text-gray-600"}`}>
+                      <span className={`${checked.has(name) ? "text-text-secondary line-through" : "text-text-secondary"}`}>
                         {name}
                       </span>
-                      <button onClick={() => removeManualItem(name)} className="text-gray-300 hover:text-red-500 text-xs ml-auto">✕</button>
+                      <button onClick={() => removeManualItem(name)} className="text-text-secondary hover:text-error text-xs ml-auto">✕</button>
                     </label>
                   ))}
                 </div>
@@ -397,19 +397,19 @@ export default function GroceryListPage() {
             <div className="mt-6">
               <button
                 onClick={() => setStapleOpen(!stapleOpen)}
-                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                className="flex items-center gap-1.5 text-xs text-text-secondary hover:text-text-secondary transition-colors"
               >
                 <span className={`transition-transform ${stapleOpen ? "rotate-90" : ""}`}>▶</span>
                 {tg("stapleItems", { count: stapleItems.length })}
               </button>
               {stapleOpen && (
-                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-gray-400">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-text-secondary">
                   {stapleItems.map((name) => (
-                    <span key={name} className="px-1.5 py-0.5 bg-gray-50 rounded">{name}</span>
+                    <span key={name} className="px-1.5 py-0.5 bg-surface rounded">{name}</span>
                   ))}
                 </div>
               )}
-              <p className="text-[10px] text-gray-300 mt-1">{tg("stapleDesc")}</p>
+              <p className="text-[10px] text-text-secondary mt-1">{tg("stapleDesc")}</p>
             </div>
           )}
 
@@ -418,7 +418,7 @@ export default function GroceryListPage() {
 
       {/* 手动添加输入框 */}
       {!isDemoUser && (
-      <div className="mt-6 bg-white rounded-xl border border-gray-200 p-3">
+      <div className="mt-6 bg-card rounded-xl border border-border p-3">
         <div className="flex gap-2">
           <input
             type="text"
@@ -426,7 +426,7 @@ export default function GroceryListPage() {
             onChange={(e) => setNewItem(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addManualItem() } }}
             placeholder={tg("addPlaceholder")}
-            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
+            className="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
           />
           <button
             onClick={addManualItem}
@@ -454,11 +454,11 @@ export default function GroceryListPage() {
       {/* 来源弹窗 */}
       {sourceDialog && (
         <div
-          className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-overlay flex items-center justify-center z-50"
           onClick={() => setSourceDialog(null)}
         >
           <div
-            className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-xl"
+            className="bg-card rounded-2xl p-6 max-w-sm w-full mx-4 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -467,22 +467,22 @@ export default function GroceryListPage() {
               </h3>
               <button
                 onClick={() => setSourceDialog(null)}
-                className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+                className="text-text-secondary hover:text-text-secondary text-xl leading-none"
               >
                 ✕
               </button>
             </div>
             <div className="space-y-3">
               {sourceDialog.sources.map((src, i) => (
-                <div key={i} className="flex items-center justify-between bg-orange-50 rounded-xl px-4 py-3">
+                <div key={i} className="flex items-center justify-between bg-surface rounded-xl px-4 py-3">
                   <span className="text-sm font-medium text-text-primary">{src.title}</span>
-                  <span className="text-sm text-gray-500">{src.quantity}</span>
+                  <span className="text-sm text-text-secondary">{src.quantity}</span>
                 </div>
               ))}
             </div>
             <button
               onClick={() => setSourceDialog(null)}
-              className="w-full mt-4 bg-gray-100 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+              className="w-full mt-4 bg-surface text-text-secondary py-2.5 rounded-xl text-sm font-medium hover:bg-border transition-colors"
             >
               {tg("closeButton")}
             </button>
@@ -493,9 +493,9 @@ export default function GroceryListPage() {
       {/* 重复添加提示 */}
       {dupDialog && (
         <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
-          <div className="bg-white border border-gray-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-card border border-border shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
             <span className="text-amber-500 text-base shrink-0">⚠️</span>
-            <span className="text-gray-700">{tg("alreadyInList", { name: dupDialog })}</span>
+            <span className="text-text-primary">{tg("alreadyInList", { name: dupDialog })}</span>
           </div>
         </div>
       )}

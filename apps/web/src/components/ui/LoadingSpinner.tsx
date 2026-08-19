@@ -23,7 +23,7 @@ export default function LoadingSpinner({
       >
         <span className="animate-bounce text-5xl">🍳</span>
         {text && (
-          <p className="mt-4 text-sm text-gray-500 font-medium">{text}</p>
+          <p className="mt-4 text-sm text-text-secondary font-medium">{text}</p>
         )}
       </div>
     )
@@ -52,7 +52,7 @@ export default function LoadingSpinner({
           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
         />
       </svg>
-      {text && <p className="text-sm text-gray-500">{text}</p>}
+      {text && <p className="text-sm text-text-secondary">{text}</p>}
     </div>
   )
 }

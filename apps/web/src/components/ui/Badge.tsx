@@ -2,8 +2,8 @@ import { type HTMLAttributes, type ReactNode } from "react"
 import { cn } from "@cookmate/shared/utils"
 
 const variantStyles = {
-  default: "bg-gray-100 text-gray-700",
-  success: "bg-green-100 text-green-700",
+  default: "bg-surface text-text-primary",
+  success: "bg-green-100 text-success",
   warning: "bg-yellow-100 text-yellow-700",
   danger: "bg-red-100 text-red-700",
   brand: "bg-[#FFF0E6] text-accent",

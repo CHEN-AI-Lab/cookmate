@@ -8,14 +8,14 @@ export default function PublicNavbar() {
   const tnav = useTranslations("nav")
 
   return (
-    <header className="border-b border-orange-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+    <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-[1400px] mx-auto px-8 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <span className="text-2xl">🍳</span>
           <span className="text-xl font-bold text-text-primary">CookMate</span>
         </Link>
 
-        <nav className="hidden sm:flex items-center gap-6 text-sm text-gray-600">
+        <nav className="hidden sm:flex items-center gap-6 text-sm text-text-secondary">
           <Link href="/#how" className="hover:text-accent">
             {tnav("howToUse")}
           </Link>

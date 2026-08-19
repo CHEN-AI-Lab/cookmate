@@ -175,7 +175,7 @@
     "githubRevokeNote": "GitHub は自動リンク解除をサポートしていません。解除後、GitHub 設定 → アプリケーション にアクセスして手動で認可をキャンセルしてください。",
     "cannotUnlinkEmail": "このログイン方法はリンク解除できません",
     "mustKeepOneMethod": "少なくとも1つのログイン方法を残す必要があります",
-    "connectedAccounts": "連携アカウント"
+    "connectedAccounts": "連携済み"
   },
   "validation": {
     "invalidEmail": "メールアドレスの形式が正しくありません",

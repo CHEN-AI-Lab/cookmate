@@ -114,7 +114,7 @@ export default function BillingPage() {
     }
   }
 
-  if (loading) return <div className="text-center py-16 text-gray-400">{t("loading")}</div>
+  if (loading) return <div className="text-center py-16 text-text-secondary">{t("loading")}</div>
 
   const isFree = info?.subscriptionTier === "FREE"
   const isDemo = info?.isDemoUser
@@ -139,41 +139,41 @@ export default function BillingPage() {
       )}
       <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
-        <p className="text-gray-500 mt-1 text-sm">{t("subtitle")}</p>
+        <h1 className="text-2xl font-bold text-text-primary">{t("title")}</h1>
+        <p className="text-text-secondary mt-1 text-sm">{t("subtitle")}</p>
       </div>
 
       {message && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700 font-medium">
+        <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-success font-medium">
           {message}
         </div>
       )}
 
       {/* ── Current Plan Card ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         {!isFree && !info?.cancelled && (
           <div className="h-1 bg-gradient-to-r from-amber-400 to-amber-200" />
         )}
         <div className="p-6">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <p className="text-sm text-gray-500">{t("currentPlan")}</p>
-              <h2 className="text-xl font-bold text-gray-900">
+              <p className="text-sm text-text-secondary">{t("currentPlan")}</p>
+              <h2 className="text-xl font-bold text-text-primary">
                 {isFree ? t("currentPlanFree") : t("currentPlanPro")}
               </h2>
               {!isFree && (
-                <p className="text-sm text-gray-500">{t("proPlanDesc")}</p>
+                <p className="text-sm text-text-secondary">{t("proPlanDesc")}</p>
               )}
               {isFree && (
-                <p className="text-sm text-gray-500">{t("freePlanDesc")}</p>
+                <p className="text-sm text-text-secondary">{t("freePlanDesc")}</p>
               )}
             </div>
             <span className={cn(
               "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold",
               isFree
-                ? "bg-gray-100 text-gray-600"
+                ? "bg-surface text-text-secondary"
                 : info?.cancelled
-                  ? "bg-gray-100 text-gray-500"
+                  ? "bg-surface text-text-secondary"
                   : "bg-amber-50 text-amber-600"
             )}>
               {isFree ? t("freeBadge") : info?.cancelled ? t("cancelled") : t("proBadge")}
@@ -184,28 +184,28 @@ export default function BillingPage() {
           <div className="mt-4 flex items-center gap-3">
             <div className={cn(
               "text-sm font-medium px-3 py-1 rounded-full",
-              daysLeft <= 7 ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700"
+              daysLeft <= 7 ? "bg-error/10 text-error" : "bg-green-50 text-success"
             )}>
               {locale === "zh-CN" ? `剩余 ${daysLeft} 天` : `${daysLeft} ${t("daysLeft")}`}
             </div>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-text-secondary">
               {t("expiryDate", { date: new Date(info.subscriptionExpiryDate).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" }) })}
             </span>
           </div>
         )}
         {!isFree && info?.subscriptionExpiryDate && info?.cancelled && (
-          <p className="text-xs text-gray-400 mt-2">
+          <p className="text-xs text-text-secondary mt-2">
             {t("expiryDate", { date: new Date(info.subscriptionExpiryDate).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" }) })}
           </p>
         )}
 
         {/* Pro features quick list */}
         {!isFree && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <div className="flex flex-wrap gap-x-6 gap-y-1.5 text-sm text-gray-600">
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="flex flex-wrap gap-x-6 gap-y-1.5 text-sm text-text-secondary">
               {(t.raw("proPlanFeatures") as string[]).map((f) => (
                 <span key={f} className="flex items-center gap-1.5">
-                  <svg className="w-3.5 h-3.5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 text-success shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                   {f}
@@ -219,8 +219,8 @@ export default function BillingPage() {
 
       {/* ── Pricing Section (FREE + PRO active users) ── */}
       {((isFree && !isDemo) || (!isFree && !info?.cancelled)) && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-bold text-gray-900 mb-4 text-center">
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
+          <h3 className="font-bold text-text-primary mb-4 text-center">
             {isFree ? t("selectPlan") : t("extendTitle")}
           </h3>
 
@@ -293,15 +293,15 @@ export default function BillingPage() {
 
       {/* ── PRO: Manage Subscription (cancel) ── */}
       {!isFree && !info?.cancelled && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between">
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-6 flex items-center justify-between">
           <div>
-            <h3 className="font-semibold text-gray-900">{t("subscriptionManage")}</h3>
-            <p className="text-sm text-gray-500 mt-0.5">{t("subscriptionManageDesc")}</p>
+            <h3 className="font-semibold text-text-primary">{t("subscriptionManage")}</h3>
+            <p className="text-sm text-text-secondary mt-0.5">{t("subscriptionManageDesc")}</p>
           </div>
           <button
             onClick={() => setShowCancelModal(true)}
             disabled={actionLoading !== null}
-            className="shrink-0 inline-flex items-center justify-center gap-1.5 text-xs text-red-500 border border-red-200 rounded-full px-3 py-1.5 hover:bg-red-50 transition-colors disabled:opacity-40"
+            className="shrink-0 inline-flex items-center justify-center gap-1.5 text-xs text-error border border-error/25 rounded-full px-3 py-1.5 hover:bg-error/10 transition-colors disabled:opacity-40"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -313,13 +313,13 @@ export default function BillingPage() {
 
       {/* ── PRO Cancelled ── */}
       {!isFree && info?.cancelled && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-gray-900">{t("subscriptionManage")}</h3>
-              <p className="text-sm text-gray-500 mt-0.5">{t("subscriptionManageDesc")}</p>
+              <h3 className="font-semibold text-text-primary">{t("subscriptionManage")}</h3>
+              <p className="text-sm text-text-secondary mt-0.5">{t("subscriptionManageDesc")}</p>
             </div>
-            <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 bg-gray-100 rounded-full px-3 py-1.5">
+            <span className="inline-flex items-center gap-1.5 text-xs text-text-secondary bg-surface rounded-full px-3 py-1.5">
               {t("subscriptionCancelled")}
             </span>
           </div>
@@ -331,7 +331,7 @@ export default function BillingPage() {
         <div className="text-center">
           <Link
             href="/app/orders"
-            className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-accent transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-accent transition-colors"
           >
             {t("orderHistory")}
           </Link>
@@ -340,9 +340,9 @@ export default function BillingPage() {
 
       {/* ── Checkout Modal ── */}
       {showCheckoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => { setShowCheckoutModal(false); setError("") }}>
-          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-bold text-lg text-gray-900 mb-4 text-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4" onClick={() => { setShowCheckoutModal(false); setError("") }}>
+          <div className="bg-card rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-bold text-lg text-text-primary mb-4 text-center">
               {isFree ? t("checkoutTitle") : t("extendTitle")}
             </h3>
 
@@ -355,10 +355,10 @@ export default function BillingPage() {
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">{error}</div>
+              <div className="mb-4 p-3 bg-error/10 border border-error/25 rounded-xl text-sm text-error">{error}</div>
             )}
 
-            <p className="text-sm font-medium text-gray-700 mb-3">{t("paymentMethods")}</p>
+            <p className="text-sm font-medium text-text-primary mb-3">{t("paymentMethods")}</p>
             <div className="space-y-2">
               <button
                 onClick={async () => {
@@ -383,41 +383,41 @@ export default function BillingPage() {
                   }
                 }}
                 disabled={actionLoading !== null || paying}
-                className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-gray-100 hover:border-blue-300 hover:bg-blue-50/50 transition-all disabled:opacity-40 group"
+                className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-border hover:border-blue-300 hover:bg-blue-50/50 transition-all disabled:opacity-40 group"
               >
                 <svg className="w-7 h-7 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="24" height="24" rx="4" fill="#1677FF"/>
                   <path d="M19.695 15.07c3.426 1.158 4.203 1.22 4.203 1.22V3.846c0-2.124-1.705-3.845-3.81-3.845H3.914C1.808.001.102 1.722.102 3.846v16.31c0 2.123 1.706 3.845 3.813 3.845h16.173c2.105 0 3.81-1.722 3.81-3.845v-.157s-6.19-2.602-9.315-4.119c-2.096 2.602-4.8 4.181-7.607 4.181-4.75 0-6.361-4.19-4.112-6.949.49-.602 1.324-1.175 2.617-1.497 2.025-.502 5.247.313 8.266 1.317a16.796 16.796 0 0 0 1.341-3.302H5.781v-.952h4.799V6.975H4.77v-.953h5.81V3.591s0-.409.411-.409h2.347v2.84h5.744v.951h-5.744v1.704h4.69a19.453 19.453 0 0 1-1.986 5.06c1.424.52 2.702 1.011 3.654 1.333m-13.81-2.032c-.596.06-1.71.325-2.321.869-1.83 1.608-.735 4.55 2.968 4.55 2.151 0 4.301-1.388 5.99-3.61-2.403-1.182-4.438-2.028-6.637-1.809" fill="white"/>
                 </svg>
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-gray-900 text-sm">{t("alipay")}</p>
-                  <p className="text-xs text-gray-400">{checkoutPriceDisplay}{checkoutPeriodLabel}</p>
+                  <p className="font-semibold text-text-primary text-sm">{t("alipay")}</p>
+                  <p className="text-xs text-text-secondary">{checkoutPriceDisplay}{checkoutPeriodLabel}</p>
                 </div>
-                {paying && <span className="text-xs text-gray-400 shrink-0">{t("redirecting")}</span>}
+                {paying && <span className="text-xs text-text-secondary shrink-0">{t("redirecting")}</span>}
               </button>
 
               {info?.creemConfigured && (
                 <button
                   onClick={() => handleCreemUpgrade(selectedPeriod)}
                   disabled={actionLoading !== null}
-                  className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-gray-100 hover:border-green-400 hover:bg-green-50/50 transition-all disabled:opacity-40 group"
+                  className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-border hover:border-green-400 hover:bg-green-50/50 transition-all disabled:opacity-40 group"
                 >
                   <svg className="w-7 h-7 shrink-0" viewBox="0 0 121 121" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="121" height="121" rx="16" fill="#151617"/>
                     <path d="M22.1102 11C24.1187 11.0001 25.9669 12.0982 26.9281 13.8619L51.2059 58.4106C52.5699 60.9134 55.7048 61.8368 58.2077 60.473C60.7108 59.109 61.6342 55.9742 60.2701 53.4712L41.5466 19.113C39.554 15.4566 42.2004 11 46.3645 11H103.806C107.885 11 110.539 15.2933 108.715 18.9416L65.0579 106.254C63.0356 110.298 57.2654 110.298 55.2431 106.254L11.5863 18.9416C9.76212 15.2933 12.4156 11 15.4946 11H22.1102Z" fill="white"/>
                   </svg>
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-gray-900 text-sm">{t("creem")}</p>
-                    <p className="text-xs text-gray-400">{t("creemDesc")}</p>
+                    <p className="font-semibold text-text-primary text-sm">{t("creem")}</p>
+                    <p className="text-xs text-text-secondary">{t("creemDesc")}</p>
                   </div>
-                  {actionLoading === "creem" && <span className="text-xs text-gray-400 shrink-0">{t("redirecting")}</span>}
+                  {actionLoading === "creem" && <span className="text-xs text-text-secondary shrink-0">{t("redirecting")}</span>}
                 </button>
               )}
             </div>
 
             <button
               onClick={() => { setShowCheckoutModal(false); setError("") }}
-              className="w-full mt-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              className="w-full mt-4 py-2.5 text-sm text-text-secondary border border-border rounded-xl hover:bg-surface transition-colors"
             >
               {t("checkoutCancel")}
             </button>
@@ -427,21 +427,21 @@ export default function BillingPage() {
 
       {/* ── Cancel Confirmation Modal ── */}
       {showCancelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowCancelModal(false)}>
-          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4" onClick={() => setShowCancelModal(false)}>
+          <div className="bg-card rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
             <div className="text-center mb-4">
               <div className="mx-auto w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-3">
-                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
-              <h3 className="font-bold text-lg text-gray-900">{t("cancelSubscription")}</h3>
+              <h3 className="font-bold text-lg text-text-primary">{t("cancelSubscription")}</h3>
             </div>
-            <p className="text-sm text-gray-600 mb-4">{t("cancelConfirm")}</p>
+            <p className="text-sm text-text-secondary mb-4">{t("cancelConfirm")}</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowCancelModal(false)}
-                className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-border rounded-xl hover:bg-surface transition-colors"
               >
                 {locale === "en" ? "Keep Pro" : t("keepPro")}
               </button>
@@ -466,7 +466,7 @@ export default function BillingPage() {
                   }
                 }}
                 disabled={actionLoading === "cancel"}
-                className="flex-1 px-4 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 disabled:bg-gray-300 transition-colors font-medium"
+                className="flex-1 px-4 py-2.5 text-sm text-white bg-error/100 rounded-xl hover:bg-error disabled:bg-gray-300 transition-colors font-medium"
               >
                 {actionLoading === "cancel" ? t("cancelling") : t("cancelSubscription")}
               </button>
@@ -477,21 +477,21 @@ export default function BillingPage() {
 
       {/* ── Downgrade Confirmation Modal (PRO → Free) ── */}
       {showDowngradeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowDowngradeModal(false)}>
-          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4" onClick={() => setShowDowngradeModal(false)}>
+          <div className="bg-card rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
             <div className="text-center mb-4">
               <div className="mx-auto w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-3">
                 <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
-              <h3 className="font-bold text-lg text-gray-900">{t("downgradeTitle")}</h3>
+              <h3 className="font-bold text-lg text-text-primary">{t("downgradeTitle")}</h3>
             </div>
-            <p className="text-sm text-gray-600 mb-4">{t("downgradeConfirm")}</p>
+            <p className="text-sm text-text-secondary mb-4">{t("downgradeConfirm")}</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowDowngradeModal(false)}
-                className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-border rounded-xl hover:bg-surface transition-colors"
               >
                 {locale === "en" ? "Keep Pro" : t("keepPro")}
               </button>

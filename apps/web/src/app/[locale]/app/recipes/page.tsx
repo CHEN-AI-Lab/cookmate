@@ -288,13 +288,13 @@ export default function RecipesPage() {
     <div>
       <h1 className="text-2xl font-bold text-text-primary mb-6">{t("aiRecipesTitle")}</h1>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-green-50 p-6 mb-6">
+      <div className="bg-card rounded-2xl shadow-sm border border-green-50 p-6 mb-6">
         {pantryLoaded && pantryItems.length > 0 && (
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-green-600 flex items-center gap-1">
+              <p className="text-xs font-medium text-success flex items-center gap-1">
                 <span>📦</span> {t("yourPantry")}
-                <span className="text-gray-400 font-normal">{t("clickToAdd")}</span>
+                <span className="text-text-secondary font-normal">{t("clickToAdd")}</span>
               </p>
               {ingredients.length > 0 && fromPantryCount > 0 && (
                 <button
@@ -315,12 +315,12 @@ export default function RecipesPage() {
                     className={`px-2.5 py-1 rounded-full text-xs border transition-all ${
                       active
                         ? "bg-green-50 text-green-700 border-green-300 shadow-sm"
-                        : "bg-gray-50 text-gray-500 border-gray-200 hover:border-green-300 hover:text-green-600 hover:bg-green-50/30"
+                        : "bg-surface text-text-secondary border-border hover:border-green-300 hover:text-success hover:bg-green-50/30"
                     }`}
                   >
                     {displayName(item.name)}
                     {active && (
-                      <span className="ml-0.5 text-green-500">✓</span>
+                      <span className="ml-0.5 text-success">✓</span>
                     )}
                   </button>
                 )
@@ -329,7 +329,7 @@ export default function RecipesPage() {
           </div>
         )}
 
-        <div className="border-t border-gray-100 pt-4">
+        <div className="border-t border-border pt-4">
           <div className="flex gap-2">
             <input
               type="text"
@@ -337,11 +337,11 @@ export default function RecipesPage() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={pantryItems.length > 0 ? t("ingredientsPlaceholderPantry") : t("ingredientsPlaceholder")}
-              className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:border-accent text-sm"
+              className="flex-1 border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:border-accent text-sm"
             />
             <button
               onClick={addIngredient}
-              className="bg-gray-100 text-gray-700 px-4 py-2.5 rounded-xl hover:bg-gray-200 transition-colors text-sm"
+              className="bg-surface text-text-primary px-4 py-2.5 rounded-xl hover:bg-border transition-colors text-sm"
             >
               {t("addIngredientBtn")}
             </button>
@@ -360,7 +360,7 @@ export default function RecipesPage() {
                 >
                   {displayName(item)}
                   {isFromPantry(item) && <span className="text-[10px] opacity-60">📦</span>}
-                  <button onClick={() => removeIngredient(item)} className="ml-1 hover:text-red-500">×</button>
+                  <button onClick={() => removeIngredient(item)} className="ml-1 hover:text-error">×</button>
                 </span>
               ))}
             </div>
@@ -377,7 +377,7 @@ export default function RecipesPage() {
             {ingredients.length > 0 && (
               <button
                 onClick={() => setIngredients([])}
-                className="text-gray-400 px-4 py-2.5 rounded-full text-sm hover:text-gray-600 transition-colors"
+                className="text-text-secondary px-4 py-2.5 rounded-full text-sm hover:text-text-secondary transition-colors"
               >
                 {t("clearAll")}
               </button>
@@ -386,14 +386,14 @@ export default function RecipesPage() {
         </div>
 
         {error && (
-          <p className="mt-3 text-sm text-red-500">{error}</p>
+          <p className="mt-3 text-sm text-error">{error}</p>
         )}
       </div>
 
       {loading && (
         <div className="text-center py-12">
           <p className="text-4xl animate-bounce">🤔</p>
-          <p className="mt-4 text-gray-500">{t("aiAnalyzing")}</p>
+          <p className="mt-4 text-text-secondary">{t("aiAnalyzing")}</p>
         </div>
       )}
 
@@ -417,7 +417,7 @@ export default function RecipesPage() {
       )}
 
       {!loading && recipes.length === 0 && !error && (
-        <div className="text-center py-12 text-gray-400">
+        <div className="text-center py-12 text-text-secondary">
           <span className="text-5xl">{generated ? "🤷" : "🥗"}</span>
           <p className="mt-4">
             {generated
@@ -430,26 +430,26 @@ export default function RecipesPage() {
       )}
 
       {addDialog && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setAddDialog(null)}>
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-overlay flex items-center justify-center z-50" onClick={() => setAddDialog(null)}>
+          <div className="bg-card rounded-2xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-text-primary mb-4">{t("addToPlan")}</h3>
-            <p className="text-sm text-gray-500 mb-4">{t("addToPlanDesc", { title: addDialog.recipe.title })}</p>
+            <p className="text-sm text-text-secondary mb-4">{t("addToPlanDesc", { title: addDialog.recipe.title })}</p>
             <div className="flex gap-2 mb-3">
               <select value={addDialog.day} onChange={(e) => setAddDialog({ ...addDialog, day: e.target.value })}
-                className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                className="flex-1 border border-border rounded-xl px-3 py-2 text-sm">
                 {DAY_VALUES.map((d) => (
                   <option key={d} value={d}>{dayLabel[d]}</option>
                 ))}
               </select>
               <select value={addDialog.meal} onChange={(e) => setAddDialog({ ...addDialog, meal: e.target.value })}
-                className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                className="flex-1 border border-border rounded-xl px-3 py-2 text-sm">
                 {MEAL_VALUES.map((m) => (
                   <option key={m} value={m}>{mealLabel[m]}</option>
                 ))}
               </select>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setAddDialog(null)} className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl text-sm">{t("cancel")}</button>
+              <button onClick={() => setAddDialog(null)} className="flex-1 bg-surface text-text-secondary py-2 rounded-xl text-sm">{t("cancel")}</button>
               <button onClick={() => addToPlan(addDialog.recipe)} className="flex-1 bg-accent text-white py-2 rounded-xl text-sm">{t("confirmAdd")}</button>
             </div>
           </div>
@@ -458,22 +458,22 @@ export default function RecipesPage() {
 
       {dupDialog && (
         <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
-          <div className="bg-white border border-gray-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-card border border-border shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
             <span className="text-amber-500 text-base shrink-0">⚠️</span>
-            <span className="text-gray-700">{t("duplicateIngredient", { name: dupDialog })}</span>
+            <span className="text-text-primary">{t("duplicateIngredient", { name: dupDialog })}</span>
           </div>
         </div>
       )}
 
       {conflictData && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setConflictData(null)}>
-          <div className="bg-white rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-overlay flex items-center justify-center z-50" onClick={() => setConflictData(null)}>
+          <div className="bg-card rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
             <p className="text-lg mb-2">⚠️</p>
             <p className="text-sm text-text-primary font-medium mb-1">{t("slotConflict")}</p>
-            <p className="text-sm text-gray-500">{t("slotConflictDesc", { day: dayLabel[conflictData.day] || conflictData.day, meal: mealLabel[conflictData.meal] || conflictData.meal, title: conflictData.existingTitle })}</p>
-            <p className="text-xs text-gray-400 mt-2">{t("slotConflictReplace", { title: conflictData.recipe.title })}</p>
+            <p className="text-sm text-text-secondary">{t("slotConflictDesc", { day: dayLabel[conflictData.day] || conflictData.day, meal: mealLabel[conflictData.meal] || conflictData.meal, title: conflictData.existingTitle })}</p>
+            <p className="text-xs text-text-secondary mt-2">{t("slotConflictReplace", { title: conflictData.recipe.title })}</p>
             <div className="flex gap-2 mt-4">
-              <button onClick={() => setConflictData(null)} className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl text-sm">{t("cancel")}</button>
+              <button onClick={() => setConflictData(null)} className="flex-1 bg-surface text-text-secondary py-2 rounded-xl text-sm">{t("cancel")}</button>
               <button onClick={confirmOverwrite} className="flex-1 bg-accent text-white py-2 rounded-xl text-sm">{t("replace")}</button>
             </div>
           </div>
@@ -481,17 +481,17 @@ export default function RecipesPage() {
       )}
 
       {deleteDialog && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setDeleteDialog(null)}>
-          <div className="bg-white rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mx-auto mb-2 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <div className="fixed inset-0 bg-overlay flex items-center justify-center z-50" onClick={() => setDeleteDialog(null)}>
+          <div className="bg-card rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mx-auto mb-2 text-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
             </svg>
             <p className="text-sm text-text-primary font-medium mb-1">{t("confirmDelete")}</p>
-            <p className="text-sm text-gray-500">{t("confirmDeleteDesc", { title: deleteDialog.title })}</p>
-            <p className="text-xs text-gray-400 mt-2">{t("irreversible")}</p>
+            <p className="text-sm text-text-secondary">{t("confirmDeleteDesc", { title: deleteDialog.title })}</p>
+            <p className="text-xs text-text-secondary mt-2">{t("irreversible")}</p>
             <div className="flex gap-2 mt-4">
-              <button onClick={() => setDeleteDialog(null)} className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl text-sm">{t("cancel")}</button>
-              <button onClick={() => deleteRecipe(deleteDialog)} className="flex-1 bg-red-500 text-white py-2 rounded-xl text-sm">{t("confirmDeleteAction")}</button>
+              <button onClick={() => setDeleteDialog(null)} className="flex-1 bg-surface text-text-secondary py-2 rounded-xl text-sm">{t("cancel")}</button>
+              <button onClick={() => deleteRecipe(deleteDialog)} className="flex-1 bg-error text-white py-2 rounded-xl text-sm">{t("confirmDeleteAction")}</button>
             </div>
           </div>
         </div>
@@ -499,33 +499,33 @@ export default function RecipesPage() {
 
       {addMsg && (
         <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
-          <div className="bg-white border border-gray-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
-            <span className="text-gray-700">{addMsg}</span>
+          <div className="bg-card border border-border shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+            <span className="text-text-primary">{addMsg}</span>
           </div>
         </div>
       )}
 
       {starToast && (
         <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
-          <div className="bg-white border border-gray-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
-            <span className="text-gray-700">{starToast}</span>
+          <div className="bg-card border border-border shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+            <span className="text-text-primary">{starToast}</span>
           </div>
         </div>
       )}
 
       {demoToast && (
         <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
-          <div className="bg-white border border-gray-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
-            <span className="text-gray-700">{demoToast}</span>
+          <div className="bg-card border border-border shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+            <span className="text-text-primary">{demoToast}</span>
           </div>
         </div>
       )}
 
       {deleteError && (
         <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
-          <div className="bg-white border border-gray-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
-            <span className="text-red-500 text-base shrink-0">❌</span>
-            <span className="text-gray-700">{deleteError}</span>
+          <div className="bg-card border border-border shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+            <span className="text-error text-base shrink-0">❌</span>
+            <span className="text-text-primary">{deleteError}</span>
           </div>
         </div>
       )}

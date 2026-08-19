@@ -128,10 +128,10 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm">
+      <div className="bg-card rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden relative">
         {/* Progress bar */}
-        <div className="h-1 bg-gray-100">
+        <div className="h-1 bg-surface">
           <div
             className="h-full bg-accent transition-all duration-500 ease-out"
             style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
@@ -157,7 +157,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
               window.location.href = "/app/dashboard"
             }
           }}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-sm"
+          className="absolute top-4 right-4 text-text-secondary hover:text-text-secondary text-sm"
         >
           {t("skip")}
         </button>
@@ -183,18 +183,18 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
           {step === 0 && (
             <div className="text-center py-4">
               <div className="text-5xl mb-4">🍳</div>
-              <h2 className="text-2xl font-bold text-gray-900">{t("welcomeTitle")}</h2>
-              <p className="text-gray-500 mt-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.raw("welcomeDesc") }} />
+              <h2 className="text-2xl font-bold text-text-primary">{t("welcomeTitle")}</h2>
+              <p className="text-text-secondary mt-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.raw("welcomeDesc") }} />
               <div className="grid grid-cols-3 gap-3 mt-8">
                 {[
                   { emoji: "🎯", title: t("step1Card1Title"), desc: t("step1Card1Desc") },
                   { emoji: "🥦", title: t("step1Card2Title"), desc: t("step1Card2Desc") },
                   { emoji: "🤖", title: t("step1Card3Title"), desc: t("step1Card3Desc") },
                 ].map((item) => (
-                  <div key={item.title} className="text-center p-3 rounded-xl bg-gray-50">
+                  <div key={item.title} className="text-center p-3 rounded-xl bg-surface">
                     <div className="text-2xl">{item.emoji}</div>
-                    <div className="text-sm font-semibold text-gray-900 mt-1">{item.title}</div>
-                    <div className="text-xs text-gray-400">{item.desc}</div>
+                    <div className="text-sm font-semibold text-text-primary mt-1">{item.title}</div>
+                    <div className="text-xs text-text-secondary">{item.desc}</div>
                   </div>
                 ))}
               </div>
@@ -203,11 +203,11 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
 
           {step === 1 && (
             <div className="py-4">
-              <h2 className="text-xl font-bold text-gray-900 text-center">{t("preferenceTitle")}</h2>
-              <p className="text-gray-500 text-sm text-center mt-1" dangerouslySetInnerHTML={{ __html: t.raw("preferenceDesc") }} />
+              <h2 className="text-xl font-bold text-text-primary text-center">{t("preferenceTitle")}</h2>
+              <p className="text-text-secondary text-sm text-center mt-1" dangerouslySetInnerHTML={{ __html: t.raw("preferenceDesc") }} />
 
               <div className="mt-6">
-                <label className="text-sm font-semibold text-gray-700">{t("dietType")}</label>
+                <label className="text-sm font-semibold text-text-primary">{t("dietType")}</label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {DIET_OPTIONS.map((opt) => (
                     <button
@@ -216,7 +216,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                         dietType === opt
                           ? "bg-accent text-white"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          : "bg-surface text-text-secondary hover:bg-border"
                       }`}
                     >
                       {dietLabel[opt]}
@@ -226,7 +226,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
               </div>
 
               <div className="mt-5">
-                <label className="text-sm font-semibold text-gray-700">{t("cuisinePref")}</label>
+                <label className="text-sm font-semibold text-text-primary">{t("cuisinePref")}</label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {CUISINE_OPTIONS.map((opt) => {
                     const selected = cuisinePref.includes(opt)
@@ -242,7 +242,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
                           selected
                             ? "bg-accent text-white"
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            : "bg-surface text-text-secondary hover:bg-border"
                         }`}
                       >
                         {selected ? "✓" : ""} {cuisineLabel[opt]}
@@ -251,15 +251,15 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                   })}
                 </div>
                 {cuisinePref.length > 0 && (
-                  <p className="text-xs text-gray-400 mt-1.5">{t("selectedCuisines", { count: cuisinePref.length })}</p>
+                  <p className="text-xs text-text-secondary mt-1.5">{t("selectedCuisines", { count: cuisinePref.length })}</p>
                 )}
                 {error && (
-                  <p className="text-xs text-red-500 mt-1.5">{error}</p>
+                  <p className="text-xs text-error mt-1.5">{error}</p>
                 )}
               </div>
 
               <div className="mt-5">
-                <label className="text-sm font-semibold text-gray-700">{t("servingSize")}</label>
+                <label className="text-sm font-semibold text-text-primary">{t("servingSize")}</label>
                 <div className="flex items-center gap-3 mt-2">
                   {SERVING_SIZE_OPTIONS.map((n) => (
                     <button
@@ -268,7 +268,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                       className={`w-10 h-10 rounded-full text-sm font-semibold transition-all ${
                         servingSize === n
                           ? "bg-accent text-white"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          : "bg-surface text-text-secondary hover:bg-border"
                       }`}
                     >
                       {n}
@@ -281,13 +281,13 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
 
           {step === 2 && (
             <div className="py-4">
-              <h2 className="text-xl font-bold text-gray-900 text-center">{t("ingredientTitle")}</h2>
-              <p className="text-gray-500 text-sm text-center mt-1" dangerouslySetInnerHTML={{ __html: t.raw("ingredientDesc") }} />
+              <h2 className="text-xl font-bold text-text-primary text-center">{t("ingredientTitle")}</h2>
+              <p className="text-text-secondary text-sm text-center mt-1" dangerouslySetInnerHTML={{ __html: t.raw("ingredientDesc") }} />
 
               <div className="mt-5 space-y-3 max-h-64 overflow-y-auto">
                 {QUICK_INGREDIENTS.map((group) => (
                   <div key={group.cat}>
-                    <p className="text-xs font-semibold text-gray-400 mb-1.5">{ingredientCats[group.cat]}</p>
+                    <p className="text-xs font-semibold text-text-secondary mb-1.5">{ingredientCats[group.cat]}</p>
                     <div className="flex flex-wrap gap-2">
                       {group.items.map((item) => (
                         <button
@@ -296,7 +296,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                           className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
                             selectedIngredients.has(item)
                               ? "bg-accent/10 text-accent border border-accent/30"
-                              : "bg-gray-50 text-gray-600 border border-gray-100 hover:bg-gray-100"
+                              : "bg-surface text-text-secondary border border-border hover:bg-surface"
                           }`}
                         >
                           {selectedIngredients.has(item) ? "✓ " : ""}{ingredientLabel[item]}
@@ -306,7 +306,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-400 mt-3 text-center">
+              <p className="text-xs text-text-secondary mt-3 text-center">
                 {t("selectedIngredients", { count: selectedIngredients.size })}
               </p>
             </div>
@@ -315,9 +315,9 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
           {step === 3 && (
             <div className="text-center py-4">
               <div className="text-5xl mb-4">🤖</div>
-              <h2 className="text-xl font-bold text-gray-900">{t("tryAiTitle")}</h2>
-              <p className="text-gray-500 mt-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.raw("tryAiDesc") }} />
-              <div className="mt-6 inline-flex items-center gap-2 bg-orange-50 text-accent px-4 py-2 rounded-full text-sm font-medium">
+              <h2 className="text-xl font-bold text-text-primary">{t("tryAiTitle")}</h2>
+              <p className="text-text-secondary mt-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.raw("tryAiDesc") }} />
+              <div className="mt-6 inline-flex items-center gap-2 bg-surface text-accent px-4 py-2 rounded-full text-sm font-medium">
                 {t("tryAiButton")}
               </div>
             </div>
@@ -328,8 +328,8 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
               {isDemoUser === true ? (
                 <>
                   <div className="text-5xl mb-4">💡</div>
-                  <h2 className="text-2xl font-bold text-gray-900">{t("readyTitle")}</h2>
-                  <p className="text-gray-500 mt-3 leading-relaxed">{t("demoCannotSave")}</p>
+                  <h2 className="text-2xl font-bold text-text-primary">{t("readyTitle")}</h2>
+                  <p className="text-text-secondary mt-3 leading-relaxed">{t("demoCannotSave")}</p>
                   <div className="mt-6">
                     <Link
                       href="/register"
@@ -342,8 +342,8 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
               ) : (
                 <>
                   <div className="text-5xl mb-4">🎉</div>
-                  <h2 className="text-2xl font-bold text-gray-900">{t("readyTitle")}</h2>
-                  <p className="text-gray-500 mt-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.raw("readyDesc") }} />
+                  <h2 className="text-2xl font-bold text-text-primary">{t("readyTitle")}</h2>
+                  <p className="text-text-secondary mt-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.raw("readyDesc") }} />
                 </>
               )}
             </div>
@@ -355,7 +355,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
             <button
               onClick={() => step > 0 && setStep(step - 1)}
               className={`text-sm font-medium py-2.5 transition-colors ${
-                step > 0 ? "text-gray-500 hover:text-gray-900" : "text-transparent pointer-events-none"
+                step > 0 ? "text-text-secondary hover:text-text-primary" : "text-transparent pointer-events-none"
               }`}
             >
               {t("previous")}
@@ -366,7 +366,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
               disabled={!canNext() || saving}
               className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
                 !canNext() || saving
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  ? "bg-gray-200 text-text-secondary cursor-not-allowed"
                   : "bg-accent text-white hover:bg-orange-600"
               }`}
             >

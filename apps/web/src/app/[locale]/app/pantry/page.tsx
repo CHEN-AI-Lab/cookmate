@@ -111,7 +111,7 @@ export default function PantryPage() {
 
   const filtered = items.filter((i) => !search || i.name.includes(search))
 
-  if (loading) return <div className="text-center py-16 text-gray-400">{t("loading")}</div>
+  if (loading) return <div className="text-center py-16 text-text-secondary">{t("loading")}</div>
 
   return (
     <div>
@@ -122,12 +122,12 @@ export default function PantryPage() {
       <div className="mb-2">
         <div className="flex gap-2 items-center">
           <div className="relative flex-1">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-sm">🔍</span>
             <input
               type="text" value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("searchPlaceholder")}
-              className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent"
+              className="w-full bg-card border border-border rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent"
             />
           </div>
           <button
@@ -144,7 +144,7 @@ export default function PantryPage() {
       <div className="mb-2">
         <h2 className="font-bold text-text-primary mb-3">{t("myItems", { count: filtered.length })}</h2>
         {filtered.length === 0 ? (
-          <p className="text-gray-400 text-sm">{t("empty")}</p>
+          <p className="text-text-secondary text-sm">{t("empty")}</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {filtered.map((item) => (
@@ -154,11 +154,11 @@ export default function PantryPage() {
                 className={`px-3 py-1 rounded-full text-sm border flex items-center gap-1 cursor-pointer transition-colors ${
                   selected.has(item.id)
                     ? "bg-gradient-to-r from-orange-400 to-amber-400 text-white border-transparent"
-                    : "bg-orange-50 text-accent border-orange-200 hover:bg-orange-100"
+                    : "bg-surface text-accent border-orange-200 hover:bg-surface"
                 }`}
               >
                 {item.name}
-                <button onClick={(e) => { e.stopPropagation(); removeItem(item.id) }} className="ml-1 hover:text-red-500">{isDemoUser ? "" : "×"}</button>
+                <button onClick={(e) => { e.stopPropagation(); removeItem(item.id) }} className="ml-1 hover:text-error">{isDemoUser ? "" : "×"}</button>
               </span>
             ))}
           </div>
@@ -190,7 +190,7 @@ export default function PantryPage() {
           </button>
         </div>
       ) : (
-        <div className="mb-4 flex items-center bg-gray-100 text-gray-400 px-4 py-2.5 rounded-xl">
+        <div className="mb-4 flex items-center bg-surface text-text-secondary px-4 py-2.5 rounded-xl">
           <span className="text-sm">{t("clickToSelect")}</span>
         </div>
       )}
@@ -198,11 +198,11 @@ export default function PantryPage() {
       {/* Add dialog modal */}
       {showAddDialog && (
         <div
-          className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-overlay flex items-center justify-center z-50"
           onClick={() => { setShowAddDialog(false); setInputName("") }}
         >
           <div
-            className="bg-white rounded-2xl p-6 w-80 shadow-xl"
+            className="bg-card rounded-2xl p-6 w-80 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-bold text-text-primary mb-4">{t("addDialogTitle")}</h3>
@@ -212,13 +212,13 @@ export default function PantryPage() {
               onChange={(e) => setInputName(e.target.value)}
               onKeyDown={async (e) => { if (e.key === "Enter") { await addItem(inputName); setShowAddDialog(false) } }}
               placeholder={t("addItemPlaceholder")}
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent mb-4"
+              className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent mb-4"
               autoFocus
             />
             <div className="flex gap-2">
               <button
                 onClick={() => { setShowAddDialog(false); setInputName("") }}
-                className="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl text-sm hover:bg-gray-200"
+                className="flex-1 bg-surface text-text-secondary py-2.5 rounded-xl text-sm hover:bg-border"
               >
                 {t("cancel")}
               </button>
@@ -235,7 +235,7 @@ export default function PantryPage() {
 
                     {/* 重复添加提示 */}
                     {dupDialog && (
-                      <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setDupDialog(null)}>
+                      <div className="fixed inset-0 bg-overlay flex items-center justify-center z-50" onClick={() => setDupDialog(null)}>
                         <div className="bg-bg-inverse text-white px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center" onClick={(e) => e.stopPropagation()}>
                           <span>{t("alreadyInPantry", { name: dupDialog })}</span>
                         </div>

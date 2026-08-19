@@ -25,7 +25,7 @@ export default async function PricingPage({ params }: { params: Promise<{ locale
 
       <section className="max-w-[1400px] mx-auto px-8 pt-20 pb-8 text-center">
         <h1 className="text-4xl sm:text-5xl font-bold text-text-primary">{tb("selectPlan")}</h1>
-        <p className="mt-3 text-lg text-gray-500">{tb("upgradeNow")}</p>
+        <p className="mt-3 text-lg text-text-secondary">{tb("upgradeNow")}</p>
       </section>
 
       <PricingCards />

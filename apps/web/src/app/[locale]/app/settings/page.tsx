@@ -832,7 +832,7 @@ const save = async () => {
               <button
                 onClick={handleUnlinkConfirm}
                 disabled={unlinking !== null}
-                className="flex-1 px-4 py-2.5 text-sm text-white bg-orange-500 rounded-xl hover:bg-orange-600 disabled:bg-gray-300 transition-colors font-medium"
+                className="flex-1 px-4 py-2.5 text-sm text-white bg-accent rounded-xl hover:bg-orange-600 disabled:bg-gray-300 transition-colors font-medium"
               >
                 {unlinking ? "..." : ta("unlink")}
               </button>

@@ -57,9 +57,9 @@ export default function OrdersPage() {
   const channelLabel: Record<string, string> = { alipay: t("channelAlipay"), creem: t("channelCreem"), stripe: t("channelStripe") }
   const statusLabel: Record<string, string> = { PAID: t("completed"), PENDING: t("cancelled"), EXPIRED: t("expired") }
   const statusColor: Record<string, string> = {
-    PAID: "text-green-600 bg-green-50",
-    PENDING: "text-gray-400 bg-gray-100",
-    EXPIRED: "text-gray-500 bg-gray-50",
+    PAID: "text-success bg-green-50",
+    PENDING: "text-text-secondary bg-surface",
+    EXPIRED: "text-text-secondary bg-surface",
   }
 
   const confirmDelete = async () => {
@@ -76,16 +76,16 @@ export default function OrdersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
-        <p className="text-gray-500 mt-1 text-sm">{t("subtitle")}</p>
+        <h1 className="text-2xl font-bold text-text-primary">{t("title")}</h1>
+        <p className="text-text-secondary mt-1 text-sm">{t("subtitle")}</p>
       </div>
 
       {loading ? (
-        <div className="text-center py-16 text-gray-400">{t("loading")}</div>
+        <div className="text-center py-16 text-text-secondary">{t("loading")}</div>
       ) : orders.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-          <p className="text-gray-400 text-lg mb-2">{t("noOrders")}</p>
-          <p className="text-gray-400 text-sm">{t("noOrdersHint")}</p>
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-12 text-center">
+          <p className="text-text-secondary text-lg mb-2">{t("noOrders")}</p>
+          <p className="text-text-secondary text-sm">{t("noOrdersHint")}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -93,54 +93,54 @@ export default function OrdersPage() {
             const date = new Date(order.createdAt)
             const isExpanded = expandedId === order.id
             return (
-              <div key={order.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div key={order.id} className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : order.id)}
-                  className="w-full flex items-center justify-between px-4 sm:px-5 py-3 hover:bg-gray-50/50 transition-colors text-left"
+                  className="w-full flex items-center justify-between px-4 sm:px-5 py-3 hover:bg-surface/50 transition-colors text-left"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="w-6 h-6 shrink-0" dangerouslySetInnerHTML={{ __html: CHANNEL_ICONS[order.channel] || "" }} />
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900">{channelLabel[order.channel] || order.channel}</p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-sm font-medium text-text-primary">{channelLabel[order.channel] || order.channel}</p>
+                      <p className="text-xs text-text-secondary">
                         {date.toLocaleDateString(locale, { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-sm font-semibold text-gray-900">¥{(order.amount / 100).toFixed(2)}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[order.status] || "text-gray-500 bg-gray-50"}`}>
+                    <span className="text-sm font-semibold text-text-primary">¥{(order.amount / 100).toFixed(2)}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[order.status] || "text-text-secondary bg-surface"}`}>
                       {statusLabel[order.status] || order.status}
                     </span>
-                    <svg className={`w-4 h-4 text-gray-300 transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`w-4 h-4 text-text-secondary transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
                 </button>
 
                 {isExpanded && (
-                  <div className="px-4 sm:px-5 pb-4 border-t border-gray-50 pt-3 space-y-2 text-sm">
+                  <div className="px-4 sm:px-5 pb-4 border-t border-border pt-3 space-y-2 text-sm">
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-400">{t("orderId")}</span>
-                      <span className="text-gray-500 font-mono text-xs break-all max-w-[200px] text-right">{order.orderId}</span>
+                      <span className="text-text-secondary">{t("orderId")}</span>
+                      <span className="text-text-secondary font-mono text-xs break-all max-w-[200px] text-right">{order.orderId}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-400">{t("plan")}</span>
-                      <span className="text-gray-600 font-semibold">{planLabel(order.amount, locale, tb)}</span>
+                      <span className="text-text-secondary">{t("plan")}</span>
+                      <span className="text-text-secondary font-semibold">{planLabel(order.amount, locale, tb)}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-400">{t("amount")}</span>
-                      <span className="text-gray-600 font-semibold">¥{(order.amount / 100).toFixed(2)}</span>
+                      <span className="text-text-secondary">{t("amount")}</span>
+                      <span className="text-text-secondary font-semibold">¥{(order.amount / 100).toFixed(2)}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-400">{t("status")}</span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[order.status] || "text-gray-500 bg-gray-50"}`}>
+                      <span className="text-text-secondary">{t("status")}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[order.status] || "text-text-secondary bg-surface"}`}>
                         {statusLabel[order.status] || order.status}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-400">{t("date")}</span>
-                      <span className="text-gray-600">
+                      <span className="text-text-secondary">{t("date")}</span>
+                      <span className="text-text-secondary">
                         {date.toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </span>
                     </div>
@@ -149,7 +149,7 @@ export default function OrdersPage() {
                         <button
                           onClick={(e) => { e.stopPropagation(); setDeleteTarget(order.orderId) }}
                           disabled={deleting === order.orderId}
-                          className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-40"
+                          className="text-xs text-error hover:text-error border border-error/25 hover:bg-error/10 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-40"
                         >
                           {deleting === order.orderId ? "..." : t("delete")}
                         </button>
@@ -164,7 +164,7 @@ export default function OrdersPage() {
       )}
 
       <div className="text-center">
-        <Link href="/app/billing" className="text-sm text-gray-400 hover:text-accent transition-colors">
+        <Link href="/app/billing" className="text-sm text-text-secondary hover:text-accent transition-colors">
           {t("backToBilling")}
         </Link>
       </div>
@@ -177,16 +177,16 @@ export default function OrdersPage() {
 
       {/* Delete confirmation modal */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => setDeleteTarget(null)}>
-          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4" onClick={() => setDeleteTarget(null)}>
+          <div className="bg-card rounded-2xl shadow-xl p-6 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
             <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              <svg className="w-6 h-6 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             </div>
             <p className="font-bold text-text-primary text-lg mb-2">{t("deleteConfirm")}</p>
-            <p className="text-sm text-gray-500 mb-6">{t("deleteConfirmHint")}</p>
+            <p className="text-sm text-text-secondary mb-6">{t("deleteConfirmHint")}</p>
             <div className="flex gap-3">
-              <button onClick={() => setDeleteTarget(null)} className="flex-1 px-4 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors font-medium">{t("cancel")}</button>
-              <button onClick={confirmDelete} className="flex-1 px-4 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors font-medium">{t("confirm")}</button>
+              <button onClick={() => setDeleteTarget(null)} className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-border rounded-xl hover:bg-surface transition-colors font-medium">{t("cancel")}</button>
+              <button onClick={confirmDelete} className="flex-1 px-4 py-2.5 text-sm text-white bg-error/100 rounded-xl hover:bg-error transition-colors font-medium">{t("confirm")}</button>
             </div>
           </div>
         </div>

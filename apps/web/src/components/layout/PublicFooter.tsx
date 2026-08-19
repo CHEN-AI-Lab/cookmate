@@ -18,7 +18,7 @@ export default function PublicFooter() {
   ] as const
 
   return (
-    <footer className="bg-bg-inverse text-gray-400">
+    <footer className="bg-bg-inverse text-text-secondary">
       <div className="max-w-[1400px] mx-auto px-8 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           {/* Brand */}
@@ -29,7 +29,7 @@ export default function PublicFooter() {
 
           {/* Quick links */}
           <div>
-            <p className="text-gray-300 font-semibold mb-3 text-xs uppercase tracking-wider">
+            <p className="text-text-secondary font-semibold mb-3 text-xs uppercase tracking-wider">
               {tfooter("links")}
             </p>
             <ul className="space-y-2">
@@ -45,7 +45,7 @@ export default function PublicFooter() {
 
           {/* Legal */}
           <div>
-            <p className="text-gray-300 font-semibold mb-3 text-xs uppercase tracking-wider">
+            <p className="text-text-secondary font-semibold mb-3 text-xs uppercase tracking-wider">
               {tfooter("legal")}
             </p>
             <ul className="space-y-2">
@@ -61,7 +61,7 @@ export default function PublicFooter() {
 
           {/* Contact */}
           <div>
-            <p className="text-gray-300 font-semibold mb-3 text-xs uppercase tracking-wider">
+            <p className="text-text-secondary font-semibold mb-3 text-xs uppercase tracking-wider">
               {tfooter("contact")}
             </p>
             <ul className="space-y-2 text-sm">
@@ -76,7 +76,7 @@ export default function PublicFooter() {
 
         {/* Copyright */}
         <div className="mt-8 pt-8 border-t border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-gray-500">{tfooter("copyright", { year: String(new Date().getFullYear()) })}</p>
+          <p className="text-xs text-text-secondary">{tfooter("copyright", { year: String(new Date().getFullYear()) })}</p>
         </div>
       </div>
     </footer>

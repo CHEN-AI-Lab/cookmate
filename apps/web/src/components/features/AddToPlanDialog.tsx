@@ -16,19 +16,19 @@ export function AddToPlanDialog({
 }: AddToPlanDialogProps) {
   return (
     <div
-      className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-overlay flex items-center justify-center z-50"
       onClick={onCancel}
     >
       <div
-        className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4"
+        className="bg-card rounded-2xl p-6 max-w-sm w-full mx-4"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-lg font-bold text-text-primary mb-4">📅 加入周计划</h3>
-        <p className="text-sm text-gray-500 mb-4">&ldquo;{recipeTitle}&rdquo; 加入</p>
+        <p className="text-sm text-text-secondary mb-4">&ldquo;{recipeTitle}&rdquo; 加入</p>
         <div className="flex gap-2 mb-3">
           <select
             id="plan-day"
-            className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm"
+            className="flex-1 border border-border rounded-xl px-3 py-2 text-sm"
             defaultValue="周一"
           >
             {DAYS.map((d) => (
@@ -39,7 +39,7 @@ export function AddToPlanDialog({
           </select>
           <select
             id="plan-meal"
-            className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm"
+            className="flex-1 border border-border rounded-xl px-3 py-2 text-sm"
             defaultValue="午餐"
           >
             {MEALS.map((m) => (
@@ -52,7 +52,7 @@ export function AddToPlanDialog({
         <div className="flex gap-2">
           <button
             onClick={onCancel}
-            className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-xl text-sm"
+            className="flex-1 bg-surface text-text-secondary py-2 rounded-xl text-sm"
           >
             取消
           </button>

@@ -21,8 +21,8 @@ export default async function NutritionPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8">
       <div className="text-6xl mb-4">🥗</div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('title')}</h1>
-      <p className="text-gray-500 mb-6">{t('placeholder_desc')}</p>
+      <h1 className="text-2xl font-bold text-text-primary mb-2">{t('title')}</h1>
+      <p className="text-text-secondary mb-6">{t('placeholder_desc')}</p>
       <div className="px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
         {t('placeholder_badge')}
       </div>

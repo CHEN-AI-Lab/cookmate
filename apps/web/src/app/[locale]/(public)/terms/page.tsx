@@ -18,9 +18,9 @@ export default async function TermsPage() {
 
       <section className="max-w-3xl mx-auto px-8 pt-20 pb-16">
         <h1 className="text-4xl sm:text-5xl font-bold text-text-primary">{t("title")}</h1>
-        <p className="mt-2 text-sm text-gray-400">{t("lastUpdated")}</p>
+        <p className="mt-2 text-sm text-text-secondary">{t("lastUpdated")}</p>
 
-        <div className="mt-10 space-y-8 text-gray-600 leading-relaxed">
+        <div className="mt-10 space-y-8 text-text-secondary leading-relaxed">
           <section>
             <h2 className="text-xl font-bold text-text-primary mb-3">{t("acceptTitle")}</h2>
             <p>{t("acceptDesc")}</p>
@@ -62,7 +62,7 @@ export default async function TermsPage() {
           </section>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-gray-200 text-center text-sm text-gray-400">
+        <div className="mt-12 pt-8 border-t border-border text-center text-sm text-text-secondary">
           <Link href="/privacy" className="hover:text-accent transition-colors">
             {t("viewPrivacy")}
           </Link>

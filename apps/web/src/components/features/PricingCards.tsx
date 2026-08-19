@@ -7,7 +7,7 @@ export function PricingCards() {
   const t = useTranslations("billing")
 
   return (
-    <section id="pricing" className="py-16 bg-white">
+    <section id="pricing" className="py-16 bg-card">
       <div className="max-w-[1400px] mx-auto px-8">
         <h2 className="text-3xl font-bold text-center text-text-primary">{t("selectPlan")}</h2>
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto items-stretch">

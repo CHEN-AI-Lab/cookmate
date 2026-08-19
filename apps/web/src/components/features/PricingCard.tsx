@@ -53,15 +53,15 @@ export function PricingCard({
 
       <div
               className={cn(
-                "rounded-2xl px-5 py-6 text-center flex flex-col h-full bg-white border",
-                highlighted ? "border-amber-200 ring-1 ring-amber-200" : "border-gray-200"
+                "rounded-2xl px-5 py-6 text-center flex flex-col h-full bg-card border",
+                highlighted ? "border-amber-200 ring-1 ring-amber-200" : "border-border"
               )}
             >
               {/* Plan name */}
               <h3
                 className={cn(
                   "text-sm font-semibold tracking-wide uppercase",
-                  highlighted ? "text-amber-600" : "text-gray-500"
+                  highlighted ? "text-amber-600" : "text-text-secondary"
                 )}
               >
                 {name}
@@ -72,7 +72,7 @@ export function PricingCard({
                 <span
                   className={cn(
                     "text-4xl font-bold tracking-tight",
-                    "text-gray-900"
+                    "text-text-primary"
                   )}
                 >
                   <CurrencySymbol locale={locale} />
@@ -81,7 +81,7 @@ export function PricingCard({
                 <span
                   className={cn(
                     "text-base font-normal ml-1",
-                    "text-gray-400"
+                    "text-text-secondary"
                   )}
                 >
                   {periodLabel}
@@ -92,21 +92,21 @@ export function PricingCard({
               <p
                 className={cn(
                   "text-xs mt-1.5",
-                  "text-gray-400"
+                  "text-text-secondary"
                 )}
               >
                 {period}
               </p>
 
               {/* Divider */}
-              <div className="w-full h-px my-4 bg-gray-100" />
+              <div className="w-full h-px my-4 bg-surface" />
 
               {/* Features */}
               <ul className="space-y-2.5 text-sm text-left flex-1">
                 {features.map((f) => (
                   <li
                     key={f}
-                    className="flex items-start gap-2.5 leading-tight text-gray-600"
+                    className="flex items-start gap-2.5 leading-tight text-text-secondary"
                   >
                     <span className="shrink-0 mt-0.5 text-amber-500">✓</span>
                     <span>{f}</span>
@@ -122,7 +122,7 @@ export function PricingCard({
                   "mt-6 w-full py-2.5 rounded-xl text-sm font-semibold transition-all",
                   highlighted
                     ? "bg-amber-500 text-white hover:bg-amber-600 active:scale-[0.98]"
-                    : "bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100 active:scale-[0.98]",
+                    : "bg-surface text-text-primary border border-border hover:bg-surface active:scale-[0.98]",
                   (disabled || loading) && "opacity-50 cursor-not-allowed active:scale-100"
                 )}
               >

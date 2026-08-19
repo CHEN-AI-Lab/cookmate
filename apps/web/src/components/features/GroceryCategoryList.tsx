@@ -33,7 +33,7 @@ function getCategoryHeaderColor(name: string): string {
     lower.includes("veg") ||
     lower.includes("veggie")
   )
-    return "bg-green-50 text-green-700"
+    return "bg-green-50 text-success"
   if (
     lower.includes("水果") ||
     lower.includes("fruit") ||
@@ -47,7 +47,7 @@ function getCategoryHeaderColor(name: string): string {
     lower.includes("meat") ||
     lower.includes("egg")
   )
-    return "bg-red-50 text-red-700"
+    return "bg-error/10 text-red-700"
   if (
     lower.includes("主食") ||
     lower.includes("粮油") ||
@@ -61,7 +61,7 @@ function getCategoryHeaderColor(name: string): string {
     lower.includes("spice")
   )
     return "bg-purple-50 text-purple-700"
-  return "bg-gray-50 text-gray-700"
+  return "bg-surface text-text-primary"
 }
 
 export function GroceryCategoryList({
@@ -81,9 +81,9 @@ export function GroceryCategoryList({
       {/* Summary */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3 text-sm">
-          <span className="text-gray-400">{t("totalItems", { count: total })}</span>
+          <span className="text-text-secondary">{t("totalItems", { count: total })}</span>
           {inPantryCount > 0 && (
-            <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded-full text-xs">
+            <span className="bg-green-50 text-success px-2 py-0.5 rounded-full text-xs">
               {t("inPantryCount", { count: inPantryCount })}
             </span>
           )}
@@ -93,14 +93,14 @@ export function GroceryCategoryList({
       {categories.length === 0 ? (
         <div className="text-center py-16">
           <span className="text-5xl">📋</span>
-          <p className="mt-4 text-gray-500">{t("empty")}</p>
+          <p className="mt-4 text-text-secondary">{t("empty")}</p>
         </div>
       ) : (
         <div className="space-y-0">
           {categories.map((cat) => (
             <div
               key={cat.name}
-              className="border-b border-gray-100 py-2 last:border-b-0"
+              className="border-b border-border py-2 last:border-b-0"
             >
               <h3
                 className={`text-xs font-semibold uppercase tracking-wider mb-1 px-1.5 py-0.5 rounded-md inline-block ${getCategoryHeaderColor(cat.name)}`}
@@ -122,10 +122,10 @@ export function GroceryCategoryList({
                     <span
                       className={`${
                         item.inPantry
-                          ? "text-green-600"
+                          ? "text-success"
                           : checked.has(item.name)
-                            ? "text-gray-300 line-through"
-                            : "text-gray-600"
+                            ? "text-text-secondary line-through"
+                            : "text-text-secondary"
                       } cursor-pointer ${
                         item.sources && item.sources.length > 0
                           ? "border-b border-dashed border-gray-300 hover:border-accent"
@@ -140,14 +140,14 @@ export function GroceryCategoryList({
                     >
                       {displayName(item.name)}
                       {item.quantity && (
-                        <span className="text-gray-400 font-normal">
+                        <span className="text-text-secondary font-normal">
                           {" "}
                           ({item.quantity})
                         </span>
                       )}
                     </span>
                     {item.inPantry && (
-                      <span className="text-[10px] text-green-500 bg-green-50 px-1 rounded shrink-0">
+                      <span className="text-[10px] text-success bg-green-50 px-1 rounded shrink-0">
                         {t("inPantry")}
                       </span>
                     )}
@@ -165,7 +165,7 @@ export function GroceryCategoryList({
       )}
 
       {/* Summary footer */}
-      <div className="mt-4 text-xs text-gray-400 text-center border-t border-gray-100 pt-3">
+      <div className="mt-4 text-xs text-text-secondary text-center border-t border-border pt-3">
         {total > 0
           ? `${total} items · ${inPantryCount} already in pantry`
           : "No items"}

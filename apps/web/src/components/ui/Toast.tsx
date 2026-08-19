@@ -16,7 +16,7 @@ interface ToastProps {
 const typeStyles: Record<ToastType, string> = {
   success: "bg-green-800 border-green-600",
   error: "bg-red-800 border-red-600",
-  info: "bg-gray-900 border-gray-700",
+  info: "bg-bg-inverse border-gray-700",
 }
 
 const typeIcons: Record<ToastType, string> = {
@@ -54,7 +54,7 @@ export default function Toast({
           typeStyles[type],
         )}
       >
-        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
+        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-card/20 text-xs font-bold">
           {typeIcons[type]}
         </span>
         <span className="flex-1">{message}</span>

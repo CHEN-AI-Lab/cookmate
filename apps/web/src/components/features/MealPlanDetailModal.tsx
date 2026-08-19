@@ -56,21 +56,21 @@ export function MealPlanDetailModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-overlay flex items-center justify-center z-50"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl p-6 w-96 shadow-xl max-h-[85vh] overflow-y-auto"
+        className="bg-card rounded-2xl p-6 w-96 shadow-xl max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-text-secondary">
             {dayLabels[day]} · {mealLabels[meal]}
           </p>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+            className="text-text-secondary hover:text-text-secondary text-xl leading-none"
           >
             &times;
           </button>
@@ -89,7 +89,7 @@ export function MealPlanDetailModal({
                   className={`transition-colors text-lg ${
                     slot?.recipe?.starred
                       ? "text-amber-400"
-                      : "text-gray-300 hover:text-amber-400"
+                      : "text-text-secondary hover:text-amber-400"
                   }`}
                   title={
                     slot?.recipe?.starred
@@ -104,14 +104,14 @@ export function MealPlanDetailModal({
 
             {/* Cooking time */}
             {slot?.recipe?.cookingTime && (
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-text-secondary">
                 {t("cookingTime", { time: slot.recipe.cookingTime })}
               </p>
             )}
 
             {/* Calories */}
             {slot?.recipe?.calories && (
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-text-secondary">
                 {t("calories", { calories: slot.recipe.calories })}
               </p>
             )}
@@ -122,7 +122,7 @@ export function MealPlanDetailModal({
                 <p className="text-sm font-semibold text-text-primary mb-1">
                   {t("ingredients")}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-text-secondary">
                   {slot.recipe.ingredients.split(", ").join("、")}
                 </p>
               </div>
@@ -134,7 +134,7 @@ export function MealPlanDetailModal({
                 <p className="text-sm font-semibold text-text-primary mb-1">
                   {t("steps")}
                 </p>
-                <div className="text-sm text-gray-600 space-y-1">
+                <div className="text-sm text-text-secondary space-y-1">
                   {slot.recipe.steps.split("\n").map((step, idx) => (
                     <p key={idx}>
                       {idx + 1}. {step}
@@ -144,12 +144,12 @@ export function MealPlanDetailModal({
               </div>
             )}
 
-            <hr className="border-gray-100" />
+            <hr className="border-border" />
 
             {/* Delete button */}
             <button
               onClick={onDeleteSlot}
-              className="w-full py-2 rounded-xl text-sm border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
+              className="w-full py-2 rounded-xl text-sm border border-error/25 text-error hover:bg-error/10 transition-colors"
             >
               {t("deleteSlotBtn")}
             </button>
@@ -157,8 +157,8 @@ export function MealPlanDetailModal({
         ) : (
           /* Empty state */
           <div className="py-6 text-center space-y-4">
-            <p className="text-gray-500 text-sm">{t("emptySlot")}</p>
-            <p className="text-sm text-gray-400 leading-relaxed">
+            <p className="text-text-secondary text-sm">{t("emptySlot")}</p>
+            <p className="text-sm text-text-secondary leading-relaxed">
               {t("emptySlotHint")}
             </p>
             <div className="flex gap-3 justify-center pt-2">

@@ -25,7 +25,7 @@ export function MobileNav({
   const t = useTranslations("nav")
 
   return (
-    <header className="fixed top-0 left-0 right-0 md:hidden bg-white border-b border-orange-100 h-16 z-50 flex items-center justify-between px-4">
+    <header className="fixed top-0 left-0 right-0 md:hidden bg-card border-b border-border h-16 z-50 flex items-center justify-between px-4">
       {/* Left: Logo */}
       <Link href="/app/dashboard" className="flex items-center gap-2">
         <span className="text-xl">🍳</span>
@@ -43,7 +43,7 @@ export function MobileNav({
               className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg transition-colors ${
                 isActive
                   ? "text-accent"
-                  : "text-gray-400 hover:text-accent"
+                  : "text-text-secondary hover:text-accent"
               }`}
             >
               <span className="text-lg">{item.icon}</span>

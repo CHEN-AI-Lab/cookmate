@@ -55,11 +55,11 @@ export default function DemoOnboarding() {
   if (!visible) return null
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-overlay p-4">
+      <div className="bg-card rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
         <div className="text-4xl mb-3">{content[step].icon}</div>
         <h3 className="font-bold text-lg text-text-primary mb-2">{content[step].title}</h3>
-        <p className="text-sm text-gray-500 leading-relaxed">
+        <p className="text-sm text-text-secondary leading-relaxed">
           {content[step].desc}
           {step === content.length - 1 && content[step].action && (
             <Link href="/register" className="text-accent hover:underline font-medium" onClick={close}>
@@ -83,12 +83,12 @@ export default function DemoOnboarding() {
         {/* Buttons */}
                 <div className="flex gap-2 mt-5">
                   {step > 0 && step < content.length - 1 && (
-                    <button onClick={prev} className="flex-1 px-4 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+                    <button onClick={prev} className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-border rounded-xl hover:bg-surface transition-colors">
                       {isEn ? "← Back" : "← 上一步"}
                     </button>
                   )}
                   {step === 0 && (
-                    <button onClick={close} className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+                    <button onClick={close} className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-border rounded-xl hover:bg-surface transition-colors">
                       {isEn ? "Skip" : "跳过"}
                     </button>
                   )}
@@ -98,7 +98,7 @@ export default function DemoOnboarding() {
                     </button>
                   ) : (
                     <div className="flex gap-2 w-full">
-                      <button onClick={close} className="flex-1 px-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+                      <button onClick={close} className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-border rounded-xl hover:bg-surface transition-colors">
                         {isEn ? "Later" : "稍后"}
                       </button>
                       <Link href="/register" onClick={close} className="flex-1 px-4 py-2.5 text-sm text-center text-white bg-accent rounded-xl hover:bg-orange-600 font-medium transition-colors">

@@ -44,14 +44,14 @@ export default function Dialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Overlay */}
       <div
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+        className="absolute inset-0 bg-overlay backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Container */}
       <div
         className={cn(
-          "relative z-10 w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl",
+          "relative z-10 w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl",
           "mx-4 animate-in fade-in zoom-in-95 duration-200",
           className,
         )}
@@ -59,10 +59,10 @@ export default function Dialog({
         {/* Title + Close */}
         {title && (
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+            <h2 className="text-lg font-semibold text-text-primary">{title}</h2>
             <button
               onClick={onClose}
-              className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              className="rounded-full p-1 text-text-secondary hover:bg-surface hover:text-text-secondary transition-colors"
               aria-label="Close dialog"
             >
               <svg
@@ -86,7 +86,7 @@ export default function Dialog({
         {!title && (
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+            className="absolute top-3 right-3 rounded-full p-1 text-text-secondary hover:bg-surface hover:text-text-secondary transition-colors"
             aria-label="Close dialog"
           >
             <svg

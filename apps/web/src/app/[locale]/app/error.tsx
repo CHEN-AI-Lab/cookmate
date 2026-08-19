@@ -14,10 +14,10 @@ export default function AppError({
 
   return (
     <div className="min-h-[50vh] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-sm border border-orange-50 p-8 max-w-md w-full text-center">
+      <div className="bg-card rounded-2xl shadow-sm border border-border p-8 max-w-md w-full text-center">
         <span className="text-5xl">😵</span>
         <h2 className="text-lg font-bold text-text-primary mt-4">{t("loadFailed")}</h2>
-        <p className="text-gray-500 mt-2 text-sm">
+        <p className="text-text-secondary mt-2 text-sm">
           {t("loadFailedDesc")}
         </p>
         <button

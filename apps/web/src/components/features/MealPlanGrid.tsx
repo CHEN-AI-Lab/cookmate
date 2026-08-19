@@ -50,9 +50,9 @@ export function MealPlanGrid({ plan, onSlotClick }: MealPlanGridProps) {
       {DAY_LABELS.map((day, dayIdx) => (
         <div
           key={day}
-          className="bg-white rounded-2xl shadow-sm border border-orange-50 overflow-hidden"
+          className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden"
         >
-          <div className="bg-orange-50 px-4 py-2 font-bold text-text-primary text-sm">{day}</div>
+          <div className="bg-surface px-4 py-2 font-bold text-text-primary text-sm">{day}</div>
           <div className="grid grid-cols-3 divide-x divide-gray-100">
             {MEAL_TYPES.map((meal) => {
               const slot = plan.slots.find(
@@ -62,9 +62,9 @@ export function MealPlanGrid({ plan, onSlotClick }: MealPlanGridProps) {
                 <button
                   key={meal}
                   onClick={() => onSlotClick(dayIdx, meal)}
-                  className="p-3 text-left hover:bg-orange-50/50 transition-colors min-h-[70px]"
+                  className="p-3 text-left hover:bg-surface/50 transition-colors min-h-[70px]"
                 >
-                  <p className="text-xs text-gray-400 mb-1">
+                  <p className="text-xs text-text-secondary mb-1">
                     {MEAL_EMOJIS[meal]} {MEAL_LABELS[meal]}
                   </p>
                   {slot?.recipe ? (
@@ -77,14 +77,14 @@ export function MealPlanGrid({ plan, onSlotClick }: MealPlanGridProps) {
                             <span className="text-amber-400 text-xs">⭐</span>
                           )}
                           {slot.recipe.cookingTime && (
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-text-secondary">
                               ⏱{slot.recipe.cookingTime}{timeSuffix}
                             </span>
                           )}
                         </div>
                       </div>
                   ) : (
-                    <p className="text-xs text-gray-300">{t("emptySlot")}</p>
+                    <p className="text-xs text-text-secondary">{t("emptySlot")}</p>
                   )}
                 </button>
               )

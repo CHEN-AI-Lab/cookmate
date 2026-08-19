@@ -22,14 +22,14 @@ export function BlogCard({
   return (
     <Link
       href={`/blog/${slug}`}
-      className="block bg-white rounded-2xl border border-orange-50 shadow-sm p-6 hover:shadow-md hover:border-orange-200 transition-all duration-200 group"
+      className="block bg-card rounded-2xl border border-border shadow-sm p-6 hover:shadow-md hover:border-orange-200 transition-all duration-200 group"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-2 flex-1">
           <h2 className="font-bold text-lg text-text-primary group-hover:text-accent transition-colors">
             {title}
           </h2>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-gray-400">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-text-secondary">
             <span>{date}</span>
             <span>·</span>
             <span>⏱ {readTime}</span>
@@ -40,7 +40,7 @@ export function BlogCard({
                   {tags.map((tag) => (
                     <span
                       key={tag}
-                      className="bg-orange-50 text-accent rounded-full px-2 py-0.5 text-xs"
+                      className="bg-surface text-accent rounded-full px-2 py-0.5 text-xs"
                     >
                       {tag}
                     </span>
@@ -49,11 +49,11 @@ export function BlogCard({
               </>
             )}
           </div>
-          <p className="text-gray-500 mt-2 text-sm leading-relaxed">
+          <p className="text-text-secondary mt-2 text-sm leading-relaxed">
             {description}
           </p>
         </div>
-        <span className="text-gray-300 group-hover:text-accent transition-colors text-xl shrink-0 mt-1">
+        <span className="text-text-secondary group-hover:text-accent transition-colors text-xl shrink-0 mt-1">
           →
         </span>
       </div>
