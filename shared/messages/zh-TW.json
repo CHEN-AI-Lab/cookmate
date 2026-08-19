@@ -167,7 +167,14 @@
     "demoLoginDesc": "無需註冊，立即體驗",
     "redirectingTo": "正在跳轉到 {provider} 登錄...",
     "demoVersion": "體驗演示版",
-    "autoRegisterHint": "未註冊用戶驗證後將自動創建賬號"
+    "autoRegisterHint": "未註冊用戶驗證後將自動創建賬號",
+    "unlink": "解綁",
+    "unlinkConfirm": "確定要解綁 {provider} 嗎？解綁後將無法使用該帳號登入。",
+    "unlinkFailed": "解綁失敗",
+    "unlinkSuccess": "已解綁",
+    "githubRevokeNote": "GitHub 網站不支援自動解綁，解綁後請前往 GitHub 設定 → 應用程式 手動取消授權。",
+    "cannotUnlinkEmail": "該登入方式不可解綁",
+    "mustKeepOneMethod": "至少需要保留一種登入方式"
   },
   "validation": {
     "invalidPhone": "請輸入正確的11位手機號",

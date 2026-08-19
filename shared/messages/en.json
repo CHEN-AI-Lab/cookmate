@@ -174,7 +174,14 @@
     "continueOAuth": "By continuing, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>",
     "noAccount": "Don't have an account?",
     "emailRegistered": "This email is already registered",
-    "emailNotRegistered": "This email is not registered"
+    "emailNotRegistered": "This email is not registered",
+    "unlink": "Unlink",
+    "unlinkConfirm": "Unlink {provider}? You will no longer be able to sign in with this account.",
+    "unlinkFailed": "Unlink failed",
+    "unlinkSuccess": "Account unlinked successfully",
+    "githubRevokeNote": "GitHub website does not support automatic unbinding. After unlinking, please go to GitHub Settings → Applications to cancel authorization manually.",
+    "cannotUnlinkEmail": "This login method cannot be unlinked",
+    "mustKeepOneMethod": "You must keep at least one login method"
   },
   "validation": {
     "invalidPhone": "Please enter a valid 11-digit phone number",

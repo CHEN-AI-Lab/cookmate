@@ -7,6 +7,13 @@
   --color-bg-inverse: #2D3436;
   --color-text-primary: #2D3436;
   --color-accent: #FF6B35;
+  --color-card: #ffffff;
+  --color-surface: #f5f5f5;
+  --color-border: #e5e7eb;
+  --color-error: #ef4444;
+  --color-success: #22c55e;
+  --color-overlay: rgba(0,0,0,0.4);
+  --color-text-secondary: #6b7280;
 }
 
 @theme inline {
@@ -15,7 +22,14 @@
   --color-bg-brand: var(--color-bg-brand);
   --color-bg-inverse: var(--color-bg-inverse);
   --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
   --color-accent: var(--color-accent);
+  --color-card: var(--color-card);
+  --color-surface: var(--color-surface);
+  --color-border: var(--color-border);
+  --color-error: var(--color-error);
+  --color-success: var(--color-success);
+  --color-overlay: var(--color-overlay);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -24,6 +38,11 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --color-card: #1a1a2e;
+    --color-surface: #16213e;
+    --color-border: rgba(255,255,255,0.1);
+    --color-overlay: rgba(0,0,0,0.7);
+    --color-text-secondary: #9ca3af;
   }
 }
 

@@ -28,19 +28,19 @@ export default async function FAQPage() {
 
       <section className="max-w-3xl mx-auto px-8 pt-20 pb-16">
         <h1 className="text-4xl sm:text-5xl font-bold text-text-primary">{t("title")}</h1>
-        <p className="mt-3 text-lg text-gray-500">{t("subtitle")}</p>
+        <p className="mt-3 text-lg text-text-secondary">{t("subtitle")}</p>
 
         <div className="mt-10 space-y-4">
           {items.map((item) => (
             <details
               key={item.q}
-              className="bg-white rounded-2xl border border-orange-50 shadow-sm overflow-hidden group"
+              className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden group"
             >
               <summary className="px-6 py-4 cursor-pointer font-medium text-text-primary hover:text-accent transition-colors list-none flex items-center justify-between">
                 <span>{t(item.q)}</span>
                 <span className="text-gray-300 group-open:rotate-180 transition-transform text-lg">▼</span>
               </summary>
-              <div className="px-6 pb-4 text-gray-600 leading-relaxed text-sm border-t border-orange-50 pt-3">
+              <div className="px-6 pb-4 text-text-secondary leading-relaxed text-sm border-t border-border pt-3">
                 {t(item.a)}
               </div>
             </details>

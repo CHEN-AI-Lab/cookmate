@@ -174,7 +174,14 @@
     "continueOAuth": "继续即表示您同意我们的 <terms>《服务条款》</terms> 和 <privacy>《隐私政策》</privacy>",
     "noAccount": "还没有账号？",
     "emailRegistered": "该邮箱已注册",
-    "emailNotRegistered": "该邮箱未注册"
+    "emailNotRegistered": "该邮箱未注册",
+    "unlink": "解绑",
+    "unlinkConfirm": "确定要解绑 {provider} 吗？解绑后将无法使用该账号登录。",
+    "unlinkFailed": "解绑失败",
+    "unlinkSuccess": "已解绑",
+    "githubRevokeNote": "GitHub 网站不支持自动解绑，解绑后请前往 GitHub 设置 → 应用 手动取消授权。",
+    "cannotUnlinkEmail": "该登录方式不可解绑",
+    "mustKeepOneMethod": "至少需要保留一种登录方式"
   },
   "validation": {
     "invalidPhone": "请输入正确的11位手机号",

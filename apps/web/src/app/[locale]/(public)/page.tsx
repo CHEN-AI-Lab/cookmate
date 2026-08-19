@@ -26,7 +26,7 @@ export default async function HomePage() {
           <br />
           <span className="text-accent">{thero("titleHighlight")}</span>
         </h1>
-        <p className="mt-4 text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
+        <p className="mt-4 text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto">
           {thero("subtitle")}
           <br />
           {thero("subtitle2")}
@@ -39,27 +39,27 @@ export default async function HomePage() {
             {thero("cta")}
           </Link>
           <DemoLoginButton
-            className="bg-white text-accent px-8 py-3 rounded-full text-lg font-medium border-2 border-accent hover:bg-orange-50 transition-colors cursor-pointer"
+            className="bg-card text-accent px-8 py-3 rounded-full text-lg font-medium border-2 border-accent hover:bg-surface transition-colors cursor-pointer"
           >
             🚀 {thero("tryDemo")}
           </DemoLoginButton>
           <a
             href="#how"
-            className="text-gray-600 px-8 py-3 rounded-full text-lg border border-gray-200 hover:border-accent hover:text-accent transition-colors"
+            className="text-text-secondary px-8 py-3 rounded-full text-lg border border-gray-200 hover:border-accent hover:text-accent transition-colors"
           >
             {thero("howItWorks")}
           </a>
         </div>
 
         {/* Demo card */}
-        <div className="mt-12 max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+        <div className="mt-12 max-w-2xl mx-auto bg-card rounded-2xl shadow-xl p-6 sm:p-8">
           <div className="text-left">
-            <p className="text-sm text-gray-500 mb-2">{thero("tryIt")}</p>
+            <p className="text-sm text-text-secondary mb-2">{thero("tryIt")}</p>
             <div className="flex flex-wrap gap-2 mb-4">
               {thero.raw("demoIngredients").map((item: string) => (
                 <span
                   key={item}
-                  className="bg-orange-50 text-accent px-3 py-1 rounded-full text-sm border border-orange-200"
+                  className="bg-surface text-accent px-3 py-1 rounded-full text-sm border border-border"
                 >
                   {item}
                 </span>
@@ -76,8 +76,8 @@ export default async function HomePage() {
           <div className="mt-6 p-4 bg-gray-50 rounded-xl text-left">
             <p className="text-sm font-medium text-text-primary">{thero("demoRecipe")}</p>
             <p className="text-lg font-bold mt-1">{thero("demoRecipeName")}</p>
-            <p className="text-sm text-gray-500 mt-1">{thero("demoRecipeMeta")}</p>
-            <p className="text-sm text-gray-600 mt-2">
+            <p className="text-sm text-text-secondary mt-1">{thero("demoRecipeMeta")}</p>
+            <p className="text-sm text-text-secondary mt-2">
               {thero("demoRecipeDesc")}
             </p>
           </div>
@@ -85,7 +85,7 @@ export default async function HomePage() {
       </section>
 
       {/* How it works */}
-      <section id="how" className="py-16 bg-white">
+      <section id="how" className="py-16 bg-card">
         <div className="max-w-[1400px] mx-auto px-8">
           <h2 className="text-3xl font-bold text-center text-text-primary">{thow("title")}</h2>
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -97,7 +97,7 @@ export default async function HomePage() {
               <div key={step.titleKey} className="text-center p-6">
                 <span className="text-5xl">{step.emoji}</span>
                 <h3 className="mt-4 text-xl font-bold text-text-primary">{thow(step.titleKey)}</h3>
-                <p className="mt-2 text-gray-500">{thow(step.descKey)}</p>
+                <p className="mt-2 text-text-secondary">{thow(step.descKey)}</p>
               </div>
             ))}
           </div>
@@ -112,10 +112,10 @@ export default async function HomePage() {
             {["aiRecipe", "mealPlan", "grocery", "diet", "pantry", "recipes"].map((key) => {
               const feature = tfeatures.raw(key) as { emoji: string; title: string; desc: string }
               return (
-                <div key={key} className="bg-white rounded-2xl p-6 shadow-sm border border-orange-50">
+                <div key={key} className="bg-card rounded-2xl p-6 shadow-sm border border-border">
                   <span className="text-3xl">{feature.emoji}</span>
                   <h3 className="mt-3 font-bold text-text-primary">{feature.title}</h3>
-                  <p className="mt-1 text-sm text-gray-500">{feature.desc}</p>
+                  <p className="mt-1 text-sm text-text-secondary">{feature.desc}</p>
                 </div>
               )
             })}
@@ -124,7 +124,7 @@ export default async function HomePage() {
       </section>
 
       {/* Stats */}
-      <section className="py-14 bg-white">
+      <section className="py-14 bg-card">
         <div className="max-w-[1400px] mx-auto px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
@@ -137,7 +137,7 @@ export default async function HomePage() {
                 <p className="text-3xl md:text-4xl font-bold text-accent">
                   {tstats(s.value)}
                 </p>
-                <p className="mt-1 text-sm text-gray-500">{tstats(s.label)}</p>
+                <p className="mt-1 text-sm text-text-secondary">{tstats(s.label)}</p>
               </div>
             ))}
           </div>
@@ -152,7 +152,7 @@ export default async function HomePage() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-orange-50 flex flex-col"
+                className="bg-card rounded-2xl p-6 shadow-sm border border-border flex flex-col"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-lg font-bold text-accent">
@@ -163,7 +163,7 @@ export default async function HomePage() {
                     <p className="text-xs text-gray-400">{ttestimonials(`item${i}Role`)}</p>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 leading-relaxed flex-1">
+                <p className="text-sm text-text-secondary leading-relaxed flex-1">
                   &ldquo;{ttestimonials(`item${i}Content`)}&rdquo;
                 </p>
               </div>

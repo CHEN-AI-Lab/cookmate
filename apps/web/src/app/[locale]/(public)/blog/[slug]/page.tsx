@@ -41,12 +41,12 @@ export default async function BlogPostPage({
       <article className="max-w-3xl mx-auto px-8 pt-20 pb-16">
         <Link
           href="/blog"
-          className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-accent transition-colors mb-8"
+          className='inline-flex items-center gap-1 text-sm text-text-secondary hover:text-accent transition-colors mb-8'
         >
           ← Back to Blog
         </Link>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-orange-50 p-8 sm:p-12">
+        <div className="bg-card rounded-2xl shadow-sm border border-border p-8 sm:p-12">
           <div className="flex flex-wrap items-center gap-2 text-sm text-gray-400 mb-4">
             <span>{dates[slug]}</span>
             <span>·</span>
@@ -62,7 +62,7 @@ export default async function BlogPostPage({
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="bg-orange-50 text-accent rounded-full px-3 py-1 text-xs font-medium"
+                  className="bg-surface text-accent rounded-full px-3 py-1 text-xs font-medium"
                 >
                   {tag}
                 </span>
@@ -71,7 +71,7 @@ export default async function BlogPostPage({
           )}
 
           <div className="mt-8 prose prose-orange max-w-none">
-            <p className="text-gray-600 leading-relaxed text-lg">{excerpt}</p>
+            <p className="text-text-secondary leading-relaxed text-lg">{excerpt}</p>
             <p className="text-gray-400 mt-8 italic text-center">
               📝 Full article content coming soon
             </p>
