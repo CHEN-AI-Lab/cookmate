@@ -181,7 +181,8 @@
     "unlinkSuccess": "Account unlinked successfully",
     "githubRevokeNote": "GitHub website does not support automatic unbinding. After unlinking, please go to GitHub Settings → Applications to cancel authorization manually.",
     "cannotUnlinkEmail": "This login method cannot be unlinked",
-    "mustKeepOneMethod": "You must keep at least one login method"
+    "mustKeepOneMethod": "You must keep at least one login method",
+    "connectedAccounts": "Connected Accounts"
   },
   "validation": {
     "invalidPhone": "Please enter a valid 11-digit phone number",

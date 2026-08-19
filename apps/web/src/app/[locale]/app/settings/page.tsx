@@ -457,7 +457,7 @@ const save = async () => {
                 {/* OAuth Connected Accounts */}
                 {profile && profile.accounts && profile.accounts.length > 0 && (
                   <div className="flex items-center py-2 border-b border-border">
-                    <span className="text-sm text-text-secondary">{ta("unlink")}</span>
+                    <span className="text-sm text-text-secondary">{ta("connectedAccounts")}</span>
                     <div className="flex gap-2 flex-wrap ml-auto">
                       {profile.accounts
                         .filter((a) => ["google", "github"].includes(a.provider))

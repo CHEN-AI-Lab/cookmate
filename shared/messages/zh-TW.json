@@ -174,7 +174,8 @@
     "unlinkSuccess": "已解綁",
     "githubRevokeNote": "GitHub 網站不支援自動解綁，解綁後請前往 GitHub 設定 → 應用程式 手動取消授權。",
     "cannotUnlinkEmail": "該登入方式不可解綁",
-    "mustKeepOneMethod": "至少需要保留一種登入方式"
+    "mustKeepOneMethod": "至少需要保留一種登入方式",
+    "connectedAccounts": "綁定帳號"
   },
   "validation": {
     "invalidPhone": "請輸入正確的11位手機號",

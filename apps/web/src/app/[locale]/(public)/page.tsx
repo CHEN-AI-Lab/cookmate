@@ -45,7 +45,7 @@ export default async function HomePage() {
           </DemoLoginButton>
           <a
             href="#how"
-            className="text-text-secondary px-8 py-3 rounded-full text-lg border border-gray-200 hover:border-accent hover:text-accent transition-colors"
+            className='text-text-secondary px-8 py-3 rounded-full text-lg border border-border hover:border-accent hover:text-accent transition-colors'
           >
             {thero("howItWorks")}
           </a>
@@ -73,7 +73,7 @@ export default async function HomePage() {
             </Link>
           </div>
           {/* Result preview */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-xl text-left">
+          <div className='mt-6 p-4 bg-surface rounded-xl text-left'>
             <p className="text-sm font-medium text-text-primary">{thero("demoRecipe")}</p>
             <p className="text-lg font-bold mt-1">{thero("demoRecipeName")}</p>
             <p className="text-sm text-text-secondary mt-1">{thero("demoRecipeMeta")}</p>
@@ -160,7 +160,7 @@ export default async function HomePage() {
                   </div>
                   <div>
                     <p className="font-medium text-text-primary text-sm">{ttestimonials(`item${i}Name`)}</p>
-                    <p className="text-xs text-gray-400">{ttestimonials(`item${i}Role`)}</p>
+                    <p className='text-xs text-text-secondary'>{ttestimonials(`item${i}Role`)}</p>
                   </div>
                 </div>
                 <p className="text-sm text-text-secondary leading-relaxed flex-1">
@@ -176,7 +176,7 @@ export default async function HomePage() {
       <section className="py-20 bg-bg-inverse">
         <div className="max-w-[1400px] mx-auto px-8 text-center">
           <h2 className="text-3xl font-bold text-white">{tcta("title")}</h2>
-          <p className="mt-3 text-gray-400 text-lg">{tcta("subtitle")}</p>
+          <p className='mt-3 text-text-secondary text-lg'>{tcta("subtitle")}</p>
           <Link
             href={ctaHref}
             className="mt-8 inline-block bg-accent text-white px-10 py-3.5 rounded-full text-lg font-medium hover:bg-orange-600 transition-colors shadow-lg shadow-orange-800/30"

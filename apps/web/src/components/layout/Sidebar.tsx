@@ -32,11 +32,11 @@ export function Sidebar({
   const initial = name?.charAt(0)?.toUpperCase() || "?"
 
   return (
-    <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-orange-100 h-screen sticky top-0">
-      {/* Logo */}
-      <Link
-        href="/app/dashboard"
-        className="flex items-center gap-2 px-6 h-16 border-b border-orange-100"
+    <aside className='hidden md:flex md:flex-col w-64 bg-card border-r border-border h-screen sticky top-0'>
+          {/* Logo */}
+          <Link
+            href="/app/dashboard"
+            className='flex items-center gap-2 px-6 h-16 border-b border-border'>
       >
         <span className="text-2xl">🍳</span>
         <span className="text-xl font-bold text-text-primary">CookMate</span>
@@ -70,7 +70,7 @@ export function Sidebar({
         ) : (
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:bg-orange-50 hover:text-accent transition-colors w-full text-left font-medium"
+            className='flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-text-secondary hover:bg-surface hover:text-accent transition-colors w-full text-left font-medium'
           >
             <span className="flex items-center justify-center w-7 h-7 shrink-0">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -137,7 +137,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
       {/* Avatar button */}
       <button
         onClick={() => { if (open) setLangOpen(false); setOpen(!open) }}
-        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-orange-50 w-full text-left transition-colors"
+        className='flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-primary hover:bg-surface w-full text-left transition-colors'
       >
         <span className="flex items-center justify-center w-7 h-7 rounded-full bg-orange-100 text-accent text-xs font-bold shrink-0">
           {initial}
@@ -150,7 +150,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute bottom-full left-0 right-0 mb-1 bg-white border border-orange-100 rounded-xl shadow-lg py-1.5 text-sm">
+        <div className='absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-xl shadow-lg py-1.5 text-sm'>
           <Link
             href="/app/settings"
             onClick={() => { setOpen(false); setLangOpen(false) }}
@@ -159,12 +159,12 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             <span className="text-base">⚙️</span>
             <span>{t("settings")}</span>
           </Link>
-          <div className="border-t border-orange-100 my-1" />
-          {/* Language sub-menu */}
-          <div className="relative">
-            <button
-              onClick={(e) => { e.stopPropagation(); setLangOpen(!langOpen) }}
-              className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-600 hover:bg-orange-50 hover:text-accent transition-colors"
+          <div className='border-t border-border my-1' />
+                    {/* Language sub-menu */}
+                    <div className='relative'>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setLangOpen(!langOpen) }}
+                        className='flex items-center gap-2.5 w-full px-4 py-2 text-sm text-text-secondary hover:bg-surface hover:text-accent transition-colors'
             >
               <span className="text-base">🌐</span>
               <span className="flex-1 text-left">{t("language")}</span>

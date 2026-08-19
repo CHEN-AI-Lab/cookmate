@@ -46,8 +46,8 @@ export default async function BlogPostPage({
           ← Back to Blog
         </Link>
 
-        <div className="bg-card rounded-2xl shadow-sm border border-border p-8 sm:p-12">
-          <div className="flex flex-wrap items-center gap-2 text-sm text-gray-400 mb-4">
+        <div className='bg-card rounded-2xl shadow-sm border border-border p-8 sm:p-12'>
+                  <div className='flex flex-wrap items-center gap-2 text-sm text-text-secondary mb-4'>
             <span>{dates[slug]}</span>
             <span>·</span>
             <span>⏱ {readTime}</span>
@@ -62,7 +62,7 @@ export default async function BlogPostPage({
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="bg-surface text-accent rounded-full px-3 py-1 text-xs font-medium"
+                  className='bg-surface text-accent rounded-full px-3 py-1 text-xs font-medium'
                 >
                   {tag}
                 </span>
@@ -71,8 +71,8 @@ export default async function BlogPostPage({
           )}
 
           <div className="mt-8 prose prose-orange max-w-none">
-            <p className="text-text-secondary leading-relaxed text-lg">{excerpt}</p>
-            <p className="text-gray-400 mt-8 italic text-center">
+            <p className='text-text-secondary leading-relaxed text-lg'>{excerpt}</p>
+                        <p className='text-text-secondary mt-8 italic text-center'>
               📝 Full article content coming soon
             </p>
           </div>

@@ -63,7 +63,7 @@ export default async function BlogPage() {
         <h1 className="text-4xl sm:text-5xl font-bold text-text-primary">
           {t('title')}
         </h1>
-        <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+        <p className='mt-4 text-lg text-text-secondary max-w-2xl mx-auto'>
           {t('subtitle')}
         </p>
       </section>
@@ -86,7 +86,7 @@ export default async function BlogPage() {
         {POSTS.length === 0 && (
           <div className="text-center py-16">
             <span className="text-5xl">📝</span>
-            <p className="mt-4 text-gray-400">{t('noPosts')}</p>
+            <p className='mt-4 text-text-secondary'>{t('noPosts')}</p>
           </div>
         )}
       </section>

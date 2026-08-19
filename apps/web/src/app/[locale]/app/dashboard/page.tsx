@@ -45,7 +45,7 @@ export default function DashboardPage() {
     setShowOnboarding(false)
   }
 
-  if (loading) return <div className="text-center py-16 text-gray-400">{td("loading")}</div>
+  if (loading) return <div className='text-center py-16 text-text-secondary'>{td("loading")}</div>
 
   return (
     <>
@@ -54,10 +54,10 @@ export default function DashboardPage() {
         {/* ===== Welcome header ===== */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{td("welcomeBack")}</h1>
-            <p className="text-gray-500 mt-1 text-sm">{td("welcomeDesc")}</p>
+            <h1 className='text-2xl font-bold text-text-primary tracking-tight'>{td("welcomeBack")}</h1>
+                        <p className='text-text-secondary mt-1 text-sm'>{td("welcomeDesc")}</p>
           </div>
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-accent text-xs font-semibold rounded-full">
+          <span className='hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface text-accent text-xs font-semibold rounded-full'>
             {stats?.subscriptionTier === "PRO" ? td("proUser") : td("freeUser")}
           </span>
         </div>
@@ -102,9 +102,9 @@ export default function DashboardPage() {
         {/* ===== Quick access — 3 cards ===== */}
         <div>
           <div className="flex items-center gap-2 mb-4">
-            <span className="h-px flex-1 bg-gray-100" />
-            <span className="text-xs font-semibold text-gray-400 tracking-wider uppercase shrink-0">{td("quickAccess")}</span>
-            <span className="h-px flex-1 bg-gray-100" />
+            <span className='h-px flex-1 bg-surface' />
+                        <span className='text-xs font-semibold text-text-secondary tracking-wider uppercase shrink-0'>{td("quickAccess")}</span>
+                        <span className='h-px flex-1 bg-surface' />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <QuickActionCard href="/app/pantry" title={td("managePantry")} desc={td("pantryDesc")} emoji="🥦" hoverBorder="hover:border-green-200" hoverShadow="hover:shadow-green-100/40" />

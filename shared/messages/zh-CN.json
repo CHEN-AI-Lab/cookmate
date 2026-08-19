@@ -181,7 +181,8 @@
     "unlinkSuccess": "已解绑",
     "githubRevokeNote": "GitHub 网站不支持自动解绑，解绑后请前往 GitHub 设置 → 应用 手动取消授权。",
     "cannotUnlinkEmail": "该登录方式不可解绑",
-    "mustKeepOneMethod": "至少需要保留一种登录方式"
+    "mustKeepOneMethod": "至少需要保留一种登录方式",
+    "connectedAccounts": "绑定账号"
   },
   "validation": {
     "invalidPhone": "请输入正确的11位手机号",

@@ -12,7 +12,7 @@ export function HeroCTA() {
       <div className="flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4">
         <div className="space-y-1.5">
           <h2 className="text-xl font-bold text-gray-900 tracking-tight">🔥 {td("todayRecommend")}</h2>
-          <p className="text-gray-500 text-sm leading-relaxed">
+          <p className='text-text-secondary text-sm leading-relaxed'>
             {td("recommendDesc")}
           </p>
         </div>
