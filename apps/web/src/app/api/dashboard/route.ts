@@ -5,15 +5,7 @@ import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import { isAlipayConfigured } from "@cookmate/shared/api/alipay-pay"
 import { isCreemConfigured } from "@cookmate/shared/api/creem"
 import { isDemoUser } from "@/lib/auth-helpers"
-
-// 检查订阅是否过期，过期自动降级（按日期比较，忽略时分秒）
-function isExpired(expiryDate: Date): boolean {
-  const now = new Date()
-  now.setUTCHours(0, 0, 0, 0)
-  const expiry = new Date(expiryDate)
-  expiry.setUTCHours(0, 0, 0, 0)
-  return now > expiry
-}
+import { isExpired } from "@cookmate/shared/utils/subscription"
 
 async function checkSubscription(userId: string, user: { subscriptionTier: string; subscriptionExpiryDate: Date | null } | null): Promise<string> {
   if (!user || user.subscriptionTier?.toUpperCase() !== "PRO") return "FREE"

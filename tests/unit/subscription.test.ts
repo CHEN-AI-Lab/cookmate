@@ -3,29 +3,20 @@
  *
  * Tests cover the three pieces of business logic that drive
  * the cancel-subscription flow:
- *   1. isExpired()     — date-based expiry check (dashboard/route.ts)
+ *   1. isExpired()     — date-based expiry check (shared/utils/subscription.ts)
  *   2. cancelled flag  — tier === "PRO" && !creemSubscriptionId
  *   3. UI conditions   — show cancel button vs cancelled badge vs hide
  *
- * These functions live inside the route handler and aren't exported,
- * so we test the logic directly by reimplementing the expressions
- * (pure boolean / date arithmetic — no mocking needed).
+ * isExpired is imported from shared/utils/subscription so the test
+ * validates the actual production code, not a replica.
  */
 
 import { describe, it, expect } from 'vitest'
+import { isExpired } from '@cookmate/shared/utils/subscription'
 
 // ---------------------------------------------------------------------------
 // Helpers — reproduce the exact logic from dashboard/route.ts
 // ---------------------------------------------------------------------------
-
-/** Replica of isExpired() in apps/web/src/app/api/dashboard/route.ts */
-function isExpired(expiryDate: Date): boolean {
-  const now = new Date()
-  now.setUTCHours(0, 0, 0, 0)
-  const expiry = new Date(expiryDate)
-  expiry.setUTCHours(0, 0, 0, 0)
-  return now > expiry
-}
 
 /** Replica of the cancelled computation: subscription was cancelled but
  *  the user still has Pro until the current billing period ends. */
