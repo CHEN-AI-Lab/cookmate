@@ -11,7 +11,7 @@ export function HeroCTA() {
     <div className="bg-card rounded-2xl border-l-4 border-accent shadow-sm shadow-orange-100/40 p-6 sm:p-8">
       <div className="flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4">
         <div className="space-y-1.5">
-          <h2 className="text-xl font-bold text-gray-900 tracking-tight">🔥 {td("todayRecommend")}</h2>
+          <h2 className="text-xl font-bold text-text-primary tracking-tight">🔥 {td("todayRecommend")}</h2>
           <p className='text-text-secondary text-sm leading-relaxed'>
             {td("recommendDesc")}
           </p>

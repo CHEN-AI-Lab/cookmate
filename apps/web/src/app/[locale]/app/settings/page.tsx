@@ -630,7 +630,7 @@ const save = async () => {
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-gray-900">{ts("exportTitle")}</h3>
+                  <h3 className="font-bold text-text-primary">{ts("exportTitle")}</h3>
                   <p className="text-sm text-text-secondary mt-0.5">{ts("exportDesc")}</p>
                 </div>
               </div>
