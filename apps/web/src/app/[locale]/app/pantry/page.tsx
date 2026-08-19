@@ -250,7 +250,7 @@ export default function PantryPage() {
       )}
       {/* Success toast */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50 flex items-center gap-2">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-success text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50 flex items-center gap-2">
           <span>✅</span> {toast}
         </div>
       )}

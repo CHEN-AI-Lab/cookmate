@@ -288,7 +288,7 @@ export default function RecipesPage() {
     <div>
       <h1 className="text-2xl font-bold text-text-primary mb-6">{t("aiRecipesTitle")}</h1>
 
-      <div className="bg-card rounded-2xl shadow-sm border border-green-50 p-6 mb-6">
+      <div className="bg-card rounded-2xl shadow-sm border border-success/10 p-6 mb-6">
         {pantryLoaded && pantryItems.length > 0 && (
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
@@ -314,8 +314,8 @@ export default function RecipesPage() {
                     onClick={() => importPantryItem(item.name)}
                     className={`px-2.5 py-1 rounded-full text-xs border transition-all ${
                       active
-                        ? "bg-green-50 text-green-700 border-green-300 shadow-sm"
-                        : "bg-surface text-text-secondary border-border hover:border-green-300 hover:text-success hover:bg-green-50/30"
+                        ? "bg-success/10 text-success border-success/25 shadow-sm"
+                        : "bg-surface text-text-secondary border-border hover:border-success/50 hover:text-success hover:bg-success/10"
                     }`}
                   >
                     {displayName(item.name)}
@@ -354,7 +354,7 @@ export default function RecipesPage() {
                   key={item}
                   className={`px-3 py-1 rounded-full text-sm border flex items-center gap-1 ${
                     isFromPantry(item)
-                      ? "bg-green-50 text-green-700 border-green-200"
+                      ? "bg-success/10 text-success border-success/25"
                       : "bg-surface text-accent border-border"
                   }`}
                 >

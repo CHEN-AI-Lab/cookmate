@@ -33,7 +33,7 @@ function getCategoryHeaderColor(name: string): string {
     lower.includes("veg") ||
     lower.includes("veggie")
   )
-    return "bg-green-50 text-success"
+    return "bg-success/10 text-success"
   if (
     lower.includes("水果") ||
     lower.includes("fruit") ||
@@ -47,7 +47,7 @@ function getCategoryHeaderColor(name: string): string {
     lower.includes("meat") ||
     lower.includes("egg")
   )
-    return "bg-error/10 text-red-700"
+    return "bg-error/10 text-error"
   if (
     lower.includes("主食") ||
     lower.includes("粮油") ||
@@ -83,7 +83,7 @@ export function GroceryCategoryList({
         <div className="flex items-center gap-3 text-sm">
           <span className="text-text-secondary">{t("totalItems", { count: total })}</span>
           {inPantryCount > 0 && (
-            <span className="bg-green-50 text-success px-2 py-0.5 rounded-full text-xs">
+            <span className="bg-success/10 text-success px-2 py-0.5 rounded-full text-xs">
               {t("inPantryCount", { count: inPantryCount })}
             </span>
           )}
@@ -147,7 +147,7 @@ export function GroceryCategoryList({
                       )}
                     </span>
                     {item.inPantry && (
-                      <span className="text-[10px] text-success bg-green-50 px-1 rounded shrink-0">
+                      <span className="text-[10px] text-success bg-success/10 px-1 rounded shrink-0">
                         {t("inPantry")}
                       </span>
                     )}

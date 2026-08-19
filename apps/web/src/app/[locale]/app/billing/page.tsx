@@ -133,7 +133,7 @@ export default function BillingPage() {
   return (
     <>
       {topBanner && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-green-600 text-white text-center text-sm font-medium py-3 px-4 shadow-lg">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-success text-white text-center text-sm font-medium py-3 px-4 shadow-lg">
           {topBanner}
         </div>
       )}
@@ -144,7 +144,7 @@ export default function BillingPage() {
       </div>
 
       {message && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-success font-medium">
+        <div className="p-4 bg-success/10 border border-success/25 rounded-xl text-sm text-success font-medium">
           {message}
         </div>
       )}
@@ -184,9 +184,9 @@ export default function BillingPage() {
           <div className="mt-4 flex items-center gap-3">
             <div className={cn(
               "text-sm font-medium px-3 py-1 rounded-full",
-              daysLeft <= 7 ? "bg-error/10 text-error" : "bg-green-50 text-success"
+              daysLeft <= 7 ? "bg-error/10 text-error" : "bg-success/10 text-success"
             )}>
-              {locale === "zh-CN" ? `剩余 ${daysLeft} 天` : `${daysLeft} ${t("daysLeft")}`}
+              {t("daysLeft", { days: daysLeft })}
             </div>
             <span className="text-xs text-text-secondary">
               {t("expiryDate", { date: new Date(info.subscriptionExpiryDate).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" }) })}
@@ -383,7 +383,7 @@ export default function BillingPage() {
                   }
                 }}
                 disabled={actionLoading !== null || paying}
-                className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-border hover:border-blue-300 hover:bg-blue-50/50 transition-all disabled:opacity-40 group"
+                className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-border hover:border-accent hover:bg-accent/5 transition-all disabled:opacity-40 group"
               >
                 <svg className="w-7 h-7 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="24" height="24" rx="4" fill="#1677FF"/>
@@ -400,7 +400,7 @@ export default function BillingPage() {
                 <button
                   onClick={() => handleCreemUpgrade(selectedPeriod)}
                   disabled={actionLoading !== null}
-                  className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-border hover:border-green-400 hover:bg-green-50/50 transition-all disabled:opacity-40 group"
+                  className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-border hover:border-success/50 hover:bg-success/10 transition-all disabled:opacity-40 group"
                 >
                   <svg className="w-7 h-7 shrink-0" viewBox="0 0 121 121" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="121" height="121" rx="16" fill="#151617"/>
@@ -430,7 +430,7 @@ export default function BillingPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4" onClick={() => setShowCancelModal(false)}>
           <div className="bg-card rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
             <div className="text-center mb-4">
-              <div className="mx-auto w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-3">
+              <div className="mx-auto w-12 h-12 rounded-full bg-error/10 flex items-center justify-center mb-3">
                 <svg className="w-6 h-6 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
@@ -466,7 +466,7 @@ export default function BillingPage() {
                   }
                 }}
                 disabled={actionLoading === "cancel"}
-                className="flex-1 px-4 py-2.5 text-sm text-white bg-error/100 rounded-xl hover:bg-error disabled:bg-gray-300 transition-colors font-medium"
+                className="flex-1 px-4 py-2.5 text-sm text-white bg-error/100 rounded-xl hover:bg-error disabled:bg-surface transition-colors font-medium"
               >
                 {actionLoading === "cancel" ? t("cancelling") : t("cancelSubscription")}
               </button>
@@ -516,7 +516,7 @@ export default function BillingPage() {
                   }
                 }}
                 disabled={actionLoading === "cancel"}
-                className="flex-1 px-4 py-2.5 text-sm text-white bg-amber-500 rounded-xl hover:bg-amber-600 disabled:bg-gray-300 transition-colors font-medium"
+                className="flex-1 px-4 py-2.5 text-sm text-white bg-amber-500 rounded-xl hover:bg-amber-600 disabled:bg-surface transition-colors font-medium"
               >
                 {locale === "en" ? "Downgrade to Free" : t("downgradeToFree")}
               </button>

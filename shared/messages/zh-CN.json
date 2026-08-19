@@ -556,7 +556,7 @@
     "paymentSuccess": "✅ 支付成功！",
     "keepPro": "保留 Pro",
     "downgradeToFree": "降级到免费版",
-    "daysLeft": "天"
+    "daysLeft": "{days, number} 天"
   },
   "orders": {
     "title": "📋 订单记录",

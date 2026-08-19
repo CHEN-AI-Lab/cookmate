@@ -35,7 +35,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               "transition-colors duration-150",
               "focus:border-accent focus:outline-none focus:ring-0",
               "disabled:cursor-not-allowed disabled:opacity-50",
-              error && "border-red-400 focus:border-red-500",
+              error && "border-error focus:border-error",
               icon && "pl-10",
               className,
             )}

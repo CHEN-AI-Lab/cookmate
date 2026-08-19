@@ -57,7 +57,7 @@ export default function OrdersPage() {
   const channelLabel: Record<string, string> = { alipay: t("channelAlipay"), creem: t("channelCreem"), stripe: t("channelStripe") }
   const statusLabel: Record<string, string> = { PAID: t("completed"), PENDING: t("cancelled"), EXPIRED: t("expired") }
   const statusColor: Record<string, string> = {
-    PAID: "text-success bg-green-50",
+    PAID: "text-success bg-success/10",
     PENDING: "text-text-secondary bg-surface",
     EXPIRED: "text-text-secondary bg-surface",
   }
@@ -179,7 +179,7 @@ export default function OrdersPage() {
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4" onClick={() => setDeleteTarget(null)}>
           <div className="bg-card rounded-2xl shadow-xl p-6 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
-            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <div className="w-12 h-12 rounded-full bg-error/10 flex items-center justify-center mx-auto mb-4">
               <svg className="w-6 h-6 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             </div>
             <p className="font-bold text-text-primary text-lg mb-2">{t("deleteConfirm")}</p>

@@ -212,13 +212,13 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
         </div>
 
         {isLoggedIn && (
-          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-            <p className="text-sm text-blue-700 font-medium">
+          <div className="mb-4 p-4 bg-info/10 border border-info/25 rounded-xl">
+            <p className="text-sm text-info font-medium">
               {userName ? `👋 ${userName}` : t('alreadyLoggedIn')}
             </p>
-            <p className="text-xs text-blue-500 mt-1">{t('switchAccountForRegister')}</p>
+            <p className="text-xs text-info/70 mt-1">{t('switchAccountForRegister')}</p>
             <div className="mt-3 flex gap-2">
-              <Link href="/app/dashboard" className="flex-1 bg-blue-600 text-white text-center text-sm py-2 rounded-lg hover:bg-blue-700">{t('enterDashboard')}</Link>
+              <Link href="/app/dashboard" className="flex-1 bg-info text-white text-center text-sm py-2 rounded-lg hover:bg-info/90">{t('enterDashboard')}</Link>
               <button onClick={() => signOut({ callbackUrl: "/" })} className="flex-1 bg-card text-text-secondary text-center text-sm py-2 rounded-lg border border-border hover:bg-surface">{tc('logout')}</button>
             </div>
           </div>
@@ -226,8 +226,8 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
 
         {error && (
           <div className={`mb-4 p-3 rounded-xl text-sm text-center ${
-            errorType === 'success' ? "bg-green-50 border border-green-200 text-success"
-            : errorType === 'info' ? "bg-blue-50 border border-blue-200 text-blue-600"
+            errorType === 'success' ? "bg-success/10 border border-success/25 text-success"
+            : errorType === 'info' ? "bg-info/10 border border-info/25 text-info"
             : "bg-error/10 border border-error/25 text-error"
           }`}>
             {error}

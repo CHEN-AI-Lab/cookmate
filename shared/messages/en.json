@@ -556,7 +556,7 @@
     "paymentSuccess": "✅ Payment successful!",
     "keepPro": "Keep Pro",
     "downgradeToFree": "Downgrade to Free",
-    "daysLeft": "days left"
+    "daysLeft": "{days} days left"
   },
   "orders": {
     "title": "📋 Order History",

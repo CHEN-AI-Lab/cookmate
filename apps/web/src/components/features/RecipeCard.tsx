@@ -29,7 +29,7 @@ interface RecipeCardProps {
 function diffColor(d: string) {
   switch (d) {
     case "easy":
-      return "text-success bg-green-50"
+      return "text-success bg-success/10"
     case "medium":
       return "text-yellow-600 bg-yellow-50"
     case "hard":
@@ -121,7 +121,7 @@ export function RecipeCard({
                   <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                   {ing}
                   {isFromPantry(ing.split(" ")[0]) && (
-                    <span className="text-[10px] text-success bg-green-50 px-1 rounded">
+                    <span className="text-[10px] text-success bg-success/10 px-1 rounded">
                       {t("inPantry")}
                     </span>
                   )}

@@ -313,7 +313,7 @@ export default function GroceryListPage() {
             <div className="flex items-center gap-3 text-sm">
               <span className="text-text-secondary">{tg("totalItems", { count: total + manualItems.length })}</span>
               {inPantryCount > 0 && (
-                <span className="bg-green-50 text-success px-2 py-0.5 rounded-full">
+                <span className="bg-success/10 text-success px-2 py-0.5 rounded-full">
                   {tg("inPantryCount", { count: inPantryCount })}
                 </span>
               )}
@@ -363,7 +363,7 @@ export default function GroceryListPage() {
                         {item.quantity && <span className="text-text-secondary font-normal"> ({item.quantity})</span>}
                       </span>
                       {item.inPantry && (
-                        <span className="text-[10px] text-success bg-green-50 px-1 rounded shrink-0">{tg("inPantry")}</span>
+                        <span className="text-[10px] text-success bg-success/10 px-1 rounded shrink-0">{tg("inPantry")}</span>
                       )}
                       {item.sources && item.sources.length > 0 && (
                         <span className="text-[10px] text-accent opacity-0 group-hover:opacity-100 transition-opacity shrink-0">🔍</span>
@@ -441,7 +441,7 @@ export default function GroceryListPage() {
       {/* 添加到食材库通知 */}
       {purchaseNotify && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-bounce-in">
-          <div className="bg-green-600 text-white px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2">
+          <div className="bg-success text-white px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2">
             {purchaseNotify.existing ? (
               <>{tg("alreadyInPantry", { name: purchaseNotify.name })}</>
             ) : (

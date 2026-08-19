@@ -342,13 +342,13 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         </div>
 
         {isLoggedIn && (
-          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-            <p className="text-sm text-blue-700 font-medium">
+          <div className="mb-4 p-4 bg-info/10 border border-info/25 rounded-xl">
+            <p className="text-sm text-info font-medium">
               {userName ? `👋 ${userName}` : t('alreadyLoggedIn')}
             </p>
-            <p className="text-xs text-blue-500 mt-1">{t('switchAccount')}</p>
+            <p className="text-xs text-info/70 mt-1">{t('switchAccount')}</p>
             <div className="mt-3 flex gap-2">
-              <Link href="/app/dashboard" className="flex-1 bg-blue-600 text-white text-center text-sm py-2 rounded-lg hover:bg-blue-700">{t('enterDashboard')}</Link>
+              <Link href="/app/dashboard" className="flex-1 bg-info text-white text-center text-sm py-2 rounded-lg hover:bg-info/90">{t('enterDashboard')}</Link>
               <button onClick={() => signOut({ callbackUrl: "/" })} className="flex-1 bg-card text-text-secondary text-center text-sm py-2 rounded-lg border border-border hover:bg-surface">{tc('logout')}</button>
             </div>
           </div>
@@ -417,14 +417,14 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                   {loading === "email_login" ? t('loggingIn') : t('loginRegisterAction')}
                 </button>
                 {emailMsg && (
-                  <div className="text-xs text-success bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+                  <div className="text-xs text-success bg-success/10 border border-success/25 rounded-xl px-3 py-2">
                     {emailMsg}
                   </div>
                 )}
                 {error && tab === "email" && (
                   <div className={`text-xs rounded-xl px-3 py-2 ${
-                    error.includes("dev") ? "bg-green-50 border border-green-200 text-success"
-                    : error.includes("sent") ? "bg-blue-50 border border-blue-200 text-blue-600"
+                    error.includes("dev") ? "bg-success/10 border border-success/25 text-success"
+                    : error.includes("sent") ? "bg-info/10 border border-info/25 text-info"
                     : "bg-error/10 border border-error/25 text-error"
                   }`}>
                     {error}
@@ -543,7 +543,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         {/* 非邮箱 tab 的错误提示 */}
         {error && tab !== "email" && (
           <div className={`mt-2 p-3 rounded-xl text-sm text-center ${
-            error.includes("dev") ? "bg-green-50 border border-green-200 text-success"
+            error.includes("dev") ? "bg-success/10 border border-success/25 text-success"
             : "bg-error/10 border border-error/25 text-error"
           }`}>
             {error}

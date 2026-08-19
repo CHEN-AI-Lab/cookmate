@@ -381,7 +381,7 @@ const save = async () => {
                                         finally { setBindLoading(false) }
                                       }}
                                       disabled={bindLoading || !bindPhone || !bindCode}
-                                      className="flex-1 bg-accent text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
+                                      className="flex-1 bg-accent text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-surface"
                                     >
                                       {bindLoading ? ts("bindLoading") : ts("bindConfirm")}
                                     </button>
@@ -413,7 +413,7 @@ const save = async () => {
                                                         <input type="text" maxLength={6} placeholder={ts("bindCodePlaceholder")} value={bindEmailCode} onChange={(e) => setBindEmailCode(e.target.value.replace(/\D/g, ""))} className="w-full border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accent" />
                                                         <button onClick={confirmBindEmail}
                                                           disabled={bindLoading || !bindEmailCode || bindEmailCode.length < 6}
-                                                          className="w-full bg-accent text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300"
+                                                          className="w-full bg-accent text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-surface"
                                                         >{bindLoading ? ts("bindLoading") : ts("bindConfirm")}</button>
                                                         {accountMsg && <p className={`text-xs ${accountMsg.startsWith("✅") ? "text-success" : "text-error"}`}>{accountMsg}</p>}
                                                       </>
@@ -598,7 +598,7 @@ const save = async () => {
                 save()
               }}
               disabled={saving || settings.cuisinePref.length === 0}
-              className="bg-accent text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-text-secondary disabled:cursor-not-allowed transition-all"
+              className="bg-accent text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-orange-600 disabled:bg-surface disabled:text-text-secondary disabled:cursor-not-allowed transition-all"
             >
               {saving ? ts("saving") : ts("saveSettings")}
             </button>
@@ -697,19 +697,19 @@ const save = async () => {
                 <p className="text-xs font-semibold text-error mb-3 uppercase tracking-wide">{ts("deleteWarning")}</p>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-2 text-xs text-text-secondary">
-                    <svg className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 text-error/70 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                     {ts("deleteItem1")}
                   </li>
                   <li className="flex items-start gap-2 text-xs text-text-secondary">
-                    <svg className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 text-error/70 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                     {ts("deleteItem2")}
                   </li>
                   <li className="flex items-start gap-2 text-xs text-text-secondary">
-                    <svg className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 text-error/70 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                     {ts("deleteItem3")}
@@ -718,7 +718,7 @@ const save = async () => {
               </div>
 
               <div className="flex items-center justify-between mt-4 pt-4 border-t border-error/25">
-                <span className="text-xs text-red-400">{ts("deleteNote")}</span>
+                <span className="text-xs text-error/70">{ts("deleteNote")}</span>
                 <button
                   onClick={() => setShowDeleteModal(true)}
                   className="inline-flex items-center gap-2 border border-error/50 text-error text-sm px-5 py-2 rounded-full hover:bg-error/10 transition-colors font-medium"
@@ -739,7 +739,7 @@ const save = async () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4" onClick={() => { setShowDeleteModal(false); setDeleteCode(""); setCodeSent(false); setDeleteError("") }}>
           <div className="bg-card rounded-2xl shadow-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full bg-error/10 flex items-center justify-center shrink-0">
                 <svg className="w-5 h-5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
               </div>
               <h3 className="font-bold text-lg text-error">{ts("deleteModalTitle")}</h3>
@@ -771,7 +771,7 @@ const save = async () => {
                     placeholder={ts("deleteCodePlaceholder")}
                     value={deleteCode}
                     onChange={(e) => setDeleteCode(e.target.value.replace(/\D/g, ""))}
-                    className="w-full border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200 text-center text-lg tracking-widest"
+                    className="w-full border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-error focus:ring-1 focus:ring-error/20 text-center text-lg tracking-widest"
                     autoFocus
                     onKeyDown={(e) => { if (e.key === "Enter" && deleteCode.length === 6) handleDelete() }}
                   />
@@ -790,7 +790,7 @@ const save = async () => {
                 <button
                   onClick={handleSendDeleteCode}
                   disabled={sendingCode || !profile?.email}
-                  className="flex-1 px-4 py-2.5 text-sm text-white bg-error/100 rounded-xl hover:bg-red-600 disabled:bg-gray-300 transition-colors font-medium"
+                  className="flex-1 px-4 py-2.5 text-sm text-white bg-error/100 rounded-xl hover:bg-error disabled:bg-surface transition-colors font-medium"
                 >
                   {sendingCode ? ts("sendingCode") : ts("sendDeleteCode")}
                 </button>
@@ -798,7 +798,7 @@ const save = async () => {
                 <button
                   onClick={handleDelete}
                   disabled={deleting || deleteCode.length !== 6}
-                  className="flex-1 px-4 py-2.5 text-sm text-white bg-error/100 rounded-xl hover:bg-red-600 disabled:bg-gray-300 transition-colors font-medium"
+                  className="flex-1 px-4 py-2.5 text-sm text-white bg-error/100 rounded-xl hover:bg-error disabled:bg-surface transition-colors font-medium"
                 >
                   {deleting ? ts("deleting") : ts("confirmDeleteBtn")}
                 </button>
@@ -834,7 +834,7 @@ const save = async () => {
               <button
                 onClick={handleUnlinkConfirm}
                 disabled={unlinking !== null}
-                className="flex-1 px-4 py-2.5 text-sm text-white bg-accent rounded-xl hover:bg-orange-600 disabled:bg-gray-300 transition-colors font-medium"
+                className="flex-1 px-4 py-2.5 text-sm text-white bg-accent rounded-xl hover:bg-orange-600 disabled:bg-surface transition-colors font-medium"
               >
                 {unlinking ? "..." : ta("unlink")}
               </button>
@@ -911,7 +911,7 @@ function PasswordForm({ hasPassword, onClose, ts, tv, locale }: { hasPassword: b
         <button
           onClick={handleSubmit}
           disabled={saving || !newPassword || !confirm}
-          className="bg-accent text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-600 disabled:bg-gray-300 transition-all whitespace-nowrap"
+          className="bg-accent text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-600 disabled:bg-surface transition-all whitespace-nowrap"
         >
           {saving ? ts("passwordFormSaving") : (hasPassword ? ts("passwordFormModify") : ts("passwordFormSet"))}
         </button>
