@@ -71,12 +71,17 @@ export function verifyWebhook(payload: string, signature: string): boolean {
     .update(payload)
     .digest("hex")
 
-  return nodeCrypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+  try {
+    return nodeCrypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+  } catch {
+    // 长度不匹配时 timingSafeEqual 会 throw RangeError
+    return false
+  }
 }
 
 // 检查支付配置是否完整
 export function isCreemConfigured(): boolean {
-  return !!(process.env.CREEM_API_KEY && process.env.CREEM_PRODUCT_ID)
+  return !!(process.env.CREEM_API_KEY && (process.env.CREEM_PRODUCT_ID || process.env.CREEM_MONTHLY_PRODUCT_ID || process.env.CREEM_ANNUAL_PRODUCT_ID))
 }
 
 // 查询 checkout 状态

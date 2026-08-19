@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import { sendEmail } from "@cookmate/shared/utils/email"
+import crypto from "node:crypto"
 import bcrypt from "bcryptjs"
 
 function emailT(locale: string, zh: string, en: string): string {
@@ -42,7 +43,7 @@ export async function POST(req: Request) {
       }, { status: 429 })
     }
 
-    const code = String(Math.floor(100000 + Math.random() * 900000))
+    const code = String(crypto.randomInt(100000, 999999))
 
     await prisma.verificationCode.create({
       data: { email, code, expiresAt: new Date(Date.now() + 5 * 60 * 1000) },

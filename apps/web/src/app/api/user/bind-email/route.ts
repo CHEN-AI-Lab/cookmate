@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import crypto from "node:crypto"
 import { isDemoUser } from "@/lib/auth-helpers"
 import { err } from "@cookmate/shared/utils/locale"
 
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
     }
 
     // 生成验证码
-    const code = String(Math.floor(100000 + Math.random() * 900000))
+    const code = String(crypto.randomInt(100000, 999999))
 
     await prisma.verificationCode.create({
       data: {
