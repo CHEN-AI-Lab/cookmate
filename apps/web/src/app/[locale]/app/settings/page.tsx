@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "@/i18n/navigation"
 import { useTranslations, useLocale } from "next-intl"
 import { signOut } from "next-auth/react"
 import Link from "next/link"
@@ -13,6 +14,7 @@ export default function SettingsPage() {
   const tv = useTranslations("validation")
   const ta = useTranslations("auth")
   const locale = useLocale()
+  const router = useRouter()
 
   const dietLabel: Record<string, string> = {
     "不限": ts("dietUnlimited"), "减脂": ts("dietLoseFat"),
@@ -56,7 +58,7 @@ export default function SettingsPage() {
   const [unlinkConfirmProvider, setUnlinkConfirmProvider] = useState<string | null>(null)
   const [unlinking, setUnlinking] = useState<string | null>(null)
   const [unlinkError, setUnlinkError] = useState("")
-  const [needsManualRevoke, setNeedsManualRevoke] = useState(false)
+  const [needsManualRevoke, setNeedsManualRevoke] = useState(false); void needsManualRevoke
   useEffect(() => {
     Promise.all([
       fetch("/api/settings").then((r) => r.json()),
@@ -226,7 +228,7 @@ const save = async () => {
       const data = await res.json()
       if (data.success) {
         await signOut({ redirect: false })
-        window.location.href = "/"
+        router?.push("/")
       } else {
         setDeleteError(data.error || ts("deleteFailed"))
       }

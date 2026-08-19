@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "@/i18n/navigation"
 import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from "@cookmate/shared/constants"
@@ -63,6 +64,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
   const [selectedIngredients, setSelectedIngredients] = useState<Set<string>>(new Set())
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
+  const router = useRouter()
 
   const canNext = () => {
     if (step === 0) return true
@@ -88,7 +90,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
     }
     // Complete — demo users cannot save
     if (isDemoUser === true) {
-      window.location.href = "/register"
+      router?.push("/register")
       return
     }
     setSaving(true)
@@ -142,7 +144,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
         <button
           onClick={async () => {
             if (isDemoUser === true) {
-              window.location.href = "/app/dashboard"
+              router?.push("/app/dashboard")
               return
             }
             const res = await fetch("/api/user/onboarding", {
@@ -154,7 +156,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
               onComplete()
             } else {
               // If save fails, still redirect to dashboard
-              window.location.href = "/app/dashboard"
+              router?.push("/app/dashboard")
             }
           }}
           className="absolute top-4 right-4 text-text-secondary hover:text-text-secondary text-sm"

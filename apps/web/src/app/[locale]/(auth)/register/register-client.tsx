@@ -4,9 +4,11 @@ import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import OAuthLoadingOverlay from "@/components/ui/OAuthLoadingOverlay"
+import { useRouter } from "@/i18n/navigation"
 
 export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: boolean; userName?: string }) {
   const t = useTranslations('auth')
+  const router = useRouter()
   const tv = useTranslations('validation')
   const tc = useTranslations('common')
   const [email, setEmail] = useState("")
@@ -27,9 +29,9 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   // 已登录用户直接跳转（解决已打开页面不触发服务端 redirect 的问题）
   useEffect(() => {
     if (isLoggedIn) {
-      window.location.href = "/app/dashboard"
+      router?.push("/app/dashboard")
     }
-  }, [isLoggedIn])
+  }, [isLoggedIn, router])
 
   useEffect(() => {
     if (countdown > 0) {
@@ -131,7 +133,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
           body: JSON.stringify({ password }),
         })
       }
-      window.location.href = "/app/dashboard"
+      router?.push("/app/dashboard")
     } catch {
       setError(tv('networkError'))
       setErrorType('error')
@@ -162,7 +164,10 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
         return
       }
       if (result?.url) {
-        window.location.href = result.url
+        // external OAuth URL — keep window.location
+        if (result.url && result.url.startsWith("/")) {
+          router?.push(result.url)
+        }
       }
     } catch {
       setError(tv('oauthNotConfigured'))
@@ -185,7 +190,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
         setError(data.error || tv('oauthNotConfigured'))
         return
       }
-      window.location.href = "/app/dashboard"
+      router?.push("/app/dashboard")
     } catch {
       setError(tv('oauthNotConfigured'))
       setErrorType('error')

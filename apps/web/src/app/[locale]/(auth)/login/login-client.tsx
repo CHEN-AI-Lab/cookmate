@@ -6,6 +6,7 @@ import PasswordInput from "@/components/ui/PasswordInput"
 import Link from "next/link"
 import OAuthLoadingOverlay from "@/components/ui/OAuthLoadingOverlay"
 import { useTranslations } from "next-intl"
+import { useRouter } from "@/i18n/navigation"
 
 export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boolean; userName?: string }) {
   const t = useTranslations('auth')
@@ -21,6 +22,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   const [error, setError] = useState("")
   const [countdown, setCountdown] = useState(0)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const router = useRouter()
   const [oauthProvider, setOauthProvider] = useState<string | null>(null)
 
   // 密码设置模式（在密码登录 tab 中设密码）
@@ -35,9 +37,9 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   // 已登录用户直接跳转（解决已打开页面不触发服务端 redirect 的问题）
   useEffect(() => {
     if (isLoggedIn) {
-      window.location.href = "/app/dashboard"
+      router?.push("/app/dashboard")
     }
-  }, [isLoggedIn])
+  }, [isLoggedIn, router])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -123,7 +125,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         setError(data.error || tv('verifyFailed'))
         return
       }
-      window.location.href = "/app/dashboard"
+      router?.push("/app/dashboard")
     } catch {
       setError(tv('networkError'))
     } finally {
@@ -197,7 +199,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
           setError(tv('wrongPassword'))
         }
       } else {
-        window.location.href = result?.url || "/app/dashboard"
+        router?.push(result?.url || "/app/dashboard")
       }
     } catch {
       setError(tv('wrongPassword'))
@@ -320,7 +322,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         return
       }
       // 刷新 session 后跳转
-      window.location.href = "/app/dashboard"
+      router?.push("/app/dashboard")
     } catch {
       setError(tv('oauthNotConfigured'))
     } finally {

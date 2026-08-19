@@ -1,10 +1,12 @@
 "use client"
 import { useTranslations } from "next-intl"
 
+import { useRouter } from "@/i18n/navigation"
 import { PricingCard } from "./PricingCard"
 
 export function PricingCards() {
   const t = useTranslations("billing")
+  const router = useRouter()
 
   return (
     <section id="pricing" className="py-16 bg-card">
@@ -21,7 +23,7 @@ export function PricingCards() {
             highlighted={false}
             isCurrent={false}
             ctaLabel={t("selectThisPlan")}
-            onCta={() => (window.location.href = "/register")}
+            onCta={() => router.push("/register")}
           />
           {/* Pro Monthly */}
           <PricingCard
@@ -33,7 +35,7 @@ export function PricingCards() {
             highlighted={false}
             isCurrent={false}
             ctaLabel={t("subscribePro")}
-            onCta={() => (window.location.href = "/register")}
+            onCta={() => router.push("/register")}
           />
           {/* Pro Annual — highlighted with savings badge */}
           <PricingCard
@@ -46,7 +48,7 @@ export function PricingCards() {
             highlighted={true}
             isCurrent={false}
             ctaLabel={t("subscribePro")}
-            onCta={() => (window.location.href = "/register")}
+            onCta={() => router.push("/register")}
           />
         </div>
       </div>
