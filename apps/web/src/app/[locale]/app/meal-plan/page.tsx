@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useTranslations, useLocale } from "next-intl"
+import { useRouter } from "@/i18n/navigation"
 import { MealPlanGrid } from "@/components/features/MealPlanGrid"
 import { MealPlanDetailModal } from "@/components/features/MealPlanDetailModal"
 import { getDemoMealPlan } from "@cookmate/shared/demo-data"
@@ -36,6 +37,7 @@ export default function MealPlanPage() {
   const locale = useLocale()
   const tc = useTranslations("common")
   const DAY_LABELS = [t("monday"), t("tuesday"), t("wednesday"), t("thursday"), t("friday"), t("saturday"), t("sunday")]
+  const router = useRouter()
   const MEAL_LABELS: Record<string, string> = {
     breakfast: t("breakfast"), lunch: t("lunch"), dinner: t("dinner"),
   }
@@ -208,7 +210,7 @@ export default function MealPlanPage() {
         mealLabels={MEAL_LABELS}
         onToggleStar={toggleStar}
         onDeleteSlot={deleteSlot}
-        onNavigateTo={(path) => { window.location.href = path }}
+        onNavigateTo={(path) => { router?.push(path) }}
       />
 
       {deleteConfirm && (
