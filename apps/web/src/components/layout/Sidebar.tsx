@@ -32,11 +32,11 @@ export function Sidebar({
   const initial = name?.charAt(0)?.toUpperCase() || "?"
 
   return (
-    <aside className='hidden md:flex md:flex-col w-64 bg-card border-r border-border h-screen sticky top-0'>
-          {/* Logo */}
-          <Link
-            href="/app/dashboard"
-            className='flex items-center gap-2 px-6 h-16 border-b border-border'>
+    <aside className="hidden md:flex md:flex-col w-64 bg-card border-r border-border h-screen sticky top-0">
+      {/* Logo */}
+      <Link
+        href="/app/dashboard"
+        className="flex items-center gap-2 px-6 h-16 border-b border-border"
       >
         <span className="text-2xl">🍳</span>
         <span className="text-xl font-bold text-text-primary">CookMate</span>
@@ -52,8 +52,8 @@ export function Sidebar({
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-orange-100 text-accent"
-                  : "text-gray-600 hover:bg-orange-50 hover:text-accent"
+                  ? "bg-surface text-accent"
+                  : "text-text-secondary hover:bg-surface hover:text-accent"
               }`}
             >
               <span className="text-lg">{item.icon}</span>
@@ -64,7 +64,7 @@ export function Sidebar({
       </nav>
 
       {/* Bottom: user menu dropdown */}
-      <div className="px-3 py-3 border-t border-orange-100">
+      <div className="px-3 py-3 border-t border-border">
         {name ? (
           <UserMenu name={name} initial={initial} t={t} isDemoUser={isDemoUser} />
         ) : (
@@ -139,11 +139,11 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
         onClick={() => { if (open) setLangOpen(false); setOpen(!open) }}
         className='flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-primary hover:bg-surface w-full text-left transition-colors'
       >
-        <span className="flex items-center justify-center w-7 h-7 rounded-full bg-orange-100 text-accent text-xs font-bold shrink-0">
+        <span className="flex items-center justify-center w-7 h-7 rounded-full bg-surface text-accent text-xs font-bold shrink-0">
           {initial}
         </span>
         <span className="truncate flex-1">{isDemoUser && (locale === "en" || locale.startsWith("en")) ? "Demo User" : name}</span>
-        <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg className={`w-4 h-4 text-text-secondary transition-transform ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
@@ -154,7 +154,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
           <Link
             href="/app/settings"
             onClick={() => { setOpen(false); setLangOpen(false) }}
-            className="flex items-center gap-2.5 px-4 py-2 text-gray-600 hover:bg-orange-50 hover:text-accent transition-colors"
+            className="flex items-center gap-2.5 px-4 py-2 text-text-secondary hover:bg-surface hover:text-accent transition-colors"
           >
             <span className="text-base">⚙️</span>
             <span>{t("settings")}</span>
@@ -168,10 +168,10 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             >
               <span className="text-base">🌐</span>
               <span className="flex-1 text-left">{t("language")}</span>
-              <svg className={`w-3 h-3 text-gray-400 transition-transform ${langOpen ? "rotate-90" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+              <svg className={`w-3 h-3 text-text-secondary transition-transform ${langOpen ? "rotate-90" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
             {langOpen && (
-              <div className="absolute left-full top-0 ml-2 bg-white border border-gray-100 rounded-lg shadow-lg py-1 min-w-[110px] z-50">
+              <div className="absolute left-full top-0 ml-2 bg-card border border-border rounded-lg shadow-lg py-1 min-w-[110px] z-50">
                 {locales
                   .filter((l) => !isDemoUser || l === "zh-CN" || l === "en")
                   .map((l) => {
@@ -191,7 +191,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
                                               }
                                               router.push(window.location.pathname.replace(new RegExp("^/(?:" + locales.join("|") + ")(/|$)"), "/") || "/", { locale: l })
                                             }}
-                      className={"w-full text-left px-4 py-2 text-sm transition-colors " + (active ? "text-accent bg-orange-50 font-medium" : "text-gray-600 hover:bg-orange-50 hover:text-accent")}
+                      className={"w-full text-left px-4 py-2 text-sm transition-colors " + (active ? "text-accent bg-surface font-medium" : "text-text-secondary hover:bg-surface hover:text-accent")}
                     >
                       {localeNames[l] || l}
                     </button>
@@ -203,7 +203,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
           <div className="border-t border-orange-100 my-1" />
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex items-center gap-2.5 px-4 py-2 text-gray-500 hover:bg-orange-50 hover:text-red-500 w-full text-left transition-colors"
+            className="flex items-center gap-2.5 px-4 py-2 text-text-secondary hover:bg-surface hover:text-error w-full text-left transition-colors"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
