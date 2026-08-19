@@ -95,7 +95,7 @@ async function upgradeUser(userId: string, creemSubscriptionId?: string, period?
   })
 }
 
-async function recordOrder(userId: string, _orderId: string) {
+async function recordOrder(userId: string, _orderId: string, period?: string) {
   // 查找这个用户的 PENDING Creem 订单，更新为已支付
   // 不直接用 orderId 查，因为我们的订单号是 CKCR 格式，webhook 拿到的是 ch_xxx
   const existing = await prisma.paymentOrder.findFirst({
@@ -109,13 +109,14 @@ async function recordOrder(userId: string, _orderId: string) {
       data: { status: "PAID" },
     })
   } else {
-    // 兜底：找不到就新建
+    // 兜底：找不到就新建 — 金额按 period 取对应定价
+    const price = period === "annual" ? PRICING.plans.annual.cny.amount : PRICING.plans.monthly.cny.amount
     await prisma.paymentOrder.create({
       data: {
         userId,
         orderId: _orderId,
         channel: "creem",
-        amount: PRICING.plans.monthly.cny.amount,
+        amount: price,
         status: "PAID",
       },
     })
@@ -159,7 +160,7 @@ export async function POST(req: Request) {
       const subscriptionId = extractSubscriptionId(event)
       const period = extractPeriod(event)
       if (orderId) {
-        await recordOrder(userId || "unknown", orderId)
+        await recordOrder(userId || "unknown", orderId, period)
       }
       if (userId) {
         await upgradeUser(userId, subscriptionId || undefined, period)

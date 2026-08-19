@@ -15,12 +15,15 @@ export async function POST(req: Request) {
     const signature = req.headers.get("stripe-signature") || ""
 
     let event
-    if (STRIPE_WEBHOOK_SECRET) {
+    if (!STRIPE_WEBHOOK_SECRET) {
+      // 开发环境未配 secret — 直接解析（仅 NODE_ENV=development 时允许）
+      if (process.env.NODE_ENV === "production") {
+        return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 })
+      }
+      event = JSON.parse(rawBody)
+    } else {
       // 生产环境：验证签名
       event = getStripe().webhooks.constructEvent(rawBody, signature, STRIPE_WEBHOOK_SECRET)
-    } else {
-      // 开发环境：直接解析（stripe listen 本地不需要签名验证）
-      event = JSON.parse(rawBody)
     }
 
     switch (event.type) {
@@ -38,7 +41,7 @@ export async function POST(req: Request) {
               stripeCustomerId: session.customer as string || undefined,
             },
           })
-          console.error(`User ${userId} upgraded to ${tier}`)
+          console.log(`User ${userId} upgraded to ${tier}`)
         }
         break
       }
@@ -73,7 +76,7 @@ export async function POST(req: Request) {
             stripeSubscriptionId: null,
           },
         })
-        console.error(`User (customer ${customerId}) reverted to FREE`)
+        console.log(`User (customer ${customerId}) reverted to FREE`)
         break
       }
 

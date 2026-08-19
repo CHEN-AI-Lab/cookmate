@@ -81,7 +81,7 @@ providers.push(
         })
       }
 
-      return { id: user.id, name: user.name, phone: user.phone }
+      return { id: user.id, name: user.name, phone: user.phone, emailVerified: new Date() }
     },
   })
 )
@@ -132,7 +132,7 @@ providers.push(
         })
       }
 
-      return { id: user.id, name: user.name, email: user.email! }
+      return { id: user.id, name: user.name, email: user.email!, emailVerified: new Date() }
     },
   })
 )
@@ -177,7 +177,7 @@ providers.push(
       }
 
       recordLoginAttempt(rateKey, true)
-      return { id: user.id, name: user.name, email: user.email!, loginMethod: isPhone ? "phone" : "email" }
+      return { id: user.id, name: user.name, email: user.email!, loginMethod: isPhone ? "phone" : "email", emailVerified: new Date() }
     },
   })
 )
@@ -235,7 +235,7 @@ providers.push(
       if (!uid) return null
       const user = await prisma.user.findUnique({ where: { id: uid } }).catch(() => null)
       if (!user) return null
-      return { id: user.id, name: user.name, email: user.email!, image: user.image }
+      return { id: user.id, name: user.name, email: user.email!, image: user.image, emailVerified: new Date() }
     },
   })
 )

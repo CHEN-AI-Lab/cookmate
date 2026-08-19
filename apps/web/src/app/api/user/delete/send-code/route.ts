@@ -10,47 +10,48 @@ function emailT(locale: string, zh: string, en: string): string {
 }
 
 export async function POST(req: Request) {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "请先登录" }, { status: 401 })
-  }
-  if (isDemoUser(session)) {
-    return NextResponse.json({ error: "体验用户不支持此操作" }, { status: 403 })
-  }
+  try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "请先登录" }, { status: 401 })
+    }
+    if (isDemoUser(session)) {
+      return NextResponse.json({ error: "体验用户不支持此操作" }, { status: 403 })
+    }
 
-  const loc = getLocaleFromCookie(req)
-  const email = session.user.email
-  if (!email) {
-    return NextResponse.json({ error: err(loc, "emailNotFound") }, { status: 400 })
-  }
+    const loc = getLocaleFromCookie(req)
+    const email = session.user.email
+    if (!email) {
+      return NextResponse.json({ error: err(loc, "emailNotFound") }, { status: 400 })
+    }
 
-  // 检查是否 60 秒内已发过
-  const recent = await prisma.verificationCode.findFirst({
-    where: { email, used: false, createdAt: { gte: new Date(Date.now() - 60000) } },
-    orderBy: { createdAt: "desc" },
-  })
-  if (recent) {
-    return NextResponse.json({ error: err(loc, "codeRecentlySent") }, { status: 429 })
-  }
+    // 检查是否 60 秒内已发过
+    const recent = await prisma.verificationCode.findFirst({
+      where: { email, used: false, createdAt: { gte: new Date(Date.now() - 60000) } },
+      orderBy: { createdAt: "desc" },
+    })
+    if (recent) {
+      return NextResponse.json({ error: err(loc, "codeRecentlySent") }, { status: 429 })
+    }
 
-  const code = String(Math.floor(100000 + Math.random() * 900000))
+    const code = String(Math.floor(100000 + Math.random() * 900000))
 
-  await prisma.verificationCode.create({
-    data: { email, code, expiresAt: new Date(Date.now() + 5 * 60 * 1000) },
-  })
+    await prisma.verificationCode.create({
+      data: { email, code, expiresAt: new Date(Date.now() + 5 * 60 * 1000) },
+    })
 
-  const isDev = process.env.NODE_ENV === "development"
-  if (isDev) {
-    return NextResponse.json({ success: true, devCode: code })
-  }
+    const isDev = process.env.NODE_ENV === "development"
+    if (isDev) {
+      return NextResponse.json({ success: true, devCode: code })
+    }
 
-  const subject = emailT(loc, "CookMate 账号删除确认验证码", "CookMate account deletion confirmation")
-  const desc = emailT(loc, "您正在申请删除 CookMate 账号。验证码是：", "You are requesting to delete your CookMate account. Enter the code below:")
-  const expireWarning = emailT(loc, "验证码 5 分钟内有效。如非本人操作，请忽略此邮件。", "This code expires in 5 minutes. If you did not request this, please ignore this email.")
-  const result = await sendEmail(
-    email,
-    subject,
-    `<div style="font-family:sans-serif;padding:24px;max-width:400px">
+    const subject = emailT(loc, "CookMate 账号删除确认验证码", "CookMate account deletion confirmation")
+    const desc = emailT(loc, "您正在申请删除 CookMate 账号。验证码是：", "You are requesting to delete your CookMate account. Enter the code below:")
+    const expireWarning = emailT(loc, "验证码 5 分钟内有效。如非本人操作，请忽略此邮件。", "This code expires in 5 minutes. If you did not request this, please ignore this email.")
+    const result = await sendEmail(
+      email,
+      subject,
+      `<div style="font-family:sans-serif;padding:24px;max-width:400px">
       <h2 style="color:#FF6B35">🍳 CookMate</h2>
       <p style="color:#333">${desc}</p>
       <div style="font-size:32px;font-weight:bold;color:red;letter-spacing:8px;text-align:center;padding:16px;background:#FFF0F0;border-radius:12px;margin:16px 0">
@@ -58,13 +59,17 @@ export async function POST(req: Request) {
       </div>
       <p style="color:#999;font-size:12px">${expireWarning}</p>
     </div>`
-  )
-  if (result.quotaExceeded) {
-    return NextResponse.json({ error: err(loc, "emailQuotaExceeded") }, { status: 429 })
-  }
-  if (!result.ok) {
-    return NextResponse.json({ error: err(loc, "emailSendFailed") }, { status: 500 })
-  }
+    )
+    if (result.quotaExceeded) {
+      return NextResponse.json({ error: err(loc, "emailQuotaExceeded") }, { status: 429 })
+    }
+    if (!result.ok) {
+      return NextResponse.json({ error: err(loc, "emailSendFailed") }, { status: 500 })
+    }
 
-  return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true })
+  } catch (error: unknown) {
+    console.error("Delete send-code error:", error)
+    return NextResponse.json({ error: "发送验证码失败" }, { status: 500 })
+  }
 }

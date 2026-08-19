@@ -102,9 +102,14 @@ export async function GET(req: Request) {
         data: { status: "PAID" },
       })
 
-      // 升级用户
+      // 升级用户 — 根据 metadata.period 计算过期时间（annual → 1 年，其余 → 1 月）
+      const period = checkoutMeta?.period
       const expiryDate = new Date()
-      expiryDate.setUTCMonth(expiryDate.getUTCMonth() + 1)
+      if (period === "annual") {
+        expiryDate.setUTCFullYear(expiryDate.getUTCFullYear() + 1)
+      } else {
+        expiryDate.setUTCMonth(expiryDate.getUTCMonth() + 1)
+      }
       await prisma.user.update({
         where: { id: session.user.id },
         data: {
