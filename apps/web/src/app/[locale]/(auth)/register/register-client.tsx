@@ -93,7 +93,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   const handleEmailRegister = async () => {
     if (!agreeTerms) {
       setShaking(true)
-      setTermsError(tv('agreeTermsRequired'))
+      setTermsError(t('agreeTermsRequired'))
       return
     }
     if (!email || !emailCode) {
@@ -149,7 +149,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
     setErrorType('error')
     if (!agreeTerms) {
       setShaking(true)
-      setTermsError(tv('agreeTermsRequired'))
+      setTermsError(t('agreeTermsRequired'))
       return
     }
     try {
