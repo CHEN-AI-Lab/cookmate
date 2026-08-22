@@ -446,7 +446,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                   type="email"
                   placeholder={t('emailPlaceholder')}
                   value={email}
-                  onChange={(e) => { setEmail(e.target.value); setEmailCodeSent(false) }}
+                  onChange={(e) => { setEmail(e.target.value); if (e.target.value === '') setEmailCodeSent(false) }}
                   className="flex-1 border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 bg-card"
                 />
                 <button
@@ -471,6 +471,15 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                     className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 bg-card mt-1.5"
                   />
                 </div>
+                {error && tab === "email" && (
+                  <div className={`text-xs rounded-xl px-3 py-2 ${
+                    error.includes("dev") ? "bg-success/10 border border-success/25 text-success"
+                    : error.includes("sent") ? "bg-info/10 border border-info/25 text-info"
+                    : "bg-error/10 border border-error/25 text-error"
+                  }`}>
+                    {error}
+                  </div>
+                )}
                 <button
                   onClick={handleEmailVerify}
                   disabled={loading === "email_login" || !emailCode}
@@ -481,15 +490,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 {emailMsg && (
                   <div className="text-xs text-success bg-success/10 border border-success/25 rounded-xl px-3 py-2">
                     {emailMsg}
-                  </div>
-                )}
-                {error && tab === "email" && (
-                  <div className={`text-xs rounded-xl px-3 py-2 ${
-                    error.includes("dev") ? "bg-success/10 border border-success/25 text-success"
-                    : error.includes("sent") ? "bg-info/10 border border-info/25 text-info"
-                    : "bg-error/10 border border-error/25 text-error"
-                  }`}>
-                    {error}
                   </div>
                 )}
               </>
@@ -524,7 +524,16 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 onChange={setPassword}
                 className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 bg-card mt-1.5"
               />
-            </div>            <button
+            </div>
+            {error && tab === "password" && !passwordSetupMode && (
+              <div className={`text-xs rounded-xl px-3 py-2 ${
+                error.includes("dev") ? "bg-success/10 border border-success/25 text-success"
+                : "bg-error/10 border border-error/25 text-error"
+              }`}>
+                {error}
+              </div>
+            )}
+            <button
               onClick={handlePasswordLogin}
               disabled={loading === "password" || !email || !password}
               className="w-full bg-accent text-white rounded-xl py-3 font-medium hover:bg-orange-600 disabled:bg-gray-300 disabled:text-text-secondary transition-all active:scale-[0.98]"
@@ -586,6 +595,14 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent bg-card mt-1.5"
               />
             </div>
+            {error && tab === "password" && passwordSetupMode && (
+              <div className={`text-xs rounded-xl px-3 py-2 ${
+                error.includes("dev") ? "bg-success/10 border border-success/25 text-success"
+                : "bg-error/10 border border-error/25 text-error"
+              }`}>
+                {error}
+              </div>
+            )}
             <button
               onClick={handleSetupPassword}
               disabled={loading === "setup_submit" || !setupCode || !setupNewPassword || !setupConfirmPassword}
@@ -599,16 +616,6 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
             >
               {t('backToLogin')}
             </button>
-          </div>
-        )}
-
-        {/* 非邮箱 tab 的错误提示 */}
-        {error && tab !== "email" && (
-          <div className={`mt-2 p-3 rounded-xl text-sm text-center ${
-            error.includes("dev") ? "bg-success/10 border border-success/25 text-success"
-            : "bg-error/10 border border-error/25 text-error"
-          }`}>
-            {error}
           </div>
         )}
 
