@@ -32,6 +32,7 @@ import WeChatProvider from "@/lib/providers/wechat"
 import { hasDemoCookie, DEMO_SESSION } from "@cookmate/shared/utils/demo-cookie"
 import { cookies } from "next/headers"
 import { checkLoginRateLimit, recordLoginAttempt } from "@cookmate/shared/utils/login-rate-limit"
+import { checkOtpRateLimit, recordOtpAttempt } from "@cookmate/shared/utils/otp-rate-limit"
 
 const providers = []
 
@@ -52,6 +53,10 @@ providers.push(
 
       if (!phone || !code) return null
 
+      // 防爆破：同一手机号失败次数过多则锁定
+      const rateKey = `otp:${phone}`
+      if (!checkOtpRateLimit(rateKey).allowed) return null
+
       // 查找未使用的验证码
       const record = await prisma.verificationCode.findFirst({
         where: {
@@ -63,7 +68,8 @@ providers.push(
         orderBy: { createdAt: "desc" },
       })
 
-      if (!record) return null
+      if (!record) { recordOtpAttempt(rateKey, false); return null }
+      recordOtpAttempt(rateKey, true)
 
       // 标记为已使用
       await prisma.verificationCode.update({
@@ -103,6 +109,10 @@ providers.push(
 
       if (!email || !code) return null
 
+      // 防爆破：同一邮箱失败次数过多则锁定
+      const rateKey = `otp:${email}`
+      if (!checkOtpRateLimit(rateKey).allowed) return null
+
       // 查找未使用的验证码
       const record = await prisma.verificationCode.findFirst({
         where: {
@@ -114,7 +124,8 @@ providers.push(
         orderBy: { createdAt: "desc" },
       })
 
-      if (!record) return null
+      if (!record) { recordOtpAttempt(rateKey, false); return null }
+      recordOtpAttempt(rateKey, true)
 
       // 标记为已使用
       await prisma.verificationCode.update({
@@ -188,7 +199,6 @@ if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
-      allowDangerousEmailAccountLinking: true,
     })
   )
 }
@@ -199,7 +209,6 @@ if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID,
       clientSecret: process.env.AUTH_GITHUB_SECRET,
-      allowDangerousEmailAccountLinking: true,
     })
   )
 }
@@ -309,6 +318,7 @@ const { handlers: nextAuthHandlers, auth: nextAuthAuth, signIn, signOut } = Next
   },
   pages: {
     signIn: "/login",
+    error: "/error",
     newUser: "/app/dashboard",
   },
 })
@@ -321,7 +331,7 @@ export async function auth() {
 
   // 检查 demo cookie
   const cookieStore = await cookies()
-  if (hasDemoCookie(cookieStore.toString())) {
+  if (await hasDemoCookie(cookieStore.toString())) {
     return DEMO_SESSION
   }
 

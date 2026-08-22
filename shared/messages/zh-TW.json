@@ -175,7 +175,24 @@
     "githubRevokeNote": "GitHub 網站不支援自動解綁，解綁後請前往 GitHub 設定 → 應用程式 手動取消授權。",
     "cannotUnlinkEmail": "該登入方式不可解綁",
     "mustKeepOneMethod": "至少需要保留一種登入方式",
-    "connectedAccounts": "已綁定帳號"
+    "connectedAccounts": "已綁定帳號",
+    "agreeTerms": "我已閱讀並同意 <terms>《服務條款》</terms> 和 <privacy>《隱私政策》</privacy>",
+    "agreeTermsShort": "我已閱讀並同意《服務條款》和《隱私政策》",
+    "continueOAuth": "繼續即表示您同意我們的 <terms>《服務條款》</terms> 和 <privacy>《隱私政策》</privacy>",
+    "noAccount": "還沒有帳號？",
+    "socialRegister": "其他註冊方式",
+    "emailRegistered": "該郵箱已註冊",
+    "emailNotRegistered": "該郵箱未註冊",
+    "oauthAccountNotLinked": "該信箱已綁定其他帳號，請先登入後<link>關聯此帳號</link>。",
+    "oauthAccessDenied": "你取消了第三方授權。要繼續，請重新點擊第三方登入按鈕。",
+    "oauthConfigError": "第三方登入服務設定錯誤，請稍後再試，或用信箱驗證碼/密碼登入。",
+    "oauthErrorGeneric": "第三方登入失敗，請重試，或改用信箱驗證碼/密碼登入。",
+    "linkErrorTitle": "連線失敗",
+    "linkEmailTaken": "該信箱已被其他帳號綁定",
+    "linkEmailTakenDesc": "你嘗試關聯的社交帳號已被其他帳號使用。請先用那個帳號登入，再在帳號設定中重新關聯。",
+    "linkOtherError": "登入過程中出現問題，請重試。",
+    "backToAccount": "返回帳號設定",
+    "backHome": "返回首頁"
   },
   "validation": {
     "invalidPhone": "請輸入正確的11位手機號",
@@ -204,7 +221,10 @@
     "oauthNotConfigured": "該登錄方式尚未配置，上線後即可使用",
     "emailNotRegistered": "該郵箱未註冊",
     "email": "郵箱",
-    "agreeTermsRequired": "請先勾選同意《服務條款》和《隱私政策》"
+    "agreeTermsRequired": "請先勾選同意《服務條款》和《隱私政策》",
+    "emailAlreadyRegistered": "該郵箱已註冊，請直接登入",
+    "emptyPhoneAndCode": "請輸入手機號碼和驗證碼",
+    "emptyEmailAndCode": "請輸入郵箱和驗證碼"
   },
   "dashboard": {
     "welcomeBack": "👋 歡迎回來",
@@ -857,6 +877,10 @@
     "enterIngredientName": "請輸入食材名稱",
     "phoneBound": "該手機號已被其他賬號綁定",
     "emailBound": "該郵箱已被其他賬號綁定",
+    "emailAlreadyRegistered": "該郵箱已註冊，請直接登入",
+    "emptyPhoneAndCode": "請輸入手機號碼和驗證碼",
+    "emptyEmailAndCode": "請輸入郵箱和驗證碼",
+    "verifyFailed": "驗證失敗",
     "codeExpired": "驗證碼錯誤或已過期",
     "emailSendFailed": "郵件發送失敗，請稍後重試",
     "invalidPassword": "密碼錯誤",

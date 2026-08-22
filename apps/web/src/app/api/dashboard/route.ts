@@ -45,11 +45,13 @@ export async function GET(req: Request) {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { subscriptionTier: true, subscriptionExpiryDate: true, creemSubscriptionId: true },
+      select: { subscriptionTier: true, subscriptionExpiryDate: true, creemSubscriptionId: true, stripeSubscriptionId: true },
     }).catch((err: unknown) => { console.error("findUnique user error:", err); return null })
 
     const tier = await checkSubscription(userId, user)
-    const cancelled = tier === "PRO" && !user?.creemSubscriptionId
+    // 仅当为 PRO 且不存在任何有效订阅记录（Creem/Stripe）时才视为已取消。
+    // 原实现只看 creemSubscriptionId，会把 Stripe 订阅错误地标记为已取消。
+    const cancelled = tier === "PRO" && !user?.creemSubscriptionId && !user?.stripeSubscriptionId
 
     // 最近订单
     const orders = await prisma.paymentOrder.findMany({

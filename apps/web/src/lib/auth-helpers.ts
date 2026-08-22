@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { isExpired } from "@cookmate/shared/utils/subscription"
 
 export function isDemoUser(session: unknown): boolean {
   if (!session || typeof session !== "object") return false
@@ -20,7 +21,10 @@ export async function checkUsageLimit(userId: string): Promise<boolean> {
     where: { id: userId },
   })
   if (!user) return false
-  if (user.subscriptionTier !== "FREE") return true
+
+  // 已过期的高级订阅视为 FREE，强制执行每日生成上限（原实现忽略过期日期）
+  const expired = user.subscriptionExpiryDate != null && isExpired(user.subscriptionExpiryDate)
+  if (user.subscriptionTier !== "FREE" && !expired) return true
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)

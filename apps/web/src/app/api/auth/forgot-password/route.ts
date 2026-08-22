@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import { sendEmail } from "@cookmate/shared/utils/email"
+import { checkOtpRateLimit, recordOtpAttempt } from "@cookmate/shared/utils/otp-rate-limit"
 import crypto from "node:crypto"
 import bcrypt from "bcryptjs"
 
@@ -86,14 +87,23 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: err(loc, "missingFields") }, { status: 400 })
     }
 
+    // 防爆破：同一邮箱失败次数过多则锁定
+    const rateKey = `otp:${email}`
+    const rate = checkOtpRateLimit(rateKey)
+    if (!rate.allowed) {
+      return NextResponse.json({ error: "尝试次数过多，请 15 分钟后再试" }, { status: 429 })
+    }
+
     // 验证验证码
     const record = await prisma.verificationCode.findFirst({
       where: { email, code, used: false, expiresAt: { gte: new Date() } },
       orderBy: { createdAt: "desc" },
     })
     if (!record) {
+      recordOtpAttempt(rateKey, false)
       return NextResponse.json({ error: err(loc, "invalidCode") }, { status: 400 })
     }
+    recordOtpAttempt(rateKey, true)
 
     // 标记验证码已使用
     await prisma.verificationCode.update({

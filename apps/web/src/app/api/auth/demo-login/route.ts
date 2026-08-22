@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     demoRateMap.set(ip, now)
 
     const headers = new Headers()
-    headers.append("Set-Cookie", buildSetDemoCookieHeader())
+    headers.append("Set-Cookie", await buildSetDemoCookieHeader())
 
     return NextResponse.json(
       { success: true, user: DEMO_SESSION.user },

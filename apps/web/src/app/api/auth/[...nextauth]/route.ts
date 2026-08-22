@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   // 拦截 session 请求：如果 demo cookie 存在，返回 demo session
   if (url.pathname.endsWith("/session")) {
     const cookieHeader = req.headers.get("cookie")
-    if (hasDemoCookie(cookieHeader)) {
+    if (await hasDemoCookie(cookieHeader)) {
       return Response.json(DEMO_SESSION)
     }
   }

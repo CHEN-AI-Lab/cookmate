@@ -164,10 +164,8 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
         return
       }
       if (result?.url) {
-        // external OAuth URL — keep window.location
-        if (result.url && result.url.startsWith("/")) {
-          router?.push(result.url)
-        }
+        // OAuth 授权后是外部跳转地址（如 accounts.google.com），必须用 window.location 跳转
+        window.location.href = result.url
       }
     } catch {
       setError(tv('oauthNotConfigured'))

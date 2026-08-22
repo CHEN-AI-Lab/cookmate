@@ -19,9 +19,14 @@ export async function POST(req: Request) {
       return new NextResponse("failure", { status: 400 })
     }
 
-    // 验证签名
-    const publicKey = process.env.AUTH_ALIPAY_PUBLIC_KEY || ""
-    if (publicKey && !verifyNotify(params, publicKey)) {
+    // 验证签名（fail-closed）：未配置公钥时无法验证回调真实性，
+    // 绝不能据此升级用户为 PRO，直接拒绝。原实现在公钥缺失时会跳过验签并照常处理。
+    const publicKey = process.env.AUTH_ALIPAY_PUBLIC_KEY
+    if (!publicKey) {
+      console.error("Alipay notify: AUTH_ALIPAY_PUBLIC_KEY 未配置，拒绝未验签的回调")
+      return new NextResponse("failure", { status: 400 })
+    }
+    if (!verifyNotify(params, publicKey)) {
       console.error("Alipay notify: signature verification failed")
       return new NextResponse("failure", { status: 400 })
     }

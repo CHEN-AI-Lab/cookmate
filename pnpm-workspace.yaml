@@ -10,5 +10,4 @@ onlyBuiltDependencies:
   - unrs-resolver
 
 overrides:
-  nodemailer: 8.0.11
   deepmerge-ts: 8.0.1

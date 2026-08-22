@@ -5,8 +5,9 @@ import { useState, useEffect, useRef } from "react"
 import PasswordInput from "@/components/ui/PasswordInput"
 import Link from "next/link"
 import OAuthLoadingOverlay from "@/components/ui/OAuthLoadingOverlay"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
+import { useSearchParams } from "next/navigation"
 
 export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boolean; userName?: string }) {
   const t = useTranslations('auth')
@@ -24,6 +25,26 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const router = useRouter()
   const [oauthProvider, setOauthProvider] = useState<string | null>(null)
+
+  // OAuth 回调失败（如邮箱已绑定其他账号）回跳时读取 ?error= 展示提示横幅
+  // 用 useSearchParams 在惰性初始化里读参数，避免 useEffect 内同步 setState 触发 lint 规则
+  const searchParams = useSearchParams()
+  const [oauthError] = useState<string | null>(() => searchParams.get("error"))
+  const [oauthBannerDismissed, setOauthBannerDismissed] = useState(false)
+  const locale = useLocale()
+  // 仅未登录时展示；关闭后用 history.replaceState 清掉 URL 上的 ?error=，避免刷新重现
+  const showOauthError = !!oauthError && !oauthBannerDismissed && !isLoggedIn
+  const dismissOauthError = () => {
+    setOauthBannerDismissed(true)
+    const params = new URLSearchParams(window.location.search)
+    params.delete("error")
+    const qs = params.toString()
+    window.history.replaceState({}, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`)
+  }
+  const OAUTH_ERROR_KEYS: Record<string, string> = {
+    AccessDenied: "oauthAccessDenied",
+    Configuration: "oauthConfigError",
+  }
 
   // 密码设置模式（在密码登录 tab 中设密码）
   const [passwordSetupMode, setPasswordSetupMode] = useState(false)
@@ -351,6 +372,35 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
               <Link href="/app/dashboard" className="flex-1 bg-info text-white text-center text-sm py-2 rounded-lg hover:bg-info/90">{t('enterDashboard')}</Link>
               <button onClick={() => signOut({ callbackUrl: "/" })} className="flex-1 bg-card text-text-secondary text-center text-sm py-2 rounded-lg border border-border hover:bg-surface">{tc('logout')}</button>
             </div>
+          </div>
+        )}
+
+        {/* OAuth 错误提示横幅：邮箱已绑定其他账号 / 取消授权 / 配置异常 */}
+        {showOauthError && (
+          <div className="relative mb-6 p-3 pr-8 rounded-xl bg-error/10 border border-error/25 text-xs text-error leading-relaxed">
+            <button
+              type="button"
+              onClick={dismissOauthError}
+              aria-label={tc('close')}
+              className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded-full text-error/60 hover:text-error hover:bg-error/10 transition-colors"
+            >
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+            {oauthError === 'OAuthAccountNotLinked' ? (
+              <p>
+                {t.rich('oauthAccountNotLinked', {
+                  link: (chunks) => (
+                    <Link href={`/${locale}/login?callbackUrl=/${locale}/app/settings`} className="text-accent font-medium hover:underline">
+                      {chunks}
+                    </Link>
+                  ),
+                })}
+              </p>
+            ) : (
+              <p>{t((oauthError && OAUTH_ERROR_KEYS[oauthError]) || 'oauthErrorGeneric')}</p>
+            )}
           </div>
         )}
 

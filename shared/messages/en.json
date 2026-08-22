@@ -182,7 +182,17 @@
     "githubRevokeNote": "GitHub website does not support automatic unbinding. After unlinking, please go to GitHub Settings → Applications to cancel authorization manually.",
     "cannotUnlinkEmail": "This login method cannot be unlinked",
     "mustKeepOneMethod": "You must keep at least one login method",
-    "connectedAccounts": "Connected"
+    "connectedAccounts": "Connected",
+    "oauthAccountNotLinked": "This email is linked to another account. Please sign in first, then <link>link this account</link>.",
+    "oauthAccessDenied": "You cancelled the third-party authorization. To continue, please click the third-party sign-in button again.",
+    "oauthConfigError": "The third-party sign-in service is misconfigured. Please try again later or sign in with your email.",
+    "oauthErrorGeneric": "Third-party sign-in failed. Please try again, or sign in with your email verification code or password.",
+    "linkErrorTitle": "Connection failed",
+    "linkEmailTaken": "This email is already linked to another account",
+    "linkEmailTakenDesc": "The social account you tried to link is already in use by another account. Please sign in with that account first, then link again from the account settings.",
+    "linkOtherError": "Something went wrong during sign-in. Please try again.",
+    "backToAccount": "Back to Account Settings",
+    "backHome": "Back to Home"
   },
   "validation": {
     "invalidPhone": "Please enter a valid 11-digit phone number",

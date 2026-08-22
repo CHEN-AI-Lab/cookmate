@@ -29,41 +29,37 @@ export async function POST(req: Request) {
 
     // saveOnly 模式：直接保存菜谱到数据库，不调用 AI
     if (saveOnly) {
-      const normalizedName = (title || "").trim().toLowerCase()
-      if (!normalizedName) return NextResponse.json({ error: e("请输入菜谱名称", "Please enter a recipe name") }, { status: 400 })
-      try {
-        const saved = await prisma.recipe.create({
-          data: {
-            userId: session.user.id,
-            title: normalizedName,
-            description: description || "",
-            ingredients: Array.isArray(ingredients) ? ingredients.join("、") : (ingredients || ""),
-            steps: Array.isArray(steps) ? steps.join("\n") : (steps || ""),
-            cookingTime: cookingTime ? Number(cookingTime) : null,
-            calories: calories ? Number(calories) : null,
-            cuisineType: cuisineType || null,
-            difficulty: difficulty || null,
-            isGenerated: true,
-            starred: starred ?? false,
-          },
+      const trimmedTitle = (title || "").trim()
+      if (!trimmedTitle) return NextResponse.json({ error: e("请输入菜谱名称", "Please enter a recipe name") }, { status: 400 })
+
+      // Case-insensitive dedup: if a recipe with the same title (any case) exists, toggle starred instead of creating a duplicate.
+      const existing = await prisma.recipe.findFirst({
+        where: { userId: session.user.id, title: { equals: trimmedTitle, mode: "insensitive" } },
+      })
+      if (existing) {
+        const updated = await prisma.recipe.update({
+          where: { id: existing.id },
+          data: { starred: starred ?? !existing.starred },
         })
-        return NextResponse.json({ recipe: saved })
-      } catch (err: unknown) {
-        const prismaErr = err as { code?: string; message?: string }
-        if (prismaErr.code === "P2002") {
-          const existing = await prisma.recipe.findFirst({
-            where: { userId: session.user.id, title: normalizedName },
-          })
-          if (existing) {
-            const updated = await prisma.recipe.update({
-              where: { id: existing.id },
-              data: { starred: starred ?? !existing.starred },
-            })
-            return NextResponse.json({ recipe: updated })
-          }
-        }
-        throw err
+        return NextResponse.json({ recipe: updated })
       }
+
+      const saved = await prisma.recipe.create({
+        data: {
+          userId: session.user.id,
+          title: trimmedTitle,
+          description: description || "",
+          ingredients: Array.isArray(ingredients) ? ingredients.join("、") : (ingredients || ""),
+          steps: Array.isArray(steps) ? steps.join("\n") : (steps || ""),
+          cookingTime: cookingTime ? Number(cookingTime) : null,
+          calories: calories ? Number(calories) : null,
+          cuisineType: cuisineType || null,
+          difficulty: difficulty || null,
+          isGenerated: true,
+          starred: starred ?? false,
+        },
+      })
+      return NextResponse.json({ recipe: saved })
     }
 
     if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
@@ -113,12 +109,20 @@ export async function POST(req: Request) {
     // 保存生成的菜谱到数据库
     const savedRecipes = []
     for (const recipe of recipes) {
-      const normalizedName = recipe.title.trim().toLowerCase()
+      const trimmedTitle = recipe.title.trim()
+      // Case-insensitive dedup: skip if a recipe with the same title already exists.
+      const existing = await prisma.recipe.findFirst({
+        where: { userId: session.user.id, title: { equals: trimmedTitle, mode: "insensitive" } },
+      })
+      if (existing) {
+        savedRecipes.push({ ...recipe, id: existing.id })
+        continue
+      }
       try {
         const saved = await prisma.recipe.create({
           data: {
             userId: session.user.id,
-            title: normalizedName,
+            title: trimmedTitle,
             description: recipe.description || "",
             ingredients: normalizeIngredients(recipe.ingredients).join(", "),
             steps: Array.isArray(recipe.steps) ? recipe.steps.join("\n") : (recipe.steps || ""),

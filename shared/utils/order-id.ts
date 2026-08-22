@@ -2,14 +2,17 @@
 // 格式: CK + 渠道缩写 + YYYYMMDD + 8位随机十六进制
 // 示例: CKAL20240707A3F9B2C1
 
+import crypto from "node:crypto"
+
 const CHANNEL_PREFIX: Record<string, string> = {
   alipay: "AL",
   creem: "CR",
   stripe: "ST",
 }
 
+// 使用密码学安全的随机数生成器，避免订单号被猜测（原实现使用 Math.random）
 function randomHex(length: number): string {
-  return Array.from({ length }, () => Math.floor(Math.random() * 16).toString(16).toUpperCase()).join("")
+  return crypto.randomBytes(Math.ceil(length / 2)).toString("hex").slice(0, length).toUpperCase()
 }
 
 function todayDate(): string {

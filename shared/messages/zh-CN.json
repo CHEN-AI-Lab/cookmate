@@ -182,7 +182,17 @@
     "githubRevokeNote": "GitHub 网站不支持自动解绑，解绑后请前往 GitHub 设置 → 应用 手动取消授权。",
     "cannotUnlinkEmail": "该登录方式不可解绑",
     "mustKeepOneMethod": "至少需要保留一种登录方式",
-    "connectedAccounts": "已绑定账号"
+    "connectedAccounts": "已绑定账号",
+    "oauthAccountNotLinked": "该邮箱已绑定其他账号，请先登录后<link>关联此账号</link>。",
+    "oauthAccessDenied": "你取消了第三方授权。要继续，请重新点击第三方登录按钮。",
+    "oauthConfigError": "第三方登录服务配置错误，请稍后再试，或用邮箱验证码/密码登录。",
+    "oauthErrorGeneric": "第三方登录失败，请重试，或改用邮箱验证码/密码登录。",
+    "linkErrorTitle": "连接失败",
+    "linkEmailTaken": "该邮箱已被其他账号绑定",
+    "linkEmailTakenDesc": "你尝试关联的社交账号已被其他账号使用。请先用那个账号登录，再在账号设置中重新关联。",
+    "linkOtherError": "登录过程中出现问题，请重试。",
+    "backToAccount": "返回账号设置",
+    "backHome": "返回首页"
   },
   "validation": {
     "invalidPhone": "请输入正确的11位手机号",
