@@ -91,6 +91,11 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   }
 
   const handleEmailRegister = async () => {
+    if (!agreeTerms) {
+      setShaking(true)
+      setTermsError(tv('agreeTermsRequired'))
+      return
+    }
     if (!email || !emailCode) {
       setError(tv('emptyEmailAndCode'))
       setErrorType('error')
@@ -142,6 +147,11 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
       setOauthProvider(provider)
     setError("")
     setErrorType('error')
+    if (!agreeTerms) {
+      setShaking(true)
+      setTermsError(tv('agreeTermsRequired'))
+      return
+    }
     try {
       if (isLoggedIn) {
         await signOut({ redirect: false })

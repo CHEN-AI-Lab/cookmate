@@ -392,9 +392,21 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
               <p>
                 {t.rich('oauthAccountNotLinked', {
                   link: (chunks) => (
-                    <Link href={`/${locale}/login?callbackUrl=/${locale}/app/settings`} className="text-accent font-medium hover:underline">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // 先清掉 URL 上的 ?error= 参数，再用硬跳转导航到登录页
+                        // 避免同一页面内 Link 导航时 error 参数残留导致 Banner 重新出现
+                        const params = new URLSearchParams(window.location.search)
+                        params.delete('error')
+                        const qs = params.toString()
+                        window.history.replaceState({}, '', `${window.location.pathname}${qs ? `?${qs}` : ''}`)
+                        window.location.href = `/${locale}/login?callbackUrl=/${locale}/app/settings`
+                      }}
+                      className="text-accent font-medium hover:underline"
+                    >
                       {chunks}
-                    </Link>
+                    </button>
                   ),
                 })}
               </p>
