@@ -96,11 +96,6 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
       setErrorType('error')
       return
     }
-    if (!agreeTerms) {
-      setShaking(true)
-      setTermsError(tv('agreeTermsRequired'))
-      return
-    }
     if (password && password !== confirmPassword) {
       setError(tv('passwordMismatch'))
       setErrorType('error')
@@ -143,11 +138,6 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   }
 
   const handleOAuth = async (provider: string) => {
-      if (provider !== "demo" && !agreeTerms) {
-        setShaking(true)
-        setTermsError(tv('agreeTermsRequired'))
-        return
-      }
       setTermsError("")
       setOauthProvider(provider)
     setError("")
