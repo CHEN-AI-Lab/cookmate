@@ -51,6 +51,8 @@ const user = await prisma.user.findUnique({
       subscriptionExpiryDate: user.subscriptionExpiryDate?.toISOString() || null,
       isDemoUser: isDemoUser(session),
       accounts: user.accounts.map((a) => ({ provider: a.provider })),
+      googleConfigured: !!(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET),
+      githubConfigured: !!(process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET),
     })
   } catch (error) {
     console.error("Profile GET:", error)

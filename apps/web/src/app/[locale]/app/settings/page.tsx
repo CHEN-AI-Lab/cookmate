@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "@/i18n/navigation"
 import { useTranslations, useLocale } from "next-intl"
-import { signOut } from "next-auth/react"
+import { signIn, signOut } from "next-auth/react"
 import Link from "next/link"
 import PasswordInput from "@/components/ui/PasswordInput"
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from "@cookmate/shared/constants"
@@ -28,7 +28,7 @@ export default function SettingsPage() {
     "中东菜": ts("cuisineMiddleEastern"), "墨西哥菜": ts("cuisineMexican"),
   }
   const [settings, setSettings] = useState<{ dietType: string; cuisinePref: string[]; servingSize: number; subscriptionTier: string }>({ dietType: DIET_OPTIONS[0], cuisinePref: [] as string[], servingSize: 2, subscriptionTier: "FREE" })
-  const [profile, setProfile] = useState<{ name: string; phone: string; email: string; loginMethod: string; createdAt: string; hasPassword?: boolean; isDemoUser?: boolean; accounts: { provider: string }[] } | null>(null)
+  const [profile, setProfile] = useState<{ name: string; phone: string; email: string; loginMethod: string; createdAt: string; hasPassword?: boolean; isDemoUser?: boolean; googleConfigured?: boolean; githubConfigured?: boolean; accounts: { provider: string }[] } | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [showSaved, setShowSaved] = useState(false)
@@ -144,6 +144,16 @@ export default function SettingsPage() {
     setUnlinkConfirmProvider(provider)
     setUnlinkError("")
     setNeedsManualRevoke(false)
+  }
+
+  // ── 关联 OAuth：已登录用户点"关联" → 走 OAuth 授权 → Auth.js 自动把新账号绑到当前用户 ──
+  const handleLink = async (provider: string) => {
+    try {
+      await signIn(provider, { callbackUrl: `/${locale}/app/settings?linked=${provider}` })
+    } catch {
+      setAccountMsg(ta("linkFailed"))
+      setTimeout(() => setAccountMsg(""), 3000)
+    }
   }
 
   const handleUnlinkConfirm = async () => {
@@ -457,7 +467,7 @@ const save = async () => {
                 )}
 
                 {/* OAuth Connected Accounts */}
-                {profile && profile.accounts && profile.accounts.length > 0 && (
+                {profile && (profile.accounts.length > 0 || profile.googleConfigured || profile.githubConfigured) && (
                   <div className="flex items-center py-2 border-b border-border">
                     <span className="text-sm text-text-secondary">{ta("connectedAccounts")}</span>
                     <div className="flex gap-2 flex-wrap ml-auto">
@@ -481,6 +491,18 @@ const save = async () => {
                             </button>
                           </span>
                         ))}
+                      {profile.googleConfigured && !profile.accounts.some((a) => a.provider === "google") && (
+                        <button onClick={() => handleLink("google")}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-accent text-white rounded-lg text-xs hover:opacity-90 transition-opacity">
+                          + {ta("linkGoogle")}
+                        </button>
+                      )}
+                      {profile.githubConfigured && !profile.accounts.some((a) => a.provider === "github") && (
+                        <button onClick={() => handleLink("github")}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-accent text-white rounded-lg text-xs hover:opacity-90 transition-opacity">
+                          + {ta("linkGitHub")}
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
