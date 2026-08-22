@@ -27,43 +27,6 @@ function hasAIKey(): boolean {
   return !!(process.env.AI_API_KEY || process.env.OPENAI_API_KEY)
 }
 
-/**
- * 强制关闭推理/思考模式所需的参数
- *
- * 当前使用的 Sensenova API：
- *   - sensenova-6.7-flash-lite: reasoning_effort: "none"
- *   - deepseek-v4-flash（通过 Sensenova 接入）: reasoning_effort: "none"
- * 参考文档：https://platform.sensenova.cn/docs
- *
- * 注意：Sensenova 提供的 DeepSeek 模型用 reasoning_effort: "none" 关闭思考，
- * 但 DeepSeek 官方 API 用的是不同的参数（如 thinking: { type: "disabled" }）。
- * extra_body 里的参数是为后期更换 API 提供商时的兜底，不要删。
- */
-function disableThinkingParams(): Record<string, unknown> {
-  return {
-    // Sensenova API（含 DeepSeek V4 Flash）: reasoning_effort: "none"
-    reasoning_effort: 'none',
-    // 以下为后期更换 API 提供商时的兜底参数
-    // 不同 API 的关闭思考方式不同（thinking/reasoning/enable_thinking 等），
-    // 多写几种方式，换 API 时无需改代码
-    extra_body: {
-      // Anthropic 风格
-      thinking: { type: "disabled" },
-      // 布尔开关型
-      reasoning: false,
-      enable_thinking: false,
-      // 负向开关型
-      disable_reasoning: true,
-      no_reasoning: true,
-      // 模式参数型
-      reasoning_mode: "off",
-      // 其他命名变体
-      think: false,
-      thinking_enabled: false,
-    },
-  }
-}
-
 /** 通用 AI 调用：先用 json_object 模式，不支持则自动降级 */
 async function callAI(params: {
   systemPrompt: string
@@ -87,7 +50,6 @@ async function callAI(params: {
         response_format: { type: "json_object" } as const,
         temperature: 0.7,
         max_tokens: maxTokens,
-        ...disableThinkingParams(),
       } as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming)
       const content = response.choices[0]?.message?.content
       if (content) return cleanJSONResponse(content)
@@ -106,7 +68,6 @@ async function callAI(params: {
     ],
     temperature: 0.7,
     max_tokens: maxTokens,
-    ...disableThinkingParams(),
   } as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming)
   const content = response.choices[0]?.message?.content
   if (!content) throw new Error("AI 没有返回内容")
@@ -309,7 +270,7 @@ export async function generateWeeklyPlan(
   const planClient = new OpenAI({
       apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
       baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
-      timeout: 10000, // Vercel Hobby 10s 超时上限
+      timeout: 120000, // 与 main 一致：120s。10s 内生成不完 21 餐 JSON，必超时
       maxRetries: 0,
     })
 
@@ -386,9 +347,11 @@ function getMockRecipes(
 
   if (ingredients.length === 0) return all
   const inputLower = ingredients.map((i) => i.trim().toLowerCase())
-  return all.filter((recipe) =>
+  const matched = all.filter((recipe) =>
     recipe.ingredients.some((ri) => inputLower.some((ii) => ri.toLowerCase().includes(ii) || ii.includes(ri.toLowerCase())))
   )
+  // 匹配不到时返回全部推荐，避免空数组让用户误以为"生成失败"
+  return matched.length > 0 ? matched : all
 }
 
 function getMockRecipesEn(
@@ -414,9 +377,11 @@ function getMockRecipesEn(
 
   if (ingredients.length === 0) return all
   const inputLower = ingredients.map((i) => i.trim().toLowerCase())
-  return all.filter((recipe) =>
+  const matched = all.filter((recipe) =>
     recipe.ingredients.some((ri) => inputLower.some((ii) => ri.toLowerCase().includes(ii) || ii.includes(ri.toLowerCase())))
   )
+  // 匹配不到时返回全部推荐，避免空数组让用户误以为"生成失败"
+  return matched.length > 0 ? matched : all
 }
 
 function getMockWeeklyPlan(
