@@ -87,6 +87,20 @@ export default function SettingsPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  // OAuth 关联回跳：提示结果并清理 URL 参数（linkError=bound 邮箱/账号已被其他账号绑定）
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const linkError = params.get("linkError")
+    const linked = params.get("linked")
+    if (linkError) {
+      setAccountMsg(linkError === "failed" ? ta("linkFailed") : ta("linkEmailTaken"))
+      setTimeout(() => setAccountMsg(""), 3000)
+      window.history.replaceState({}, "", `/${locale}/app/settings`)
+    } else if (linked) {
+      window.history.replaceState({}, "", `/${locale}/app/settings`)
+    }
+  }, [locale, ta])
+
   const saveName = async () => {
     if (!editNameValue.trim() || editNameValue.trim() === profile?.name) {
       setEditingName(false)

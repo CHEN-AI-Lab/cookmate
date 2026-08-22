@@ -31,6 +31,7 @@ import AlipayProvider from "@/lib/providers/alipay"
 import WeChatProvider from "@/lib/providers/wechat"
 import { hasDemoCookie, DEMO_SESSION } from "@cookmate/shared/utils/demo-cookie"
 import { cookies } from "next/headers"
+import { decode } from "next-auth/jwt"
 import { checkLoginRateLimit, recordLoginAttempt } from "@cookmate/shared/utils/login-rate-limit"
 import { checkOtpRateLimit, recordOtpAttempt } from "@cookmate/shared/utils/otp-rate-limit"
 
@@ -253,27 +254,102 @@ providers.push(
 // 防止体验用户 session 被用于关联真实 OAuth 账号
 // 见 /api/auth/demo-login 和 lib/demo-cookie.ts
 
+// 读取当前登录会话的用户 id（"关联账号"场景判定：已登录用户发起的 OAuth = 关联操作）。
+// 直接解码 session cookie，避免在回调里递归调用 auth()；
+// 体验用户走独立 demo cookie（无 NextAuth session），解码结果为 null，天然不会进关联分支
+async function getSessionUserId(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies()
+    const cookieName = cookieStore.get("__Secure-authjs.session-token")
+      ? "__Secure-authjs.session-token"
+      : "authjs.session-token"
+    const token = cookieStore.get(cookieName)?.value
+    if (!token) return null
+    const decoded = await decode({
+      token,
+      salt: cookieName,
+      secret: process.env.AUTH_SECRET!,
+    })
+    return decoded?.sub ?? null
+  } catch {
+    return null
+  }
+}
+
 const { handlers: nextAuthHandlers, auth: nextAuthAuth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   providers,
   callbacks: {
-    async signIn({ user, account }) {
-      // OAuth 首次登录时，设置 termsAgreedAt
-      if (account?.type === "oauth" && user.id && user.id !== "demo-user-id") {
-        try {
-          const dbUser = await prisma.user.findUnique({
-            where: { id: user.id },
-            select: { termsAgreedAt: true },
+    async signIn({ user, account, profile }) {
+      if (account?.type === "oauth") {
+        // ── 关联模式：已登录用户从设置页发起 OAuth = "关联账号"操作 ──
+        // signIn() 本质是登录（会把 session 切到 OAuth 身份甚至新建用户），
+        // 真正的关联在这里拦截：返回字符串 = 直接重定向且不签发新 session，当前登录态保持不变
+        const currentUserId = await getSessionUserId()
+        if (currentUserId) {
+          // 该 OAuth 账号是否已被绑定
+          const existingAccount = await prisma.account.findUnique({
+            where: {
+              provider_providerAccountId: {
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+              },
+            },
           })
-          if (dbUser && !dbUser.termsAgreedAt) {
-            await prisma.user.update({
-              where: { id: user.id },
-              data: { termsAgreedAt: new Date() },
-            })
+          if (existingAccount) {
+            // 已绑在当前用户身上 → 放行（正常完成登录，session 不变）
+            if (existingAccount.userId === currentUserId) return true
+            // 绑在别人身上 → 拒绝，不切换登录态
+            return "/app/settings?linkError=bound"
           }
-        } catch (e) {
-          console.error("signIn callback error:", e)
+          // OAuth 邮箱已被其他账号占用 → 拒绝
+          const email = (profile?.email ?? user.email ?? "").trim().toLowerCase()
+          if (email) {
+            const emailOwner = await prisma.user.findUnique({ where: { email } })
+            if (emailOwner && emailOwner.id !== currentUserId) {
+              return "/app/settings?linkError=bound"
+            }
+          }
+          // 无冲突 → 把 OAuth 账号绑到当前用户名下（当前登录态保持不变）
+          try {
+            await prisma.account.create({
+              data: {
+                userId: currentUserId,
+                type: account.type,
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+                refresh_token: account.refresh_token,
+                access_token: account.access_token,
+                expires_at: account.expires_at,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+                session_state: typeof account.session_state === "string" ? account.session_state : null,
+              },
+            })
+            return `/app/settings?linked=${account.provider}`
+          } catch {
+            return "/app/settings?linkError=failed"
+          }
+        }
+        // ── 普通登录（无登录态的 OAuth）→ 原逻辑不变 ──
+        // OAuth 首次登录时，设置 termsAgreedAt
+        if (user.id && user.id !== "demo-user-id") {
+          try {
+            const dbUser = await prisma.user.findUnique({
+              where: { id: user.id },
+              select: { termsAgreedAt: true },
+            })
+            if (dbUser && !dbUser.termsAgreedAt) {
+              await prisma.user.update({
+                where: { id: user.id },
+                data: { termsAgreedAt: new Date() },
+              })
+            }
+          } catch (e) {
+            console.error("signIn callback error:", e)
+          }
         }
       }
       return true
