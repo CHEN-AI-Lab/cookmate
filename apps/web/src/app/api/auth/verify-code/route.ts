@@ -32,6 +32,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
     console.error("Verify code error:", error)
-    return NextResponse.json({ error: err(loc, "sendFailed") }, { status: 500 })
+    return NextResponse.json({ error: err(loc, "verifyFailed") }, { status: 500 })
   }
 }

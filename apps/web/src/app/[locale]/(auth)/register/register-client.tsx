@@ -175,6 +175,11 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   }
 
   const handleDemoLogin = async () => {
+    if (!agreeTerms) {
+      setShaking(true)
+      setTermsError(t('agreeTermsRequired'))
+      return
+    }
     setLoading("demo")
     setError("")
     setErrorType('error')
