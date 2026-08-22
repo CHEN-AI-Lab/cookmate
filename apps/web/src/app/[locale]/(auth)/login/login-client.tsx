@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react"
 import PasswordInput from "@/components/ui/PasswordInput"
 import Link from "next/link"
 import OAuthLoadingOverlay from "@/components/ui/OAuthLoadingOverlay"
+import { useToast } from "@/components/ui/Toast"
 import { useTranslations, useLocale } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { useSearchParams } from "next/navigation"
@@ -32,6 +33,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   const [oauthError] = useState<string | null>(() => searchParams.get("error"))
   const [oauthBannerDismissed, setOauthBannerDismissed] = useState(false)
   const locale = useLocale()
+  const { showToast } = useToast()
   // 仅未登录时展示；关闭后用 history.replaceState 清掉 URL 上的 ?error=，避免刷新重现
   const showOauthError = !!oauthError && !oauthBannerDismissed && !isLoggedIn
   const dismissOauthError = () => {
@@ -118,7 +120,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         setEmailCode(data.devCode)
         setEmailMsg(tv('devCodePrefix') + ' ' + data.devCode)
       } else {
-        setEmailMsg(tv('codeSentEmail'))
+        showToast(tv('codeSentEmail'), 'success')
       }
     } catch {
       setError(tv('sendFailedRetry'))

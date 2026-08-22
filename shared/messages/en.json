@@ -211,7 +211,7 @@
     "passwordMismatch": "Passwords do not match",
     "sendFailed": "Failed to send",
     "sendFailedRetry": "Failed to send, please retry",
-    "verifyFailed": "Verification failed",
+    "verifyFailed": "Invalid or expired code",
     "networkError": "Network error, please try again later",
     "codeSent": "Verification code sent to your phone",
     "codeSentEmail": "Verification code sent to your email",
@@ -893,7 +893,7 @@
     "emailAlreadyRegistered": "This email is already registered. Please log in instead.",
     "emptyPhoneAndCode": "Please enter phone number and verification code",
     "emptyEmailAndCode": "Please enter email and verification code",
-    "verifyFailed": "Verification failed",
+    "verifyFailed": "Invalid or expired code",
     "accountLocked": "Too many failed attempts. Your account is locked for {minutes} minutes.",
     "attemptsRemaining": "({count} attempt(s) remaining)"
   },

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import OAuthLoadingOverlay from "@/components/ui/OAuthLoadingOverlay"
+import { useToast } from "@/components/ui/Toast"
 import { useRouter } from "@/i18n/navigation"
 
 export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: boolean; userName?: string }) {
@@ -11,6 +12,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   const router = useRouter()
   const tv = useTranslations('validation')
   const tc = useTranslations('common')
+  const { showToast } = useToast()
   const [email, setEmail] = useState("")
   const [emailCode, setEmailCode] = useState("")
   const [emailCodeSent, setEmailCodeSent] = useState(false)
@@ -79,8 +81,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
         setError(`${tv('devCodePrefix')} ${data.devCode}`)
         setErrorType('success')
       } else {
-        setError(tv('codeSentEmail'))
-        setErrorType('info')
+        showToast(tv('codeSentEmail'), 'success')
       }
     } catch {
       setError(tv('networkError'))
@@ -93,7 +94,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   const handleEmailRegister = async () => {
     if (!agreeTerms) {
       setShaking(true)
-      setTermsError(t('agreeTermsRequired'))
+      setTermsError(tv('agreeTermsRequired'))
       return
     }
     if (!email || !emailCode) {
@@ -149,7 +150,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
     setErrorType('error')
     if (!agreeTerms) {
       setShaking(true)
-      setTermsError(t('agreeTermsRequired'))
+      setTermsError(tv('agreeTermsRequired'))
       return
     }
     try {
@@ -175,11 +176,7 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   }
 
   const handleDemoLogin = async () => {
-    if (!agreeTerms) {
-      setShaking(true)
-      setTermsError(t('agreeTermsRequired'))
-      return
-    }
+    // 体验用户（Demo）无需勾选隐私政策，可直接进入
     setLoading("demo")
     setError("")
     setErrorType('error')
