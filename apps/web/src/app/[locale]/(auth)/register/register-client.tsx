@@ -50,6 +50,14 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   }, [shaking])
 
   const sendCode = async () => {
+    setError("")
+    setTermsError("")
+    // 与 aaigc 一致：发送验证码前必须勾选隐私政策（体验用户走 Demo 按钮，不经过这里）
+    if (!agreeTerms) {
+      setShaking(true)
+      setTermsError(tv('agreeTermsRequired'))
+      return
+    }
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError(tv('invalidEmail'))
       setErrorType('error')
@@ -144,15 +152,16 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
   }
 
   const handleOAuth = async (provider: string) => {
-      setTermsError("")
-      setOauthProvider(provider)
-    setError("")
-    setErrorType('error')
+    // 与 aaigc 一致：先拦截未勾选隐私政策，再设置 loading 状态（否则覆盖层会卡死）
     if (!agreeTerms) {
       setShaking(true)
       setTermsError(tv('agreeTermsRequired'))
       return
     }
+    setTermsError("")
+    setOauthProvider(provider)
+    setError("")
+    setErrorType('error')
     try {
       if (isLoggedIn) {
         await signOut({ redirect: false })
