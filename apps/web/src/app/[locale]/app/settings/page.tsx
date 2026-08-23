@@ -97,7 +97,7 @@ export default function SettingsPage() {
         setAccountMsg(ta("linkFailed"))
       } else if (linkError === "bound") {
         const providerParam = params.get("provider") || ""
-        const providerNames = { google: "Google", github: "GitHub" }
+        const providerNames: Record<string, string> = { google: "Google", github: "GitHub" }
         const providerName = providerNames[providerParam] || providerParam
         setAccountMsg(providerName ? ta("linkAccountBound", { provider: providerName }) : ta("linkEmailTaken"))
       } else {
