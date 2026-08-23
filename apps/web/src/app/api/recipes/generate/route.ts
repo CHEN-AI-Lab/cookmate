@@ -7,6 +7,9 @@ import {
   BLACKLIST, getBlockReason,
 } from "@cookmate/shared/constants/ingredients"
 
+// Vercel 免费版（Hobby）函数默认上限 10s，AI 生成易被平台掐死 → 显式放宽到 60s（Hobby 最高值）
+export const maxDuration = 60
+
 /** 根据 locale 返回对应语言的错误消息 */
 function errMsg(locale: string, zh: string, en: string): string {
   return locale === "en" ? en : zh

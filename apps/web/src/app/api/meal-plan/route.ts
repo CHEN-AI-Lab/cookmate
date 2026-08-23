@@ -6,6 +6,8 @@ import { generateWeeklyPlan, normalizeIngredients } from "@cookmate/shared/api/o
 import { checkUsageLimit, incrementUsage } from "@/lib/auth-helpers"
 import { errMsg, getDayMap } from "@cookmate/shared/utils/meal-plan"
 
+// Vercel 免费版（Hobby）函数默认上限 10s，AI 周计划生成易超时 → 显式放宽到 60s（Hobby 最高值）
+export const maxDuration = 60
 
 export async function GET(req: Request) {
   const loc = getLocaleFromCookie(req)
