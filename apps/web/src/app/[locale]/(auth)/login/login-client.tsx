@@ -59,10 +59,15 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
 
   // 已登录用户直接跳转（解决已打开页面不触发服务端 redirect 的问题）
   useEffect(() => {
-    if (isLoggedIn) {
-      router?.push("/app/dashboard")
+    if (!isLoggedIn) return
+    // 关联 OAuth 失败回跳（已登录 + OAuthAccountNotLinked/AccountNotLinked）：
+    // 带 linkError 跳回设置页，由设置页提示"该邮箱已被其他账号绑定"，避免停在登录页闪烁
+    if (oauthError === 'OAuthAccountNotLinked' || oauthError === 'AccountNotLinked') {
+      router?.push('/app/settings?linkError=bound')
+      return
     }
-  }, [isLoggedIn, router])
+    router?.push("/app/dashboard")
+  }, [isLoggedIn, router, oauthError])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)

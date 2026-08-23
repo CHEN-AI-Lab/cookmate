@@ -260,18 +260,55 @@ providers.push(
 async function getSessionUserId(): Promise<string | null> {
   try {
     const cookieStore = await cookies()
-    const cookieName = cookieStore.get("__Secure-authjs.session-token")
-      ? "__Secure-authjs.session-token"
-      : "authjs.session-token"
-    const token = cookieStore.get(cookieName)?.value
-    if (!token) return null
-    const decoded = await decode({
-      token,
-      salt: cookieName,
-      secret: process.env.AUTH_SECRET!,
-    })
-    return decoded?.sub ?? null
-  } catch {
+    const all = cookieStore.getAll()
+    // 找出所有会话 cookie（含可能的分片 __Secure-authjs.session-token.0/.1）
+    const sessionCookies = all.filter(
+      (c) =>
+        c.name === "__Secure-authjs.session-token" ||
+        c.name === "authjs.session-token" ||
+        /^__?Secure-authjs\.session-token(?:\.\d+)?$/.test(c.name),
+    )
+    if (sessionCookies.length === 0) {
+      console.error("[link-account] 未找到 session cookie，现存 cookie 名:", all.map((c) => c.name))
+      return null
+    }
+    // 逐个基础名（去掉 .N 分片后缀）尝试取得完整 token
+    const baseNames = [...new Set(sessionCookies.map((c) => c.name.replace(/\.\d+$/, "")))]
+    let token = ""
+    let salt = "authjs.session-token"
+    for (const base of baseNames) {
+      const full = cookieStore.get(base)
+      if (full?.value) {
+        token = full.value
+        salt = base
+        break
+      }
+      const chunks = sessionCookies
+        .filter((c) => c.name.startsWith(`${base}.`))
+        .sort((a, b) => a.name.localeCompare(b.name))
+      if (chunks.length > 0) {
+        token = chunks.map((c) => c.value).join("")
+        salt = base
+        break
+      }
+    }
+    if (!token) {
+      console.error("[link-account] 找到 session cookie 但无法取得 token:", sessionCookies.map((c) => c.name))
+      return null
+    }
+    const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
+    if (!secret) {
+      console.error("[link-account] 缺少 AUTH_SECRET / NEXTAUTH_SECRET")
+      return null
+    }
+    const decoded = await decode({ token, salt, secret })
+    if (!decoded?.sub) {
+      console.error("[link-account] decode 成功但无 sub，salt:", salt)
+      return null
+    }
+    return decoded.sub
+  } catch (e) {
+    console.error("[link-account] 读取 session 异常:", e)
     return null
   }
 }
