@@ -83,12 +83,12 @@ export default function DemoOnboarding() {
         {/* Buttons */}
                 <div className="flex gap-2 mt-5">
                   {step > 0 && step < content.length - 1 && (
-                    <button onClick={prev} className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-border rounded-xl hover:bg-surface transition-colors">
+                    <button onClick={prev} className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-gray-100 rounded-xl hover:bg-surface transition-colors">
                       {isEn ? "← Back" : "← 上一步"}
                     </button>
                   )}
                   {step === 0 && (
-                    <button onClick={close} className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-border rounded-xl hover:bg-surface transition-colors">
+                    <button onClick={close} className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-gray-100 rounded-xl hover:bg-surface transition-colors">
                       {isEn ? "Skip" : "跳过"}
                     </button>
                   )}
@@ -98,7 +98,7 @@ export default function DemoOnboarding() {
                     </button>
                   ) : (
                     <div className="flex gap-2 w-full">
-                      <button onClick={close} className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-border rounded-xl hover:bg-surface transition-colors">
+                      <button onClick={close} className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-gray-100 rounded-xl hover:bg-surface transition-colors">
                         {isEn ? "Later" : "稍后"}
                       </button>
                       <Link href="/register" onClick={close} className="flex-1 px-4 py-2.5 text-sm text-center text-white bg-accent rounded-xl hover:bg-orange-600 font-medium transition-colors">

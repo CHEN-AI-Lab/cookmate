@@ -2,11 +2,11 @@ import { type HTMLAttributes, type ReactNode } from "react"
 import { cn } from "@cookmate/shared/utils"
 
 const variantStyles = {
-  default: "bg-surface text-text-primary",
-  success: "bg-success/10 text-success",
+  default: "bg-gray-100 text-gray-700",
+  success: "bg-green-100 text-green-700",
   warning: "bg-yellow-100 text-yellow-700",
-  danger: "bg-error/10 text-error",
-  brand: "bg-accent/10 text-accent",
+  danger: "bg-red-100 text-red-700",
+  brand: "bg-[#FFF0E6] text-accent",
 } as const
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {

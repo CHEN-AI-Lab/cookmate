@@ -40,7 +40,7 @@ export default async function AboutPage() {
               { emoji: "⚡", titleKey: "featureSpeedTitle", descKey: "featureSpeedDesc" },
               { emoji: "📋", titleKey: "featureFullTitle", descKey: "featureFullDesc" },
             ].map((v) => (
-              <div key={v.titleKey} className="text-center p-6 bg-bg-brand rounded-2xl border border-border">
+              <div key={v.titleKey} className="text-center p-6 bg-bg-brand rounded-2xl border border-orange-50">
                 <span className="text-4xl">{v.emoji}</span>
                 <h3 className="mt-3 font-bold text-text-primary">{t(v.titleKey)}</h3>
                 <p className='mt-1 text-sm text-text-secondary'>{t(v.descKey)}</p>

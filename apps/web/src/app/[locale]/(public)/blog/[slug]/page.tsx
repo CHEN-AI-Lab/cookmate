@@ -46,7 +46,7 @@ export default async function BlogPostPage({
           ← Back to Blog
         </Link>
 
-        <div className='bg-card rounded-2xl shadow-sm border border-border p-8 sm:p-12'>
+        <div className='bg-card rounded-2xl shadow-sm border border-gray-100 p-8 sm:p-12'>
                   <div className='flex flex-wrap items-center gap-2 text-sm text-text-secondary mb-4'>
             <span>{dates[slug]}</span>
             <span>·</span>
@@ -62,7 +62,7 @@ export default async function BlogPostPage({
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className='bg-accent/10 text-accent rounded-full px-3 py-1 text-xs font-medium'
+                  className='bg-orange-50 text-accent rounded-full px-3 py-1 text-xs font-medium'
                 >
                   {tag}
                 </span>

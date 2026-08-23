@@ -309,7 +309,7 @@ export default function MyRecipesPage() {
               <button
                 onClick={() => setDeleteDialog(filtered.filter((r) => selectedIds.has(r.id)))}
                 disabled={selectedIds.size === 0}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-error/10 text-error border border-error/25 hover:bg-error/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-600 border border-red-200 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {tr("deleteSelected")}
               </button>
@@ -401,7 +401,7 @@ export default function MyRecipesPage() {
                         {recipe.calories && <span>🔥 {recipe.calories}{tr("caloriesShort")}</span>}
                         {recipe.cuisineType && <span>{locale === "en" || locale.startsWith("en") ? (CUISINE_LABELS[recipe.cuisineType] || recipe.cuisineType) : recipe.cuisineType}</span>}
                         {recipe.difficulty && (
-                          <span className="px-1.5 py-0.5 rounded bg-accent/10 text-accent">{diffLabel(recipe.difficulty)}</span>
+                          <span className="px-1.5 py-0.5 rounded bg-orange-50 text-accent">{diffLabel(recipe.difficulty)}</span>
                         )}
                       </div>
                     </div>
@@ -419,7 +419,7 @@ export default function MyRecipesPage() {
                     {!isSelectMode && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setDeleteDialog([recipe]) }}
-                        className="text-text-secondary hover:text-error transition-colors"
+                        className="text-text-secondary hover:text-red-600 transition-colors"
                         title={tr("delete")}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -447,7 +447,7 @@ export default function MyRecipesPage() {
                   </div>
                   <button
                     onClick={() => isDemoUser ? showToast(tr("demoToast")) : setAddDialog({ recipeId: recipe.id, title: recipe.title })}
-                    className="mt-4 bg-accent/10 text-accent px-4 py-2 rounded-xl text-sm font-medium hover:bg-accent/15 transition-colors"
+                    className="mt-4 bg-orange-50 text-accent px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-100 transition-colors"
                   >
                     {tr("addToPlan")}
                   </button>
@@ -494,7 +494,7 @@ export default function MyRecipesPage() {
                   if (n >= 1 && n <= totalPage) { setLoading(true); loadRecipes(n); setJumpPage("") }
                 }
               }}
-              className="w-14 text-center border border-border rounded-xl px-2 py-2 text-sm focus:outline-none focus:border-accent"
+              className="w-14 text-center border border-gray-100 rounded-xl px-2 py-2 text-sm focus:outline-none focus:border-accent"
             />
             <span className="text-xs text-text-secondary">/ {totalPage}</span>
           </div>
@@ -514,7 +514,7 @@ export default function MyRecipesPage() {
             <p className="text-xs text-text-secondary mt-2">{tr("irreversible")}</p>
             <div className="flex gap-2 mt-4">
               <button onClick={() => setDeleteDialog(null)} className="flex-1 bg-surface text-text-secondary py-2 rounded-xl text-sm">{tr("cancel")}</button>
-              <button onClick={deleteRecipes} className="flex-1 bg-error text-white py-2 rounded-xl text-sm">{tr("confirmDeleteAction")}</button>
+              <button onClick={deleteRecipes} className="flex-1 bg-red-500 text-white py-2 rounded-xl text-sm">{tr("confirmDeleteAction")}</button>
             </div>
           </div>
         </div>

@@ -291,11 +291,11 @@ const save = async () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {/* Left column: Account info + Plan */}
         <div className="h-full">
-          <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden h-full">
+          <div className="bg-card rounded-2xl shadow-sm border border-orange-50 overflow-hidden h-full">
             <div className="h-1 bg-gradient-to-r from-accent to-orange-300" />
             <div className="p-5 sm:p-6">
             <div className="flex items-center gap-2 mb-5">
-              <span className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center text-sm shrink-0">👤</span>
+              <span className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center text-sm shrink-0">👤</span>
               <h2 className="font-bold text-text-primary">{ts("profile")}</h2>
             </div>
             {profile ? (
@@ -310,7 +310,7 @@ const save = async () => {
                                       value={editNameValue}
                                       onChange={(e) => setEditNameValue(e.target.value)}
                                       maxLength={30}
-                                      className="border border-border rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-accent w-32"
+                                      className="border border-gray-100 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-accent w-32"
                                       autoFocus
                                       onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setEditingName(false) }}
                                     />
@@ -411,7 +411,7 @@ const save = async () => {
                                     </button>
                                     <button onClick={() => { setShowBindPhone(false); setBindPhone(""); setBindCode(""); setBindError("") }} className="text-sm text-gray-400 hover:text-text-secondary px-3">{ts("bindCancel")}</button>
                                     </div>
-                                    {bindError && <p className="text-xs text-error">{bindError}</p>}
+                                    {bindError && <p className="text-xs text-red-600">{bindError}</p>}
                                   </div>
                                 )}
                 <div className="flex items-center justify-between py-2 border-b border-border">
@@ -439,7 +439,7 @@ const save = async () => {
                                                           disabled={bindLoading || !bindEmailCode || bindEmailCode.length < 6}
                                                           className="w-full bg-accent text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-surface"
                                                         >{bindLoading ? ts("bindLoading") : ts("bindConfirm")}</button>
-                                                        {accountMsg && <p className={`text-xs ${accountMsg.startsWith("✅") ? "text-success" : "text-error"}`}>{accountMsg}</p>}
+                                                        {accountMsg && <p className={`text-xs ${accountMsg.startsWith("✅") ? "text-green-600" : "text-red-600"}`}>{accountMsg}</p>}
                                                       </>
                                                     )}
                                                   </div>
@@ -475,7 +475,7 @@ const save = async () => {
                   </div>
                 )}
                 {accountMsg && (
-                  <div className={`py-2 text-sm text-center ${accountMsg.startsWith("✅") ? "text-success" : "text-error"}`}>
+                  <div className={`py-2 text-sm text-center ${accountMsg.startsWith("✅") ? "text-green-600" : "text-red-600"}`}>
                     {accountMsg}
                   </div>
                 )}
@@ -488,7 +488,7 @@ const save = async () => {
                       {profile.accounts
                         .filter((a) => ["google", "github"].includes(a.provider))
                         .map((acc) => (
-                          <span key={acc.provider} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-surface border border-border rounded-lg text-xs text-text-primary">
+                          <span key={acc.provider} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-surface border border-gray-100 rounded-lg text-xs text-text-primary">
                             {acc.provider === "google" && (
                               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12c0 1.78.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
                             )}
@@ -498,7 +498,7 @@ const save = async () => {
                             {acc.provider === "google" ? "Google" : "GitHub"}
                             <button
                               onClick={(e) => { e.stopPropagation(); handleUnlinkClick(acc.provider) }}
-                              className="text-gray-400 hover:text-error transition-colors ml-1"
+                              className="text-gray-400 hover:text-red-600 transition-colors ml-1"
                               title={ta("unlink")}
                             >
                               <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -545,11 +545,11 @@ const save = async () => {
         </div>
 
         {/* Right column: Diet preferences */}
-        <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden h-full">
+        <div className="bg-card rounded-2xl shadow-sm border border-orange-50 overflow-hidden h-full">
                     <div className="h-1 bg-gradient-to-r from-green-400 to-green-200" />
                     <div className="p-5 sm:p-6">
                     <div className="flex items-center gap-2 mb-5">
-                      <span className="w-7 h-7 rounded-lg bg-success/10 flex items-center justify-center text-sm shrink-0">🥗</span>
+                      <span className="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center text-sm shrink-0">🥗</span>
                       <h2 className="font-bold text-text-primary">{ts("dietPreferences")}</h2>
                     </div>
                   <div className="space-y-5">
@@ -639,12 +639,12 @@ const save = async () => {
               {saving ? ts("saving") : ts("saveSettings")}
             </button>
             {saved && (
-              <span className={`text-sm text-success transition-opacity duration-300 ${showSaved ? 'opacity-100' : 'opacity-0'}`}>
+              <span className={`text-sm text-green-600 transition-opacity duration-300 ${showSaved ? 'opacity-100' : 'opacity-0'}`}>
                 {ts("saved")}
               </span>
             )}
           </div>
-          {error && <p className="mt-2 text-sm text-error">{error}</p>}
+          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
         </div>
         </div>
       </div>
@@ -656,7 +656,7 @@ const save = async () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
           {/* ── Export Data ── */}
-          <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="bg-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="h-1.5 bg-gradient-to-r from-sky-400 to-sky-200" />
             <div className="p-6">
               <div className="flex items-start gap-4">
@@ -676,7 +676,7 @@ const save = async () => {
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                   {[ts("exportItem1"), ts("exportItem2"), ts("exportItem3"), ts("exportItem4"), ts("exportItem5"), ts("exportItem6")].map((item) => (
                     <div key={item} className="flex items-center gap-2 text-xs text-text-secondary">
-                      <svg className="w-3.5 h-3.5 text-success shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3.5 h-3.5 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                       </svg>
                       {item}
@@ -714,38 +714,38 @@ const save = async () => {
           </div>
 
           {/* ── Delete Account ── */}
-          <div className="bg-card rounded-2xl border border-error/25 shadow-sm overflow-hidden">
+          <div className="bg-card rounded-2xl border border-red-200 shadow-sm overflow-hidden">
             <div className="h-1.5 bg-gradient-to-r from-red-400 to-red-200" />
             <div className="p-6">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-error/10 flex items-center justify-center shrink-0">
-                  <svg className="w-5 h-5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-error">{ts("deleteTitle")}</h3>
+                  <h3 className="font-bold text-red-600">{ts("deleteTitle")}</h3>
                   <p className="text-sm text-text-secondary mt-0.5">{ts("deleteDesc")}</p>
                 </div>
               </div>
 
-              <div className="mt-4 bg-error/5 rounded-xl p-4 border border-error/25">
-                <p className="text-xs font-semibold text-error mb-3 uppercase tracking-wide">{ts("deleteWarning")}</p>
+              <div className="mt-4 bg-red-500/5 rounded-xl p-4 border border-red-200">
+                <p className="text-xs font-semibold text-red-600 mb-3 uppercase tracking-wide">{ts("deleteWarning")}</p>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-2 text-xs text-text-secondary">
-                    <svg className="w-3.5 h-3.5 text-error/70 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 text-red-600/70 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                     {ts("deleteItem1")}
                   </li>
                   <li className="flex items-start gap-2 text-xs text-text-secondary">
-                    <svg className="w-3.5 h-3.5 text-error/70 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 text-red-600/70 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                     {ts("deleteItem2")}
                   </li>
                   <li className="flex items-start gap-2 text-xs text-text-secondary">
-                    <svg className="w-3.5 h-3.5 text-error/70 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 text-red-600/70 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                     {ts("deleteItem3")}
@@ -753,11 +753,11 @@ const save = async () => {
                 </ul>
               </div>
 
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-error/25">
-                <span className="text-xs text-error/70">{ts("deleteNote")}</span>
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-red-200">
+                <span className="text-xs text-red-600/70">{ts("deleteNote")}</span>
                 <button
                   onClick={() => setShowDeleteModal(true)}
-                  className="inline-flex items-center gap-2 border border-error/50 text-error text-sm px-5 py-2 rounded-full hover:bg-error/10 transition-colors font-medium"
+                  className="inline-flex items-center gap-2 border border-red-300 text-red-600 text-sm px-5 py-2 rounded-full hover:bg-red-50 transition-colors font-medium"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                   {ts("deleteButton")}
@@ -775,10 +775,10 @@ const save = async () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4" onClick={() => { setShowDeleteModal(false); setDeleteCode(""); setCodeSent(false); setDeleteError("") }}>
           <div className="bg-card rounded-2xl shadow-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-full bg-error/10 flex items-center justify-center shrink-0">
-                <svg className="w-5 h-5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+              <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
               </div>
-              <h3 className="font-bold text-lg text-error">{ts("deleteModalTitle")}</h3>
+              <h3 className="font-bold text-lg text-red-600">{ts("deleteModalTitle")}</h3>
             </div>
             <p className="text-sm text-text-secondary mb-1">{ts("deleteWarning")}</p>
             <ul className="text-xs text-text-secondary mb-4 ml-4 list-disc space-y-1">
@@ -818,7 +818,7 @@ const save = async () => {
             <div className="flex gap-2 mt-4">
               <button
                 onClick={() => { setShowDeleteModal(false); setDeleteCode(""); setCodeSent(false); setDeleteError("") }}
-                className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-border rounded-xl hover:bg-surface transition-colors"
+                className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-gray-100 rounded-xl hover:bg-surface transition-colors"
               >
                 {tc("cancel")}
               </button>
@@ -826,7 +826,7 @@ const save = async () => {
                 <button
                   onClick={handleSendDeleteCode}
                   disabled={sendingCode || !profile?.email}
-                  className="flex-1 px-4 py-2.5 text-sm text-white bg-error/100 rounded-xl hover:bg-error disabled:bg-surface transition-colors font-medium"
+                  className="flex-1 px-4 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-500 disabled:bg-surface transition-colors font-medium"
                 >
                   {sendingCode ? ts("sendingCode") : ts("sendDeleteCode")}
                 </button>
@@ -834,13 +834,13 @@ const save = async () => {
                 <button
                   onClick={handleDelete}
                   disabled={deleting || deleteCode.length !== 6}
-                  className="flex-1 px-4 py-2.5 text-sm text-white bg-error/100 rounded-xl hover:bg-error disabled:bg-surface transition-colors font-medium"
+                  className="flex-1 px-4 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-500 disabled:bg-surface transition-colors font-medium"
                 >
                   {deleting ? ts("deleting") : ts("confirmDeleteBtn")}
                 </button>
               )}
             </div>
-            {deleteError && <p className="mt-3 text-xs text-error">{deleteError}</p>}
+            {deleteError && <p className="mt-3 text-xs text-red-600">{deleteError}</p>}
           </div>
         </div>
       )}
@@ -859,11 +859,11 @@ const save = async () => {
             {unlinkConfirmProvider === "github" && (
               <p className="text-xs text-gray-400 mt-2 mb-3">{ta("githubRevokeNote")}</p>
             )}
-            {unlinkError && <p className="text-xs text-error mt-2">{unlinkError}</p>}
+            {unlinkError && <p className="text-xs text-red-600 mt-2">{unlinkError}</p>}
             <div className="flex gap-2 mt-4">
               <button
                 onClick={() => setUnlinkConfirmProvider(null)}
-                className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-border rounded-xl hover:bg-surface transition-colors"
+                className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-gray-100 rounded-xl hover:bg-surface transition-colors"
               >
                 {tc("cancel")}
               </button>
@@ -954,7 +954,7 @@ function PasswordForm({ hasPassword, onClose, ts, tv, locale }: { hasPassword: b
         <button onClick={onClose} className="text-sm text-gray-400 hover:text-text-secondary whitespace-nowrap">{ts("passwordFormCancel")}</button>
       </div>
       {msg && (
-        <p className={`text-xs ${msg.startsWith("✅") ? "text-success" : "text-error"}`}>{msg}</p>
+        <p className={`text-xs ${msg.startsWith("✅") ? "text-green-600" : "text-red-600"}`}>{msg}</p>
       )}
     </div>
   )

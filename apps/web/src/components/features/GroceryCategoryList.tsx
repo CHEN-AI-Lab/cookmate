@@ -33,7 +33,7 @@ function getCategoryHeaderColor(name: string): string {
     lower.includes("veg") ||
     lower.includes("veggie")
   )
-    return "bg-success/10 text-success"
+    return "bg-green-50 text-green-600"
   if (
     lower.includes("水果") ||
     lower.includes("fruit") ||
@@ -47,7 +47,7 @@ function getCategoryHeaderColor(name: string): string {
     lower.includes("meat") ||
     lower.includes("egg")
   )
-    return "bg-error/10 text-error"
+    return "bg-red-50 text-red-600"
   if (
     lower.includes("主食") ||
     lower.includes("粮油") ||
@@ -83,7 +83,7 @@ export function GroceryCategoryList({
         <div className="flex items-center gap-3 text-sm">
           <span className="text-text-secondary">{t("totalItems", { count: total })}</span>
           {inPantryCount > 0 && (
-            <span className="bg-success/10 text-success px-2 py-0.5 rounded-full text-xs">
+            <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded-full text-xs">
               {t("inPantryCount", { count: inPantryCount })}
             </span>
           )}
@@ -122,7 +122,7 @@ export function GroceryCategoryList({
                     <span
                       className={`${
                         item.inPantry
-                          ? "text-success"
+                          ? "text-green-600"
                           : checked.has(item.name)
                             ? "text-text-secondary line-through"
                             : "text-text-secondary"
@@ -147,7 +147,7 @@ export function GroceryCategoryList({
                       )}
                     </span>
                     {item.inPantry && (
-                      <span className="text-[10px] text-success bg-success/10 px-1 rounded shrink-0">
+                      <span className="text-[10px] text-green-600 bg-green-50 px-1 rounded shrink-0">
                         {t("inPantry")}
                       </span>
                     )}

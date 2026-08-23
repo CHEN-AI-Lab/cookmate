@@ -19,7 +19,7 @@ export default async function AuthErrorPage({
   return (
     <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center">
-        <div className="w-14 h-14 mx-auto rounded-full bg-error/10 flex items-center justify-center text-2xl mb-4">
+        <div className="w-14 h-14 mx-auto rounded-full bg-red-50 flex items-center justify-center text-2xl mb-4">
           ⚠️
         </div>
         <h1 className="text-lg font-semibold text-text-primary mb-2">{t('linkErrorTitle')}</h1>
@@ -38,7 +38,7 @@ export default async function AuthErrorPage({
           </Link>
           <Link
             href={`/${locale}`}
-            className="px-4 py-2 rounded-xl border border-border text-sm text-text-secondary hover:bg-accent/5 transition-colors"
+            className="px-4 py-2 rounded-xl border border-gray-100 text-sm text-text-secondary hover:bg-accent/5 transition-colors"
           >
             {t('backHome')}
           </Link>

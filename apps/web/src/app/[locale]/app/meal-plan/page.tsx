@@ -176,7 +176,7 @@ export default function MealPlanPage() {
         </button>
       </div>
 
-      {error && <p className="mb-4 text-sm text-error">{error}</p>}
+      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
       {!plan && !generating && (
         <div className="text-center py-16">
@@ -216,7 +216,7 @@ export default function MealPlanPage() {
       {deleteConfirm && (
         <div className="fixed inset-0 bg-overlay flex items-center justify-center z-50" onClick={() => setDeleteConfirm(false)}>
           <div className="bg-card rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mx-auto mb-2 text-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mx-auto mb-2 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
             </svg>
             <p className="text-sm text-text-primary font-medium mb-1">{t("confirmDeleteTitle")}</p>
@@ -224,7 +224,7 @@ export default function MealPlanPage() {
             <p className="text-xs text-text-secondary mt-2">{t("irreversible")}</p>
             <div className="flex gap-2 mt-4">
               <button onClick={() => setDeleteConfirm(false)} className="flex-1 bg-surface text-text-secondary py-2 rounded-xl text-sm">{tc("cancel")}</button>
-              <button onClick={() => { setDeleteConfirm(false); confirmDelete() }} className="flex-1 bg-error/100 text-white py-2 rounded-xl text-sm">{t("confirmDelete")}</button>
+              <button onClick={() => { setDeleteConfirm(false); confirmDelete() }} className="flex-1 bg-red-500 text-white py-2 rounded-xl text-sm">{t("confirmDelete")}</button>
             </div>
           </div>
         </div>

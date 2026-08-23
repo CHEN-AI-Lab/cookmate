@@ -79,7 +79,7 @@ export default function LanguageSwitcher({
         </button>
 
         {open && (
-          <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[100px] z-50">
+          <div className="absolute right-0 top-full mt-1 bg-card border border-gray-100 rounded-xl shadow-lg py-1 min-w-[100px] z-50">
             {visibleLocales.map((l) => {
               const active = l === locale
               return (
@@ -88,7 +88,7 @@ export default function LanguageSwitcher({
                   onClick={() => switchLocale(l)}
                   className={`w-full text-left px-4 py-2 text-sm transition-colors ${
                     active
-                      ? "text-accent bg-accent/10 font-medium"
+                      ? "text-accent bg-orange-50 font-medium"
                       : "text-text-secondary hover:bg-surface hover:text-accent"
                   }`}
                 >

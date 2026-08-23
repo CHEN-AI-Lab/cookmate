@@ -14,7 +14,7 @@ export default function RootError({
 
   return (
     <div className="min-h-screen bg-bg-brand flex items-center justify-center p-4">
-      <div className="bg-card rounded-2xl shadow-sm border border-border p-8 max-w-md w-full text-center">
+      <div className="bg-card rounded-2xl shadow-sm border border-gray-100 p-8 max-w-md w-full text-center">
         <span className="text-6xl">😵</span>
         <h2 className="text-xl font-bold text-text-primary mt-4">{t("title")}</h2>
         <p className="text-text-secondary mt-2 text-sm">

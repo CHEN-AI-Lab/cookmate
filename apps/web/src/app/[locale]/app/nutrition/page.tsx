@@ -23,7 +23,7 @@ export default async function NutritionPage() {
       <div className="text-6xl mb-4">🥗</div>
       <h1 className="text-2xl font-bold text-text-primary mb-2">{t('title')}</h1>
       <p className="text-text-secondary mb-6">{t('placeholder_desc')}</p>
-      <div className="px-4 py-2 bg-info/10 border border-info/25 rounded-lg text-sm text-info">
+      <div className="px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-600">
         {t('placeholder_badge')}
       </div>
     </div>

@@ -52,8 +52,8 @@ export function Sidebar({
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-accent/10 text-accent"
-                  : "text-text-secondary hover:bg-surface hover:text-accent"
+                  ? "bg-orange-100 text-accent"
+                  : "text-text-secondary hover:bg-orange-50 hover:text-accent"
               }`}
             >
               <span className="text-lg">{item.icon}</span>
@@ -139,7 +139,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
         onClick={() => { if (open) setLangOpen(false); setOpen(!open) }}
         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-primary hover:bg-surface w-full text-left transition-colors"
       >
-        <span className="flex items-center justify-center w-7 h-7 rounded-full bg-accent/10 text-accent text-xs font-bold shrink-0">
+        <span className="flex items-center justify-center w-7 h-7 rounded-full bg-orange-100 text-accent text-xs font-bold shrink-0">
           {initial}
         </span>
         <span className="truncate flex-1">{isDemoUser && (locale === "en" || locale.startsWith("en")) ? "Demo User" : name}</span>
@@ -150,7 +150,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-xl shadow-lg py-1.5 text-sm">
+        <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-gray-100 rounded-xl shadow-lg py-1.5 text-sm">
           <Link
             href="/app/settings"
             onClick={() => { setOpen(false); setLangOpen(false) }}
@@ -171,7 +171,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
               <svg className={`w-3 h-3 text-text-secondary transition-transform ${langOpen ? "rotate-90" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
             {langOpen && (
-              <div className="absolute left-full top-0 ml-2 bg-card border border-border rounded-lg shadow-lg py-1 min-w-[110px] z-50">
+              <div className="absolute left-full top-0 ml-2 bg-card border border-gray-100 rounded-lg shadow-lg py-1 min-w-[110px] z-50">
                 {locales
                   .filter((l) => !isDemoUser || l === "zh-CN" || l === "en")
                   .map((l) => {
@@ -191,7 +191,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
                                               }
                                               router.push(window.location.pathname.replace(new RegExp("^/(?:" + locales.join("|") + ")(/|$)"), "/") || "/", { locale: l })
                                             }}
-                      className={"w-full text-left px-4 py-2 text-sm transition-colors " + (active ? "text-accent bg-accent/10 font-medium" : "text-text-secondary hover:bg-surface hover:text-accent")}
+                      className={"w-full text-left px-4 py-2 text-sm transition-colors " + (active ? "text-accent bg-orange-50 font-medium" : "text-text-secondary hover:bg-orange-50 hover:text-accent")}
                     >
                       {localeNames[l] || l}
                     </button>
@@ -203,7 +203,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
           <div className="border-t border-border my-1" />
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex items-center gap-2.5 px-4 py-2 text-text-secondary hover:bg-surface hover:text-error w-full text-left transition-colors"
+            className="flex items-center gap-2.5 px-4 py-2 text-text-secondary hover:bg-surface hover:text-red-600 w-full text-left transition-colors"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />

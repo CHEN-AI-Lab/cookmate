@@ -22,7 +22,7 @@ export function BlogCard({
   return (
     <Link
       href={`/blog/${slug}`}
-      className="block bg-card rounded-2xl border border-border shadow-sm p-6 hover:shadow-md hover:border-orange-200 transition-all duration-200 group"
+      className="block bg-card rounded-2xl border border-orange-50 shadow-sm p-6 hover:shadow-md hover:border-orange-200 transition-all duration-200 group"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-2 flex-1">
@@ -40,7 +40,7 @@ export function BlogCard({
                   {tags.map((tag) => (
                     <span
                       key={tag}
-                      className="bg-accent/10 text-accent rounded-full px-2 py-0.5 text-xs"
+                      className="bg-orange-50 text-accent rounded-full px-2 py-0.5 text-xs"
                     >
                       {tag}
                     </span>

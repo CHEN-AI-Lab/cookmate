@@ -127,7 +127,7 @@ export default function PantryPage() {
               type="text" value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("searchPlaceholder")}
-              className="w-full bg-card border border-border rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent"
+              className="w-full bg-card border border-gray-100 rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent"
             />
           </div>
           <button
@@ -154,11 +154,11 @@ export default function PantryPage() {
                 className={`px-3 py-1 rounded-full text-sm border flex items-center gap-1 cursor-pointer transition-colors ${
                   selected.has(item.id)
                     ? "bg-gradient-to-r from-orange-400 to-amber-400 text-white border-transparent"
-                    : "bg-accent/10 text-accent border-accent/20 hover:bg-accent/15"
+                    : "bg-orange-50 text-accent border-orange-200 hover:bg-orange-100"
                 }`}
               >
                 {item.name}
-                <button onClick={(e) => { e.stopPropagation(); removeItem(item.id) }} className="ml-1 hover:text-error">{isDemoUser ? "" : "×"}</button>
+                <button onClick={(e) => { e.stopPropagation(); removeItem(item.id) }} className="ml-1 hover:text-red-600">{isDemoUser ? "" : "×"}</button>
               </span>
             ))}
           </div>
@@ -212,7 +212,7 @@ export default function PantryPage() {
               onChange={(e) => setInputName(e.target.value)}
               onKeyDown={async (e) => { if (e.key === "Enter") { await addItem(inputName); setShowAddDialog(false) } }}
               placeholder={t("addItemPlaceholder")}
-              className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent mb-4"
+              className="w-full border border-gray-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent mb-4"
               autoFocus
             />
             <div className="flex gap-2">
@@ -250,7 +250,7 @@ export default function PantryPage() {
       )}
       {/* Success toast */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-success text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50 flex items-center gap-2">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50 flex items-center gap-2">
           <span>✅</span> {toast}
         </div>
       )}

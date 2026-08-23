@@ -26,7 +26,7 @@ export function ManualAddSection({
   return (
     <div className="mt-6 space-y-4">
       {/* Manual add input */}
-      <div className="bg-card rounded-xl border border-border p-3">
+      <div className="bg-card rounded-xl border border-gray-100 p-3">
         <div className="flex gap-2">
           <input
             type="text"
@@ -89,12 +89,12 @@ export function ManualAddSection({
             {manualItems.map((name) => (
               <span
                 key={name}
-                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-accent/10 text-accent border border-accent/20"
+                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-orange-50 text-accent border border-orange-200"
               >
                 {name}
                 <button
                   onClick={() => onRemoveManual(name)}
-                  className="text-text-secondary hover:text-error text-xs leading-none"
+                  className="text-text-secondary hover:text-red-600 text-xs leading-none"
                 >
                   ×
                 </button>
@@ -107,7 +107,7 @@ export function ManualAddSection({
       {/* Duplicate dialog */}
       {dupDialog && (
         <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
-          <div className="bg-card border border-border shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-card border border-gray-100 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
             <span className="text-amber-500 text-base shrink-0">⚠️</span>
             <span className="text-text-primary">
               「{dupDialog}」已在购物清单中

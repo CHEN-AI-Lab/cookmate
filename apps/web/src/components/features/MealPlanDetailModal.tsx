@@ -149,7 +149,7 @@ export function MealPlanDetailModal({
             {/* Delete button */}
             <button
               onClick={onDeleteSlot}
-              className="w-full py-2 rounded-xl text-sm border border-error/25 text-error hover:bg-error/10 transition-colors"
+              className="w-full py-2 rounded-xl text-sm border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
             >
               {t("deleteSlotBtn")}
             </button>

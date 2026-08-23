@@ -53,7 +53,7 @@ export function PantryList({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="搜索食材..."
-              className="w-full bg-card border border-border rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent"
+              className="w-full bg-card border border-gray-100 rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent"
             />
           </div>
           <button
@@ -67,7 +67,7 @@ export function PantryList({
 
       {/* Error toast */}
       {error && (
-        <div className="mb-3 bg-error/10 border border-error/25 text-error text-sm rounded-xl px-4 py-2.5">
+        <div className="mb-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-2.5">
           {error}
         </div>
       )}
@@ -94,7 +94,7 @@ export function PantryList({
                 className={`px-3 py-1 rounded-full text-sm border flex items-center gap-1 cursor-pointer transition-colors ${
                   selectedIds.has(item.id)
                     ? "bg-gradient-to-r from-orange-400 to-amber-400 text-white border-transparent"
-                    : "bg-accent/10 text-accent border-accent/20 hover:bg-accent/15"
+                    : "bg-orange-50 text-accent border-orange-200 hover:bg-orange-100"
                 }`}
               >
                 {item.name}
@@ -103,7 +103,7 @@ export function PantryList({
                     e.stopPropagation()
                     onDeleteItem(item.id)
                   }}
-                  className="ml-1 hover:text-error"
+                  className="ml-1 hover:text-red-600"
                 >
                   ×
                 </button>
@@ -129,7 +129,7 @@ export function PantryList({
       )}
 
       {/* Quick add grid */}
-      <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+      <div className="bg-card rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-5 pb-5 pt-3 space-y-4">
           {QUICK_ADD.map((group) => (
             <div key={group.category}>
@@ -164,7 +164,7 @@ export function PantryList({
       {/* Duplicate dialog */}
       {dupDialog && (
         <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
-          <div className="bg-card border border-border shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-card border border-gray-100 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
             <span className="text-amber-500 text-base shrink-0">⚠️</span>
             <span className="text-text-primary">「{dupDialog}」已在食材库中</span>
           </div>
