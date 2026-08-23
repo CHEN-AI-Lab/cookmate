@@ -93,8 +93,17 @@ export default function SettingsPage() {
     const linkError = params.get("linkError")
     const linked = params.get("linked")
     if (linkError) {
-      setAccountMsg(linkError === "failed" ? ta("linkFailed") : ta("linkEmailTaken"))
-      setTimeout(() => setAccountMsg(""), 3000)
+      if (linkError === "failed") {
+        setAccountMsg(ta("linkFailed"))
+      } else if (linkError === "bound") {
+        const providerParam = params.get("provider") || ""
+        const providerNames = { google: "Google", github: "GitHub" }
+        const providerName = providerNames[providerParam] || providerParam
+        setAccountMsg(providerName ? ta("linkAccountBound", { provider: providerName }) : ta("linkEmailTaken"))
+      } else {
+        setAccountMsg(ta("linkEmailTaken"))
+      }
+      setTimeout(() => setAccountMsg(""), 6000)
       window.history.replaceState({}, "", `/${locale}/app/settings`)
     } else if (linked) {
       window.history.replaceState({}, "", `/${locale}/app/settings`)

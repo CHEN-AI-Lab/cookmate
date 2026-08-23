@@ -391,7 +391,7 @@ const { handlers: nextAuthHandlers, auth: nextAuthAuth, signIn, signOut } = Next
   providers,
   callbacks: {
     async signIn({ user, account, profile }) {
-      if (account?.type === "oauth") {
+      if (account?.type === "oauth" || account?.type === "oidc") {
         // ── 关联模式：已登录用户从设置页发起 OAuth = "关联账号"操作 ──
         // signIn() 本质是登录（会把 session 切到 OAuth 身份甚至新建用户），
         // 真正的关联在这里拦截：返回字符串 = 直接重定向且不签发新 session，当前登录态保持不变
@@ -410,16 +410,9 @@ const { handlers: nextAuthHandlers, auth: nextAuthAuth, signIn, signOut } = Next
             // 已绑在当前用户身上 → 放行（正常完成登录，session 不变）
             if (existingAccount.userId === currentUserId) return true
             // 绑在别人身上 → 拒绝，不切换登录态
-            return "/app/settings?linkError=bound"
+            return `/app/settings?linkError=bound&provider=${account.provider}`
           }
-          // OAuth 邮箱已被其他账号占用 → 拒绝
           const email = (profile?.email ?? user.email ?? "").trim().toLowerCase()
-          if (email) {
-            const emailOwner = await prisma.user.findUnique({ where: { email } })
-            if (emailOwner && emailOwner.id !== currentUserId) {
-              return "/app/settings?linkError=bound"
-            }
-          }
           // 无冲突 → 把 OAuth 账号绑到当前用户名下（当前登录态保持不变）
           try {
             await prisma.account.create({
