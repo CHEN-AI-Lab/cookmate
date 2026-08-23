@@ -1,6 +1,5 @@
 {
   "common": {
-    "appName": "CookMate",
     "appTagline": "AIスマートレシピ＆献立プラットフォーム",
     "loading": "読み込み中...",
     "error": "エラーが発生しました",
@@ -15,7 +14,6 @@
     "search": "検索",
     "noData": "データがありません",
     "free": "無料",
-    "pro": "Pro",
     "demo": "デモ",
     "or": "または",
     "demoDesc": "これはサンプルデータです。登録してパーソナライズされた献立を取得しましょう。",
@@ -29,7 +27,8 @@
     "seconds": "秒",
     "sendCode": "コードを送信",
     "sending": "送信中...",
-    "showPassword": "パスワードを表示"
+    "showPassword": "パスワードを表示",
+    "appName": "クックメイト"
   },
   "nav": {
     "dashboard": "ダッシュボード",
@@ -72,45 +71,36 @@
   },
   "howItWorks": {
     "title": "3つの簡単ステップ",
-    "step1Emoji": "🥦",
     "step1Title": "1. 食材をAIに伝える",
     "step1Desc": "冷蔵庫の食材を入力するか、パントリーからインポート",
-    "step2Emoji": "🤖",
     "step2Title": "2. AIがレシピを生成",
     "step2Desc": "3秒でカスタムレシピを取得。調理時間、カロリー付き",
-    "step3Emoji": "📋",
     "step3Title": "3. 献立に追加 → 買い物リスト",
     "step3Desc": "レシピを選んで週間予定を組み、買い物リストを自動作成"
   },
   "features": {
     "title": "さらに多くの機能",
     "aiRecipe": {
-      "emoji": "🍳",
       "title": "AIレシピ生成",
       "desc": "食材を入れるだけで、3秒でオリジナルレシピ"
     },
     "mealPlan": {
-      "emoji": "📅",
       "title": "スマート週間献立",
       "desc": "AIがワンクリックで一週間のメニューを自動作成"
     },
     "grocery": {
-      "emoji": "🛒",
       "title": "買い物リスト",
       "desc": "スーパーの売り場順に自動分類、食材庫とクロスチェック"
     },
     "diet": {
-      "emoji": "🥗",
       "title": "食事カスタマイズ",
       "desc": "ケト、ベジタリアン、低炭水化物など、あなたの食事ニーズに対応"
     },
     "pantry": {
-      "emoji": "🥦",
       "title": "食材庫管理",
       "desc": "冷蔵庫の在庫を管理、AIが優先的にお持ちの食材を使ったレシピを提案"
     },
     "recipes": {
-      "emoji": "📚",
       "title": "レシピコレクション",
       "desc": "お気に入りのレシピを保存して整理"
     }
@@ -154,10 +144,6 @@
     "demoVersion": "デモを試す",
     "loginAction": "ログイン",
     "loginRegisterAction": "ログイン/登録",
-    "oauthAlipay": "Alipay",
-    "oauthGithub": "GitHub",
-    "oauthGoogle": "Google",
-    "oauthWechat": "WeChat",
     "oauthWechatSetup": "このログイン方法はまだ設定されていません",
     "passwordLabel": "パスワード",
     "passwordPlaceholder": "パスワードを入力",
@@ -193,6 +179,7 @@
     "linkErrorTitle": "連携に失敗しました",
     "linkEmailTaken": "このメールアドレスは既に別のアカウントに紐付けられています",
     "linkEmailTakenDesc": "関連しようとしたソーシャルアカウントは既に別のアカウントで使用されています。まずそのアカウントでログインし、アカウント設定から再度連携してください。",
+    "linkAccountBound": "この{provider}アカウントは既に他のユーザーに紐付けられています",
     "linkOtherError": "ログイン中に問題が発生しました。もう一度お試しください。",
     "backToAccount": "アカウント設定へ",
     "backHome": "ホームへ"
@@ -364,8 +351,7 @@
       "🥛 乳品豆制品": "🥛 乳製品・豆製品",
       "🍚 主食粮油": "🍚 主食・油"
     },
-    "addItem": "アイテム追加",
-    "searchIcon": "🔍"
+    "addItem": "アイテム追加"
   },
   "recipes": {
     "title": "AIレシピ",
@@ -463,8 +449,6 @@
     "title": "課金管理",
     "subtitle": "サブスクリプションを管理",
     "currentPlan": "現在のプラン",
-    "freePlan": "Free",
-    "proPlan": "Pro",
     "familyPlan": "ファミリープラン",
     "perMonth": "/月",
     "perYear": "/年",
@@ -501,7 +485,6 @@
     "freePlanDesc": "1日1回のAIレシピ提案",
     "proPlanDesc": "無制限のAI生成、Pro全機能",
     "freeBadge": "🆓 無料",
-    "proBadge": "🌟 Pro",
     "expiryDate": "有効期限：{date}",
     "paymentMethods": "支払い方法",
     "payDesc": "スキャンして支払う・安全・迅速",
@@ -514,8 +497,6 @@
     "cancelling": "キャンセル中...",
     "yearlyPro": "Pro年払い",
     "monthlyPro": "Pro月払い",
-    "yearlyPrice": "16.99",
-    "monthlyPrice": "2.99",
     "yearlyPeriod": "≈ $1.42/月 · 53%お得",
     "yearlySaving": "🔥 おすすめ · $19お得",
     "yearlySavingShort": "$19お得",
@@ -527,11 +508,9 @@
     "demoBillingRegister": "無料登録",
     "savePercent": "{percent}%お得",
     "saveAmount": "{amount}お得",
-    "alipay": "Alipay",
     "alipayDesc": "¥20/月〜",
     "creditCard": "クレジットカード",
     "creditCardDesc": "$3/月〜 via Stripe",
-    "creem": "Creem",
     "creemDesc": "クレジットカード · 複数決済",
     "checkPayment": "支払い状況を確認",
     "checkPaymentDesc": "支払い後にクリックして確認",
@@ -543,12 +522,8 @@
     "upgradeAction": "Proにアップグレード",
     "inUse": "利用中",
     "freeLabel": "無料",
-    "proLabel": "Pro",
     "currentPlanFree": "Free（無料）",
-    "currentPlanPro": "Pro",
-    "alipayPay": "Alipay",
     "stripePay": "クレジットカード",
-    "creemPay": "Creem",
     "payFrom": "¥20/月〜",
     "payFromStripe": "$3/月〜 via Stripe",
     "success": "✅ 支払い成功！Proにアップグレードしました。",
@@ -588,9 +563,6 @@
     "loading": "読み込み中...",
     "backToBilling": "← 課金管理に戻る",
     "cancel": "キャンセル",
-    "channelAlipay": "Alipay",
-    "channelCreem": "Creem",
-    "channelStripe": "Stripe",
     "completed": "支払い済み",
     "confirm": "削除",
     "delete": "削除",
@@ -820,13 +792,10 @@
     "subtitle": "AIが毎日の「何を食べるか」問題を解決"
   },
   "stats": {
-    "users": "10,000+",
     "usersLabel": "アクティブユーザー",
-    "recipes": "50,000+",
     "recipesLabel": "生成されたレシピ",
     "meals": "100,000+",
     "mealsLabel": "計画された食事",
-    "satisfaction": "98%",
     "satisfactionLabel": "ユーザー満足度",
     "title": "数字で見る"
   },
@@ -854,9 +823,7 @@
     "legal": "法的情報",
     "privacy": "プライバシー",
     "terms": "利用規約",
-    "copyright": "© {year} CookMate. All rights reserved.",
     "about": "概要",
-    "email": "CookMate@aaigc.online",
     "features": "AIレシピ",
     "links": "リンク"
   },
@@ -992,8 +959,6 @@
     "freePlan": "無料",
     "getCode": "コードを取得",
     "hasPassword": "設定済み",
-    "languageEn": "English",
-    "languageZh": "中文",
     "loginMethod": "ログイン方法",
     "loginMethod_邮箱+密码": "メール+パスワード",
     "loginMethod_手机号+密码": "電話番号+パスワード",
@@ -1020,7 +985,6 @@
     "passwordFormSet": "パスワード設定",
     "passwordUpdatedModify": "✅ パスワードを更新しました",
     "passwordUpdatedSet": "✅ パスワードを設定しました",
-    "proPlan": "Pro",
     "profileLoading": "読み込み中...",
     "registerDate": "登録日",
     "saveName": "保存",

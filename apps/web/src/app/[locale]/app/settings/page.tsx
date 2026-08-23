@@ -52,7 +52,6 @@ export default function SettingsPage() {
   const [bindCodeSent, setBindCodeSent] = useState(false)
   const [bindLoading, setBindLoading] = useState(false)
   const [bindError, setBindError] = useState("")
-  const [accountMsg, setAccountMsg] = useState("")
   const [globalToast, setGlobalToast] = useState("")
   // ── Unlink OAuth ──
   const [unlinkConfirmProvider, setUnlinkConfirmProvider] = useState<string | null>(null)
@@ -94,18 +93,20 @@ export default function SettingsPage() {
     const linked = params.get("linked")
     if (linkError) {
       if (linkError === "failed") {
-        setAccountMsg(ta("linkFailed"))
+        setTimeout(() => setGlobalToast(ta("linkFailed")), 0)
       } else if (linkError === "bound") {
         const providerParam = params.get("provider") || ""
         const providerNames: Record<string, string> = { google: "Google", github: "GitHub" }
         const providerName = providerNames[providerParam] || providerParam
-        setAccountMsg(providerName ? ta("linkAccountBound", { provider: providerName }) : ta("linkEmailTaken"))
+        setTimeout(() => setGlobalToast(providerName ? ta("linkAccountBound", { provider: providerName }) : ta("linkEmailTaken")), 0)
       } else {
-        setAccountMsg(ta("linkEmailTaken"))
+        setTimeout(() => setGlobalToast(ta("linkEmailTaken")), 0)
       }
-      setTimeout(() => setAccountMsg(""), 6000)
+      setTimeout(() => setGlobalToast(""), 6000)
       window.history.replaceState({}, "", `/${locale}/app/settings`)
     } else if (linked) {
+      setTimeout(() => setGlobalToast(ta("linkSuccess")), 0)
+      setTimeout(() => setGlobalToast(""), 6000)
       window.history.replaceState({}, "", `/${locale}/app/settings`)
     }
   }, [locale, ta])
@@ -124,41 +125,41 @@ export default function SettingsPage() {
       if (r.ok) {
         setProfile((p) => p ? { ...p, name: editNameValue.trim() } : p)
         setEditingName(false)
-        setAccountMsg(ts("nameUpdated"))
-        setTimeout(() => setAccountMsg(""), 3000)
+        setGlobalToast(ts("nameUpdated"))
+        setTimeout(() => setGlobalToast(""), 3000)
       } else {
         const d = await r.json()
-        setAccountMsg(d.error || ts("updateFailed"))
-        setTimeout(() => setAccountMsg(""), 3000)
+        setGlobalToast(d.error || ts("updateFailed"))
+        setTimeout(() => setGlobalToast(""), 3000)
       }
     } catch (err) {
       console.error("save name error:", err)
-      setAccountMsg(tv("networkError"))
-      setTimeout(() => setAccountMsg(""), 3000)
+      setGlobalToast(tv("networkError"))
+      setTimeout(() => setGlobalToast(""), 3000)
     }
   }
 
   const sendBindEmailCode = async () => {
-    if (!bindEmail || !/^[^\s]+@[^\s]+\.[^\s]+$/.test(bindEmail)) { setAccountMsg(tv("invalidEmail")); setTimeout(() => setAccountMsg(""), 3000); return }
+    if (!bindEmail || !/^[^\s]+@[^\s]+\.[^\s]+$/.test(bindEmail)) { setGlobalToast(tv("invalidEmail")); setTimeout(() => setGlobalToast(""), 3000); return }
     setBindLoading(true)
     try {
       const r = await fetch("/api/user/bind-email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: bindEmail, locale }) })
       const d = await r.json()
-      if (r.ok) { setBindCodeSent(true); setAccountMsg(ts("codeSentToEmail", { email: bindEmail })); setTimeout(() => setAccountMsg(""), 3000) }
-      else { setAccountMsg(d.error || tv("sendFailed")); setTimeout(() => setAccountMsg(""), 3000) }
-    } catch (err) { console.error("send bind email code error:", err); setAccountMsg(tv("networkError")); setTimeout(() => setAccountMsg(""), 3000) }
+      if (r.ok) { setBindCodeSent(true); setGlobalToast(ts("codeSentToEmail", { email: bindEmail })); setTimeout(() => setGlobalToast(""), 3000) }
+      else { setGlobalToast(d.error || tv("sendFailed")); setTimeout(() => setGlobalToast(""), 3000) }
+    } catch (err) { console.error("send bind email code error:", err); setGlobalToast(tv("networkError")); setTimeout(() => setGlobalToast(""), 3000) }
     finally { setBindLoading(false) }
   }
 
   const confirmBindEmail = async () => {
-    if (!bindEmailCode || bindEmailCode.length < 6) { setAccountMsg(tv("emptyCode")); setTimeout(() => setAccountMsg(""), 3000); return }
+    if (!bindEmailCode || bindEmailCode.length < 6) { setGlobalToast(tv("emptyCode")); setTimeout(() => setGlobalToast(""), 3000); return }
     setBindLoading(true)
     try {
       const r = await fetch("/api/user/bind-email", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: bindEmail, code: bindEmailCode, locale }) })
       const d = await r.json()
-      if (r.ok) { setProfile((p) => p ? { ...p, email: bindEmail } : p); setShowBindEmail(false); setBindCodeSent(false); setBindEmail(""); setBindEmailCode(""); setAccountMsg(ts("bindSuccessEmail")); setTimeout(() => setAccountMsg(""), 3000) }
-      else { setAccountMsg(d.error || ts("bindFailed")); setTimeout(() => setAccountMsg(""), 3000) }
-    } catch (err) { console.error("confirm bind email error:", err); setAccountMsg(tv("networkError")); setTimeout(() => setAccountMsg(""), 3000) }
+      if (r.ok) { setProfile((p) => p ? { ...p, email: bindEmail } : p); setShowBindEmail(false); setBindCodeSent(false); setBindEmail(""); setBindEmailCode(""); setGlobalToast(ts("bindSuccessEmail")); setTimeout(() => setGlobalToast(""), 3000) }
+      else { setGlobalToast(d.error || ts("bindFailed")); setTimeout(() => setGlobalToast(""), 3000) }
+    } catch (err) { console.error("confirm bind email error:", err); setGlobalToast(tv("networkError")); setTimeout(() => setGlobalToast(""), 3000) }
     finally { setBindLoading(false) }
   }
 
@@ -174,8 +175,8 @@ export default function SettingsPage() {
     try {
       await signIn(provider, { callbackUrl: `/${locale}/app/settings?linked=${provider}` })
     } catch {
-      setAccountMsg(ta("linkFailed"))
-      setTimeout(() => setAccountMsg(""), 3000)
+      setGlobalToast(ta("linkFailed"))
+      setTimeout(() => setGlobalToast(""), 3000)
     }
   }
 
@@ -194,11 +195,11 @@ export default function SettingsPage() {
         setUnlinkConfirmProvider(null)
         if (data.needsManualRevoke) {
           setNeedsManualRevoke(true)
-          setAccountMsg(ta("githubRevokeNote"))
-          setTimeout(() => setAccountMsg(""), 6000)
+          setGlobalToast(ta("githubRevokeNote"))
+          setTimeout(() => setGlobalToast(""), 6000)
         } else {
-          setAccountMsg(ta("unlinkSuccess"))
-          setTimeout(() => setAccountMsg(""), 3000)
+          setGlobalToast(ta("unlinkSuccess"))
+          setTimeout(() => setGlobalToast(""), 3000)
         }
       } else {
         setUnlinkError(ta("unlinkFailed"))
@@ -405,8 +406,8 @@ const save = async () => {
                                           if (r.ok) {
                                             setProfile((p) => p ? { ...p, phone: bindPhone } : p)
                                             setShowBindPhone(false)
-                                            setAccountMsg(ts("bindSuccessPhone"))
-                                            setTimeout(() => setAccountMsg(""), 3000)
+                                            setGlobalToast(ts("bindSuccessPhone"))
+                                            setTimeout(() => setGlobalToast(""), 3000)
                                           } else {
                                             setBindError(d.error || ts("bindFailed"))
                                           }
@@ -448,7 +449,6 @@ const save = async () => {
                                                           disabled={bindLoading || !bindEmailCode || bindEmailCode.length < 6}
                                                           className="w-full bg-accent text-white rounded-xl py-2 text-sm font-medium hover:bg-orange-600 disabled:bg-surface"
                                                         >{bindLoading ? ts("bindLoading") : ts("bindConfirm")}</button>
-                                                        {accountMsg && <p className={`text-xs ${accountMsg.startsWith("✅") ? "text-green-600" : "text-red-600"}`}>{accountMsg}</p>}
                                                       </>
                                                     )}
                                                   </div>
@@ -483,12 +483,6 @@ const save = async () => {
                     />
                   </div>
                 )}
-                {accountMsg && (
-                  <div className={`py-2 text-sm text-center ${accountMsg.startsWith("✅") ? "text-green-600" : "text-red-600"}`}>
-                    {accountMsg}
-                  </div>
-                )}
-
                 {/* OAuth Connected Accounts */}
                 {profile && (profile.accounts.length > 0 || profile.googleConfigured || profile.githubConfigured) && (
                   <div className="flex items-center py-2 border-b border-border">
@@ -890,8 +884,10 @@ const save = async () => {
 
       {/* Global toast */}
       {globalToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-bg-inverse text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
-          {globalToast}
+        <div className="fixed top-1/3 left-1/2 -translate-x-1/2 z-[100]">
+          <div className="bg-bg border border-border shadow-lg rounded-xl px-5 py-2.5 text-sm text-text-primary">
+            {globalToast}
+          </div>
         </div>
       )}
     </div>

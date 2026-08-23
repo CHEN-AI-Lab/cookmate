@@ -186,6 +186,7 @@
         "linkGoogle": "关联 Google",
         "linkGitHub": "关联 GitHub",
         "linkFailed": "关联失败，请重试",
+        "linkSuccess": "关联成功",
         "oauthAccountNotLinked": "该邮箱已绑定其他账号，请先登录后<link>关联此账号</link>。",
         "oauthAccessDenied": "你取消了第三方授权。要继续，请重新点击第三方登录按钮。",
         "oauthConfigError": "第三方登录服务配置错误，请稍后再试，或用邮箱验证码/密码登录。",
