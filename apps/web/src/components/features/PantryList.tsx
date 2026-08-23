@@ -94,7 +94,7 @@ export function PantryList({
                 className={`px-3 py-1 rounded-full text-sm border flex items-center gap-1 cursor-pointer transition-colors ${
                   selectedIds.has(item.id)
                     ? "bg-gradient-to-r from-orange-400 to-amber-400 text-white border-transparent"
-                    : "bg-surface text-accent border-orange-200 hover:bg-surface"
+                    : "bg-accent/10 text-accent border-accent/20 hover:bg-accent/15"
                 }`}
               >
                 {item.name}

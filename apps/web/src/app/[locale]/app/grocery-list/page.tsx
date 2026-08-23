@@ -474,7 +474,7 @@ export default function GroceryListPage() {
             </div>
             <div className="space-y-3">
               {sourceDialog.sources.map((src, i) => (
-                <div key={i} className="flex items-center justify-between bg-surface rounded-xl px-4 py-3">
+                <div key={i} className="flex items-center justify-between bg-accent/10 rounded-xl px-4 py-3">
                   <span className="text-sm font-medium text-text-primary">{src.title}</span>
                   <span className="text-sm text-text-secondary">{src.quantity}</span>
                 </div>

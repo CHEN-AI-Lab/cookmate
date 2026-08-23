@@ -89,7 +89,7 @@ export function ManualAddSection({
             {manualItems.map((name) => (
               <span
                 key={name}
-                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-surface text-accent border border-orange-200"
+                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-accent/10 text-accent border border-accent/20"
               >
                 {name}
                 <button

@@ -40,7 +40,7 @@ export function BlogCard({
                   {tags.map((tag) => (
                     <span
                       key={tag}
-                      className="bg-surface text-accent rounded-full px-2 py-0.5 text-xs"
+                      className="bg-accent/10 text-accent rounded-full px-2 py-0.5 text-xs"
                     >
                       {tag}
                     </span>

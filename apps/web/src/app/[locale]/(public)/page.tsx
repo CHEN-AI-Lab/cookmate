@@ -59,7 +59,7 @@ export default async function HomePage() {
               {thero.raw("demoIngredients").map((item: string) => (
                 <span
                   key={item}
-                  className="bg-surface text-accent px-3 py-1 rounded-full text-sm border border-border"
+                  className="bg-accent/10 text-accent px-3 py-1 rounded-full text-sm border-accent/20"
                 >
                   {item}
                 </span>

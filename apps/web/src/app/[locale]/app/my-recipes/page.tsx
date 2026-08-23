@@ -401,7 +401,7 @@ export default function MyRecipesPage() {
                         {recipe.calories && <span>🔥 {recipe.calories}{tr("caloriesShort")}</span>}
                         {recipe.cuisineType && <span>{locale === "en" || locale.startsWith("en") ? (CUISINE_LABELS[recipe.cuisineType] || recipe.cuisineType) : recipe.cuisineType}</span>}
                         {recipe.difficulty && (
-                          <span className="px-1.5 py-0.5 rounded bg-surface">{diffLabel(recipe.difficulty)}</span>
+                          <span className="px-1.5 py-0.5 rounded bg-accent/10 text-accent">{diffLabel(recipe.difficulty)}</span>
                         )}
                       </div>
                     </div>
@@ -447,7 +447,7 @@ export default function MyRecipesPage() {
                   </div>
                   <button
                     onClick={() => isDemoUser ? showToast(tr("demoToast")) : setAddDialog({ recipeId: recipe.id, title: recipe.title })}
-                    className="mt-4 bg-surface text-accent px-4 py-2 rounded-xl text-sm font-medium hover:bg-surface transition-colors"
+                    className="mt-4 bg-accent/10 text-accent px-4 py-2 rounded-xl text-sm font-medium hover:bg-accent/15 transition-colors"
                   >
                     {tr("addToPlan")}
                   </button>

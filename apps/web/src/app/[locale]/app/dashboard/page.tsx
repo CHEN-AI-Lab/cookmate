@@ -57,7 +57,7 @@ export default function DashboardPage() {
             <h1 className='text-2xl font-bold text-text-primary tracking-tight'>{td("welcomeBack")}</h1>
                         <p className='text-text-secondary mt-1 text-sm'>{td("welcomeDesc")}</p>
           </div>
-          <span className='hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface text-accent text-xs font-semibold rounded-full'>
+          <span className='hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-accent/10 text-accent text-xs font-semibold rounded-full'>
             {stats?.subscriptionTier === "PRO" ? td("proUser") : td("freeUser")}
           </span>
         </div>

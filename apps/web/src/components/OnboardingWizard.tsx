@@ -319,7 +319,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
               <div className="text-5xl mb-4">🤖</div>
               <h2 className="text-xl font-bold text-text-primary">{t("tryAiTitle")}</h2>
               <p className="text-text-secondary mt-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.raw("tryAiDesc") }} />
-              <div className="mt-6 inline-flex items-center gap-2 bg-surface text-accent px-4 py-2 rounded-full text-sm font-medium">
+              <div className="mt-6 inline-flex items-center gap-2 bg-accent/10 text-accent px-4 py-2 rounded-full text-sm font-medium">
                 {t("tryAiButton")}
               </div>
             </div>

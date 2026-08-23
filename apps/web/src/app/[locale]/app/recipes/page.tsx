@@ -355,7 +355,7 @@ export default function RecipesPage() {
                   className={`px-3 py-1 rounded-full text-sm border flex items-center gap-1 ${
                     isFromPantry(item)
                       ? "bg-success/10 text-success border-success/25"
-                      : "bg-surface text-accent border-border"
+                      : "bg-accent/10 text-accent border-accent/20"
                   }`}
                 >
                   {displayName(item)}

@@ -52,7 +52,7 @@ export function Sidebar({
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-surface text-accent"
+                  ? "bg-accent/10 text-accent"
                   : "text-text-secondary hover:bg-surface hover:text-accent"
               }`}
             >
@@ -139,7 +139,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
         onClick={() => { if (open) setLangOpen(false); setOpen(!open) }}
         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-primary hover:bg-surface w-full text-left transition-colors"
       >
-        <span className="flex items-center justify-center w-7 h-7 rounded-full bg-surface text-accent text-xs font-bold shrink-0">
+        <span className="flex items-center justify-center w-7 h-7 rounded-full bg-accent/10 text-accent text-xs font-bold shrink-0">
           {initial}
         </span>
         <span className="truncate flex-1">{isDemoUser && (locale === "en" || locale.startsWith("en")) ? "Demo User" : name}</span>
@@ -191,7 +191,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
                                               }
                                               router.push(window.location.pathname.replace(new RegExp("^/(?:" + locales.join("|") + ")(/|$)"), "/") || "/", { locale: l })
                                             }}
-                      className={"w-full text-left px-4 py-2 text-sm transition-colors " + (active ? "text-accent bg-surface font-medium" : "text-text-secondary hover:bg-surface hover:text-accent")}
+                      className={"w-full text-left px-4 py-2 text-sm transition-colors " + (active ? "text-accent bg-accent/10 font-medium" : "text-text-secondary hover:bg-surface hover:text-accent")}
                     >
                       {localeNames[l] || l}
                     </button>

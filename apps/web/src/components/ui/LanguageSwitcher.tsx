@@ -88,7 +88,7 @@ export default function LanguageSwitcher({
                   onClick={() => switchLocale(l)}
                   className={`w-full text-left px-4 py-2 text-sm transition-colors ${
                     active
-                      ? "text-accent bg-surface font-medium"
+                      ? "text-accent bg-accent/10 font-medium"
                       : "text-text-secondary hover:bg-surface hover:text-accent"
                   }`}
                 >

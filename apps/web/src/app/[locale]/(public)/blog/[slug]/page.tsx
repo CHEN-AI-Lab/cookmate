@@ -62,7 +62,7 @@ export default async function BlogPostPage({
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className='bg-surface text-accent rounded-full px-3 py-1 text-xs font-medium'
+                  className='bg-accent/10 text-accent rounded-full px-3 py-1 text-xs font-medium'
                 >
                   {tag}
                 </span>
