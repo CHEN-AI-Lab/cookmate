@@ -276,7 +276,7 @@ const save = async () => {
   if (loading) return <div className="text-center py-16 text-gray-400">{tc("loading")}</div>
 
   return (
-    <div>
+    <div className="relative">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-text-primary">{ts("title")}</h1>
         <p className="text-sm text-gray-400 mt-1">{ts("subtitle")}</p>
@@ -884,7 +884,7 @@ const save = async () => {
 
       {/* Global toast */}
       {globalToast && (
-        <div className="fixed top-1/3 left-4 sm:left-6 z-[100]">
+        <div className="absolute top-1/3 left-1/3 z-[100]">
           <div className="bg-accent text-white border border-border shadow-lg rounded-xl px-5 py-2.5 text-sm">
             {globalToast}
           </div>
