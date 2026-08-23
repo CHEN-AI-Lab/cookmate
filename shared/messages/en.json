@@ -448,6 +448,7 @@
         "aiAnalyzing": "AI is analyzing ingredients and generating recipes...",
         "errorAtLeastOneIngredient": "Please add at least one ingredient",
         "errorGenerateFailed": "Generation failed, please try again later",
+    "aiFallback": "AI generation failed, showing default recipes",
         "errorUnknown": "Unknown error",
         "errorAddFailed": "Failed to add",
         "errorReplaceFailed": "Failed to replace",

@@ -191,11 +191,11 @@ export async function generateRecipes(
   },
   pantryContext?: string[],
   locale?: string
-): Promise<RecipeResult[]> {
+): Promise<{ recipes: RecipeResult[]; fallback: boolean }> {
   const isEnglish = locale === "en"
 
   if (!hasAIKey()) {
-    return isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences)
+    return { recipes: isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences), fallback: true }
   }
 
   const systemPrompt = buildSystemPrompt(locale)
@@ -240,14 +240,14 @@ export async function generateRecipes(
     })
     const parsed = JSON.parse(content)
     const aiRecipes = parsed.recipes || []
-    if (aiRecipes.length > 0) return aiRecipes
+    if (aiRecipes.length > 0) return { recipes: aiRecipes, fallback: false }
     // AI 返回空结果，降级用 mock 数据
     console.warn("AI returned empty, falling back to mock data")
-    return isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences)
+    return { recipes: isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences), fallback: true }
   } catch (err) {
     console.error("AI recipe generation failed, falling back to mock data:", err)
     // AI 失败时降级到 mock 数据，确保用户至少能获得一些推荐
-    return isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences)
+    return { recipes: isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences), fallback: true }
   }
 }
 

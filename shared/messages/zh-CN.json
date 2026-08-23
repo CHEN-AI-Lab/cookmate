@@ -448,6 +448,7 @@
         "aiAnalyzing": "AI 正在分析食材并生成菜谱...",
         "errorAtLeastOneIngredient": "请至少添加一种食材",
         "errorGenerateFailed": "生成失败，请稍后重试",
+    "aiFallback": "AI 生成失败，已为您推荐默认菜谱",
         "errorUnknown": "未知错误",
         "errorAddFailed": "添加失败",
         "errorReplaceFailed": "替换失败",

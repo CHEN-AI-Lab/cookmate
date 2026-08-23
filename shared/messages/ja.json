@@ -418,6 +418,7 @@
     "errorAddFailed": "追加に失敗しました",
     "errorAtLeastOneIngredient": "少なくとも1つの食材を追加してください",
     "errorGenerateFailed": "生成に失敗しました。しばらくしてからやり直してください。",
+    "aiFallback": "AI 生成に失敗しました。デフォルトレシピを表示します",
     "errorReplaceFailed": "置き換えに失敗しました",
     "errorUnknown": "不明なエラー",
     "friday": "金",
