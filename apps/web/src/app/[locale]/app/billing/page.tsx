@@ -340,7 +340,7 @@ export default function BillingPage() {
 
       {/* ── Checkout Modal ── */}
       {showCheckoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4" onClick={() => { setShowCheckoutModal(false); setError("") }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => { setShowCheckoutModal(false); setError("") }}>
           <div className="bg-card rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold text-lg text-text-primary mb-4 text-center">
               {isFree ? t("checkoutTitle") : t("extendTitle")}
@@ -383,7 +383,7 @@ export default function BillingPage() {
                   }
                 }}
                 disabled={actionLoading !== null || paying}
-                className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-gray-100 hover:border-accent hover:bg-accent/5 transition-all disabled:opacity-40 group"
+                className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-gray-100 hover:border-accent hover:bg-orange-50/30 transition-all disabled:opacity-40 group"
               >
                 <svg className="w-7 h-7 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect width="24" height="24" rx="4" fill="#1677FF"/>
@@ -427,7 +427,7 @@ export default function BillingPage() {
 
       {/* ── Cancel Confirmation Modal ── */}
       {showCancelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4" onClick={() => setShowCancelModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => setShowCancelModal(false)}>
           <div className="bg-card rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
             <div className="text-center mb-4">
               <div className="mx-auto w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-3">
@@ -477,7 +477,7 @@ export default function BillingPage() {
 
       {/* ── Downgrade Confirmation Modal (PRO → Free) ── */}
       {showDowngradeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4" onClick={() => setShowDowngradeModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => setShowDowngradeModal(false)}>
           <div className="bg-card rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
             <div className="text-center mb-4">
               <div className="mx-auto w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-3">

@@ -55,7 +55,7 @@ export default function DemoOnboarding() {
   if (!visible) return null
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-overlay p-4">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/30 p-4">
       <div className="bg-card rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
         <div className="text-4xl mb-3">{content[step].icon}</div>
         <h3 className="font-bold text-lg text-text-primary mb-2">{content[step].title}</h3>

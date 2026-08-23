@@ -288,7 +288,7 @@ export default function RecipesPage() {
     <div>
       <h1 className="text-2xl font-bold text-text-primary mb-6">{t("aiRecipesTitle")}</h1>
 
-      <div className="bg-card rounded-2xl shadow-sm border border-success/10 p-6 mb-6">
+      <div className="bg-card rounded-2xl shadow-sm border border-green-50 p-6 mb-6">
         {pantryLoaded && pantryItems.length > 0 && (
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
@@ -430,7 +430,7 @@ export default function RecipesPage() {
       )}
 
       {addDialog && (
-        <div className="fixed inset-0 bg-overlay flex items-center justify-center z-50" onClick={() => setAddDialog(null)}>
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setAddDialog(null)}>
           <div className="bg-card rounded-2xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-text-primary mb-4">{t("addToPlan")}</h3>
             <p className="text-sm text-text-secondary mb-4">{t("addToPlanDesc", { title: addDialog.recipe.title })}</p>
@@ -466,7 +466,7 @@ export default function RecipesPage() {
       )}
 
       {conflictData && (
-        <div className="fixed inset-0 bg-overlay flex items-center justify-center z-50" onClick={() => setConflictData(null)}>
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setConflictData(null)}>
           <div className="bg-card rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
             <p className="text-lg mb-2">⚠️</p>
             <p className="text-sm text-text-primary font-medium mb-1">{t("slotConflict")}</p>
@@ -481,7 +481,7 @@ export default function RecipesPage() {
       )}
 
       {deleteDialog && (
-        <div className="fixed inset-0 bg-overlay flex items-center justify-center z-50" onClick={() => setDeleteDialog(null)}>
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setDeleteDialog(null)}>
           <div className="bg-card rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
             <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mx-auto mb-2 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>

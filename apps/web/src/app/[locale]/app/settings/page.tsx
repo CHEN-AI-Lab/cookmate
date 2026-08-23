@@ -772,7 +772,7 @@ const save = async () => {
 
       {/* Delete confirmation modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4" onClick={() => { setShowDeleteModal(false); setDeleteCode(""); setCodeSent(false); setDeleteError("") }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => { setShowDeleteModal(false); setDeleteCode(""); setCodeSent(false); setDeleteError("") }}>
           <div className="bg-card rounded-2xl shadow-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center shrink-0">
@@ -847,7 +847,7 @@ const save = async () => {
 
       {/* ── Unlink Confirmation Modal ── */}
       {unlinkConfirmProvider && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4" onClick={() => setUnlinkConfirmProvider(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => setUnlinkConfirmProvider(null)}>
           <div className="bg-card rounded-2xl shadow-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center shrink-0">

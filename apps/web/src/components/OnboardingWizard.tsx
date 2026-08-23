@@ -130,7 +130,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
       <div className="bg-card rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden relative">
         {/* Progress bar */}
         <div className="h-1 bg-surface">
