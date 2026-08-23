@@ -70,7 +70,8 @@ export async function POST(req: Request) {
     if (!isDev) {
       const isMock = !(process.env.AI_API_KEY || process.env.OPENAI_API_KEY)
       if (!isMock) {
-        const canGenerate = await checkUsageLimit(userId).catch((err: unknown) => { console.error("check usage limit error:", err); return true })
+        // fail-closed：用量检查出错（如 DB 抖动）时拒绝生成，原实现 catch 返回 true 会让免费用户无限调用付费 AI
+        const canGenerate = await checkUsageLimit(userId).catch((err: unknown) => { console.error("check usage limit error:", err); return false })
         if (!canGenerate) {
           return NextResponse.json({ error: e("今日次数已用完，明天再来吧", "Daily limit reached, come back tomorrow") }, { status: 429 })
         }

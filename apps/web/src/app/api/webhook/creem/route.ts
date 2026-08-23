@@ -78,7 +78,13 @@ function extractSubscriptionId(event: Record<string, unknown>): string | null {
 }
 
 async function upgradeUser(userId: string, creemSubscriptionId?: string, period?: string) {
-  const expiryDate = new Date()
+  // 续费累加：从 max(now, 现有到期日) 起算，避免吞掉用户剩余天数
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  const now = new Date()
+  const base = user?.subscriptionExpiryDate && user.subscriptionExpiryDate > now
+    ? user.subscriptionExpiryDate
+    : now
+  const expiryDate = new Date(base)
   if (period === "annual") {
     expiryDate.setUTCFullYear(expiryDate.getUTCFullYear() + 1)
   } else {
@@ -178,6 +184,45 @@ export async function POST(req: Request) {
         await upgradeUser(userId, subscriptionId || undefined, period)
       }
       logWebhook("creem", event.eventType as string, "success")
+      return NextResponse.json({ success: true })
+    }
+
+    // 退款 — 立即降级为 FREE（原实现不处理，用户退款后永久保持 PRO）
+    if (event.eventType === "refund.created") {
+      const userId = extractUserId(event)
+      if (userId) {
+        await prisma.user.update({
+          where: { id: userId },
+          data: { subscriptionTier: "FREE", subscriptionExpiryDate: null, creemSubscriptionId: null },
+        })
+      }
+      logWebhook("creem", "refund.created", "success")
+      return NextResponse.json({ success: true })
+    }
+
+    // 订阅到期 — 降级为 FREE
+    if (event.eventType === "subscription.expired") {
+      const userId = extractUserId(event)
+      if (userId) {
+        await prisma.user.update({
+          where: { id: userId },
+          data: { subscriptionTier: "FREE", creemSubscriptionId: null },
+        })
+      }
+      logWebhook("creem", "subscription.expired", "success")
+      return NextResponse.json({ success: true })
+    }
+
+    // 取消订阅 — 保留 PRO 到已付周期结束（subscriptionExpiryDate 不变），仅清除订阅关联防止续费
+    if (event.eventType === "subscription.canceled") {
+      const userId = extractUserId(event)
+      if (userId) {
+        await prisma.user.update({
+          where: { id: userId },
+          data: { creemSubscriptionId: null },
+        })
+      }
+      logWebhook("creem", "subscription.canceled", "success")
       return NextResponse.json({ success: true })
     }
 

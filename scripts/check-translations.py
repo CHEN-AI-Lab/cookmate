@@ -1,27 +1,41 @@
+# 翻译完整性检查：以 en.json 为基准，深度递归比对所有语言的 key 是否对齐
+# 原实现只比对 zh-CN ↔ en 且仅检查两层，导致 ja/zh-TW 缺 200+ key 未被发现（上线前检查发现）
 import json, sys
 
-with open("shared/messages/zh-CN.json") as f: zh = json.load(f)
-with open("shared/messages/en.json") as f: en = json.load(f)
+LOCALES = ["en", "zh-CN", "ja", "zh-TW"]
+BASE = "en"
 
-zh_keys = {k for k in zh if isinstance(zh[k], dict)}
-en_keys = {k for k in en if isinstance(en[k], dict)}
+def flat(d, prefix=""):
+    out = {}
+    for k, v in d.items():
+        key = f"{prefix}.{k}" if prefix else k
+        if isinstance(v, dict):
+            out.update(flat(v, key))
+        else:
+            out[key] = v
+    return out
+
+def load(locale):
+    with open(f"shared/messages/{locale}.json", encoding="utf-8") as f:
+        return flat(json.load(f))
+
+base = load(BASE)
 issues = []
 
-missing = zh_keys - en_keys
-extra = en_keys - zh_keys
-if missing: issues.append("Missing en sections: " + str(missing))
-if extra: issues.append("Extra en sections: " + str(extra))
-
-for section in sorted(zh_keys):
-    zh_sec = set(zh[section].keys())
-    en_sec = set(en[section].keys())
-    diff = zh_sec - en_sec
-    if diff: issues.append(f"{section}: missing en keys {diff}")
-    diff = en_sec - zh_sec
-    if diff: issues.append(f"{section}: extra en keys {diff}")
+for loc in LOCALES:
+    if loc == BASE:
+        continue
+    cur = load(loc)
+    missing = sorted(set(base) - set(cur))
+    extra = sorted(set(cur) - set(base))
+    if missing:
+        issues.append(f"{loc}: 缺失 {len(missing)} 个 key: {missing[:10]}{' ...' if len(missing) > 10 else ''}")
+    if extra:
+        issues.append(f"{loc}: 多出 {len(extra)} 个 key: {extra[:10]}{' ...' if len(extra) > 10 else ''}")
 
 if issues:
-    for i in issues: print(i)
+    for i in issues:
+        print(i)
     sys.exit(1)
 else:
-    print("✅ All translation keys match between zh-CN and en")
+    print(f"✅ All translation keys match across {', '.join(LOCALES)} ({len(base)} keys)")

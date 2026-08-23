@@ -88,40 +88,59 @@ export async function GET(req: Request) {
     const checkout = await retrieveCheckout(checkoutId)
     const checkoutMeta = checkout.metadata as Record<string, string> | undefined
 
-    // 安全检查：这个 checkout 必须是当前用户的
-    if (checkoutMeta?.userId && checkoutMeta.userId !== session.user.id) {
+    // 安全检查：这个 checkout 必须归属当前用户；metadata 缺 userId 时同样拒绝（不放行）
+    if (!checkoutMeta?.userId || checkoutMeta.userId !== session.user.id) {
       return NextResponse.json({ paid: false, error: "订单不属于当前用户" }, { status: 403 })
     }
 
     const isPaid = checkout.status === "completed"
 
     if (isPaid) {
-      // 更新订单状态
-      await prisma.paymentOrder.updateMany({
-        where: { orderId: checkoutId },
-        data: { status: "PAID" },
+      // 幂等：本地订单号（CKCR 格式）与 Creem checkoutId（ch_xxx）不同，
+      // 按"当前用户的 PENDING Creem 订单"匹配，且只有状态真正流转 PENDING → PAID 时才升级，
+      // 用旧 checkoutId 重复调用本接口不会重复续期
+      const pendingOrder = await prisma.paymentOrder.findFirst({
+        where: { userId: session.user.id, channel: "creem", status: "PENDING" },
+        orderBy: { createdAt: "desc" },
       })
 
-      // 升级用户 — 根据 metadata.period 计算过期时间（annual → 1 年，其余 → 1 月）
-      const period = checkoutMeta?.period
-      const expiryDate = new Date()
-      if (period === "annual") {
-        expiryDate.setUTCFullYear(expiryDate.getUTCFullYear() + 1)
-      } else {
-        expiryDate.setUTCMonth(expiryDate.getUTCMonth() + 1)
+      let upgraded = false
+      if (pendingOrder) {
+        const updated = await prisma.paymentOrder.updateMany({
+          where: { id: pendingOrder.id, status: "PENDING" },
+          data: { status: "PAID" },
+        })
+
+        if (updated.count > 0) {
+          // 升级用户 — 根据 metadata.period 计算过期时间（annual → 1 年，其余 → 1 月）
+          // 续费累加：从 max(now, 现有到期日) 起算，避免吞掉剩余天数
+          const user = await prisma.user.findUnique({ where: { id: session.user.id } })
+          const now = new Date()
+          const base = user?.subscriptionExpiryDate && user.subscriptionExpiryDate > now
+            ? user.subscriptionExpiryDate
+            : now
+          const expiryDate = new Date(base)
+          const period = checkoutMeta.period
+          if (period === "annual") {
+            expiryDate.setUTCFullYear(expiryDate.getUTCFullYear() + 1)
+          } else {
+            expiryDate.setUTCMonth(expiryDate.getUTCMonth() + 1)
+          }
+          await prisma.user.update({
+            where: { id: session.user.id },
+            data: {
+              subscriptionTier: "PRO",
+              subscriptionExpiryDate: expiryDate,
+            },
+          })
+          upgraded = true
+        }
       }
-      await prisma.user.update({
-        where: { id: session.user.id },
-        data: {
-          subscriptionTier: "PRO",
-          subscriptionExpiryDate: expiryDate,
-        },
-      })
 
       return NextResponse.json({
         paid: true,
         status: checkout.status,
-        message: "支付已确认，已升级到 PRO",
+        message: upgraded ? "支付已确认，已升级到 PRO" : "该订单已处理过，无需重复升级",
       })
     }
 

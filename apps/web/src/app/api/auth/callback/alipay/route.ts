@@ -110,9 +110,18 @@ export async function GET(req: Request) {
       userId = newUser.id
     }
 
-    // Step 4: 重定向到登录页，参数传递给前端自动登录
+    // Step 4: 签发一次性登录令牌（5 分钟有效、用完即删），替代原先的裸 userId 直传
+    // 安全要求：authorize() 只认这里签发的 token，绝不接受裸 userId，防止伪造 URL 登录任意账号
+    const oneTimeToken = crypto.randomBytes(32).toString("hex")
+    await prisma.verificationToken.create({
+      data: {
+        identifier: `alipay-auth:${userId}`,
+        token: oneTimeToken,
+        expires: new Date(Date.now() + 5 * 60 * 1000),
+      },
+    })
     const loginUrl = new URL("/login", req.url)
-    loginUrl.searchParams.set("alipay_auth", userId)
+    loginUrl.searchParams.set("alipay_auth", oneTimeToken)
     return NextResponse.redirect(loginUrl)
   } catch (err: unknown) {
     console.error("[Alipay Callback] Error:", err)

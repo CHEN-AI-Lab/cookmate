@@ -28,7 +28,8 @@
     "sendCode": "コードを送信",
     "sending": "送信中...",
     "showPassword": "パスワードを表示",
-    "appName": "クックメイト"
+    "appName": "クックメイト",
+    "pro": "Pro"
   },
   "nav": {
     "dashboard": "ダッシュボード",
@@ -76,33 +77,42 @@
     "step2Title": "2. AIがレシピを生成",
     "step2Desc": "3秒でカスタムレシピを取得。調理時間、カロリー付き",
     "step3Title": "3. 献立に追加 → 買い物リスト",
-    "step3Desc": "レシピを選んで週間予定を組み、買い物リストを自動作成"
+    "step3Desc": "レシピを選んで週間予定を組み、買い物リストを自動作成",
+    "step1Emoji": "🥦",
+    "step2Emoji": "🤖",
+    "step3Emoji": "📋"
   },
   "features": {
     "title": "さらに多くの機能",
     "aiRecipe": {
       "title": "AIレシピ生成",
-      "desc": "食材を入れるだけで、3秒でオリジナルレシピ"
+      "desc": "食材を入れるだけで、3秒でオリジナルレシピ",
+      "emoji": "🍳"
     },
     "mealPlan": {
       "title": "スマート週間献立",
-      "desc": "AIがワンクリックで一週間のメニューを自動作成"
+      "desc": "AIがワンクリックで一週間のメニューを自動作成",
+      "emoji": "📅"
     },
     "grocery": {
       "title": "買い物リスト",
-      "desc": "スーパーの売り場順に自動分類、食材庫とクロスチェック"
+      "desc": "スーパーの売り場順に自動分類、食材庫とクロスチェック",
+      "emoji": "🛒"
     },
     "diet": {
       "title": "食事カスタマイズ",
-      "desc": "ケト、ベジタリアン、低炭水化物など、あなたの食事ニーズに対応"
+      "desc": "ケト、ベジタリアン、低炭水化物など、あなたの食事ニーズに対応",
+      "emoji": "🥗"
     },
     "pantry": {
       "title": "食材庫管理",
-      "desc": "冷蔵庫の在庫を管理、AIが優先的にお持ちの食材を使ったレシピを提案"
+      "desc": "冷蔵庫の在庫を管理、AIが優先的にお持ちの食材を使ったレシピを提案",
+      "emoji": "🥦"
     },
     "recipes": {
       "title": "レシピコレクション",
-      "desc": "お気に入りのレシピを保存して整理"
+      "desc": "お気に入りのレシピを保存して整理",
+      "emoji": "📚"
     }
   },
   "auth": {
@@ -182,7 +192,12 @@
     "linkAccountBound": "この{provider}アカウントは既に他のユーザーに紐付けられています",
     "linkOtherError": "ログイン中に問題が発生しました。もう一度お試しください。",
     "backToAccount": "アカウント設定へ",
-    "backHome": "ホームへ"
+    "backHome": "ホームへ",
+    "oauthWechat": "WeChat",
+    "oauthAlipay": "Alipay",
+    "oauthGoogle": "Google",
+    "oauthGithub": "GitHub",
+    "linkSuccess": "連携しました"
   },
   "validation": {
     "invalidEmail": "メールアドレスの形式が正しくありません",
@@ -351,7 +366,8 @@
       "🥛 乳品豆制品": "🥛 乳製品・豆製品",
       "🍚 主食粮油": "🍚 主食・油"
     },
-    "addItem": "アイテム追加"
+    "addItem": "アイテム追加",
+    "searchIcon": "🔍"
   },
   "recipes": {
     "title": "AIレシピ",
@@ -544,7 +560,18 @@
     "daysLeft": "{days, number} 日残り",
     "manageStripe": "Stripeサブスクリプション管理",
     "noSubscription": "サブスクリプション記録がありません",
-    "upgrade": "プランアップグレード"
+    "upgrade": "プランアップグレード",
+    "proPlan": "Pro",
+    "freePlan": "無料",
+    "proBadge": "🌟 Pro",
+    "yearlyPrice": "16.99",
+    "monthlyPrice": "2.99",
+    "alipay": "Alipay",
+    "creem": "Creem",
+    "proLabel": "Pro",
+    "currentPlanPro": "Pro",
+    "alipayPay": "Alipay",
+    "creemPay": "Creem"
   },
   "orders": {
     "title": "📋 注文履歴",
@@ -569,7 +596,10 @@
     "deleteConfirm": "この注文を削除しますか？",
     "deleteConfirmHint": "この操作は元に戻せません。",
     "deleteSuccess": "注文を削除しました",
-    "plan": "プラン"
+    "plan": "プラン",
+    "channelAlipay": "Alipay",
+    "channelStripe": "Stripe",
+    "channelCreem": "Creem"
   },
   "blog": {
     "title": "ブログ",
@@ -797,7 +827,10 @@
     "meals": "100,000+",
     "mealsLabel": "計画された食事",
     "satisfactionLabel": "ユーザー満足度",
-    "title": "数字で見る"
+    "title": "数字で見る",
+    "users": "10,000+",
+    "recipes": "50,000+",
+    "satisfaction": "98%"
   },
   "testimonials": {
     "title": "ユーザーの声",
@@ -825,7 +858,9 @@
     "terms": "利用規約",
     "about": "概要",
     "features": "AIレシピ",
-    "links": "リンク"
+    "links": "リンク",
+    "email": "CookMate@aaigc.online",
+    "copyright": "© {year} CookMate. All rights reserved."
   },
   "errors": {
     "notFound": "ページが見つかりません",
@@ -1000,6 +1035,9 @@
     "set": "設定",
     "updateFailed": "更新に失敗しました",
     "upgradePlan": "⬆️ Proにアップグレード",
-    "username": "ユーザー名"
+    "username": "ユーザー名",
+    "languageZh": "中文",
+    "languageEn": "English",
+    "proPlan": "Pro"
   }
 }

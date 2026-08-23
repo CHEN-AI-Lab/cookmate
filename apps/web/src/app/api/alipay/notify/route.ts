@@ -34,24 +34,34 @@ export async function POST(req: Request) {
     // 只处理支付成功
     if (tradeStatus === "TRADE_SUCCESS" || tradeStatus === "TRADE_FINISHED") {
       if (outTradeNo) {
-        // 更新订单状态
-        await prisma.paymentOrder.updateMany({
+        // 幂等：支付宝会重发 notify（网络重试/success 未送达），
+        // 只有订单状态真正从 PENDING → PAID 变更成功时才升级用户，重复回调不再延长订阅
+        const updated = await prisma.paymentOrder.updateMany({
           where: { orderId: outTradeNo, status: "PENDING" },
           data: { status: "PAID" },
         })
 
-        // 查找订单关联的用户
-        const order = await prisma.paymentOrder.findUnique({
-          where: { orderId: outTradeNo },
-        })
-        if (order) {
-          await prisma.user.update({
-            where: { id: order.userId },
-            data: {
-              subscriptionTier: "PRO",
-              subscriptionExpiryDate: (() => { const d = new Date(); d.setUTCMonth(d.getUTCMonth() + 1); return d })(),
-            },
+        if (updated.count > 0) {
+          const order = await prisma.paymentOrder.findUnique({
+            where: { orderId: outTradeNo },
           })
+          if (order) {
+            // 续费累加：从 max(now, 现有到期日) 起算，避免吞掉用户剩余天数
+            const user = await prisma.user.findUnique({ where: { id: order.userId } })
+            const now = new Date()
+            const base = user?.subscriptionExpiryDate && user.subscriptionExpiryDate > now
+              ? user.subscriptionExpiryDate
+              : now
+            const expiry = new Date(base)
+            expiry.setUTCMonth(expiry.getUTCMonth() + 1)
+            await prisma.user.update({
+              where: { id: order.userId },
+              data: {
+                subscriptionTier: "PRO",
+                subscriptionExpiryDate: expiry,
+              },
+            })
+          }
         }
       }
     }

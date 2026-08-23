@@ -7,10 +7,10 @@ import DemoOnboarding from "@/components/ui/DemoOnboarding"
 import OnboardingGuard from "@/components/ui/OnboardingGuard"
 
 export default async function AppLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
-  const session = await auth()
-  if (!session?.user) redirect("/login")
-
   const { locale } = await params
+  const session = await auth()
+  // 重定向保留语言前缀（localePrefix 为 always），否则中文用户会被跳到英文登录页
+  if (!session?.user) redirect(`/${locale}/login`)
 
   const onboardingCompleted = session.user.onboardingCompleted ?? false
   const isDemoUser = session.user.id.startsWith("demo")

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import crypto from "node:crypto"
 import { isDemoUser } from "@/lib/auth-helpers"
 import { err } from "@cookmate/shared/utils/locale"
+import { checkOtpRateLimit, recordOtpAttempt } from "@cookmate/shared/utils/otp-rate-limit"
 
 function emailT(locale: string, zh: string, en: string): string {
   return locale === "zh-CN" ? zh : en
@@ -92,12 +93,22 @@ export async function PUT(req: Request) {
     l = locale || "zh-CN"
     if (!email || !code) return NextResponse.json({ error: err(l, "missingParams") }, { status: 400 })
 
+    // 防爆破：同一邮箱失败次数过多则锁定（与 forgot-password 同一限流器）
+    const rateKey = `otp:${email}`
+    if (!checkOtpRateLimit(rateKey).allowed) {
+      return NextResponse.json({ error: l === "en" ? "Too many attempts, please try again in 15 minutes" : "尝试次数过多，请 15 分钟后再试" }, { status: 429 })
+    }
+
     // 验证码校验
     const record = await prisma.verificationCode.findFirst({
       where: { email, code, used: false, expiresAt: { gte: new Date() } },
       orderBy: { createdAt: "desc" },
     })
-    if (!record) return NextResponse.json({ error: err(l, "codeExpired") }, { status: 400 })
+    if (!record) {
+      recordOtpAttempt(rateKey, false)
+      return NextResponse.json({ error: err(l, "codeExpired") }, { status: 400 })
+    }
+    recordOtpAttempt(rateKey, true)
 
     // 标记验证码已使用
     await prisma.verificationCode.update({ where: { id: record.id }, data: { used: true } })

@@ -74,7 +74,8 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
     const alipayAuth = params.get("alipay_auth")
     if (alipayAuth) {
       window.history.replaceState({}, "", "/login")
-      signIn("alipay-auth", { userId: alipayAuth, callbackUrl: "/app/dashboard" })
+      // alipay_auth 现在是后端签发的一次性令牌（非 userId），authorize 校验并核销后才签发会话
+      signIn("alipay-auth", { token: alipayAuth, callbackUrl: "/app/dashboard" })
     }
   }, [])
   useEffect(() => {

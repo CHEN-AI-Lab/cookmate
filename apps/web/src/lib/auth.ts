@@ -215,8 +215,11 @@ if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
   )
 }
 
-// 支付宝登录 — 仅当配置了凭证时才启用
-if (process.env.AUTH_ALIPAY_ID && process.env.AUTH_ALIPAY_PRIVATE_KEY) {
+// 支付宝 OAuth 登录 — 安全警告：该 provider 的 token/userinfo 仍是 mock 实现（固定返回测试用户），
+// 绝不能随真实凭证启用（否则任何人登录都会变成同一测试用户）。
+// 仅在显式设置 ALIPAY_MOCK_LOGIN=true 的本地调试环境注册；生产环境该变量不存在则不加载。
+// 真实支付宝登录走 /api/auth/callback/alipay 自定义回调 + alipay-auth 一次性令牌，不经过此 provider。
+if (process.env.ALIPAY_MOCK_LOGIN === "true" && process.env.AUTH_ALIPAY_ID && process.env.AUTH_ALIPAY_PRIVATE_KEY) {
   providers.push(
     AlipayProvider({
       clientId: process.env.AUTH_ALIPAY_ID,
@@ -236,14 +239,21 @@ if (process.env.AUTH_WECHAT_ID && process.env.AUTH_WECHAT_SECRET) {
 }
 
 // 支付宝授权登录回调 — 仅被自定义回调路由调用
+// 安全：只接受 /api/auth/callback/alipay 签发的一次性令牌（DB 核销、5 分钟有效），拒绝裸 userId
 providers.push(
   Credentials({
     id: "alipay-auth",
     name: "支付宝",
-    credentials: { userId: { label: "User ID", type: "text" } },
+    credentials: { token: { label: "One-time Token", type: "text" } },
     async authorize(credentials) {
-      const uid = credentials?.userId as string
-      if (!uid) return null
+      const token = credentials?.token as string
+      if (!token) return null
+      // 查令牌并立即删除（一次性），identifier 形如 alipay-auth:<userId>
+      const record = await prisma.verificationToken.findUnique({ where: { token } }).catch(() => null)
+      if (!record || !record.identifier.startsWith("alipay-auth:")) return null
+      await prisma.verificationToken.delete({ where: { token } }).catch(() => {})
+      if (record.expires < new Date()) return null
+      const uid = record.identifier.slice("alipay-auth:".length)
       const user = await prisma.user.findUnique({ where: { id: uid } }).catch(() => null)
       if (!user) return null
       return { id: user.id, name: user.name, email: user.email!, image: user.image, emailVerified: new Date() }
@@ -388,6 +398,8 @@ async function getSessionUserId(): Promise<string | null> {
 const { handlers: nextAuthHandlers, auth: nextAuthAuth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
+  // 信任请求主机：Vercel 会自动推断，但自托管/自定义反代部署缺省时 /api/auth/* 会 500（UntrustedHost）
+  trustHost: true,
   providers,
   callbacks: {
     async signIn({ user, account, profile }) {

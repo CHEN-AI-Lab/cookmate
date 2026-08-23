@@ -46,7 +46,8 @@
     "billing": "賬單",
     "demoLangToast": "體驗用戶只能在中文和英文間切換",
     "language": "語言",
-    "logout": "退出登錄"
+    "logout": "退出登錄",
+    "howToUse": "使用流程"
   },
   "hero": {
     "title": "今天吃什麼？",
@@ -75,33 +76,44 @@
     "step2Title": "2. AI 生成菜譜",
     "step2Desc": "3 秒內獲得量身定製的菜譜，含步驟、時間、卡路里",
     "step3Title": "3. 加入周計劃 → 生成購物清單",
-    "step3Desc": "選好菜譜排入日程，購物清單自動按超市分區歸類"
+    "step3Desc": "選好菜譜排入日程，購物清單自動按超市分區歸類",
+    "title": "三步搞定",
+    "step1Emoji": "🥦",
+    "step2Emoji": "🤖",
+    "step3Emoji": "📋"
   },
   "features": {
     "aiRecipe": {
       "title": "AI 菜譜生成",
-      "desc": "輸入食材，3 秒生成定製菜譜"
+      "desc": "輸入食材，3 秒生成定製菜譜",
+      "emoji": "🍳"
     },
     "mealPlan": {
       "title": "智能周計劃",
-      "desc": "AI 一鍵生成整週菜單，不滿意可刪除重排"
+      "desc": "AI 一鍵生成整週菜單，不滿意可刪除重排",
+      "emoji": "📅"
     },
     "grocery": {
       "title": "購物清單",
-      "desc": "按超市分區歸類，與食材庫自動比對"
+      "desc": "按超市分區歸類，與食材庫自動比對",
+      "emoji": "🛒"
     },
     "diet": {
       "title": "飲食定製",
-      "desc": "減脂、增肌、素食，滿足你的飲食需求"
+      "desc": "減脂、增肌、素食，滿足你的飲食需求",
+      "emoji": "🥗"
     },
     "pantry": {
       "title": "食材庫",
-      "desc": "管理冰箱食材，AI 優先用存貨推薦菜譜"
+      "desc": "管理冰箱食材，AI 優先用存貨推薦菜譜",
+      "emoji": "🥦"
     },
     "recipes": {
       "title": "我的菜譜",
-      "desc": "收藏和管理你的私房菜譜"
-    }
+      "desc": "收藏和管理你的私房菜譜",
+      "emoji": "📚"
+    },
+    "title": "更多功能"
   },
   "auth": {
     "loginTitle": "登錄 CookMate",
@@ -181,7 +193,11 @@
     "linkAccountBound": "該{provider}帳號已被其他使用者綁定",
     "linkOtherError": "登入過程中出現問題，請重試。",
     "backToAccount": "返回帳號設定",
-    "backHome": "返回首頁"
+    "backHome": "返回首頁",
+    "oauthWechat": "微信",
+    "oauthGoogle": "Google",
+    "oauthGithub": "GitHub",
+    "linkSuccess": "關聯成功"
   },
   "validation": {
     "invalidPhone": "請輸入正確的11位手機號",
@@ -236,7 +252,11 @@
     "subtextPantry": "冰箱裡的食材",
     "subtextPantryDemo": "示例數據",
     "subtextStarred": "你的私房菜單",
-    "subtextStarredDemo": "示例數據"
+    "subtextStarredDemo": "示例數據",
+    "aiGenerate": "AI 生成",
+    "quickAccess": "快捷入口",
+    "managePantry": "管理食材",
+    "subtextAiGenerating": "AI 生成"
   },
   "mealPlan": {
     "title": "本週計劃",
@@ -271,7 +291,14 @@
     "goToAiRecipes": "🤖 去 AI 菜譜",
     "goToMyRecipes": "📚 去我的菜譜",
     "unstarToast": "已取消收藏",
-    "starTooltipStarred": "取消收藏"
+    "starTooltipStarred": "取消收藏",
+    "generating": "🤖 生成中...",
+    "deleteAll": "🗑️ 清除全部",
+    "breakfast": "早餐",
+    "lunch": "午餐",
+    "dinner": "晚餐",
+    "starToast": "⭐ 已收藏",
+    "emptySlot": "未安排菜品"
   },
   "grocery": {
     "title": "🛒 購物清單",
@@ -301,8 +328,17 @@
       "🍺 酒类": "🍺 酒類",
       "🥩 肉类": "🥩 肉類",
       "🍚 主食粮油": "🍚 主食糧油",
-      "🧂 调味料": "🧂 調味料"
-    }
+      "🧂 调味料": "🧂 調味料",
+      "🥬 蔬菜水果": "🥬 蔬菜水果",
+      "🥩 肉禽蛋": "🥩 肉禽蛋",
+      "🧴 日用品": "🧴 日用品",
+      "🥬 蔬菜": "🥬 蔬菜",
+      "🥚 蛋奶": "🥚 蛋奶",
+      "其他": "其他"
+    },
+    "lastNDays": "前{n}天",
+    "addButton": "新增",
+    "inPantry": "已有"
   },
   "pantry": {
     "title": "🥦 食材庫",
@@ -318,9 +354,20 @@
     "demoLockedAction": "🔒 體驗用戶無法使用，請註冊後使用",
     "catLabels": {
       "🥛 乳品豆制品": "🥛 乳品豆製品",
-      "🍚 主食粮油": "🍚 主食糧油"
+      "🍚 主食粮油": "🍚 主食糧油",
+      "🥬 蔬菜": "🥬 蔬菜",
+      "🍎 水果": "🍎 水果",
+      "🥩 肉禽蛋": "🥩 肉禽蛋"
     },
-    "cancel": "取消"
+    "cancel": "取消",
+    "searchPlaceholder": "搜尋食材...",
+    "addButton": "＋ 新增",
+    "addItem": "新增食材",
+    "myItems": "📦 我的食材 ({count})",
+    "addDialogTitle": "新增食材",
+    "added": "已新增 ",
+    "add": "新增",
+    "searchIcon": "🔍"
   },
   "recipes": {
     "title": "菜譜",
@@ -393,7 +440,26 @@
     "star": "收藏",
     "cancel": "取消",
     "unstarToast": "已取消收藏",
-    "clearAll": "清空"
+    "clearAll": "清空",
+    "medium": "中等",
+    "servings": "份量",
+    "calories": "卡路里",
+    "ingredients": "🥄 食材",
+    "caloriesShort": "卡",
+    "all": "全部 ({count})",
+    "starredFilter": "⭐ 收藏 ({count})",
+    "done": "完成",
+    "addToPlanTitle": "📅 加入 {title}",
+    "addedToPlanWithTitle": "✅ 已加入 {title} 到 {day}{meal}",
+    "addedToPlan": "✅ 已加入 {day}{meal}",
+    "starToast": "⭐ 已收藏",
+    "slotConflictDesc": "{day}{meal} 已有「{title}」",
+    "breakfast": "早餐",
+    "lunch": "午餐",
+    "dinner": "晚餐",
+    "addIngredientBtn": "+ 新增",
+    "aiThinking": "🤔 AI 正在思考...",
+    "duplicateIngredient": "「{name}」已在食材列表中"
   },
   "billing": {
     "title": "💳 賬單與訂閱",
@@ -471,7 +537,41 @@
     "downgradeToFree": "降級到免費版",
     "checkoutCancel": "取消",
     "features": "功能",
-    "daysLeft": "{days, number} 天"
+    "daysLeft": "{days, number} 天",
+    "perMonth": "/月",
+    "perYear": "/年",
+    "monthly": "月付",
+    "annual": "年付",
+    "proBadge": "🌟 Pro",
+    "paymentMethods": "支付方式",
+    "cancelling": "取消中...",
+    "yearlyPro": "Pro 年付",
+    "monthlyPro": "Pro 月付",
+    "yearlyPrice": "119",
+    "monthlyPrice": "20",
+    "yearlyPeriod": "≈ ¥9.92/月 · 省50%",
+    "yearlySavingShort": "省 ¥121",
+    "yearlySavingAlt": "年付 ¥119/年，省 ¥121",
+    "monthlyPeriod": "≈ ¥20/月",
+    "otherPlans": "季付 ¥51/3月 · 省15%  |  半年付 ¥90/6月 · 省25%",
+    "savePercent": "省 {percent}%",
+    "saveAmount": "省 {amount}",
+    "alipayDesc": "¥20/月起",
+    "creditCard": "信用卡",
+    "creditCardDesc": "$3/月起 · Stripe",
+    "creem": "Creem",
+    "manageAction": "管理",
+    "inUse": "使用中",
+    "proLabel": "Pro",
+    "stripePay": "信用卡",
+    "creemPay": "Creem",
+    "payFrom": "¥20/月起",
+    "payFromStripe": "$3/月起 · Stripe",
+    "canceled": "已取消",
+    "quarterlyPlan": "季付",
+    "halfyearPlan": "半年付",
+    "paymentSuccess": "✅ 支付成功！",
+    "keepPro": "保留 Pro"
   },
   "orders": {
     "title": "📋 訂單記錄",
@@ -493,7 +593,13 @@
     "backToBilling": "← 返回賬單",
     "loading": "加載中...",
     "date": "日期",
-    "cancel": "取消"
+    "cancel": "取消",
+    "pending": "待支付",
+    "completed": "已支付",
+    "refunded": "已退款",
+    "cancelled": "已取消",
+    "channelStripe": "Stripe",
+    "channelCreem": "Creem"
   },
   "blog": {
     "subtitle": "餐食規劃技巧、AI 美食推薦，讓下廚更簡單",
@@ -537,7 +643,8 @@
       "入門"
     ],
     "post5ReadTime": "5 分鐘閱讀",
-    "noPosts": "暫無文章"
+    "noPosts": "暫無文章",
+    "title": "CookMate 部落格"
   },
   "privacy": {
     "title": "隱私政策",
@@ -561,7 +668,12 @@
     "rights4": "導出您的數據（JSON 格式）",
     "contactTitle": "6. 聯繫我們",
     "contactDesc": "如有隱私相關問題，請聯繫：",
-    "viewTerms": "查看服務條款 →"
+    "viewTerms": "查看服務條款 →",
+    "infoCollectTitle": "1. 資訊收集",
+    "usageTitle": "2. 資訊使用",
+    "dataShareTitle": "3. 資訊共享",
+    "cookiesTitle": "4. Cookie 使用",
+    "rights5": "撤回同意"
   },
   "terms": {
     "title": "服務條款",
@@ -601,14 +713,18 @@
     "q8": "如何刪除我的賬號？",
     "a8": "前往「設置 → 數據管理 → 刪除賬號」，通過驗證碼確認後即可刪除。",
     "viewPrivacy": "查看隱私政策",
-    "viewTerms": "查看服務條款"
+    "viewTerms": "查看服務條款",
+    "q6": "支援哪些支付方式？"
   },
   "nutrition": {
     "title": "營養分析",
     "placeholder_desc": "記錄每日熱量、蛋白質等營養數據，生成周/月統計圖表",
     "placeholder_badge": "⏸️ 此功能規劃中，後期實現",
     "protein": "蛋白質",
-    "fiber": "膳食纖維"
+    "fiber": "膳食纖維",
+    "calories": "卡路里",
+    "carbs": "碳水化合物",
+    "fat": "脂肪"
   },
   "onboarding": {
     "title": "歡迎使用 CookMate",
@@ -659,7 +775,23 @@
     "step3Desc": "在「周計劃」中規劃一週三餐，<br />系統自動彙總「購物清單」，買菜不遺漏。<br /><br />勾選已買的食材，自動同步到食材庫，<br />做菜時一眼就知道冰箱裡有什麼。<br /><br />去「AI 菜譜」頁面試試，輸入食材秒出菜譜，<br />一鍵加入周計劃，不滿意隨時重新生成。",
     "ingredient_potato": "馬鈴薯",
     "ingredient_garlic": "大蒜",
-    "ingredient_bacon": "培根"
+    "ingredient_bacon": "培根",
+    "next": "下一步 →",
+    "complete": "完成",
+    "step1Card2Title": "新增食材",
+    "tryAiTitle": "🥦 食材管理",
+    "previous": "← 上一步",
+    "saving": "儲存中...",
+    "catVegetables": "🥬 蔬菜",
+    "catMeat": "🥩 肉禽蛋",
+    "ingredient_greens": "青菜",
+    "ingredient_cabbage": "白菜",
+    "ingredient_ginger": "姜",
+    "ingredient_pork_belly": "五花肉",
+    "ingredient_beef": "牛肉",
+    "ingredient_rice": "大米",
+    "ingredient_oil": "食用油",
+    "step2Title": "🥦 食材管理"
   },
   "error": {
     "title": "出錯了",
@@ -686,14 +818,19 @@
     "featureFullDesc": "從周計劃到購物清單，買菜做飯一站式搞定，不再遺漏任何食材",
     "ctaTitle": "🚀 開始使用",
     "ctaDesc": "免費註冊，立即體驗 AI 智能食譜推薦",
-    "ctaButton": "免費開始使用"
+    "ctaButton": "免費開始使用",
+    "featureFullTitle": "📋 全流程管理"
   },
   "stats": {
     "title": "數據",
     "usersLabel": "註冊用戶",
     "recipesLabel": "菜譜生成",
     "mealsLabel": "餐食規劃",
-    "satisfactionLabel": "用戶滿意度"
+    "satisfactionLabel": "用戶滿意度",
+    "users": "10,000+",
+    "recipes": "50,000+",
+    "meals": "200,000+",
+    "satisfaction": "98%"
   },
   "testimonials": {
     "title": "用戶怎麼說",
@@ -702,7 +839,10 @@
     "item2Role": "健身教練 · 上海",
     "item2Content": "減脂期需要精確控制卡路里和營養比例，CookMate 的 AI 推薦幫了大忙，每週計劃一鍵搞定。",
     "item3Role": "家庭主婦 · 廣州",
-    "item3Content": "家裡人多口味雜，CookMate 的周計劃功能讓我們家再也不用為做飯吵架了，購物清單也省心。"
+    "item3Content": "家裡人多口味雜，CookMate 的周計劃功能讓我們家再也不用為做飯吵架了，購物清單也省心。",
+    "item1Name": "王小美",
+    "item1Role": "上班族 · 北京",
+    "item3Name": "李阿姨"
   },
   "ctaBanner": {
     "title": "準備好告別選擇困難了嗎？",
@@ -718,7 +858,9 @@
     "privacy": "隱私政策",
     "terms": "服務條款",
     "contact": "聯繫我們",
-    "copyright": "© {year} CookMate 保留所有權利"
+    "copyright": "© {year} CookMate 保留所有權利",
+    "legal": "法律",
+    "email": "CookMate@aaigc.online"
   },
   "errors": {
     "loginRequired": "請先登錄",
@@ -874,6 +1016,28 @@
     "codeSentToEmail": "驗證碼已發送到 {email}",
     "cancelName": "取消",
     "passwordFormCancel": "取消",
-    "bindCancel": "取消"
+    "bindCancel": "取消",
+    "languageZh": "中文",
+    "languageEn": "English",
+    "cuisine": "菜系偏好",
+    "servingSize": "份量",
+    "saveSuccess": "儲存成功",
+    "loginMethod_其他": "其他",
+    "modify": "修改",
+    "editName": "修改",
+    "saveName": "儲存",
+    "dietUnlimited": "不限",
+    "dietBuildMuscle": "增肌",
+    "dietVegetarian": "素食",
+    "dietLowCarb": "低碳水",
+    "cuisineChinese": "中餐",
+    "cuisineWestern": "西餐",
+    "cuisineJapanese": "日料",
+    "cuisineIndian": "印度菜",
+    "cuisineMexican": "墨西哥菜",
+    "saving": "儲存中...",
+    "saved": "✅ 已儲存",
+    "passwordFormSaving": "儲存中...",
+    "bindWarningTitle": "⚠️ 重要提醒"
   }
 }

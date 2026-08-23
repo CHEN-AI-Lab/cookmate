@@ -7,7 +7,8 @@ import { err, getLocaleFromCookie } from "@cookmate/shared/utils/locale"
 const intlMiddleware = createMiddleware(routing)
 
 const RATE_LIMIT_WINDOW = 60_000
-const RATE_LIMIT_MAX = 10
+// NextAuth 一次正常登录会调用多个 /api/auth 端点（csrf/session/callback 等），阈值放宽避免误伤合法用户
+const RATE_LIMIT_MAX = 30
 
 // 使用全局变量，在 Vercel warm start 时保留状态
 // 注意：多实例部署仍可能不共享，生产环境建议用 Redis
@@ -77,5 +78,6 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+  // 注意：/api/auth/:path* 必须在排除 api 的规则之前声明，否则 auth 限流永远不生效
+  matcher: ["/api/auth/:path*", "/((?!api|_next|_vercel|.*\\..*).*)"],
 }
