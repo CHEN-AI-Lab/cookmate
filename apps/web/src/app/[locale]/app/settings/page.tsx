@@ -884,8 +884,8 @@ const save = async () => {
 
       {/* Global toast */}
       {globalToast && (
-        <div className="fixed top-1/3 left-1/2 -translate-x-1/2 z-[100]">
-          <div className="bg-bg border border-border shadow-lg rounded-xl px-5 py-2.5 text-sm text-text-primary">
+        <div className="fixed top-1/3 left-4 sm:left-6 z-[100]">
+          <div className="bg-accent text-white border border-border shadow-lg rounded-xl px-5 py-2.5 text-sm">
             {globalToast}
           </div>
         </div>
