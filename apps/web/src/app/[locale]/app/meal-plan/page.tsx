@@ -365,10 +365,9 @@ export default function MealPlanPage() {
                         const lo = Math.min(pickStart!, pickEnd!)
                         const hi = Math.max(pickStart!, pickEnd!)
                         const n = hi - lo + 1
-                        const names = DAYS.slice(lo, hi + 1).map((k) => t(k)).join("、")
-                        const range = t("pickerRange", { start: t(DAYS[lo]), end: t(DAYS[hi]), count: n, meals: n * 3 })
+                        const range = `从 <b style="color:#FF6B35">${t(DAYS[lo])}</b> 到 <b style="color:#FF6B35">${t(DAYS[hi])}</b>，共 <b style="color:#FF6B35">${n} 天 ${n * 3} 餐</b>`
                         const tip = n >= 6 ? `<br><span style="color:#6b7280;font-size:12px">💡 ${t("pickerTip")}</span>` : ""
-                        return `${range}：${names}${tip}`
+                        return `${range}${tip}`
                       })(),
               }}
             />
