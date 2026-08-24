@@ -367,9 +367,32 @@ export async function generateWeeklyPlan(
       userContent,
       maxTokens: 12000,
       client: planClient,
-      skipStructured: true, // 跳过 json_object，避免 reasoning 耗时翻倍
+      skipStructured: false, // 让 callAI 先试 json_object，400/403 自动降级 text；不写死适配任意提供商
     })
-    return { plan: JSON.parse(content), fallback: false }
+    const rawPlan = JSON.parse(content)
+
+    // 健全性检查：AI 偶尔返回"带 key 但空 value"的对象（不同提供商行为差异）。
+    // 统计"未命名菜谱"（=空对象经 sanitize 后的产物）占比，超过 50% 或总数为 0 都视为垃圾响应，
+    // 自动降级 mock —— 保证用户至少能看到内容。
+    const sanitized = sanitizeWeeklyPlan(rawPlan)
+    let totalMeals = 0
+    let emptyMeals = 0
+    for (const day of Object.values(sanitized)) {
+      for (const meal of Object.values(day)) {
+        totalMeals++
+        if (meal.title === "未命名菜谱") emptyMeals++
+      }
+    }
+    if (totalMeals === 0) {
+      console.warn(`[weekly-plan] AI 返回 0 餐（可能结构错乱），降级 mock. Raw:`, content.substring(0, 500))
+      return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true }
+    }
+    if (emptyMeals / totalMeals > 0.5) {
+      console.warn(`[weekly-plan] AI 返回大量空数据 (${emptyMeals}/${totalMeals} 未命名)，降级 mock. Raw:`, content.substring(0, 500))
+      return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true }
+    }
+
+    return { plan: rawPlan, fallback: false }
   } catch (err) {
     console.error("AI weekly plan generation failed, falling back to mock data:", err)
     return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true }
