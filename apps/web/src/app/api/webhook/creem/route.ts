@@ -126,6 +126,18 @@ function extractPeriod(event: Record<string, unknown>): string | undefined {
   return undefined
 }
 
+// 兜底计算到期日（当事件未携带官方 current_period_end_date 时）
+function computeFallbackExpiry(period?: string): Date {
+  const now = new Date()
+  const expiry = new Date(now)
+  if (period === "annual") {
+    expiry.setUTCFullYear(expiry.getUTCFullYear() + 1)
+  } else {
+    expiry.setUTCMonth(expiry.getUTCMonth() + 1)
+  }
+  return expiry
+}
+
 // 通过 creemSubscriptionId 反查 userId（metadata 没带 userId 时的兜底）
 async function findUserIdBySubscriptionId(subscriptionId: string): Promise<string | null> {
   const user = await prisma.user.findFirst({
@@ -323,20 +335,18 @@ export async function POST(req: Request) {
       const subscriptionId = extractSubscriptionId(event)
       const periodEndDate = extractPeriodEndDate(event)
 
-      if (userId && subscriptionId && periodEndDate) {
-        await grantAccess(userId, subscriptionId, periodEndDate)
-      } else if (userId && subscriptionId) {
-        // periodEndDate 缺失的兜底（不太可能发生，但防御性处理）
-        const period = extractPeriod(event)
-        const now = new Date()
-        const expiryDate = new Date(now)
-        if (period === "annual") {
-          expiryDate.setUTCFullYear(expiryDate.getUTCFullYear() + 1)
-        } else {
-          expiryDate.setUTCMonth(expiryDate.getUTCMonth() + 1)
-        }
-        await grantAccess(userId, subscriptionId, expiryDate)
+      // 关键：升级是「一次性授权点」，必须真正写入数据库后才算处理成功。
+      // 若此刻解析不到用户/订阅（如 subscription.paid 早于 checkout.completed 到达、
+      // 订阅ID尚未同步），绝不能标记为 processed —— 否则事件ID去重会让 Creem 重试被丢弃，
+      // 用户付款后永久无法升级。这里返回 500，让 Creem 按退避策略重试，
+      // 待 checkout.completed 同步订阅ID后即可解析到用户并重试成功。
+      if (!userId || !subscriptionId) {
+        await logWebhook("creem", "subscription.paid", "failed:unresolved", undefined, eventId ?? undefined)
+        return NextResponse.json({ error: "user or subscription not resolvable yet" }, { status: 500 })
       }
+
+      const expiryDate = periodEndDate ?? computeFallbackExpiry(extractPeriod(event))
+      await grantAccess(userId, subscriptionId, expiryDate)
 
       await logWebhook("creem", "subscription.paid", "processed", undefined, eventId ?? undefined)
       return NextResponse.json({ success: true })
@@ -415,6 +425,10 @@ export async function POST(req: Request) {
           // 状态非 active（如 paused/canceled）→ 只同步订阅ID
           await syncSubscription(userId, subscriptionId)
         }
+      } else if (subscriptionId && status === "active" && periodEndDate) {
+        // 升级型更新却暂无法解析用户：返回 500，让 Creem 重试（待 checkout.completed 同步订阅ID）
+        await logWebhook("creem", "subscription.update", "failed:unresolved", undefined, eventId ?? undefined)
+        return NextResponse.json({ error: "user not resolvable yet" }, { status: 500 })
       }
       await logWebhook("creem", "subscription.update", "processed", undefined, eventId ?? undefined)
       return NextResponse.json({ success: true })
