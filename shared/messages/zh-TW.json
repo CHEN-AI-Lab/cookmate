@@ -305,7 +305,9 @@
     "pickerSelectEnd": "再點一個日期作為終點",
     "pickerRange": "從 {start} 到 {end}，共 {count} 天 {meals} 餐",
     "pickerTip": "每次生成 3-5 天菜譜細節更豐富，剩餘天數可隨時補充生成",
-    "confirmGenerate": "生成"
+    "confirmGenerate": "生成",
+    "pickerLegendGenerate": "生成區間",
+    "pickerLegendExisting": "已有（保留）"
   },
   "grocery": {
     "title": "🛒 購物清單",

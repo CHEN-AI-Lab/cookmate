@@ -262,64 +262,139 @@ export default function MealPlanPage() {
         </div>
       )}
 
-      {/* 选天数弹窗 */}
+      {/* 选天数弹窗 — 严格对齐测试页方案D */}
       {showPicker && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4" onClick={() => setShowPicker(false)}>
-          <div className="bg-card rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-text-primary mb-1">{t("generate")}</h3>
-            <p className="text-sm text-text-secondary mb-4">{t("pickerHint")}</p>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(2px)" }}
+          onClick={() => setShowPicker(false)}
+        >
+          <div
+            className="bg-white w-full max-w-[440px] p-6"
+            style={{ borderRadius: 20, boxShadow: "0 20px 50px rgba(0,0,0,0.2)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 标题栏 + 关闭按钮 */}
+            <div className="flex items-center justify-between mb-1">
+              <div className="text-[17px] font-bold text-text-primary">{t("generate")}</div>
+              <button
+                onClick={() => setShowPicker(false)}
+                className="text-[20px] text-text-secondary hover:text-text-primary transition-colors px-2"
+                style={{ border: "none", background: "none", cursor: "pointer", lineHeight: 1 }}
+              >
+                ×
+              </button>
+            </div>
+            {/* 副标题 */}
+            <p className="text-[13px] text-text-secondary mb-4">{t("pickerHint")}</p>
 
-            <div className="grid grid-cols-7 gap-2 mb-3">
+            {/* 星期格子 */}
+            <div className="grid grid-cols-7 gap-1.5 mb-2.5">
               {DAYS.map((key, i) => {
                 const hasOld = plan?.slots.some((s) => s.dayOfWeek === i && s.recipe !== null)
-                let cls = "rounded-lg border py-3 text-center text-sm font-medium cursor-pointer transition-all "
-                if (pickStart !== null && pickEnd !== null) {
-                  const lo = Math.min(pickStart, pickEnd)
-                  const hi = Math.max(pickStart, pickEnd)
-                  if (i >= lo && i <= hi) {
-                    cls += i === lo || i === hi ? "bg-accent text-white border-accent" : "bg-orange-50 text-accent border-accent"
-                  } else if (hasOld) {
-                    cls += "bg-green-50 text-green-600 border-green-400"
-                  } else {
-                    cls += "bg-white text-text-secondary border-gray-200 hover:border-accent"
-                  }
-                } else if (i === pickStart) {
-                  cls += "bg-accent text-white border-accent"
-                } else if (hasOld) {
-                  cls += "bg-green-50 text-green-600 border-green-400"
-                } else {
-                  cls += "bg-white text-text-secondary border-gray-200 hover:border-accent"
+                const isStart = pickStart !== null && pickEnd === null && i === pickStart
+                const isHint = pickStart !== null && pickEnd === null && i !== pickStart
+                const inRange = pickStart !== null && pickEnd !== null
+                const lo = inRange ? Math.min(pickStart!, pickEnd!) : 0
+                const hi = inRange ? Math.max(pickStart!, pickEnd!) : 0
+                const isRangeMid = inRange && i >= lo && i <= hi && i !== lo && i !== hi
+                const isRangeEnd = inRange && (i === lo || i === hi)
+
+                let style: React.CSSProperties = {
+                  borderRadius: 10,
+                  border: "1.5px dashed #fed7aa",
+                  padding: "10px 0",
+                  textAlign: "center",
+                  fontSize: 13,
+                  color: "#6b7280",
+                  background: "#fff",
+                  cursor: "pointer",
+                  transition: "all .15s",
+                }
+                if (hasOld && !isStart && !isRangeMid && !isRangeEnd) {
+                  style = { ...style, borderStyle: "solid", borderColor: "#22c55e", background: "#f0fdf4", color: "#16a34a", fontWeight: 600 }
+                }
+                if (isStart) {
+                  style = { ...style, borderStyle: "solid", borderColor: "#FF6B35", background: "#FF6B35", color: "#fff", fontWeight: 700 }
+                }
+                if (isHint) {
+                  style = { ...style, animation: "pickerPulse 1.2s infinite" }
+                }
+                if (isRangeMid) {
+                  style = { ...style, borderStyle: "solid", borderColor: "#FF6B35", background: "#ffedd5", color: "#FF6B35", fontWeight: 600 }
+                }
+                if (isRangeEnd) {
+                  style = { ...style, borderStyle: "solid", borderColor: "#FF6B35", background: "#FF6B35", color: "#fff", fontWeight: 700 }
                 }
                 return (
-                  <button key={key} className={cls} onClick={() => handleDayClick(i)}>
-                    <div className="text-xs">{t(key).slice(0, 2)}</div>
-                  </button>
+                  <div key={key} style={style} onClick={() => handleDayClick(i)}>
+                    {t(key)}
+                  </div>
                 )
               })}
             </div>
 
+            {/* 图例 */}
+            <div className="flex gap-4 text-[12px] text-text-secondary mt-1.5 mb-3 flex-wrap">
+              <span className="flex items-center gap-1.5">
+                <span style={{ width: 12, height: 12, borderRadius: 4, background: "#FF6B35", display: "inline-block" }} />
+                {t("pickerLegendGenerate")}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span style={{ width: 12, height: 12, borderRadius: 4, background: "#16a34a", display: "inline-block" }} />
+                {t("pickerLegendExisting")}
+              </span>
+            </div>
+
+            {/* 信息提示框 */}
             <div
-              className="text-xs text-text-secondary mb-4 min-h-[20px] leading-relaxed"
+              className="text-[13px] mb-4 leading-relaxed"
+              style={{
+                background: "#fff7ed",
+                border: "1px solid #fed7aa",
+                borderRadius: 12,
+                padding: "12px 16px",
+                minHeight: 48,
+              }}
               dangerouslySetInnerHTML={{
                 __html: pickStart === null
                   ? t("pickerSelectStart")
                   : pickEnd === null
                     ? t("pickerSelectEnd")
                     : (() => {
-                        const lo = Math.min(pickStart, pickEnd)
-                        const hi = Math.max(pickStart, pickEnd)
+                        const lo = Math.min(pickStart!, pickEnd!)
+                        const hi = Math.max(pickStart!, pickEnd!)
                         const n = hi - lo + 1
                         const names = DAYS.slice(lo, hi + 1).map((k) => t(k)).join("、")
                         const range = t("pickerRange", { start: t(DAYS[lo]), end: t(DAYS[hi]), count: n, meals: n * 3 })
-                        const tip = n >= 6 ? `<br><span class="text-text-secondary">💡 ${t("pickerTip")}</span>` : ""
+                        const tip = n >= 6 ? `<br><span style="color:#6b7280;font-size:12px">💡 ${t("pickerTip")}</span>` : ""
                         return `${range}：${names}${tip}`
                       })(),
               }}
             />
 
-            <div className="flex gap-2">
-              <button onClick={() => setShowPicker(false)} className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gray-100 text-text-secondary hover:bg-gray-200 transition-colors">{tc("cancel")}</button>
-              <button onClick={confirmGenerate} disabled={pickStart === null || pickEnd === null} className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-accent text-white disabled:bg-orange-200 disabled:cursor-not-allowed hover:bg-orange-600 transition-colors">{t("confirmGenerate")}</button>
+            {/* 按钮组 */}
+            <div className="flex gap-2.5 mt-5">
+              <button
+                onClick={() => setShowPicker(false)}
+                className="flex-1 py-3 rounded-xl text-[14px] font-semibold transition-all"
+                style={{ border: "none", background: "#f3f4f6", color: "#6b7280", cursor: "pointer" }}
+              >
+                {tc("cancel")}
+              </button>
+              <button
+                onClick={confirmGenerate}
+                disabled={pickStart === null || pickEnd === null}
+                className="flex-1 py-3 rounded-xl text-[14px] font-semibold transition-all"
+                style={{
+                  border: "none",
+                  background: pickStart === null || pickEnd === null ? "#fed7aa" : "#FF6B35",
+                  color: "#fff",
+                  cursor: pickStart === null || pickEnd === null ? "not-allowed" : "pointer",
+                }}
+              >
+                {t("confirmGenerate")}
+              </button>
             </div>
           </div>
         </div>

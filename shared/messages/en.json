@@ -305,7 +305,9 @@
     "pickerSelectEnd": "Pick an end day",
     "pickerRange": "From {start} to {end}, {count} days, {meals} meals",
     "pickerTip": "Generating 3-5 days at a time gives more detailed recipes. Remaining days can be generated later.",
-    "confirmGenerate": "Generate"
+    "confirmGenerate": "Generate",
+    "pickerLegendGenerate": "Generate range",
+    "pickerLegendExisting": "Existing (kept)"
   },
   "grocery": {
     "title": "🛒 Grocery List",
