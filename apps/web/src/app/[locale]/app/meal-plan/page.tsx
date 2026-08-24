@@ -80,6 +80,9 @@ export default function MealPlanPage() {
       const data = await res.json()
       if (res.ok && data.plan) {
         setPlan(data.plan)
+        if (data.fallback) {
+          setError(t("aiFallback"))
+        }
       } else {
         setError(data.detail ? `${data.error} (${data.detail})` : (data.error || t("generateFailed")))
       }

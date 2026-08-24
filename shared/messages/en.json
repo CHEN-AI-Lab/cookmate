@@ -282,6 +282,7 @@
         "deleteSlotFailed": "Failed to delete",
         "networkError": "Network error",
         "generateFailed": "Failed to generate",
+    "aiFallback": "AI generation failed, showing default weekly plan",
         "deleteSlotSuccess": "✅ Recipe deleted",
         "confirmDeleteTitle": "Confirm Delete",
         "confirmDeleteDesc": "Are you sure you want to delete \"{title}\"?",

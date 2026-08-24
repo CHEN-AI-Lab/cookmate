@@ -275,6 +275,7 @@
     "deleteSlotFailed": "刪除失敗",
     "networkError": "網絡錯誤",
     "generateFailed": "生成失敗",
+    "aiFallback": "AI 生成失敗，已為您推薦默認週計劃",
     "deleteSlotSuccess": "✅ 菜譜已刪除",
     "confirmDeleteTitle": "確認刪除",
     "confirmDeleteDesc": "確定要刪除「{title}」嗎？",

@@ -260,11 +260,11 @@ export async function generateWeeklyPlan(
   },
   pantryItems?: string[],
   locale?: string
-): Promise<Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }>> {
+): Promise<{ plan: Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }>; fallback: boolean }> {
   const isEnglish = locale === "en"
 
   if (!hasAIKey()) {
-    return isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences)
+    return { plan: isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), fallback: true }
   }
 
   const planClient = new OpenAI({
@@ -313,10 +313,10 @@ export async function generateWeeklyPlan(
       client: planClient,
       skipStructured: true, // 跳过 json_object，避免 reasoning 耗时翻倍
     })
-    return JSON.parse(content)
+    return { plan: JSON.parse(content), fallback: false }
   } catch (err) {
     console.error("AI weekly plan generation failed, falling back to mock data:", err)
-    return isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences)
+    return { plan: isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), fallback: true }
   }
 }
 

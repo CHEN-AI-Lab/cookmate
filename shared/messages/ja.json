@@ -285,6 +285,7 @@
     "emptySlot": "料理が割り当てられていません",
     "emptySlotHint": "💡 AIレシピまたはマイレシピに移動して料理を生成し、週間献立に追加してください",
     "generateFailed": "生成に失敗しました",
+    "aiFallback": "AI 生成に失敗しました。デフォルト週計画を表示します",
     "generatingDesc": "AIが今週の献立を計画中...",
     "goToAiRecipes": "🤖 AIレシピ",
     "goToMyRecipes": "📚 マイレシピ",

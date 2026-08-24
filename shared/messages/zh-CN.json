@@ -282,6 +282,7 @@
         "deleteSlotFailed": "删除失败",
         "networkError": "网络错误",
         "generateFailed": "生成失败",
+    "aiFallback": "AI 生成失败，已为您推荐默认周计划",
         "deleteSlotSuccess": "✅ 菜谱已删除",
         "confirmDeleteTitle": "确认删除",
         "confirmDeleteDesc": "确定要删除「{title}」吗？",
