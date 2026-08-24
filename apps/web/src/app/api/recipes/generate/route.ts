@@ -148,7 +148,8 @@ export async function POST(req: Request) {
       await incrementUsage(session.user.id)
     }
 
-    return NextResponse.json({ recipes: savedRecipes, fallback })
+    // 没配 AI Key 时不是"失败",不显示 fallback 提示
+    return NextResponse.json({ recipes: savedRecipes, fallback: isMock ? false : fallback })
   } catch (error) {
     console.error("Recipe generation error:", error)
     return NextResponse.json({ error: e("生成失败，请稍后重试", "Generation failed, please try again later") }, { status: 500 })

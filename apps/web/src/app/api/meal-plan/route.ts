@@ -69,8 +69,8 @@ export async function POST(req: Request) {
     }
 
     const isDev = process.env.NODE_ENV !== "production"
+    const isMock = !(process.env.AI_API_KEY || process.env.OPENAI_API_KEY)
     if (!isDev) {
-      const isMock = !(process.env.AI_API_KEY || process.env.OPENAI_API_KEY)
       if (!isMock) {
         // fail-closed：用量检查出错（如 DB 抖动）时拒绝生成，原实现 catch 返回 true 会让免费用户无限调用付费 AI
         const canGenerate = await checkUsageLimit(userId).catch((err: unknown) => { console.error("check usage limit error:", err); return false })
@@ -193,7 +193,7 @@ export async function POST(req: Request) {
       mealPlan = { id: "demo-plan", weekStart: monday.toISOString(), slots }
     }
 
-    return NextResponse.json({ plan: mealPlan, generated: weekPlan, fallback })
+    return NextResponse.json({ plan: mealPlan, generated: weekPlan, fallback: isMock ? false : fallback })
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error)
     console.error("Meal plan generation error:", errMsg, error)
