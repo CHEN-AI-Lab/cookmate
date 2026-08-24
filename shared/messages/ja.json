@@ -299,7 +299,13 @@
     "starTooltipStarred": "お気に入り解除",
     "starTooltipUnstarred": "お気に入りに追加",
     "steps": "📝 手順",
-    "unstarToast": "お気に入り解除"
+    "unstarToast": "お気に入り解除",
+    "pickerHint": "開始日と終了日を選んで、期間を指定して生成します。選択していない日はそのまま残ります。",
+    "pickerSelectStart": "開始日を選んでください",
+    "pickerSelectEnd": "終了日を選んでください",
+    "pickerRange": "{start} から {end} まで、合計 {count} 日 {meals} 食",
+    "pickerTip": "3〜5日ずつ生成すると、より詳細なレシピが得られます。残りの日は後から追加生成できます。",
+    "confirmGenerate": "生成"
   },
   "grocery": {
     "title": "買い物リスト",

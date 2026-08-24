@@ -1,11 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useTranslations, useLocale } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { MealPlanGrid } from "@/components/features/MealPlanGrid"
 import { MealPlanDetailModal } from "@/components/features/MealPlanDetailModal"
 import { getDemoMealPlan } from "@cookmate/shared/demo-data"
+
+const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+
 interface Recipe {
   id?: string
   title: string
@@ -41,6 +44,7 @@ export default function MealPlanPage() {
   const MEAL_LABELS: Record<string, string> = {
     breakfast: t("breakfast"), lunch: t("lunch"), dinner: t("dinner"),
   }
+
   const [plan, setPlan] = useState<MealPlan | null>(null)
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
@@ -49,6 +53,11 @@ export default function MealPlanPage() {
   const [starToast, setStarToast] = useState("")
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [isDemoUser, setIsDemoUser] = useState(false)
+
+  // 弹窗状态
+  const [showPicker, setShowPicker] = useState(false)
+  const [pickStart, setPickStart] = useState<number | null>(null)
+  const [pickEnd, setPickEnd] = useState<number | null>(null)
 
   useEffect(() => {
     fetch("/api/meal-plan")
@@ -72,11 +81,39 @@ export default function MealPlanPage() {
       .catch((err) => console.error("load profile error:", err))
   }, [locale])
 
-  const generatePlan = async () => {
+  const openPicker = () => {
+    setPickStart(null)
+    setPickEnd(null)
+    setShowPicker(true)
+  }
+
+  const handleDayClick = (i: number) => {
+    if (pickStart === null) {
+      setPickStart(i)
+    } else if (pickEnd === null) {
+      setPickEnd(i)
+    } else {
+      setPickStart(i)
+      setPickEnd(null)
+    }
+  }
+
+  const confirmGenerate = async () => {
+    if (pickStart === null || pickEnd === null) return
+    const lo = Math.min(pickStart, pickEnd)
+    const hi = Math.max(pickStart, pickEnd)
+    const days: number[] = []
+    for (let i = lo; i <= hi; i++) days.push(i)
+
+    setShowPicker(false)
     setGenerating(true)
     setError("")
     try {
-      const res = await fetch("/api/meal-plan", { method: "POST" })
+      const res = await fetch("/api/meal-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ days }),
+      })
       const data = await res.json()
       if (res.ok && data.plan) {
         setPlan(data.plan)
@@ -111,29 +148,20 @@ export default function MealPlanPage() {
     if (!detail || !plan) return
     const slot = getSlot(detail.day, detail.meal)
     if (!slot) return
-
     try {
       const res = await fetch("/api/meal-plan/slot", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          slotId: slot.id,
-          title: "",
-          description: "",
-        }),
+        body: JSON.stringify({ slotId: slot.id, title: "", description: "" }),
       })
       if (!res.ok) throw new Error(t("deleteSlotFailed"))
     } catch (err) {
       console.error("delete slot error:", err)
       return
     }
-
-    const updatedSlots = plan.slots.map((s) => {
-      if (s.dayOfWeek === detail.day && s.mealType === detail.meal) {
-        return { ...s, recipe: null }
-      }
-      return s
-    })
+    const updatedSlots = plan.slots.map((s) =>
+      s.dayOfWeek === detail.day && s.mealType === detail.meal ? { ...s, recipe: null } : s
+    )
     setPlan({ ...plan, slots: updatedSlots })
     setDetail(null)
     setStarToast(t("deleteSlotSuccess"))
@@ -153,9 +181,7 @@ export default function MealPlanPage() {
         return {
           ...prev,
           slots: prev.slots.map((s) =>
-            s.recipe?.id === recipeId
-              ? { ...s, recipe: { ...s.recipe, starred: data.starred } as Recipe }
-              : s
+            s.recipe?.id === recipeId ? { ...s, recipe: { ...s.recipe, starred: data.starred } as Recipe } : s
           ),
         }
       })
@@ -171,7 +197,7 @@ export default function MealPlanPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-text-primary">{t("title")}</h1>
         <button
-          onClick={generatePlan}
+          onClick={isDemoUser ? undefined : openPicker}
           disabled={generating || isDemoUser}
           className="bg-accent text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 disabled:opacity-50"
         >
@@ -197,10 +223,7 @@ export default function MealPlanPage() {
       )}
 
       {plan && !generating && (
-        <MealPlanGrid
-          plan={plan}
-          onSlotClick={(day, meal) => setDetail({ day, meal })}
-        />
+        <MealPlanGrid plan={plan} onSlotClick={(day, meal) => setDetail({ day, meal })} />
       )}
 
       <MealPlanDetailModal
@@ -213,7 +236,7 @@ export default function MealPlanPage() {
         mealLabels={MEAL_LABELS}
         onToggleStar={toggleStar}
         onDeleteSlot={deleteSlot}
-        onNavigateTo={(path) => { router?.push(path) }}
+        onNavigateTo={(path) => router?.push(path)}
       />
 
       {deleteConfirm && (
@@ -236,6 +259,61 @@ export default function MealPlanPage() {
       {starToast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-bg-inverse text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
           {starToast}
+        </div>
+      )}
+
+      {/* 选天数弹窗 */}
+      {showPicker && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4" onClick={() => setShowPicker(false)}>
+          <div className="bg-card rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-text-primary mb-1">{t("generate")}</h3>
+            <p className="text-sm text-text-secondary mb-4">{t("pickerHint")}</p>
+
+            <div className="grid grid-cols-7 gap-2 mb-3">
+              {DAYS.map((key, i) => {
+                let cls = "rounded-lg border py-3 text-center text-sm font-medium cursor-pointer transition-all "
+                if (pickStart !== null && pickEnd !== null) {
+                  const lo = Math.min(pickStart, pickEnd)
+                  const hi = Math.max(pickStart, pickEnd)
+                  if (i >= lo && i <= hi) {
+                    cls += i === lo || i === hi ? "bg-accent text-white border-accent" : "bg-orange-50 text-accent border-accent"
+                  } else {
+                    cls += "bg-white text-text-secondary border-gray-200 hover:border-accent"
+                  }
+                } else if (i === pickStart) {
+                  cls += "bg-accent text-white border-accent"
+                } else {
+                  cls += "bg-white text-text-secondary border-gray-200 hover:border-accent"
+                }
+                return (
+                  <button key={key} className={cls} onClick={() => handleDayClick(i)}>
+                    <div className="text-xs">{t(key).slice(0, 1)}</div>
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="text-xs text-text-secondary mb-4 min-h-[20px]">
+              {pickStart === null
+                ? t("pickerSelectStart")
+                : pickEnd === null
+                  ? t("pickerSelectEnd")
+                  : (() => {
+                      const lo = Math.min(pickStart, pickEnd)
+                      const hi = Math.max(pickStart, pickEnd)
+                      const n = hi - lo + 1
+                      const names = DAYS.slice(lo, hi + 1).map((k) => t(k)).join("、")
+                      let tip = ""
+                      if (n >= 6) tip = `<br><span class="text-text-secondary">💡 ${t("pickerTip")}</span>`
+                      return `${t("pickerRange", { start: t(DAYS[lo]), end: t(DAYS[hi]), count: n, meals: n * 3 })}：${names}${tip}`
+                    })()}
+            </div>
+
+            <div className="flex gap-2">
+              <button onClick={() => setShowPicker(false)} className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gray-100 text-text-secondary hover:bg-gray-200 transition-colors">{tc("cancel")}</button>
+              <button onClick={confirmGenerate} disabled={pickStart === null || pickEnd === null} className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-accent text-white disabled:bg-orange-200 disabled:cursor-not-allowed hover:bg-orange-600 transition-colors">{t("confirmGenerate")}</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -176,8 +176,28 @@ function buildSystemPrompt(locale?: string): string {
   return SYSTEM_PROMPT_TEMPLATE.replace('LANGUAGE', getLangName(locale))
 }
 
-function buildWeeklyPrompt(locale?: string): string {
-  return WEEKLY_PROMPT_TEMPLATE.replace('LANGUAGE', getLangName(locale))
+function buildWeeklyPrompt(locale?: string, days?: number[]): string {
+  const lang = getLangName(locale)
+  const dayNames = locale === "en"
+    ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    : ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+  const targetDays = days ?? [0, 1, 2, 3, 4, 5, 6]
+  const dayList = targetDays.map(i => dayNames[i]).join("、")
+  const count = targetDays.length * 3
+  const dayJson = targetDays.map(i => `  "${dayNames[i]}": {\n    "breakfast": { ... },\n    "lunch": { ... },\n    "dinner": { ... }\n  }`).join(",\n")
+
+  return `你是 CookMate 的 AI 厨师助手。你的任务是生成以下日期的早、午、晚餐菜谱：${dayList}
+1. 自由推荐多样化的菜谱，涵盖不同菜系（中餐、西餐、川菜、日料等混搭），确保饮食丰富不重复
+2. 每个菜谱需包含：菜名、简介、**食材清单（每项食材必须标注数量）**、步骤、烹饪时间、热量、菜系、难度
+3. **食材必须全部是普通家庭日常常备的。禁止使用"高汤"、"奶油芝士"、"淡奶油"、"味醂"、"味噌"、"鱼露"等不常备的食材。**
+4. 始终用 ${lang} 回复
+5. **必须生成以上指定的 ${targetDays.length} 天，每天早、午、晚餐共 ${count} 餐。只生成指定的这些天，不要生成其他天。**
+6. 响应必须是 JSON 格式，不要包含任何 markdown 标记
+
+JSON 格式:
+{
+${dayJson}
+}`
 }
 
 export async function generateRecipes(
@@ -259,31 +279,33 @@ export async function generateWeeklyPlan(
     servingSize?: number
   },
   pantryItems?: string[],
-  locale?: string
+  locale?: string,
+  days?: number[]
 ): Promise<{ plan: Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }>; fallback: boolean }> {
   const isEnglish = locale === "en"
+  const targetDays = days ?? [0, 1, 2, 3, 4, 5, 6]
+  const dayNames = isEnglish
+    ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    : ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 
   if (!hasAIKey()) {
-    return { plan: isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), fallback: true }
+    return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true }
   }
 
   const planClient = new OpenAI({
       apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
       baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
-      timeout: 120000, // 与 main 一致：120s。10s 内生成不完 21 餐 JSON，必超时
+      timeout: 120000,
       maxRetries: 0,
     })
 
-  const days = isEnglish
-    ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    : ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
-
-  const systemPrompt = buildWeeklyPrompt(locale)
+  const systemPrompt = buildWeeklyPrompt(locale, targetDays)
+  const dayList = targetDays.map(i => dayNames[i]).join(", ")
 
   const userContent = [
     isEnglish
-      ? "Please generate breakfast, lunch, and dinner recipes for each day of the week."
-      : "请为以下一周每一天生成早、午、晚餐的菜谱。",
+      ? `Please generate breakfast, lunch, and dinner recipes for these days: ${dayList}`
+      : `请为以下日期生成早、午、晚餐的菜谱：${dayList}`,
     preferences.dietType
       ? (isEnglish ? `Diet type: ${preferences.dietType}` : `饮食类型: ${preferences.dietType}`)
       : "",
@@ -316,8 +338,22 @@ export async function generateWeeklyPlan(
     return { plan: JSON.parse(content), fallback: false }
   } catch (err) {
     console.error("AI weekly plan generation failed, falling back to mock data:", err)
-    return { plan: isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), fallback: true }
+    return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true }
   }
+}
+
+/** 按天数过滤周计划(只保留选中天) */
+function filterPlanByDays(
+  plan: Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }>,
+  days: number[],
+  dayNames: string[]
+): Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }> {
+  const result: Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }> = {}
+  for (const i of days) {
+    const name = dayNames[i]
+    if (plan[name]) result[name] = plan[name]
+  }
+  return result
 }
 
 // ══════════════════════════════════════════

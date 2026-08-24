@@ -48,6 +48,8 @@ export async function POST(req: Request) {
 
   try {
     const userId = session.user.id
+    const body = await req.json().catch(() => ({}))
+    const targetDays: number[] = body?.days ?? [0, 1, 2, 3, 4, 5, 6]
 
     interface MealPlanUser {
       subscriptionTier: string
@@ -83,7 +85,7 @@ export async function POST(req: Request) {
       dietType: user?.dietType || undefined,
       cuisinePref: user?.cuisinePref || undefined,
       servingSize: user?.servingSize || 2,
-    }, pantryNames, locale)
+    }, pantryNames, locale, targetDays)
 
     // 获取本周一日期
     const now = new Date()
@@ -96,9 +98,10 @@ export async function POST(req: Request) {
     let mealPlan: Record<string, unknown> | null = null
     const dayMap = getDayMap(locale)
     try {
-      // Delete old slots and meal plan (keep recipes to avoid losing user data)
-      await prisma.mealSlot.deleteMany({ where: { mealPlan: { userId: userId, weekStart: monday } } })
-      await prisma.mealPlan.deleteMany({ where: { userId: userId, weekStart: monday } })
+      // 只删除选中天的旧 slots，保留未选中天的旧计划
+      await prisma.mealSlot.deleteMany({
+        where: { mealPlan: { userId: userId, weekStart: monday }, dayOfWeek: { in: targetDays } }
+      })
 
       const slotEntries = Object.entries(weekPlan).flatMap(([dayName, meals], dayIdx) => {
         const dow = dayMap[dayName] ?? dayIdx
@@ -144,10 +147,26 @@ export async function POST(req: Request) {
         slotData.push({ dayOfWeek, mealType, recipeId, note: (recipe.description || "").substring(0, 100) })
       }
 
-      mealPlan = await prisma.mealPlan.create({
-        data: { userId, weekStart: monday, slots: { create: slotData.map(({ dayOfWeek, mealType, recipeId, note }) => ({ dayOfWeek, mealType, note, recipeId })) } },
-        include: { slots: { include: { recipe: true } } },
-      })
+      // 查找或创建本周 MealPlan
+      const existingPlan = await prisma.mealPlan.findFirst({ where: { userId, weekStart: monday } })
+      if (existingPlan) {
+        // 已有计划，添加新 slots
+        if (slotData.length > 0) {
+          await prisma.mealSlot.createMany({
+            data: slotData.map(({ dayOfWeek, mealType, recipeId, note }) => ({ mealPlanId: existingPlan.id, dayOfWeek, mealType, recipeId, note })),
+          })
+        }
+        mealPlan = await prisma.mealPlan.findUnique({
+          where: { id: existingPlan.id },
+          include: { slots: { include: { recipe: true } } },
+        })
+      } else {
+        // 新建计划
+        mealPlan = await prisma.mealPlan.create({
+          data: { userId, weekStart: monday, slots: { create: slotData.map(({ dayOfWeek, mealType, recipeId, note }) => ({ dayOfWeek, mealType, note, recipeId })) } },
+          include: { slots: { include: { recipe: true } } },
+        })
+      }
 
       if (!isDev) { await incrementUsage(userId).catch((err: unknown) => { console.error("increment usage error:", err) }) }
     } catch (err) {
