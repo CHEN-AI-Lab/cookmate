@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
-import { generateWeeklyPlan, normalizeIngredients } from "@cookmate/shared/api/openai"
+import { generateWeeklyPlan, normalizeIngredients, sanitizeWeeklyPlan } from "@cookmate/shared/api/openai"
 import { checkUsageLimit, incrementUsage } from "@/lib/auth-helpers"
 import { errMsg, getDayMap } from "@cookmate/shared/utils/meal-plan"
 
@@ -81,11 +81,14 @@ export async function POST(req: Request) {
     }
 
     // 生成周计划
-    const { plan: weekPlan, fallback } = await generateWeeklyPlan({
+    const { plan: rawPlan, fallback } = await generateWeeklyPlan({
       dietType: user?.dietType || undefined,
       cuisinePref: user?.cuisinePref || undefined,
       servingSize: user?.servingSize || 2,
     }, pantryNames, locale, targetDays)
+
+    // AI 返回数据兜底消毒：缺失字段填默认值，避免 .join() 崩溃 + 防止"刷新就丢"
+    const weekPlan = sanitizeWeeklyPlan(rawPlan)
 
     // 获取本周一日期
     const now = new Date()

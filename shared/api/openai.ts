@@ -109,6 +109,38 @@ export interface RecipeResult {
   difficulty: "easy" | "medium" | "hard"
 }
 
+/** AI 返回数据兜底消毒：缺失字段填默认值，避免下游 .join() / Number() 崩溃
+ *  以及"显示成 0 + 刷新就丢"的问题（fallback 块会拿默认值合成伪记录） */
+export function sanitizeRecipe(r: Partial<RecipeResult> | undefined | null): RecipeResult {
+  return {
+    title: (r?.title && String(r.title).trim()) || "未命名菜谱",
+    description: r?.description || "",
+    ingredients: Array.isArray(r?.ingredients) ? r.ingredients.map(String) : [],
+    steps: Array.isArray(r?.steps) ? r.steps.map(String) : [],
+    cookingTime: typeof r?.cookingTime === "number" ? r.cookingTime : 0,
+    calories: typeof r?.calories === "number" ? r.calories : 0,
+    cuisineType: r?.cuisineType || "",
+    difficulty: r?.difficulty || "easy",
+  }
+}
+
+/** 整周计划消毒：把 AI 返回的 plan 中每个 meal 套上 sanitizeRecipe */
+export function sanitizeWeeklyPlan(
+  plan: Record<string, { breakfast?: Partial<RecipeResult>; lunch?: Partial<RecipeResult>; dinner?: Partial<RecipeResult> }> | undefined | null
+): Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }> {
+  const result: Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }> = {}
+  if (!plan || typeof plan !== "object") return result
+  for (const [day, meals] of Object.entries(plan)) {
+    if (!meals || typeof meals !== "object") continue
+    result[day] = {
+      breakfast: sanitizeRecipe(meals.breakfast),
+      lunch: sanitizeRecipe(meals.lunch),
+      dinner: sanitizeRecipe(meals.dinner),
+    }
+  }
+  return result
+}
+
 // ─── Locale → AI language name mapping ───
 // 告诉 AI 用什么语言回复，加新语言在这里加一行就行
 const LANGUAGE_MAP: Record<string, string> = {
