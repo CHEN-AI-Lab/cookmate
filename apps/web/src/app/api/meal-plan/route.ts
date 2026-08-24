@@ -81,7 +81,7 @@ export async function POST(req: Request) {
     }
 
     // 生成周计划
-    const weekPlan = await generateWeeklyPlan({
+    const { plan: weekPlan, fallback } = await generateWeeklyPlan({
       dietType: user?.dietType || undefined,
       cuisinePref: user?.cuisinePref || undefined,
       servingSize: user?.servingSize || 2,
@@ -193,7 +193,7 @@ export async function POST(req: Request) {
       mealPlan = { id: "demo-plan", weekStart: monday.toISOString(), slots }
     }
 
-    return NextResponse.json({ plan: mealPlan, generated: weekPlan })
+    return NextResponse.json({ plan: mealPlan, generated: weekPlan, fallback })
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error)
     console.error("Meal plan generation error:", errMsg, error)

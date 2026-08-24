@@ -213,11 +213,11 @@ export async function generateRecipes(
   },
   pantryContext?: string[],
   locale?: string
-): Promise<RecipeResult[]> {
+): Promise<{ recipes: RecipeResult[]; fallback: boolean }> {
   const isEnglish = locale === "en"
 
   if (!hasAIKey()) {
-    return isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences)
+    return { recipes: isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences), fallback: true }
   }
 
   const systemPrompt = buildSystemPrompt(locale)
@@ -262,14 +262,14 @@ export async function generateRecipes(
     })
     const parsed = JSON.parse(content)
     const aiRecipes = parsed.recipes || []
-    if (aiRecipes.length > 0) return aiRecipes
+    if (aiRecipes.length > 0) return { recipes: aiRecipes, fallback: false }
     // AI 返回空结果，降级用 mock 数据
     console.warn("AI returned empty, falling back to mock data")
-    return isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences)
+    return { recipes: isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences), fallback: true }
   } catch (err) {
     console.error("AI recipe generation failed, falling back to mock data:", err)
     // AI 失败时降级到 mock 数据，确保用户至少能获得一些推荐
-    return isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences)
+    return { recipes: isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences), fallback: true }
   }
 }
 
@@ -283,7 +283,7 @@ export async function generateWeeklyPlan(
   pantryItems?: string[],
   locale?: string,
   days?: number[]
-): Promise<Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }>> {
+): Promise<{ plan: Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }>; fallback: boolean }> {
   const isEnglish = locale === "en"
   const targetDays = days ?? [0, 1, 2, 3, 4, 5, 6]
   const dayNames = isEnglish
@@ -291,7 +291,7 @@ export async function generateWeeklyPlan(
     : ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 
   if (!hasAIKey()) {
-    return filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames)
+    return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true }
   }
 
   const planClient = new OpenAI({
@@ -337,10 +337,10 @@ export async function generateWeeklyPlan(
       client: planClient,
       skipStructured: true, // 跳过 json_object，避免 reasoning 耗时翻倍
     })
-    return JSON.parse(content)
+    return { plan: JSON.parse(content), fallback: false }
   } catch (err) {
     console.error("AI weekly plan generation failed, falling back to mock data:", err)
-    return filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames)
+    return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true }
   }
 }
 
