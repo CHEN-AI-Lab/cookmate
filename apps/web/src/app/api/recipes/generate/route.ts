@@ -103,7 +103,7 @@ export async function POST(req: Request) {
       select: { dietType: true, cuisinePref: true, servingSize: true },
     }).catch((err: unknown) => { console.error("findUnique user error:", err); return null })
 
-    const { recipes: aiRecipes, fallback } = await generateRecipes(ingredients, {
+    const recipes = await generateRecipes(ingredients, {
       dietType: user?.dietType || undefined,
       cuisinePref: user?.cuisinePref || undefined,
       servingSize: user?.servingSize || undefined,
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
 
     // 保存生成的菜谱到数据库
     const savedRecipes = []
-    for (const recipe of aiRecipes) {
+    for (const recipe of recipes) {
       const trimmedTitle = recipe.title.trim()
       // Case-insensitive dedup: skip if a recipe with the same title already exists.
       const existing = await prisma.recipe.findFirst({
@@ -149,7 +149,7 @@ export async function POST(req: Request) {
     }
 
     // 没配 AI Key 时不是"失败",不显示 fallback 提示
-    return NextResponse.json({ recipes: savedRecipes, fallback: isMock ? false : fallback })
+    return NextResponse.json({ recipes: savedRecipes })
   } catch (error) {
     console.error("Recipe generation error:", error)
     return NextResponse.json({ error: e("生成失败，请稍后重试", "Generation failed, please try again later") }, { status: 500 })

@@ -273,9 +273,7 @@ export default function RecipesPage() {
       } else {
         setRecipes(data.recipes || [])
         setGenerated(true)
-        if (data.fallback) {
-          setError(t("aiFallback"))
-        }
+        
       }
     } catch (err) {
       console.error("generate recipes error:", err)
