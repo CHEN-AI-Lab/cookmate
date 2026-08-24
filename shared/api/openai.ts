@@ -218,7 +218,24 @@ function buildWeeklyPrompt(locale?: string, days?: number[]): string {
   const targetDays = days ?? [0, 1, 2, 3, 4, 5, 6]
   const dayList = targetDays.map(i => dayNames[i]).join("、")
   const count = targetDays.length * 3
-  const dayJson = targetDays.map(i => `  "${dayNames[i]}": {\n    "breakfast": { ... },\n    "lunch": { ... },\n    "dinner": { ... }\n  }`).join(",\n")
+
+  // 关键：示例必须用**英文**字段名 + ingredients 为 string[]（不是 object），
+  // 否则 AI 跟着中文 prompt 返回中文 key，sanitize 也救不回来。
+  const mealExample = `{
+      "title": "菜名",
+      "description": "简介",
+      "ingredients": ["食材1 数量", "食材2 数量"],
+      "steps": ["步骤1", "步骤2"],
+      "cookingTime": 30,
+      "calories": 450,
+      "cuisineType": "中餐",
+      "difficulty": "easy"
+    }`
+  const dayJson = targetDays.map(i => `  "${dayNames[i]}": {
+    "breakfast": ${mealExample},
+    "lunch": ${mealExample},
+    "dinner": ${mealExample}
+  }`).join(",\n")
 
   return `你是 CookMate 的 AI 厨师助手。你的任务是生成以下日期的早、午、晚餐菜谱：${dayList}
 1. 自由推荐多样化的菜谱，涵盖不同菜系（中餐、西餐、川菜、日料等混搭），确保饮食丰富不重复
@@ -226,7 +243,9 @@ function buildWeeklyPrompt(locale?: string, days?: number[]): string {
 3. **食材必须全部是普通家庭日常常备的。禁止使用"高汤"、"奶油芝士"、"淡奶油"、"味醂"、"味噌"、"鱼露"等不常备的食材。**
 4. 始终用 ${lang} 回复
 5. **必须生成以上指定的 ${targetDays.length} 天，每天早、午、晚餐共 ${count} 餐。只生成指定的这些天，不要生成其他天。**
-6. 响应必须是 JSON 格式，不要包含任何 markdown 标记
+6. **所有 JSON 字段名必须用英文**（title / description / ingredients / steps / cookingTime / calories / cuisineType / difficulty），不要用"菜名"等中文 key。
+7. **ingredients 必须是字符串数组**，例如 ["鸡蛋 3个", "牛奶 30ml"]，**不要**返回 {"鸡蛋": "3个"} 这种 object 形式。
+8. 响应必须是 JSON 格式，不要包含任何 markdown 标记
 
 JSON 格式:
 {
