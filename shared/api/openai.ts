@@ -388,8 +388,8 @@ function getMockRecipes(
   const matched = all.filter((recipe) =>
     recipe.ingredients.some((ri) => inputLower.some((ii) => ri.toLowerCase().includes(ii) || ii.includes(ri.toLowerCase())))
   )
-  // 匹配不到时返回 2 条推荐，避免空数组让用户误以为"生成失败"
-  return matched.length > 0 ? matched.slice(0, 2) : all.slice(0, 2)
+  // 匹配不到时返回 4 条推荐（降级场景多给几个选择）
+  return matched.length > 0 ? matched.slice(0, 4) : all.slice(0, 4)
 }
 
 function getMockRecipesEn(
@@ -419,7 +419,7 @@ function getMockRecipesEn(
     recipe.ingredients.some((ri) => inputLower.some((ii) => ri.toLowerCase().includes(ii) || ii.includes(ri.toLowerCase())))
   )
   // 匹配不到时返回全部推荐，避免空数组让用户误以为"生成失败"
-  return matched.length > 0 ? matched : all
+  return matched.length > 0 ? matched.slice(0, 4) : all.slice(0, 4)
 }
 
 function getMockWeeklyPlan(
