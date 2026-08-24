@@ -260,7 +260,7 @@
   },
   "mealPlan": {
     "title": "本週計劃",
-    "generate": "🤖 AI 生成整週計劃",
+    "generate": "🤖 AI 生成週計劃",
     "generatingDesc": "AI 正在為你規劃一週菜單...",
     "noPlan": "還沒有周計劃",
     "noPlanHint": "點擊按鈕讓 AI 為你規劃一週菜單，生成後點擊格子可以查看詳情",

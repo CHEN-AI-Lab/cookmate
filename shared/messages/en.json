@@ -260,7 +260,7 @@
   },
   "mealPlan": {
     "title": "📅 This Week's Plan",
-    "generate": "🤖 AI Generate Weekly Plan",
+    "generate": "🤖 AI Generate Plan",
     "generating": "🤖 Generating...",
     "generatingDesc": "AI is planning your meals for the week...",
     "deleteAll": "🗑️ Clear All",

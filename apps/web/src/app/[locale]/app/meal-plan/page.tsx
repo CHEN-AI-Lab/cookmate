@@ -271,43 +271,51 @@ export default function MealPlanPage() {
 
             <div className="grid grid-cols-7 gap-2 mb-3">
               {DAYS.map((key, i) => {
+                const hasOld = plan?.slots.some((s) => s.dayOfWeek === i && s.recipe !== null)
                 let cls = "rounded-lg border py-3 text-center text-sm font-medium cursor-pointer transition-all "
                 if (pickStart !== null && pickEnd !== null) {
                   const lo = Math.min(pickStart, pickEnd)
                   const hi = Math.max(pickStart, pickEnd)
                   if (i >= lo && i <= hi) {
                     cls += i === lo || i === hi ? "bg-accent text-white border-accent" : "bg-orange-50 text-accent border-accent"
+                  } else if (hasOld) {
+                    cls += "bg-green-50 text-green-600 border-green-400"
                   } else {
                     cls += "bg-white text-text-secondary border-gray-200 hover:border-accent"
                   }
                 } else if (i === pickStart) {
                   cls += "bg-accent text-white border-accent"
+                } else if (hasOld) {
+                  cls += "bg-green-50 text-green-600 border-green-400"
                 } else {
                   cls += "bg-white text-text-secondary border-gray-200 hover:border-accent"
                 }
                 return (
                   <button key={key} className={cls} onClick={() => handleDayClick(i)}>
-                    <div className="text-xs">{t(key).slice(0, 1)}</div>
+                    <div className="text-xs">{t(key).slice(0, 2)}</div>
                   </button>
                 )
               })}
             </div>
 
-            <div className="text-xs text-text-secondary mb-4 min-h-[20px]">
-              {pickStart === null
-                ? t("pickerSelectStart")
-                : pickEnd === null
-                  ? t("pickerSelectEnd")
-                  : (() => {
-                      const lo = Math.min(pickStart, pickEnd)
-                      const hi = Math.max(pickStart, pickEnd)
-                      const n = hi - lo + 1
-                      const names = DAYS.slice(lo, hi + 1).map((k) => t(k)).join("、")
-                      let tip = ""
-                      if (n >= 6) tip = `<br><span class="text-text-secondary">💡 ${t("pickerTip")}</span>`
-                      return `${t("pickerRange", { start: t(DAYS[lo]), end: t(DAYS[hi]), count: n, meals: n * 3 })}：${names}${tip}`
-                    })()}
-            </div>
+            <div
+              className="text-xs text-text-secondary mb-4 min-h-[20px] leading-relaxed"
+              dangerouslySetInnerHTML={{
+                __html: pickStart === null
+                  ? t("pickerSelectStart")
+                  : pickEnd === null
+                    ? t("pickerSelectEnd")
+                    : (() => {
+                        const lo = Math.min(pickStart, pickEnd)
+                        const hi = Math.max(pickStart, pickEnd)
+                        const n = hi - lo + 1
+                        const names = DAYS.slice(lo, hi + 1).map((k) => t(k)).join("、")
+                        const range = t("pickerRange", { start: t(DAYS[lo]), end: t(DAYS[hi]), count: n, meals: n * 3 })
+                        const tip = n >= 6 ? `<br><span class="text-text-secondary">💡 ${t("pickerTip")}</span>` : ""
+                        return `${range}：${names}${tip}`
+                      })(),
+              }}
+            />
 
             <div className="flex gap-2">
               <button onClick={() => setShowPicker(false)} className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gray-100 text-text-secondary hover:bg-gray-200 transition-colors">{tc("cancel")}</button>

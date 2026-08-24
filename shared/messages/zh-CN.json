@@ -260,7 +260,7 @@
   },
   "mealPlan": {
     "title": "本周计划",
-    "generate": "🤖 AI 生成整周计划",
+    "generate": "🤖 AI 生成周计划",
     "generating": "🤖 生成中...",
     "generatingDesc": "AI 正在为你规划一周菜单...",
     "deleteAll": "🗑️ 清除全部",
