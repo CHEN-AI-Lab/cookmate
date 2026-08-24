@@ -2,108 +2,156 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { PRICING } from "@cookmate/shared/constants/pricing"
 
-// 从事件中提取 userId
-// Creem webhook payload 结构：
-// { "eventType": "xxx", "object": { "metadata": { "userId": "..." }, ... } }
-function extractUserId(event: Record<string, unknown>): string | null {
-  // checkout.completed — metadata 在 event.object.metadata
-  if (event.object && typeof event.object === "object") {
-    const obj = event.object as Record<string, unknown>
-    if (obj.metadata && typeof obj.metadata === "object") {
-      const meta = obj.metadata as Record<string, string>
-      if (typeof meta.userId === "string") return meta.userId
-    }
-    // subscription.active — 订阅对象里也有 metadata
-    if (obj.subscription && typeof obj.subscription === "object") {
-      const sub = obj.subscription as Record<string, unknown>
-      if (sub.metadata && typeof sub.metadata === "object") {
-        const meta = sub.metadata as Record<string, string>
-        if (typeof meta.userId === "string") return meta.userId
-      }
-    }
-  }
-  // 旧格式兜底
-  if (event.metadata && typeof event.metadata === "object") {
-    const meta = event.metadata as Record<string, string>
+// ── 辅助函数：从 webhook 事件中提取各种字段 ──
+
+// 从 metadata 提取 userId（CookMate 创建结账时塞入 metadata.userId）
+function extractUserIdFromMetadata(event: Record<string, unknown>): string | null {
+  const obj = event.object as Record<string, unknown> | undefined
+  if (!obj) return null
+
+  // subscription.* 事件：object 就是订阅对象，metadata 在 object.metadata
+  if (obj.metadata && typeof obj.metadata === "object") {
+    const meta = obj.metadata as Record<string, unknown>
     if (typeof meta.userId === "string") return meta.userId
   }
-  return null
-}
 
-function extractOrderId(event: Record<string, unknown>): string | null {
-  // checkout.completed — event.object.id 是 checkout ID
-  if (event.object && typeof event.object === "object") {
-    const obj = event.object as Record<string, unknown>
-    if (typeof obj.id === "string") return obj.id
-    // 也可取 order.id
-    if (obj.order && typeof obj.order === "object") {
-      const o = obj.order as Record<string, unknown>
-      if (typeof o.id === "string") return o.id
+  // checkout.completed / refund.created：metadata 也在嵌套的 object.subscription.metadata
+  if (obj.subscription && typeof obj.subscription === "object") {
+    const sub = obj.subscription as Record<string, unknown>
+    if (sub.metadata && typeof sub.metadata === "object") {
+      const meta = sub.metadata as Record<string, unknown>
+      if (typeof meta.userId === "string") return meta.userId
     }
   }
-  // 兜底：event 本身的 id
-  if (typeof event.id === "string") return event.id
-  return null
-}
 
-// 从事件 metadata 中提取 period
-function extractPeriod(event: Record<string, unknown>): string | undefined {
-  if (event.object && typeof event.object === "object") {
-    const obj = event.object as Record<string, unknown>
-    if (obj.metadata && typeof obj.metadata === "object") {
-      const meta = obj.metadata as Record<string, string>
-      if (meta.period === "annual" || meta.period === "monthly") return meta.period
-    }
-    if (obj.subscription && typeof obj.subscription === "object") {
-      const sub = obj.subscription as Record<string, unknown>
-      if (sub.metadata && typeof sub.metadata === "object") {
-        const meta = sub.metadata as Record<string, string>
-        if (meta.period === "annual" || meta.period === "monthly") return meta.period
-      }
+  // refund.created：metadata 还在 object.checkout.metadata
+  if (obj.checkout && typeof obj.checkout === "object") {
+    const checkout = obj.checkout as Record<string, unknown>
+    if (checkout.metadata && typeof checkout.metadata === "object") {
+      const meta = checkout.metadata as Record<string, unknown>
+      if (typeof meta.userId === "string") return meta.userId
     }
   }
-  return undefined
+
+  return null
 }
 
 // 从事件中提取 subscriptionId
 function extractSubscriptionId(event: Record<string, unknown>): string | null {
-  if (event.object && typeof event.object === "object") {
-    const obj = event.object as Record<string, unknown>
-    if (obj.subscription && typeof obj.subscription === "object") {
-      const sub = obj.subscription as Record<string, unknown>
-      if (typeof sub.id === "string") return sub.id
+  const obj = event.object as Record<string, unknown> | undefined
+  if (!obj) return null
+
+  // subscription.* 事件：object 就是订阅对象
+  if (obj.object === "subscription" && typeof obj.id === "string") return obj.id
+
+  // checkout.completed / refund.created：订阅在嵌套的 object.subscription
+  if (obj.subscription && typeof obj.subscription === "object") {
+    const sub = obj.subscription as Record<string, unknown>
+    if (typeof sub.id === "string") return sub.id
+  }
+
+  return null
+}
+
+// 从事件中提取 current_period_end_date（Creem 官方到期日）
+function extractPeriodEndDate(event: Record<string, unknown>): Date | null {
+  const obj = event.object as Record<string, unknown> | undefined
+  if (!obj) return null
+
+  // subscription.* 事件：直接在 object 上
+  if (typeof obj.current_period_end_date === "string") {
+    const d = new Date(obj.current_period_end_date)
+    if (!isNaN(d.getTime())) return d
+  }
+
+  // checkout.completed / refund.created：在嵌套的 object.subscription 上
+  if (obj.subscription && typeof obj.subscription === "object") {
+    const sub = obj.subscription as Record<string, unknown>
+    if (typeof sub.current_period_end_date === "string") {
+      const d = new Date(sub.current_period_end_date)
+      if (!isNaN(d.getTime())) return d
     }
+  }
+
+  return null
+}
+
+// 从事件中提取订阅状态
+function extractStatus(event: Record<string, unknown>): string | null {
+  const obj = event.object as Record<string, unknown> | undefined
+  if (!obj) return null
+  if (typeof obj.status === "string") return obj.status
+  return null
+}
+
+// 从事件中提取 orderId（checkout.completed 用）
+function extractOrderId(event: Record<string, unknown>): string | null {
+  const obj = event.object as Record<string, unknown> | undefined
+  if (!obj) return null
+  if (typeof obj.id === "string") return obj.id
+  if (obj.order && typeof obj.order === "object") {
+    const o = obj.order as Record<string, unknown>
+    if (typeof o.id === "string") return o.id
   }
   return null
 }
 
-async function upgradeUser(userId: string, creemSubscriptionId?: string, period?: string) {
-  // 续费累加：从 max(now, 现有到期日) 起算，避免吞掉用户剩余天数
-  const user = await prisma.user.findUnique({ where: { id: userId } })
-  const now = new Date()
-  const base = user?.subscriptionExpiryDate && user.subscriptionExpiryDate > now
-    ? user.subscriptionExpiryDate
-    : now
-  const expiryDate = new Date(base)
-  if (period === "annual") {
-    expiryDate.setUTCFullYear(expiryDate.getUTCFullYear() + 1)
-  } else {
-    expiryDate.setUTCMonth(expiryDate.getUTCMonth() + 1)
+// 从事件中提取 period（用于 recordOrder 兜底算金额）
+function extractPeriod(event: Record<string, unknown>): string | undefined {
+  const obj = event.object as Record<string, unknown> | undefined
+  if (!obj) return undefined
+
+  // 优先从 product.billing_period 推导（更可靠）
+  const product = obj.product as Record<string, unknown> | undefined
+  if (product && typeof product.billing_period === "string") {
+    if (product.billing_period === "every-year") return "annual"
+    if (product.billing_period === "every-month") return "monthly"
   }
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      subscriptionTier: "PRO",
-      subscriptionExpiryDate: expiryDate,
-      ...(creemSubscriptionId ? { creemSubscriptionId } : {}),
-    },
-  })
+  // 兜底从 metadata.period 取（CookMate 创建结账时塞的）
+  if (obj.metadata && typeof obj.metadata === "object") {
+    const meta = obj.metadata as Record<string, unknown>
+    if (meta.period === "annual" || meta.period === "monthly") return meta.period as string
+  }
+
+  // 嵌套 subscription 的 metadata
+  if (obj.subscription && typeof obj.subscription === "object") {
+    const sub = obj.subscription as Record<string, unknown>
+    if (sub.metadata && typeof sub.metadata === "object") {
+      const meta = sub.metadata as Record<string, unknown>
+      if (meta.period === "annual" || meta.period === "monthly") return meta.period as string
+    }
+  }
+
+  return undefined
 }
 
-async function recordOrder(userId: string, _orderId: string, period?: string) {
-  // 查找这个用户的 PENDING Creem 订单，更新为已支付
-  // 不直接用 orderId 查，因为我们的订单号是 CKCR 格式，webhook 拿到的是 ch_xxx
+// 通过 creemSubscriptionId 反查 userId（metadata 没带 userId 时的兜底）
+async function findUserIdBySubscriptionId(subscriptionId: string): Promise<string | null> {
+  const user = await prisma.user.findFirst({
+    where: { creemSubscriptionId: subscriptionId },
+    select: { id: true },
+  })
+  return user?.id ?? null
+}
+
+// 综合获取 userId：先从 metadata 取，取不到用 subscriptionId 反查
+async function resolveUserId(event: Record<string, unknown>): Promise<string | null> {
+  const metaUserId = extractUserIdFromMetadata(event)
+  if (metaUserId) return metaUserId
+
+  const subId = extractSubscriptionId(event)
+  if (subId) {
+    return findUserIdBySubscriptionId(subId)
+  }
+
+  return null
+}
+
+// ── 业务函数 ──
+
+// 记录订单（checkout.completed 用：标记 PENDING → PAID）
+async function recordOrder(userId: string, orderId: string, period?: string) {
   const existing = await prisma.paymentOrder.findFirst({
     where: { userId, channel: "creem", status: "PENDING" },
     orderBy: { createdAt: "desc" },
@@ -115,118 +163,284 @@ async function recordOrder(userId: string, _orderId: string, period?: string) {
       data: { status: "PAID" },
     })
   } else {
-    // 兜底：找不到就新建 — 金额按 period 取对应定价
+    // 兜底：找不到 PENDING 订单就新建（webhook 比前端先到的竞态）
     const price = period === "annual" ? PRICING.plans.annual.cny.amount : PRICING.plans.monthly.cny.amount
     await prisma.paymentOrder.create({
-      data: {
-        userId,
-        orderId: _orderId,
-        channel: "creem",
-        amount: price,
-        status: "PAID",
-      },
+      data: { userId, orderId, channel: "creem", amount: price, status: "PAID" },
     })
   }
 }
 
-async function logWebhook(source: string, eventType: string | null, status: string, rawBody?: string) {
+// 授予访问权限（subscription.paid 用）
+// 用 Creem 官方的 current_period_end_date 作为到期日，不再自己算
+async function grantAccess(userId: string, subscriptionId: string, periodEndDate: Date): Promise<boolean> {
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  if (!user) return false
+
+  // 幂等：如果用户已经是 PRO 且到期日 >= 本次周期结束日，说明已授权，跳过
+  if (user.subscriptionTier === "PRO" && user.subscriptionExpiryDate && user.subscriptionExpiryDate >= periodEndDate) {
+    return false
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      subscriptionTier: "PRO",
+      subscriptionExpiryDate: periodEndDate,
+      creemSubscriptionId: subscriptionId,
+    },
+  })
+  return true
+}
+
+// 撤销访问权限（paused / expired / past_due / refund 用）
+async function revokeAccess(userId: string, clearSubscriptionId: boolean = true): Promise<void> {
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      subscriptionTier: "FREE",
+      subscriptionExpiryDate: null,
+      ...(clearSubscriptionId ? { creemSubscriptionId: null } : {}),
+    },
+  }).catch(() => {
+    // 用户可能已删除，忽略
+  })
+}
+
+// 同步订阅信息（subscription.active / update 用）
+// 只同步 creemSubscriptionId；有 periodEndDate 时同步到期日和 PRO
+async function syncSubscription(userId: string, subscriptionId: string, periodEndDate?: Date | null): Promise<void> {
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      creemSubscriptionId: subscriptionId,
+      ...(periodEndDate ? { subscriptionTier: "PRO", subscriptionExpiryDate: periodEndDate } : {}),
+    },
+  }).catch(() => {
+    // 用户可能已删除，忽略
+  })
+}
+
+// ── 事件ID去重 ──
+
+// 检查事件是否已处理过（幂等保护）
+async function isAlreadyProcessed(eventId: string): Promise<boolean> {
+  const existing = await prisma.webhookLog.findFirst({
+    where: { eventId, status: "processed" },
+    select: { id: true },
+  })
+  return !!existing
+}
+
+// 记录 webhook 日志
+async function logWebhook(
+  source: string,
+  eventType: string | null,
+  status: string,
+  rawBody?: string,
+  eventId?: string,
+): Promise<void> {
   try {
     await prisma.webhookLog.create({
-      data: { source, eventType, status, rawBody },
+      data: { source, eventType, status, rawBody, eventId },
     })
   } catch {
     // 日志不要影响主流程
   }
 }
 
+// ── Webhook 入口 ──
+
 export async function POST(req: Request) {
   try {
     const signature = req.headers.get("creem-signature") || ""
     const body = await req.text()
 
-    // 先记录日志（异步，不阻塞）
-    let parsedEvent: Record<string, unknown> = {}
-    try { parsedEvent = JSON.parse(body) } catch { /* skip */ }
-    const rawEventType = (parsedEvent?.eventType as string) || null
-    logWebhook("creem", rawEventType, "received", body)
+    // 解析事件
+    let event: Record<string, unknown> = {}
+    try { event = JSON.parse(body) } catch { /* 格式错误，后面签名验证会拦 */ }
+
+    const rawEventType = (event.eventType as string) || null
+    const eventId = (event.id as string) || null
+
+    // 先记录收到日志
+    logWebhook("creem", rawEventType, "received", body, eventId ?? undefined)
 
     // 验证签名
     const { verifyWebhook } = await import("@cookmate/shared/api/creem")
     if (!verifyWebhook(body, signature)) {
-      logWebhook("creem", rawEventType, "failed:signature")
+      logWebhook("creem", rawEventType, "failed:signature", undefined, eventId ?? undefined)
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
     }
 
-    const event = parsedEvent
+    // 事件ID去重：已处理过的事件直接返回 200（Creem 会重试，必须幂等）
+    if (eventId && await isAlreadyProcessed(eventId)) {
+      logWebhook("creem", rawEventType, "duplicate", undefined, eventId)
+      return NextResponse.json({ success: true, message: "duplicate event" })
+    }
 
-    // checkout.completed — 订单完成
+    // ── checkout.completed ──
+    // 记录订单（PENDING → PAID）+ 同步订阅ID，不升级用户
+    // 升级交给 subscription.paid（官方推荐）
     if (event.eventType === "checkout.completed") {
-      const userId = extractUserId(event)
+      const userId = await resolveUserId(event)
       const orderId = extractOrderId(event) || ""
-      const subscriptionId = extractSubscriptionId(event)
       const period = extractPeriod(event)
-      if (orderId) {
-        await recordOrder(userId || "unknown", orderId, period)
-      }
-      if (userId) {
-        await upgradeUser(userId, subscriptionId || undefined, period)
-      }
-      logWebhook("creem", "checkout.completed", "success")
-      return NextResponse.json({ success: true })
-    }
-
-    // subscription.active / subscription.paid
-    if (event.eventType === "subscription.active" || event.eventType === "subscription.paid") {
-      const userId = extractUserId(event)
       const subscriptionId = extractSubscriptionId(event)
-      const period = extractPeriod(event)
-      if (userId) {
-        await upgradeUser(userId, subscriptionId || undefined, period)
+
+      if (userId && orderId) {
+        await recordOrder(userId, orderId, period)
       }
-      logWebhook("creem", event.eventType as string, "success")
+      // 同步订阅ID（为后续事件的 userId 反查做准备）
+      if (userId && subscriptionId) {
+        await syncSubscription(userId, subscriptionId)
+      }
+
+      await logWebhook("creem", "checkout.completed", "processed", undefined, eventId ?? undefined)
       return NextResponse.json({ success: true })
     }
 
-    // 退款 — 立即降级为 FREE（原实现不处理，用户退款后永久保持 PRO）
-    if (event.eventType === "refund.created") {
-      const userId = extractUserId(event)
-      if (userId) {
-        await prisma.user.update({
-          where: { id: userId },
-          data: { subscriptionTier: "FREE", subscriptionExpiryDate: null, creemSubscriptionId: null },
-        })
+    // ── subscription.active ──
+    // 官方明确："subscription.active is only for data synchronization"
+    // 只同步订阅ID，不升级用户
+    if (event.eventType === "subscription.active") {
+      const userId = await resolveUserId(event)
+      const subscriptionId = extractSubscriptionId(event)
+
+      if (userId && subscriptionId) {
+        await syncSubscription(userId, subscriptionId)
       }
-      logWebhook("creem", "refund.created", "success")
+
+      await logWebhook("creem", "subscription.active", "processed", undefined, eventId ?? undefined)
       return NextResponse.json({ success: true })
     }
 
-    // 订阅到期 — 降级为 FREE
-    if (event.eventType === "subscription.expired") {
-      const userId = extractUserId(event)
-      if (userId) {
-        await prisma.user.update({
-          where: { id: userId },
-          data: { subscriptionTier: "FREE", creemSubscriptionId: null },
-        })
+    // ── subscription.paid ──
+    // 官方推荐："use subscription.paid to activate user access"
+    // 唯一升级点：用 Creem 官方 current_period_end_date 作为到期日
+    if (event.eventType === "subscription.paid") {
+      const userId = await resolveUserId(event)
+      const subscriptionId = extractSubscriptionId(event)
+      const periodEndDate = extractPeriodEndDate(event)
+
+      if (userId && subscriptionId && periodEndDate) {
+        await grantAccess(userId, subscriptionId, periodEndDate)
+      } else if (userId && subscriptionId) {
+        // periodEndDate 缺失的兜底（不太可能发生，但防御性处理）
+        const period = extractPeriod(event)
+        const now = new Date()
+        const expiryDate = new Date(now)
+        if (period === "annual") {
+          expiryDate.setUTCFullYear(expiryDate.getUTCFullYear() + 1)
+        } else {
+          expiryDate.setUTCMonth(expiryDate.getUTCMonth() + 1)
+        }
+        await grantAccess(userId, subscriptionId, expiryDate)
       }
-      logWebhook("creem", "subscription.expired", "success")
+
+      await logWebhook("creem", "subscription.paid", "processed", undefined, eventId ?? undefined)
       return NextResponse.json({ success: true })
     }
 
-    // 取消订阅 — 保留 PRO 到已付周期结束（subscriptionExpiryDate 不变），仅清除订阅关联防止续费
+    // ── subscription.canceled ──
+    // 清除订阅关联（防止下个周期续费），保留 PRO 到到期日（用户已付费的周期不收回）
     if (event.eventType === "subscription.canceled") {
-      const userId = extractUserId(event)
+      const userId = await resolveUserId(event)
       if (userId) {
         await prisma.user.update({
           where: { id: userId },
           data: { creemSubscriptionId: null },
-        })
+        }).catch(() => {})
       }
-      logWebhook("creem", "subscription.canceled", "success")
+      await logWebhook("creem", "subscription.canceled", "processed", undefined, eventId ?? undefined)
       return NextResponse.json({ success: true })
     }
 
-    logWebhook("creem", rawEventType, "ignored")
+    // ── subscription.expired ──
+    // 周期结束未续费 → 降级 FREE
+    if (event.eventType === "subscription.expired") {
+      const userId = await resolveUserId(event)
+      if (userId) {
+        await revokeAccess(userId)
+      }
+      await logWebhook("creem", "subscription.expired", "processed", undefined, eventId ?? undefined)
+      return NextResponse.json({ success: true })
+    }
+
+    // ── subscription.paused ──
+    // 官方："revoke access when paused"
+    // 降级 FREE 但保留订阅ID（恢复时 subscription.update/paid 会重新授权）
+    if (event.eventType === "subscription.paused") {
+      const userId = await resolveUserId(event)
+      if (userId) {
+        await revokeAccess(userId, false)
+      }
+      await logWebhook("creem", "subscription.paused", "processed", undefined, eventId ?? undefined)
+      return NextResponse.json({ success: true })
+    }
+
+    // ── subscription.past_due ──
+    // 付款失败待重试 → 降级 FREE（fail-closed，更安全）
+    // 保留订阅ID（重试成功后 subscription.paid 会重新授权）
+    if (event.eventType === "subscription.past_due") {
+      const userId = await resolveUserId(event)
+      if (userId) {
+        await revokeAccess(userId, false)
+      }
+      await logWebhook("creem", "subscription.past_due", "processed", undefined, eventId ?? undefined)
+      return NextResponse.json({ success: true })
+    }
+
+    // ── subscription.scheduled_cancel ──
+    // 计划到期取消 → 不操作（仍有效，到期后 subscription.expired 会处理降级）
+    if (event.eventType === "subscription.scheduled_cancel") {
+      await logWebhook("creem", "subscription.scheduled_cancel", "processed", undefined, eventId ?? undefined)
+      return NextResponse.json({ success: true })
+    }
+
+    // ── subscription.update ──
+    // 订阅变更（如月→年）→ 同步到期日
+    // 只有状态为 active 时才授权，其他状态只同步订阅ID
+    if (event.eventType === "subscription.update") {
+      const userId = await resolveUserId(event)
+      const subscriptionId = extractSubscriptionId(event)
+      const periodEndDate = extractPeriodEndDate(event)
+      const status = extractStatus(event)
+
+      if (userId && subscriptionId) {
+        if (status === "active" && periodEndDate) {
+          // 状态正常且有到期日 → 同步并授权
+          await syncSubscription(userId, subscriptionId, periodEndDate)
+        } else {
+          // 状态非 active（如 paused/canceled）→ 只同步订阅ID
+          await syncSubscription(userId, subscriptionId)
+        }
+      }
+      await logWebhook("creem", "subscription.update", "processed", undefined, eventId ?? undefined)
+      return NextResponse.json({ success: true })
+    }
+
+    // ── subscription.trialing ──
+    // CookMate 没有试用功能 → 仅记录
+    if (event.eventType === "subscription.trialing") {
+      await logWebhook("creem", "subscription.trialing", "processed", undefined, eventId ?? undefined)
+      return NextResponse.json({ success: true })
+    }
+
+    // ── refund.created ──
+    // 退款 → 立即降级 FREE
+    if (event.eventType === "refund.created") {
+      const userId = await resolveUserId(event)
+      if (userId) {
+        await revokeAccess(userId)
+      }
+      await logWebhook("creem", "refund.created", "processed", undefined, eventId ?? undefined)
+      return NextResponse.json({ success: true })
+    }
+
+    // ── 未知事件 ──
+    // 记录但不处理，返回 200（防止 Creem 重试）
+    await logWebhook("creem", rawEventType, "ignored", undefined, eventId ?? undefined)
     return NextResponse.json({ received: true })
   } catch (error: unknown) {
     console.error("Creem webhook error:", error)

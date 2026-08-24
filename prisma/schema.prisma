@@ -190,7 +190,8 @@ model WebhookLog {
   id        String   @id @default(cuid())
   source    String                        // creem / alipay / stripe
   eventType String?
-  status    String   @default("received") // received / processed / failed
+  status    String   @default("received") // received / processed / failed / duplicate / ignored
   rawBody   String?
+  eventId   String?  @unique              // Creem 事件唯一ID（evt_xxx），用于幂等去重
   createdAt DateTime @default(now())
 }
