@@ -104,11 +104,12 @@ export async function POST(req: Request) {
     monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7))
     monday.setHours(0, 0, 0, 0)
 
-    // 保存到数据库
+    // 保存到数据库(降级时不保存,返回 weekPlan 直接显示,不覆盖旧数据)
     let mealPlan: Record<string, unknown> | null = null
     const dayMap = getDayMap(locale)
-    try {
-      // 只删除选中天的旧 slots，保留未选中天的旧计划
+    if (!fallback) {
+      try {
+        // 只删除选中天的旧 slots，保留未选中天的旧计划
       await prisma.mealSlot.deleteMany({
         where: { mealPlan: { userId: userId, weekStart: monday }, dayOfWeek: { in: targetDays } }
       })
@@ -201,6 +202,7 @@ export async function POST(req: Request) {
         }))
       )
       mealPlan = { id: "demo-plan", weekStart: monday.toISOString(), slots }
+    }
     }
 
     return NextResponse.json({ plan: mealPlan, generated: weekPlan, fallback })

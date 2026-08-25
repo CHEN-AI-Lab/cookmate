@@ -255,7 +255,7 @@ export default function RecipesPage() {
     }
     setLoading(true)
     setError("")
-    setRecipes([])
+    // 不清空上次结果，生成失败时保留旧菜谱
     setGenerated(false)
 
     try {
