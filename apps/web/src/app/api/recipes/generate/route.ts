@@ -69,6 +69,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: e("请至少提供一种食材", "Please provide at least one ingredient") }, { status: 400 })
     }
 
+    // 耗时日志
+    const T = (label: string) => console.log(`[TIMING recipes] ${label}: ${Date.now() - t0}ms`)
+    const t0 = Date.now()
+    T("start")
+
     if (ingredients.length > 20) {
       return NextResponse.json({ error: e("食材最多 20 种", "Maximum 20 ingredients allowed") }, { status: 400 })
     }
@@ -103,11 +108,15 @@ export async function POST(req: Request) {
       select: { dietType: true, cuisinePref: true, servingSize: true },
     }).catch((err: unknown) => { console.error("findUnique user error:", err); return null })
 
+    T("db_user_pref_done")
+
     const { recipes: aiRecipes, fallback } = await generateRecipes(ingredients, {
       dietType: user?.dietType || undefined,
       cuisinePref: user?.cuisinePref || undefined,
       servingSize: user?.servingSize || undefined,
     }, pantryContext, locale)
+
+    T("ai_done")
 
     // 保存生成的菜谱到数据库
     const savedRecipes = []
@@ -148,7 +157,8 @@ export async function POST(req: Request) {
       await incrementUsage(session.user.id)
     }
 
-    // 没配 AI Key 时不是"失败",不显示 fallback 提示
+    T("save_done")
+
     return NextResponse.json({ recipes: savedRecipes, fallback })
   } catch (error) {
     console.error("Recipe generation error:", error)

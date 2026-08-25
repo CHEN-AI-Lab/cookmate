@@ -80,12 +80,19 @@ export async function POST(req: Request) {
       }
     }
 
+    // 耗时日志
+    const T = (label: string) => console.log(`[TIMING mealplan] ${label}: ${Date.now() - t0}ms`)
+    const t0 = Date.now()
+    T("start")
+
     // 生成周计划
     const { plan: rawPlan, fallback } = await generateWeeklyPlan({
       dietType: user?.dietType || undefined,
       cuisinePref: user?.cuisinePref || undefined,
       servingSize: user?.servingSize || 2,
     }, pantryNames, locale, targetDays)
+
+    T("ai_done")
 
     // AI 返回数据兜底消毒：缺失字段填默认值，避免 .join() 崩溃 + 防止"刷新就丢"
     const weekPlan = sanitizeWeeklyPlan(rawPlan)
