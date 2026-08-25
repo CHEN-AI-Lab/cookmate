@@ -70,7 +70,8 @@ export function makePrisma() {
           (o: any) =>
             (!where.userId || o.userId === where.userId) &&
             (!where.channel || o.channel === where.channel) &&
-            (!where.status || o.status === where.status),
+            (!where.status || o.status === where.status) &&
+            (!where.externalCheckoutId || o.externalCheckoutId === where.externalCheckoutId),
         )
         if (orderBy?.createdAt === 'desc') list.sort((a: any, b: any) => b.createdAt - a.createdAt)
         return list[0] || null
@@ -78,7 +79,10 @@ export function makePrisma() {
       findUnique: vi.fn(async ({ where }: any) => stores.orders.get(where.orderId) || null),
       findMany: vi.fn(async ({ where, orderBy, take }: any) => {
         let list = [...stores.orders.values()].filter(
-          (o: any) => (!where.userId || o.userId === where.userId) && (!where.channel || o.channel === where.channel),
+          (o: any) =>
+            (!where.userId || o.userId === where.userId) &&
+            (!where.channel || o.channel === where.channel) &&
+            (!where.externalCheckoutId || o.externalCheckoutId === where.externalCheckoutId),
         )
         if (orderBy?.createdAt === 'desc') list.sort((a: any, b: any) => b.createdAt - a.createdAt)
         if (take) list = list.slice(0, take)
@@ -115,6 +119,13 @@ export function makePrisma() {
           }
         }
         return { count }
+      }),
+      delete: vi.fn(async ({ where }: any) => {
+        const key = where.orderId || where.id
+        const rec = stores.orders.get(key)
+        if (!rec) throw new Error('Order not found')
+        stores.orders.delete(key)
+        return rec
       }),
     },
     webhookLog: {

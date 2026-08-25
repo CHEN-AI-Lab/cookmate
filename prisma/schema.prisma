@@ -175,15 +175,19 @@ model UsageDaily {
 }
 
 model PaymentOrder {
-  id         String   @id @default(cuid())
-  orderId    String   @unique               // 业务订单号
-  channel    String                        // 支付渠道: alipay, creem, stripe
-  amount     Int                           // 金额（分）
-  status     String   @default("PENDING")  // PENDING / PAID / EXPIRED
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                 String   @id @default(cuid())
+  orderId            String   @unique               // 业务订单号（本地 CKCRxxx）
+  externalCheckoutId String?                         // 支付平台侧的 checkout/session ID（Creem ch_xxx / Stripe cs_xxx），用于 webhook + GET 精确反查本地订单
+  channel            String                          // 支付渠道: alipay, creem, stripe
+  amount             Int                             // 金额（分）
+  status             String   @default("PENDING")    // PENDING / PAID / EXPIRED
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([externalCheckoutId])
+  @@index([userId, status])
 }
 
 model WebhookLog {
@@ -194,4 +198,6 @@ model WebhookLog {
   rawBody   String?
   eventId   String?  @unique              // Creem 事件唯一ID（evt_xxx），用于幂等去重
   createdAt DateTime @default(now())
+
+  @@index([source, createdAt])
 }

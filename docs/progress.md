@@ -61,3 +61,4 @@
 ## 已知问题
 - 支付宝支付待商户注册（PayJS 集成）
 - 营养计算为估算值
+- **WebhookLog 表无定期清理 job**：上线初期数据量小可暂缓，待日均通知量 > 1000 或表行数 > 100k 时实施。届时需新增 Vercel Cron Job（参考 aaigc RateLimit 清理模式：每日 03:00 UTC 删除 `createdAt < now() - 90d` 的行）。详见 2026-08-25 代码审查报告 `deliverables/gstack/code-review-billing-subscription-2026-08-25.md` 🟢 #28。

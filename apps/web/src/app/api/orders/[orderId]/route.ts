@@ -14,8 +14,12 @@ export async function DELETE(
 
     const { orderId } = await params
 
-    const order = await prisma.paymentOrder.findUnique({ where: { orderId } })
-    if (!order || order.userId !== session.user.id) {
+    // findFirst 一次查完（orderId + userId 同时匹配），userId 不匹配时不返回任何记录
+    // ——避免泄露订单存在性（订单号 8 位 hex 实际难枚举，但仍是轻微 IDOR）
+    const order = await prisma.paymentOrder.findFirst({
+      where: { orderId, userId: session.user.id },
+    })
+    if (!order) {
       return NextResponse.json({ error: "订单不存在" }, { status: 404 })
     }
     if (order.status === "PAID") {

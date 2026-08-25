@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { isExpired } from '@cookmate/shared/utils/subscription'
+import { isExpired, addMonths, addYears } from '@cookmate/shared/utils/subscription'
 
 // ---------------------------------------------------------------------------
 // Helpers — reproduce the exact logic from dashboard/route.ts
@@ -57,6 +57,57 @@ describe("isExpired (date comparison, zeroing time)", () => {
     tomorrow.setDate(tomorrow.getDate() + 1)
     tomorrow.setUTCHours(0, 0, 0, 0)
     expect(isExpired(tomorrow)).toBe(false)
+  })
+})
+
+describe("addMonths (月底越界防护)", () => {
+  it("普通跨月：1月15日 + 1月 → 2月15日", () => {
+    const d = new Date(Date.UTC(2026, 0, 15)) // 2026-01-15
+    expect(addMonths(d, 1).toISOString().slice(0, 10)).toBe("2026-02-15")
+  })
+
+  it("月底越界：1月31日 + 1月 → 2月28日（非3月3日）", () => {
+    const d = new Date(Date.UTC(2026, 0, 31)) // 2026-01-31
+    expect(addMonths(d, 1).toISOString().slice(0, 10)).toBe("2026-02-28")
+  })
+
+  it("月底越界（闰年）：1月31日 + 1月 → 2月29日", () => {
+    const d = new Date(Date.UTC(2024, 0, 31)) // 2024-01-31（2024 是闰年）
+    expect(addMonths(d, 1).toISOString().slice(0, 10)).toBe("2024-02-29")
+  })
+
+  it("月底越界：3月31日 + 1月 → 4月30日", () => {
+    const d = new Date(Date.UTC(2026, 2, 31)) // 2026-03-31
+    expect(addMonths(d, 1).toISOString().slice(0, 10)).toBe("2026-04-30")
+  })
+
+  it("多年累加：1月31日 + 13月 → 次年2月28日", () => {
+    const d = new Date(Date.UTC(2026, 0, 31))
+    expect(addMonths(d, 13).toISOString().slice(0, 10)).toBe("2027-02-28")
+  })
+
+  it("不影响时分秒：1月15日 12:34:56 + 1月 → 2月15日 12:34:56", () => {
+    const d = new Date(Date.UTC(2026, 0, 15, 12, 34, 56))
+    expect(addMonths(d, 1).toISOString()).toBe("2026-02-15T12:34:56.000Z")
+  })
+
+  it("不修改原日期（immutable）", () => {
+    const d = new Date(Date.UTC(2026, 0, 31))
+    const before = d.toISOString()
+    addMonths(d, 1)
+    expect(d.toISOString()).toBe(before)
+  })
+})
+
+describe("addYears (复用 addMonths，处理闰年越界)", () => {
+  it("普通跨年：2026-01-15 + 1年 → 2027-01-15", () => {
+    const d = new Date(Date.UTC(2026, 0, 15))
+    expect(addYears(d, 1).toISOString().slice(0, 10)).toBe("2027-01-15")
+  })
+
+  it("闰年越界：2024-02-29 + 1年 → 2025-02-28（不是 2025-03-01）", () => {
+    const d = new Date(Date.UTC(2024, 1, 29))
+    expect(addYears(d, 1).toISOString().slice(0, 10)).toBe("2025-02-28")
   })
 })
 

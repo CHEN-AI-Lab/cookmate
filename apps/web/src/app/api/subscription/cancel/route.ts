@@ -62,16 +62,19 @@ export async function POST() {
   }
 
   const data: { creemSubscriptionId?: null; stripeSubscriptionId?: null } = {}
+  const results: { creem?: "completed" | "failed"; stripe?: "completed" | "failed" } = {}
 
   // 取消 Creem 订阅（立即取消，避免下个周期续费扣款）
   if (user?.creemSubscriptionId) {
     try {
       await cancelSubscription(user.creemSubscriptionId)
       data.creemSubscriptionId = null
+      results.creem = "completed"
       await logCancelAudit("creem", session.user.id, user.creemSubscriptionId, "completed")
     } catch (err) {
       console.error("Creem cancel error:", err)
       // fail-closed：本地订阅ID 保留，写失败审计日志便于对账
+      results.creem = "failed"
       await logCancelAudit("creem", session.user.id, user.creemSubscriptionId, "failed", err)
     }
   }
@@ -81,10 +84,12 @@ export async function POST() {
     try {
       await cancelStripeSubscription(user.stripeSubscriptionId)
       data.stripeSubscriptionId = null
+      results.stripe = "completed"
       await logCancelAudit("stripe", session.user.id, user.stripeSubscriptionId, "completed")
     } catch (err) {
       console.error("Stripe cancel error:", err)
       // fail-closed：本地订阅ID 保留，写失败审计日志便于对账
+      results.stripe = "failed"
       await logCancelAudit("stripe", session.user.id, user.stripeSubscriptionId, "failed", err)
     }
   }
@@ -94,8 +99,15 @@ export async function POST() {
     await prisma.user.update({ where: { id: session.user.id }, data })
   }
 
+  // 部分取消成功：返 207 Multi-Status 让用户感知到部分失败，全成功才返 200
+  const anyFailed = results.creem === "failed" || results.stripe === "failed"
+  const status = anyFailed ? 207 : 200
   return NextResponse.json({
-    success: true,
-    message: "已取消订阅，当前周期内仍可使用 Pro 功能，到期后将自动降级为免费版",
-  })
+    success: !anyFailed,
+    partial: anyFailed,
+    results,
+    message: anyFailed
+      ? "部分渠道取消失败，请重试或前往 管理后台 → 取消审计 查看详情"
+      : "已取消订阅，当前周期内仍可使用 Pro 功能，到期后将自动降级为免费版",
+  }, { status })
 }

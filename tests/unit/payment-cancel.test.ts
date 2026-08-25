@@ -65,7 +65,12 @@ describe('取消订阅', () => {
     cancelSubscription.mockRejectedValue(new Error('api down'))
     stores.users.set('u1', { id: 'u1', subscriptionTier: 'PRO', creemSubscriptionId: 'creem_sub_1', stripeSubscriptionId: null })
     const res = await cancelPOST()
-    expect(res.status).toBe(200)
+    // 部分渠道失败 → 207 Multi-Status（让用户感知部分失败）
+    expect(res.status).toBe(207)
+    const body = await res.json()
+    expect(body.success).toBe(false)
+    expect(body.partial).toBe(true)
+    expect(body.results.creem).toBe('failed')
     // 不上游取消成功时，本地订阅ID 保留：
     // 1) 等 Creem webhook（subscription.canceled/expired）仍能按 subscriptionId 解析到用户并降级；
     // 2) 提供方 API 恢复后可再次点「取消」重试。
@@ -119,5 +124,32 @@ describe('取消订阅', () => {
     // 不应调用任何上游取消 API
     expect(cancelSubscription.mock.calls.length).toBe(beforeCreem)
     expect(cancelStripeSubscription.mock.calls.length).toBe(beforeStripe)
+  })
+
+  // P0 加固：部分取消成功返 207 让用户感知到部分失败
+  it('同时有 Creem + Stripe，Creem 失败 + Stripe 成功 → 207 partial:true', async () => {
+    cancelSubscription.mockRejectedValue(new Error('creem down'))
+    stores.users.set('u1', { id: 'u1', subscriptionTier: 'PRO', creemSubscriptionId: 'creem_sub_1', stripeSubscriptionId: 'stripe_sub_1', subscriptionExpiryDate: new Date(Date.now() + 86400000) })
+    const res = await cancelPOST()
+    expect(res.status).toBe(207)
+    const body = await res.json()
+    expect(body.success).toBe(false)
+    expect(body.partial).toBe(true)
+    expect(body.results.creem).toBe('failed')
+    expect(body.results.stripe).toBe('completed')
+    // Creem 失败保留订阅ID（fail-closed），Stripe 成功清空
+    expect(stores.users.get('u1').creemSubscriptionId).toBe('creem_sub_1')
+    expect(stores.users.get('u1').stripeSubscriptionId).toBeNull()
+  })
+
+  it('Creem + Stripe 都成功 → 200 success:true partial:false', async () => {
+    stores.users.set('u1', { id: 'u1', subscriptionTier: 'PRO', creemSubscriptionId: 'creem_sub_1', stripeSubscriptionId: 'stripe_sub_1', subscriptionExpiryDate: new Date(Date.now() + 86400000) })
+    const res = await cancelPOST()
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.success).toBe(true)
+    expect(body.partial).toBe(false)
+    expect(body.results.creem).toBe('completed')
+    expect(body.results.stripe).toBe('completed')
   })
 })

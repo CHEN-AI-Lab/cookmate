@@ -2,6 +2,19 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { verifyNotify } from "@cookmate/shared/api/alipay-pay"
 import { PRICING } from "@cookmate/shared/constants/pricing"
+import { addMonths } from "@cookmate/shared/utils/subscription"
+
+// 支付宝异步通知写入 WebhookLog（与 Creem / Stripe 一致，便于对账 + 审计追溯）
+// 失败绝不影响主流程（catch 吞错 + 静默）
+async function logWebhook(eventType: string | null, status: string, rawBody?: string): Promise<void> {
+  try {
+    await prisma.webhookLog.create({
+      data: { source: "alipay", eventType, status, rawBody },
+    })
+  } catch (err) {
+    console.error("Alipay notify: failed to write webhookLog", err)
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -17,6 +30,7 @@ export async function POST(req: Request) {
 
     // 验证 app_id
     if (appId !== process.env.AUTH_ALIPAY_ID) {
+      await logWebhook("appid-mismatch", "failed:appid", JSON.stringify(params))
       return new NextResponse("failure", { status: 400 })
     }
 
@@ -25,12 +39,17 @@ export async function POST(req: Request) {
     const publicKey = process.env.AUTH_ALIPAY_PUBLIC_KEY
     if (!publicKey) {
       console.error("Alipay notify: AUTH_ALIPAY_PUBLIC_KEY 未配置，拒绝未验签的回调")
+      await logWebhook(tradeStatus, "failed:no-public-key", JSON.stringify(params))
       return new NextResponse("failure", { status: 400 })
     }
     if (!verifyNotify(params, publicKey)) {
       console.error("Alipay notify: signature verification failed")
+      await logWebhook(tradeStatus, "failed:signature", JSON.stringify(params))
       return new NextResponse("failure", { status: 400 })
     }
+
+    // 验签通过后写 received 审计
+    await logWebhook(tradeStatus, "received", JSON.stringify(params))
 
     // 只处理支付成功
     if (tradeStatus === "TRADE_SUCCESS" || tradeStatus === "TRADE_FINISHED") {
@@ -42,6 +61,7 @@ export async function POST(req: Request) {
 
         if (!order) {
           console.error("Alipay notify: order not found", { outTradeNo })
+          await logWebhook(tradeStatus, "failed:order-not-found", JSON.stringify(params))
           return new NextResponse("failure", { status: 400 })
         }
 
@@ -51,6 +71,7 @@ export async function POST(req: Request) {
         const actualAmount = params.total_amount
         if (Number(actualAmount) !== Number(expectedAmount)) {
           console.error("Alipay notify: amount mismatch", { outTradeNo, actualAmount, expectedAmount })
+          await logWebhook(tradeStatus, "failed:amount-mismatch", JSON.stringify(params))
           return new NextResponse("failure", { status: 400 })
         }
 
@@ -68,14 +89,20 @@ export async function POST(req: Request) {
           const base = user?.subscriptionExpiryDate && user.subscriptionExpiryDate > now
             ? user.subscriptionExpiryDate
             : now
-          const expiry = new Date(base)
-          // 按订单金额匹配计费周期（支付宝仅支持月/年），避免「年付只得 1 月」的缺陷
+          // 按订单金额匹配计费周期（避免「年付只得 1 月」与「金额匹配失败静默回退 1 月」两个缺陷）
           const periodMonths: Record<string, number> = { monthly: 1, quarterly: 3, semiannual: 6, annual: 12 }
-          let months = 1
+          let months: number | null = null
           for (const [p, cfg] of Object.entries(PRICING.plans)) {
-            if (cfg.cny.amount === order.amount) { months = periodMonths[p] ?? 1; break }
+            if (cfg.cny.amount === order.amount) { months = periodMonths[p] ?? null; break }
           }
-          expiry.setUTCMonth(expiry.getUTCMonth() + months)
+          if (months === null) {
+            // 订单金额不在四套餐内（运营调价 / 老订单 / 优惠码场景）：
+            // fail-closed，拒绝处理，留待人工对账（不要静默回退到 1 月）
+            console.error("Alipay notify: amount does not match any plan", { outTradeNo, amount: order.amount })
+            await logWebhook(tradeStatus, "failed:amount-unknown", JSON.stringify(params))
+            return new NextResponse("failure", { status: 400 })
+          }
+          const expiry = addMonths(base, months)
           await prisma.user.update({
             where: { id: order.userId },
             data: {
@@ -85,6 +112,7 @@ export async function POST(req: Request) {
           })
         }
       }
+      await logWebhook(tradeStatus, "processed", JSON.stringify(params))
     }
 
     // 支付宝要求返回 success

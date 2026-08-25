@@ -77,9 +77,9 @@ describe('Creem webhook — 授权事件', () => {
     expect(stores.users.get('u1').subscriptionTier).toBe('FREE')
   })
   it('checkout.completed → 记录订单并同步订阅ID，不升级', async () => {
-    // 真实流程：create-checkout 先创建本地 PENDING 订单（orderId=CKCRxxx），
-    // webhook 随后到达携带 Creem 的 ch_xxx；recordOrder 按 userId+PENDING 找到本地订单并更新为 PAID
-    stores.orders.set('CKCRlocal', { id: 'CKCRlocal', orderId: 'CKCRlocal', userId: 'u1', channel: 'creem', amount: 2000, status: 'PENDING' })
+    // 真实流程：create-checkout 先创建本地 PENDING 订单（orderId=CKCRxxx，externalCheckoutId=Creem ch_xxx），
+    // webhook 随后到达携带 Creem 的 ch_xxx；recordOrder 按 externalCheckoutId 精确匹配本地订单并更新为 PAID
+    stores.orders.set('CKCRlocal', { id: 'CKCRlocal', orderId: 'CKCRlocal', externalCheckoutId: 'ord_1', userId: 'u1', channel: 'creem', amount: 2000, status: 'PENDING' })
     await POST(creemReq(mkCreem('checkout.completed', nestedObj(), 'e_co')))
     expect(stores.users.get('u1').subscriptionTier).toBe('FREE')
     expect(stores.users.get('u1').creemSubscriptionId).toBe('creem_sub_1')

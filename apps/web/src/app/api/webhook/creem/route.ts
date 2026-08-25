@@ -162,10 +162,11 @@ async function resolveUserId(event: Record<string, unknown>): Promise<string | n
 // ── 业务函数 ──
 
 // 记录订单（checkout.completed 用：标记 PENDING → PAID）
-async function recordOrder(userId: string, orderId: string, period?: string) {
+// 用 Creem 的 checkoutId（externalCheckoutId）精确反查本地订单，不再用"按最近 PENDING"匹配
+// （避免历史存在多个 abandoned checkout 时匹配错订单）
+async function recordOrder(userId: string, externalCheckoutId: string) {
   const existing = await prisma.paymentOrder.findFirst({
-    where: { userId, channel: "creem", status: "PENDING" },
-    orderBy: { createdAt: "desc" },
+    where: { userId, channel: "creem", status: "PENDING", externalCheckoutId },
   })
 
   if (existing) {
@@ -176,12 +177,11 @@ async function recordOrder(userId: string, orderId: string, period?: string) {
     return
   }
 
-  // 防「一次付款产生两条订单」：本地订单号（CKCRxxx）与 Creem checkoutId（ch_xxx）不同，
-  // webhook 比 create-checkout 先到的极端竞态下若回退新建，orderId 会是 ch_xxx（Creem ID），
-  // 与本地 PENDING（CKCRxxx）并存 → 用户看到两条订单。
-  // 此场景下直接跳过 recordOrder；PRO 升级由 subscription.paid（用 Creem 权威数据）处理。
+  // 防「一次付款产生两条订单」：若本地找不到对应 externalCheckoutId 的 PENDING 订单，
+  // 说明本地 create-checkout 还没来得及建 PENDING（极端 race）；不再回退新建（本地 CKCRxxx vs Creem ch_xxx 不同）
+  // PRO 升级由 subscription.paid（用 Creem 权威数据）处理。
   console.warn(
-    `[creem-webhook] recordOrder: no PENDING order found for userId=${userId} orderId=${orderId}; skip (PRO upgrade handled by subscription.paid)`,
+    `[creem-webhook] recordOrder: no PENDING order found for userId=${userId} externalCheckoutId=${externalCheckoutId}; skip (PRO upgrade handled by subscription.paid)`,
   )
 }
 
@@ -308,12 +308,11 @@ export async function POST(req: Request) {
     // 升级交给 subscription.paid（官方推荐）
     if (event.eventType === "checkout.completed") {
       const userId = await resolveUserId(event)
-      const orderId = extractOrderId(event) || ""
-      const period = extractPeriod(event)
+      const externalCheckoutId = extractOrderId(event)
       const subscriptionId = extractSubscriptionId(event)
 
-      if (userId && orderId) {
-        await recordOrder(userId, orderId, period)
+      if (userId && externalCheckoutId) {
+        await recordOrder(userId, externalCheckoutId)
       }
       // 同步订阅ID（为后续事件的 userId 反查做准备）
       if (userId && subscriptionId) {

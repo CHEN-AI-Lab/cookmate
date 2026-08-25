@@ -4,6 +4,7 @@ import { createCheckout, retrieveCheckout, isCreemConfigured } from "@cookmate/s
 import { prisma } from "@/lib/prisma"
 import { generateOrderId } from "@cookmate/shared/utils/order-id"
 import { PRICING } from "@cookmate/shared/constants/pricing"
+import { addMonths, addYears } from "@cookmate/shared/utils/subscription"
 
 export async function POST(req: Request) {
   try {
@@ -35,16 +36,15 @@ export async function POST(req: Request) {
       metadata: { userId: session.user.id, period },
     })
 
-    // 保存订单记录（用统一订单号）
+    // 保存订单记录（用统一订单号 + 关联 Creem sessionId 用于精确反查）
     if (sessionId) {
       const orderId = generateOrderId("creem")
       const price = PRICING.get(period, "CNY")
-      await prisma.paymentOrder.upsert({
-        where: { orderId },
-        update: {},
-        create: {
+      await prisma.paymentOrder.create({
+        data: {
           userId: session.user.id,
           orderId,
+          externalCheckoutId: sessionId, // Creem 的 ch_xxx，用于 webhook + GET 精确匹配
           channel: "creem",
           amount: price.amount,
           status: "PENDING",
@@ -72,7 +72,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   const checkoutId = searchParams.get("checkoutId")
 
-  // 如果没有传 checkoutId，查这个用户最近的 Creem PENDING 订单
+  // 如果没有传 checkoutId，查这个用户最近的 Creem PENDING 订单，返回其 externalCheckoutId 给前端轮询
   if (!checkoutId) {
     const pending = await prisma.paymentOrder.findFirst({
       where: { userId: session.user.id, channel: "creem", status: "PENDING" },
@@ -81,7 +81,7 @@ export async function GET(req: Request) {
     if (!pending) {
       return NextResponse.json({ message: "没有待处理的 Creem 订单" })
     }
-    return NextResponse.json({ checkoutId: pending.orderId })
+    return NextResponse.json({ checkoutId: pending.externalCheckoutId ?? pending.orderId })
   }
 
   try {
@@ -96,12 +96,15 @@ export async function GET(req: Request) {
     const isPaid = checkout.status === "completed"
 
     if (isPaid) {
-      // 幂等：本地订单号（CKCR 格式）与 Creem checkoutId（ch_xxx）不同，
-      // 按"当前用户的 PENDING Creem 订单"匹配，且只有状态真正流转 PENDING → PAID 时才升级，
-      // 用旧 checkoutId 重复调用本接口不会重复续期
+      // 精确反查：用 Creem 的 checkoutId（externalCheckoutId）匹配本地 PENDING 订单，
+      // 避免「按最近 PENDING 匹配」在历史存在多个 abandoned checkout 时匹配错订单
       const pendingOrder = await prisma.paymentOrder.findFirst({
-        where: { userId: session.user.id, channel: "creem", status: "PENDING" },
-        orderBy: { createdAt: "desc" },
+        where: {
+          userId: session.user.id,
+          channel: "creem",
+          status: "PENDING",
+          externalCheckoutId: checkoutId,
+        },
       })
 
       let upgraded = false
@@ -119,13 +122,8 @@ export async function GET(req: Request) {
           const base = user?.subscriptionExpiryDate && user.subscriptionExpiryDate > now
             ? user.subscriptionExpiryDate
             : now
-          const expiryDate = new Date(base)
           const period = checkoutMeta.period
-          if (period === "annual") {
-            expiryDate.setUTCFullYear(expiryDate.getUTCFullYear() + 1)
-          } else {
-            expiryDate.setUTCMonth(expiryDate.getUTCMonth() + 1)
-          }
+          const expiryDate = period === "annual" ? addYears(base, 1) : addMonths(base, 1)
           await prisma.user.update({
             where: { id: session.user.id },
             data: {

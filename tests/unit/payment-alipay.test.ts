@@ -144,4 +144,40 @@ describe('支付宝异步通知', () => {
     expect(stores.users.get('u1').subscriptionTier).toBe('FREE')
     expect(stores.orders.get('CKALamt').status).toBe('PENDING')
   })
+
+  // P0 加固：金额匹配失败 fail-closed（运营调价 / 老订单 / 优惠码场景）
+  it('订单金额不在四套餐内（运营调价） → 400 failure，不静默回退到 1 月', async () => {
+    stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null, stripeCustomerId: null, stripeSubscriptionId: null })
+    // 订单金额 3000 分（¥30），不在任何套餐内
+    stores.orders.set('CKALweird', { id: 'CKALweird', orderId: 'CKALweird', userId: 'u1', channel: 'alipay', amount: 3000, status: 'PENDING' })
+    const res = await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALweird', total_amount: '30.00' }))
+    expect(res.status).toBe(400)
+    expect(await res.text()).toBe('failure')
+    // 关键：不升级、不延长到期日（不再静默回退到 1 月）
+    expect(stores.users.get('u1').subscriptionTier).toBe('FREE')
+    expect(stores.users.get('u1').subscriptionExpiryDate).toBeNull()
+  })
+
+  // 加固：Alipay notify 必须写 WebhookLog 审计（与 Creem/Stripe 一致）
+  it('Alipay notify 处理成功 → WebhookLog 写入 received + processed', async () => {
+    stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null, stripeCustomerId: null, stripeSubscriptionId: null })
+    stores.orders.set('CKALaudit', { id: 'CKALaudit', orderId: 'CKALaudit', userId: 'u1', channel: 'alipay', amount: 2000, status: 'PENDING' })
+    await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALaudit', total_amount: '20.00' }))
+    const logs = Array.from(stores.logs.values()).filter((l: any) => l.source === 'alipay')
+    const received = logs.find((l: any) => l.status === 'received')
+    const processed = logs.find((l: any) => l.status === 'processed')
+    expect(received).toBeDefined()
+    expect(received.eventType).toBe('TRADE_SUCCESS')
+    expect(processed).toBeDefined()
+  })
+
+  it('Alipay notify app_id 不匹配 → WebhookLog 写 failed:appid', async () => {
+    await notifyPOST(makeFormNotify({ app_id: 'wrong_app_id', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKAL1' }))
+    const failed = Array.from(stores.logs.values()).find((l: any) => l.source === 'alipay' && l.status === 'failed:appid')
+    expect(failed).toBeDefined()
+    // 关键：原始参数必须落库（用于事后审计 / 对账）
+    expect(failed.rawBody).toBeDefined()
+    const params = JSON.parse(failed.rawBody)
+    expect(params.app_id).toBe('wrong_app_id')
+  })
 })
