@@ -15,6 +15,7 @@
     "check:json": "python3 scripts/check-json.py",
     "check:light": "pnpm check:json && pnpm test:light",
     "check": "bash scripts/check.sh",
+    "reconcile:cancellations": "node scripts/reconcile-cancellations.mjs",
     "postinstall": "pnpm --filter cookmate-web postinstall",
     "prepare": "husky"
   },

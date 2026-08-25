@@ -23,9 +23,11 @@ const navItems = [
 export function Sidebar({
   name,
   isDemoUser,
+  isAdmin,
 }: {
   name?: string | undefined | null
   isDemoUser?: boolean
+  isAdmin?: boolean
 }) {
   const pathname = usePathname()
   const t = useTranslations("nav")
@@ -61,6 +63,19 @@ export function Sidebar({
             </Link>
           )
         })}
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              pathname === "/admin" || pathname.endsWith("/admin")
+                ? "bg-orange-100 text-accent"
+                : "text-text-secondary hover:bg-orange-50 hover:text-accent"
+            }`}
+          >
+            <span className="text-lg">🛡️</span>
+            <span className="truncate">管理员</span>
+          </Link>
+        )}
       </nav>
 
       {/* Bottom: user menu dropdown */}

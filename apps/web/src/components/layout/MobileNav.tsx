@@ -18,8 +18,10 @@ const navItems = [
 
 export function MobileNav({
   isDemoUser,
+  isAdmin,
 }: {
   isDemoUser?: boolean
+  isAdmin?: boolean
 }) {
   const pathname = usePathname()
   const t = useTranslations("nav")
@@ -51,6 +53,19 @@ export function MobileNav({
             </Link>
           )
         })}
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg transition-colors ${
+              pathname === "/admin" || pathname.endsWith("/admin")
+                ? "text-accent"
+                : "text-text-secondary hover:text-accent"
+            }`}
+          >
+            <span className="text-lg">🛡️</span>
+            <span className="text-[10px] font-medium leading-tight">管理员</span>
+          </Link>
+        )}
         <LanguageSwitcher isDemoUser={isDemoUser} />
       </nav>
     </header>

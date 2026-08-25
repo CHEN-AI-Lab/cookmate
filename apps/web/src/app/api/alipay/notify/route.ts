@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { verifyNotify } from "@cookmate/shared/api/alipay-pay"
+import { PRICING } from "@cookmate/shared/constants/pricing"
 
 export async function POST(req: Request) {
   try {
@@ -53,7 +54,13 @@ export async function POST(req: Request) {
               ? user.subscriptionExpiryDate
               : now
             const expiry = new Date(base)
-            expiry.setUTCMonth(expiry.getUTCMonth() + 1)
+            // 按订单金额匹配计费周期（支付宝仅支持月/年），避免「年付只得 1 月」的缺陷
+            const periodMonths: Record<string, number> = { monthly: 1, quarterly: 3, semiannual: 6, annual: 12 }
+            let months = 1
+            for (const [p, cfg] of Object.entries(PRICING.plans)) {
+              if (cfg.cny.amount === order.amount) { months = periodMonths[p] ?? 1; break }
+            }
+            expiry.setUTCMonth(expiry.getUTCMonth() + months)
             await prisma.user.update({
               where: { id: order.userId },
               data: {

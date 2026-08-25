@@ -23,3 +23,8 @@ export function getPriceIds() {
   }
   return { pro }
 }
+
+/** 取消 Stripe 订阅（立即取消，与 Creem 的 cancelSubscription 语义一致，避免下个周期续费扣款） */
+export async function cancelStripeSubscription(subscriptionId: string): Promise<void> {
+  await getStripe().subscriptions.cancel(subscriptionId)
+}

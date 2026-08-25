@@ -15,6 +15,13 @@ export default async function AppLayout({ children, params }: { children: React.
   const onboardingCompleted = session.user.onboardingCompleted ?? false
   const isDemoUser = session.user.id.startsWith("demo")
 
+  // 管理员判定（服务端）：登录邮箱需匹配环境变量 ADMIN_EMAIL；未配置则一律非管理员
+  const adminEmail = process.env.ADMIN_EMAIL
+  const isAdmin =
+    !!adminEmail &&
+    !!session.user.email &&
+    session.user.email.toLowerCase() === adminEmail.toLowerCase()
+
   // Server-side guard: redirect demo users away from onboarding-preview
   if (isDemoUser) {
     const headersList = await headers()
@@ -27,8 +34,8 @@ export default async function AppLayout({ children, params }: { children: React.
   return (
     <div className="min-h-screen bg-bg-brand flex">
       <OnboardingGuard onboardingCompleted={onboardingCompleted} isDemoUser={isDemoUser} locale={locale} />
-      <Sidebar name={session.user.name} isDemoUser={isDemoUser} />
-      <MobileNav isDemoUser={isDemoUser} />
+      <Sidebar name={session.user.name} isDemoUser={isDemoUser} isAdmin={isAdmin} />
+      <MobileNav isDemoUser={isDemoUser} isAdmin={isAdmin} />
       {isDemoUser && <DemoOnboarding />}
       <main className="flex-1 md:ml-0 pt-16 md:pt-4 px-4 md:px-8 pb-8">
         <div className="max-w-5xl mx-auto">
