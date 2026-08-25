@@ -104,4 +104,20 @@ describe('取消订阅', () => {
     expect(raw.userId).toBe('u1')
     expect(raw.subscriptionId).toBe('creem_sub_1')
   })
+
+  // P0 加固：「PRO + 无任何渠道订阅ID」误返 200 → 返回 409 明确告知
+  // 场景：支付宝一次性付款 / webhook 失败遗留 / 两个渠道都错过回调
+  it('PRO 用户但无 creem/stripe 订阅ID（遗留状态） → 409，提示无需取消', async () => {
+    stores.users.set('u1', { id: 'u1', subscriptionTier: 'PRO', creemSubscriptionId: null, stripeSubscriptionId: null, subscriptionExpiryDate: new Date(Date.now() + 86400000) })
+    // 用 before/after 计数：之前其他测试调用过 mock，但本次不应新增任何调用
+    const beforeCreem = cancelSubscription.mock.calls.length
+    const beforeStripe = cancelStripeSubscription.mock.calls.length
+    const res = await cancelPOST()
+    expect(res.status).toBe(409)
+    const body = await res.json()
+    expect(body.error).toMatch(/无需取消|PRO 将在到期后自动失效/)
+    // 不应调用任何上游取消 API
+    expect(cancelSubscription.mock.calls.length).toBe(beforeCreem)
+    expect(cancelStripeSubscription.mock.calls.length).toBe(beforeStripe)
+  })
 })

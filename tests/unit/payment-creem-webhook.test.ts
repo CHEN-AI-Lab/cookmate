@@ -77,10 +77,13 @@ describe('Creem webhook — 授权事件', () => {
     expect(stores.users.get('u1').subscriptionTier).toBe('FREE')
   })
   it('checkout.completed → 记录订单并同步订阅ID，不升级', async () => {
+    // 真实流程：create-checkout 先创建本地 PENDING 订单（orderId=CKCRxxx），
+    // webhook 随后到达携带 Creem 的 ch_xxx；recordOrder 按 userId+PENDING 找到本地订单并更新为 PAID
+    stores.orders.set('CKCRlocal', { id: 'CKCRlocal', orderId: 'CKCRlocal', userId: 'u1', channel: 'creem', amount: 2000, status: 'PENDING' })
     await POST(creemReq(mkCreem('checkout.completed', nestedObj(), 'e_co')))
     expect(stores.users.get('u1').subscriptionTier).toBe('FREE')
     expect(stores.users.get('u1').creemSubscriptionId).toBe('creem_sub_1')
-    expect(stores.orders.get('ord_1').status).toBe('PAID')
+    expect(stores.orders.get('CKCRlocal').status).toBe('PAID')
   })
   it('subscription.update active → 同步并授权', async () => {
     await POST(creemReq(mkCreem('subscription.update', subObj({ status: 'active' }), 'e1')))
@@ -147,5 +150,59 @@ describe('Creem webhook — 幂等', () => {
     const res = await POST(creemReq(ev, 's2'))
     expect(res.status).toBe(200)
     expect(prismaMock.user.update.mock.calls.length).toBe(before)
+  })
+})
+
+describe('Creem webhook — P0 加固', () => {
+  // DoS 防护：rawBody > 64KB 必须在验签前直接拒绝，不能写库
+  it('超大 body（>64KB）→ 413 且不写 webhookLog（验签前拒绝）', async () => {
+    const huge = 'x'.repeat(70 * 1024)
+    const body = { eventType: 'subscription.paid', id: 'evt_huge', object: subObj(), raw: huge }
+    const before = stores.logs.size
+    const res = await POST(creemReq(body, 'sig'))
+    expect(res.status).toBe(413)
+    // 即使签名合法也不能入审计表（防止大 body 撑爆 DB）
+    expect(stores.logs.size).toBe(before)
+  })
+
+  // 签名失败：可以写一条"failed:signature"审计，但 rawBody 必须为 undefined（防敏感 payload 入库）
+  it('签名失败 → 401 且 webhookLog.rawBody 为 undefined（不存原始 payload）', async () => {
+    verifyWebhook.mockReturnValue(false)
+    const res = await POST(creemReq(mkCreem('subscription.paid', subObj(), 'e_bad'), 'bad'))
+    expect(res.status).toBe(401)
+    const failed = Array.from(stores.logs.values()).find((l: any) => l.status === 'failed:signature')
+    expect(failed).toBeDefined()
+    expect(failed.rawBody).toBeUndefined()
+  })
+
+  // 验签通过后才有"received"日志（顺序保护）
+  it('签名通过 → webhookLog 存在 status:received 记录', async () => {
+    await POST(creemReq(mkCreem('subscription.paid', subObj(), 'e1')))
+    const received = Array.from(stores.logs.values()).find((l: any) => l.status === 'received')
+    expect(received).toBeDefined()
+    expect(received.eventId).toBe('e1')
+  })
+
+  // recordOrder：本地没有 PENDING 订单时不要回退创建新订单（防「一次付款产生两条订单」）
+  it('checkout.completed 无本地 PENDING → 不创建新订单（仅写 warning，PRO 升级交给 subscription.paid）', async () => {
+    // 故意不在 stores.orders 中种任何 PENDING 订单（极端 race：webhook 先到 / create-checkout 后到）
+    expect(stores.orders.size).toBe(0)
+    const res = await POST(creemReq(mkCreem('checkout.completed', nestedObj({ id: 'ch_xxx' }), 'e_co')))
+    expect(res.status).toBe(200)
+    // 不应新建任何 order（之前 buggy 版本会创建 orderId=ch_xxx 的脏数据）
+    expect(stores.orders.size).toBe(0)
+    // 订阅ID 同步仍然发生（syncSubscription 不依赖订单）
+    expect(stores.users.get('u1').creemSubscriptionId).toBe('creem_sub_1')
+  })
+
+  // grantAccess 用户不存在 → 500 + failed 审计（防 metadata.userId 篡改攻击）
+  it('subscription.paid metadata.userId 指向不存在的用户 → 500 + failed:user-not-found 审计', async () => {
+    const res = await POST(creemReq(mkCreem('subscription.paid', subObj({ metadata: { userId: 'ghost_user' } }), 'e_ghost')))
+    expect(res.status).toBe(500)
+    const failed = Array.from(stores.logs.values()).find((l: any) => l.status === 'failed:user-not-found')
+    expect(failed).toBeDefined()
+    expect(failed.eventType).toBe('subscription.paid')
+    // 用户状态未被篡改
+    expect(stores.users.get('u1').subscriptionTier).toBe('FREE')
   })
 })

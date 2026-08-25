@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { PRICING } from "@cookmate/shared/constants/pricing"
 
 // ── 辅助函数：从 webhook 事件中提取各种字段 ──
 
@@ -174,24 +173,32 @@ async function recordOrder(userId: string, orderId: string, period?: string) {
       where: { id: existing.id },
       data: { status: "PAID" },
     })
-  } else {
-    // 兜底：找不到 PENDING 订单就新建（webhook 比前端先到的竞态）
-    const price = period === "annual" ? PRICING.plans.annual.cny.amount : PRICING.plans.monthly.cny.amount
-    await prisma.paymentOrder.create({
-      data: { userId, orderId, channel: "creem", amount: price, status: "PAID" },
-    })
+    return
   }
+
+  // 防「一次付款产生两条订单」：本地订单号（CKCRxxx）与 Creem checkoutId（ch_xxx）不同，
+  // webhook 比 create-checkout 先到的极端竞态下若回退新建，orderId 会是 ch_xxx（Creem ID），
+  // 与本地 PENDING（CKCRxxx）并存 → 用户看到两条订单。
+  // 此场景下直接跳过 recordOrder；PRO 升级由 subscription.paid（用 Creem 权威数据）处理。
+  console.warn(
+    `[creem-webhook] recordOrder: no PENDING order found for userId=${userId} orderId=${orderId}; skip (PRO upgrade handled by subscription.paid)`,
+  )
 }
 
 // 授予访问权限（subscription.paid 用）
 // 用 Creem 官方的 current_period_end_date 作为到期日，不再自己算
-async function grantAccess(userId: string, subscriptionId: string, periodEndDate: Date): Promise<boolean> {
+// 返回结构化结果：granted=true 表示已写入；granted=false 时 reason 区分原因（user 不存在 → 让 Creem 重试；已 PRO → 幂等跳过）
+async function grantAccess(
+  userId: string,
+  subscriptionId: string,
+  periodEndDate: Date,
+): Promise<{ granted: boolean; reason?: "user-not-found" | "already-pro" }> {
   const user = await prisma.user.findUnique({ where: { id: userId } })
-  if (!user) return false
+  if (!user) return { granted: false, reason: "user-not-found" }
 
   // 幂等：如果用户已经是 PRO 且到期日 >= 本次周期结束日，说明已授权，跳过
   if (user.subscriptionTier === "PRO" && user.subscriptionExpiryDate && user.subscriptionExpiryDate >= periodEndDate) {
-    return false
+    return { granted: false, reason: "already-pro" }
   }
 
   await prisma.user.update({
@@ -202,7 +209,7 @@ async function grantAccess(userId: string, subscriptionId: string, periodEndDate
       creemSubscriptionId: subscriptionId,
     },
   })
-  return true
+  return { granted: true }
 }
 
 // 撤销访问权限（paused / expired / past_due / refund 用）
@@ -268,6 +275,11 @@ export async function POST(req: Request) {
     const signature = req.headers.get("creem-signature") || ""
     const body = await req.text()
 
+    // DoS 防护：raw body 大小硬上限，超大直接拒绝（验签前不写库）
+    if (body.length > 64 * 1024) {
+      return NextResponse.json({ error: "Payload too large" }, { status: 413 })
+    }
+
     // 解析事件
     let event: Record<string, unknown> = {}
     try { event = JSON.parse(body) } catch { /* 格式错误，后面签名验证会拦 */ }
@@ -275,15 +287,15 @@ export async function POST(req: Request) {
     const rawEventType = (event.eventType as string) || null
     const eventId = (event.id as string) || null
 
-    // 先记录收到日志
-    logWebhook("creem", rawEventType, "received", body, eventId ?? undefined)
-
-    // 验证签名
+    // 验证签名（验签前不写日志 / 不入任何库，防 DoS；签名失败也不带 rawBody 写库）
     const { verifyWebhook } = await import("@cookmate/shared/api/creem")
     if (!verifyWebhook(body, signature)) {
-      logWebhook("creem", rawEventType, "failed:signature", undefined, eventId ?? undefined)
+      await logWebhook("creem", rawEventType, "failed:signature", undefined, eventId ?? undefined)
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
     }
+
+    // 验签通过后才记录收到日志（仅签名合法的请求可入审计表）
+    await logWebhook("creem", rawEventType, "received", body, eventId ?? undefined)
 
     // 事件ID去重：已处理过的事件直接返回 200（Creem 会重试，必须幂等）
     if (eventId && await isAlreadyProcessed(eventId)) {
@@ -346,8 +358,16 @@ export async function POST(req: Request) {
       }
 
       const expiryDate = periodEndDate ?? computeFallbackExpiry(extractPeriod(event))
-      await grantAccess(userId, subscriptionId, expiryDate)
+      const result = await grantAccess(userId, subscriptionId, expiryDate)
 
+      // grantAccess 返回 user-not-found：metadata.userId/subscriptionId 与 DB 不匹配，
+      // 可能是恶意构造的回调；返回 500 让 Creem 重试（虽然 Creem 不会真的改 userId，但显式失败便于对账）
+      if (result.reason === "user-not-found") {
+        await logWebhook("creem", "subscription.paid", "failed:user-not-found", undefined, eventId ?? undefined)
+        return NextResponse.json({ error: "user not found for metadata.userId" }, { status: 500 })
+      }
+
+      // result.reason === "already-pro"：幂等跳过，不算失败，正常返回
       await logWebhook("creem", "subscription.paid", "processed", undefined, eventId ?? undefined)
       return NextResponse.json({ success: true })
     }

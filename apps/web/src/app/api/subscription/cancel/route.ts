@@ -52,6 +52,15 @@ export async function POST() {
     return NextResponse.json({ error: "当前已是免费版，无需取消" }, { status: 400 })
   }
 
+  // 防「PRO + 无任何渠道订阅ID」误返 200：
+  // 支付宝一次性付款 / webhook 失败遗留 / 两个渠道都错过回调等场景下，用户会「以为取消但实际没取消」；
+  // 这种情况下没有上游订阅可调，无需任何操作 + PRO 会在到期后自动失效。
+  if (!user?.creemSubscriptionId && !user?.stripeSubscriptionId) {
+    return NextResponse.json({
+      error: "当前无活跃订阅渠道（可能是一次性付款或历史遗留状态），PRO 将在到期后自动失效，无需取消",
+    }, { status: 409 })
+  }
+
   const data: { creemSubscriptionId?: null; stripeSubscriptionId?: null } = {}
 
   // 取消 Creem 订阅（立即取消，避免下个周期续费扣款）
