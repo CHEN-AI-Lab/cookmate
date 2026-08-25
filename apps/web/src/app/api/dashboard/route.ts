@@ -11,11 +11,8 @@ async function checkSubscription(userId: string, user: { subscriptionTier: strin
   if (!user || user.subscriptionTier?.toUpperCase() !== "PRO") return "FREE"
   if (!user.subscriptionExpiryDate) return "PRO" // 无到期日的视为永久
   if (isExpired(user.subscriptionExpiryDate)) {
-    // 已过期，自动降级
-    await prisma.user.update({
-      where: { id: userId },
-      data: { subscriptionTier: "FREE", subscriptionExpiryDate: null },
-    }).catch((err: unknown) => { console.error("update subscription error:", err) })
+    // 已过期 —— 只读返回 FREE，降级由 scripts/expire-sweep.mjs 定时任务处理
+    // （GET 端点不再写库，符合 REST 语义；UI 上提示「已过期，等待后台降级」）
     return "FREE"
   }
   return "PRO"

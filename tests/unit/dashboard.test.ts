@@ -65,14 +65,15 @@ describe('dashboard GET', () => {
     expect(json.subscriptionTier).toBe('PRO')
     expect(json.cancelled).toBe(true)
   })
-  it('PRO 但已过期 → 自动降级 FREE', async () => {
+  it('PRO 但已过期 → 返回 FREE（降级由 expire-sweep 定时任务处理，GET 不写库）', async () => {
     const past = new Date()
     past.setDate(past.getDate() - 1)
     seed({ subscriptionTier: 'PRO', subscriptionExpiryDate: past, creemSubscriptionId: 'creem_sub_1' })
     const res = await GET(getReq())
     const json = await res.json()
+    // UI 上显示 FREE（因为已过期），但 DB 中仍是 PRO（等 cron 降级）
     expect(json.subscriptionTier).toBe('FREE')
-    expect(stores.users.get('u1').subscriptionTier).toBe('FREE')
+    expect(stores.users.get('u1').subscriptionTier).toBe('PRO') // DB 未变
   })
   it('体验用户 → isDemoUser=true', async () => {
     seed()

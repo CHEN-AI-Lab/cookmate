@@ -17,7 +17,7 @@ function getBaseUrl(): string {
 
 function getHeaders(): Record<string, string> {
   const apiKey = process.env.CREEM_API_KEY
-  if (!apiKey) throw new Error("CREEM_API_KEY 未配置")
+  if (!apiKey) throw Object.assign(new Error("CREEM_API_KEY 未配置"), { code: "CREEM_NOT_CONFIGURED" })
   return {
     "Content-Type": "application/json",
     "Accept": "application/json",
@@ -32,7 +32,7 @@ export async function createCheckout(params: {
   metadata?: Record<string, string>
 }): Promise<{ checkoutUrl: string; sessionId: string }> {
   const productId = params.productId || process.env.CREEM_PRODUCT_ID
-  if (!productId) throw new Error("CREEM_PRODUCT_ID 未配置")
+  if (!productId) throw Object.assign(new Error("CREEM_PRODUCT_ID 未配置"), { code: "CREEM_NOT_CONFIGURED" })
 
   const body: Record<string, unknown> = {
     product_id: productId,
@@ -51,7 +51,7 @@ export async function createCheckout(params: {
 
   if (!res.ok) {
     const text = await res.text()
-    throw new Error(`Creem checkout failed: ${res.status} ${text.substring(0, 200)}`)
+    throw Object.assign(new Error("Creem checkout failed"), { code: "CREEM_CHECKOUT_FAILED", statusCode: res.status, details: text.substring(0, 200) })
   }
 
   const data = await res.json()
@@ -93,7 +93,7 @@ export async function retrieveCheckout(checkoutId: string): Promise<{ status: st
 
   if (!res.ok) {
     const text = await res.text()
-    throw new Error(`Creem retrieve checkout failed: ${res.status} ${text.substring(0, 200)}`)
+    throw Object.assign(new Error("Creem retrieve checkout failed"), { code: "CREEM_RETRIEVE_FAILED", statusCode: res.status, details: text.substring(0, 200) })
   }
 
   return res.json()
@@ -109,6 +109,6 @@ export async function cancelSubscription(subscriptionId: string): Promise<void> 
 
   if (!res.ok) {
     const text = await res.text()
-    throw new Error(`Creem cancel subscription failed: ${res.status} ${text.substring(0, 200)}`)
+    throw Object.assign(new Error("Creem cancel subscription failed"), { code: "CREEM_CANCEL_FAILED", statusCode: res.status, details: text.substring(0, 200) })
   }
 }

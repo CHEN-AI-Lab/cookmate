@@ -212,6 +212,19 @@ async function grantAccess(
   return { granted: true }
 }
 
+
+// 判断「迟到降级」：若用户当前已是 PRO 且到期日比事件预期更新，说明有新升级已处理，
+// 本次降级可能是迟到/重复的，应当拒绝以避免用旧状态覆盖新状态。
+// 参数 allowRefund=true 时（refund.created），不执行此防护（退款永远是合法的）。
+async function isLateDowngrade(userId: string, expectExpired: Date | null): Promise<boolean> {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { subscriptionTier: true, subscriptionExpiryDate: true } })
+  if (!user || user.subscriptionTier !== "PRO" || !user.subscriptionExpiryDate) return false
+  // refund 不受此限制：退款永远是合法的，不管当前状态
+  if (expectExpired === null) return false
+  // 若当前到期日 > 事件预期的过期日，说明升级发生得更晚 → 拒绝降级
+  return user.subscriptionExpiryDate > expectExpired
+}
+
 // 撤销访问权限（paused / expired / past_due / refund 用）
 async function revokeAccess(userId: string, clearSubscriptionId: boolean = true): Promise<void> {
   await prisma.user.update({
@@ -252,6 +265,8 @@ async function isAlreadyProcessed(eventId: string): Promise<boolean> {
 }
 
 // 记录 webhook 日志
+// 失败时 console.error（Vercel Logs 自动聚合），不再完全静默；
+// eventId 唯一冲突 = 重复事件，正常并发，无需报警；其他错误（schema 不匹配 / DB 断连）需告警
 async function logWebhook(
   source: string,
   eventType: string | null,
@@ -263,8 +278,11 @@ async function logWebhook(
     await prisma.webhookLog.create({
       data: { source, eventType, status, rawBody, eventId },
     })
-  } catch {
-    // 日志不要影响主流程
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    // eventId @unique 冲突是预期的（重复事件）—— 静默；其他错误报警
+    if (msg.includes("Unique constraint") || msg.includes("UNIQUE")) return
+    console.error("[webhookLog-write-failed]", { source, eventType, status, eventId, error: msg })
   }
 }
 
@@ -290,12 +308,14 @@ export async function POST(req: Request) {
     // 验证签名（验签前不写日志 / 不入任何库，防 DoS；签名失败也不带 rawBody 写库）
     const { verifyWebhook } = await import("@cookmate/shared/api/creem")
     if (!verifyWebhook(body, signature)) {
+      console.error("[monitor:creem-signature-failed]", { eventType: rawEventType, eventId })
       await logWebhook("creem", rawEventType, "failed:signature", undefined, eventId ?? undefined)
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
     }
 
     // 验签通过后才记录收到日志（仅签名合法的请求可入审计表）
     await logWebhook("creem", rawEventType, "received", body, eventId ?? undefined)
+    console.log("[monitor:creem-received]", { eventType: rawEventType, eventId })
 
     // 事件ID去重：已处理过的事件直接返回 200（Creem 会重试，必须幂等）
     if (eventId && await isAlreadyProcessed(eventId)) {
@@ -389,7 +409,14 @@ export async function POST(req: Request) {
     // 周期结束未续费 → 降级 FREE
     if (event.eventType === "subscription.expired") {
       const userId = await resolveUserId(event)
+      // 迟到降级防护：若用户已是 PRO 且到期日比事件预期更新，拒绝降级
       if (userId) {
+        const periodEnd = extractPeriodEndDate(event)
+        if (await isLateDowngrade(userId, periodEnd)) {
+          console.warn("[creem-webhook] subscription.expired late downgrade skipped (user already upgraded later)", { userId, eventId })
+          await logWebhook("creem", "subscription.expired", "ignored:late-downgrade", undefined, eventId ?? undefined)
+          return NextResponse.json({ success: true })
+        }
         await revokeAccess(userId)
       }
       await logWebhook("creem", "subscription.expired", "processed", undefined, eventId ?? undefined)
@@ -402,6 +429,12 @@ export async function POST(req: Request) {
     if (event.eventType === "subscription.paused") {
       const userId = await resolveUserId(event)
       if (userId) {
+        const periodEnd = extractPeriodEndDate(event)
+        if (await isLateDowngrade(userId, periodEnd)) {
+          console.warn("[creem-webhook] subscription.paused late downgrade skipped", { userId, eventId })
+          await logWebhook("creem", "subscription.paused", "ignored:late-downgrade", undefined, eventId ?? undefined)
+          return NextResponse.json({ success: true })
+        }
         await revokeAccess(userId, false)
       }
       await logWebhook("creem", "subscription.paused", "processed", undefined, eventId ?? undefined)
@@ -414,6 +447,12 @@ export async function POST(req: Request) {
     if (event.eventType === "subscription.past_due") {
       const userId = await resolveUserId(event)
       if (userId) {
+        const periodEnd = extractPeriodEndDate(event)
+        if (await isLateDowngrade(userId, periodEnd)) {
+          console.warn("[creem-webhook] subscription.past_due late downgrade skipped", { userId, eventId })
+          await logWebhook("creem", "subscription.past_due", "ignored:late-downgrade", undefined, eventId ?? undefined)
+          return NextResponse.json({ success: true })
+        }
         await revokeAccess(userId, false)
       }
       await logWebhook("creem", "subscription.past_due", "processed", undefined, eventId ?? undefined)
@@ -465,6 +504,12 @@ export async function POST(req: Request) {
     if (event.eventType === "refund.created") {
       const userId = await resolveUserId(event)
       if (userId) {
+        // 退款永远是合法的（防欺诈），不受迟到降级保护；但记录 warn 以便对账
+        const periodEnd = extractPeriodEndDate(event)
+        const isLate = await isLateDowngrade(userId, periodEnd)
+        if (isLate) {
+          console.warn("[creem-webhook] refund.created late but still processing (refund is always legitimate)", { userId, eventId })
+        }
         await revokeAccess(userId)
       }
       await logWebhook("creem", "refund.created", "processed", undefined, eventId ?? undefined)

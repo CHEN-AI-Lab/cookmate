@@ -5,14 +5,14 @@ import { PRICING } from "@cookmate/shared/constants/pricing"
 import { addMonths } from "@cookmate/shared/utils/subscription"
 
 // 支付宝异步通知写入 WebhookLog（与 Creem / Stripe 一致，便于对账 + 审计追溯）
-// 失败绝不影响主流程（catch 吞错 + 静默）
+// 失败时 console.error（Vercel Logs 自动聚合），不再完全静默
 async function logWebhook(eventType: string | null, status: string, rawBody?: string): Promise<void> {
   try {
     await prisma.webhookLog.create({
       data: { source: "alipay", eventType, status, rawBody },
     })
   } catch (err) {
-    console.error("Alipay notify: failed to write webhookLog", err)
+    console.error("[alipay-webhookLog-write-failed]", { eventType, status, error: err instanceof Error ? err.message : String(err) })
   }
 }
 
@@ -50,6 +50,7 @@ export async function POST(req: Request) {
 
     // 验签通过后写 received 审计
     await logWebhook(tradeStatus, "received", JSON.stringify(params))
+    console.log("[monitor:alipay-received]", { outTradeNo, tradeStatus })
 
     // 只处理支付成功
     if (tradeStatus === "TRADE_SUCCESS" || tradeStatus === "TRADE_FINISHED") {
@@ -69,11 +70,11 @@ export async function POST(req: Request) {
         // order.amount 单位为分（CNY），params.total_amount 单位为元；强制两位小数比较避免浮点误差
         const expectedAmount = (order.amount / 100).toFixed(2)
         const actualAmount = params.total_amount
-        if (Number(actualAmount) !== Number(expectedAmount)) {
-          console.error("Alipay notify: amount mismatch", { outTradeNo, actualAmount, expectedAmount })
-          await logWebhook(tradeStatus, "failed:amount-mismatch", JSON.stringify(params))
-          return new NextResponse("failure", { status: 400 })
-        }
+if (Number(actualAmount) !== Number(expectedAmount)) {
+      console.error("[monitor:alipay-amount-mismatch]", { outTradeNo, actualAmount, expectedAmount })
+      await logWebhook(tradeStatus, "failed:amount-mismatch", JSON.stringify(params))
+      return new NextResponse("failure", { status: 400 })
+    }
 
         // 幂等：支付宝会重发 notify（网络重试/success 未送达），
         // 只有订单状态真正从 PENDING → PAID 变更成功时才升级用户，重复回调不再延长订阅
@@ -98,7 +99,7 @@ export async function POST(req: Request) {
           if (months === null) {
             // 订单金额不在四套餐内（运营调价 / 老订单 / 优惠码场景）：
             // fail-closed，拒绝处理，留待人工对账（不要静默回退到 1 月）
-            console.error("Alipay notify: amount does not match any plan", { outTradeNo, amount: order.amount })
+            console.error("[monitor:alipay-amount-unknown]", { outTradeNo, amount: order.amount })
             await logWebhook(tradeStatus, "failed:amount-unknown", JSON.stringify(params))
             return new NextResponse("failure", { status: 400 })
           }

@@ -16,6 +16,7 @@
     "check:light": "pnpm check:json && pnpm test:light",
     "check": "bash scripts/check.sh",
     "reconcile:cancellations": "node scripts/reconcile-cancellations.mjs",
+    "expire:sweep": "node scripts/expire-sweep.mjs",
     "postinstall": "pnpm --filter cookmate-web postinstall",
     "prepare": "husky"
   },

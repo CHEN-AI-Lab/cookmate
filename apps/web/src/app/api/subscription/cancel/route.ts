@@ -9,6 +9,7 @@ import { cancelStripeSubscription } from "@cookmate/shared/api/stripe"
 // 目的：上游取消 API 偶发失败时，fail-closed 会保留本地订阅ID（便于 webhook 到期降级 + 可重试），
 // 但我们不能「静默」失败 —— 必须留痕，方便对账脚本/后台第一时间发现并去 Creem/Stripe 后台补刀。
 // 注意：WebhookLog 模型无 userId / subscriptionId 列，用户与渠道上下文以 JSON 存入 rawBody。
+// 写入失败 console.error 报警（Vercel Logs 自动聚合），不再完全静默
 async function logCancelAudit(
   channel: "creem" | "stripe",
   userId: string,
@@ -29,8 +30,8 @@ async function logCancelAudit(
         }),
       },
     })
-  } catch {
-    // 日志写入失败绝不影响取消主流程
+  } catch (err) {
+    console.error("[cancel-audit-write-failed]", { channel, userId, subscriptionId, status, error: err instanceof Error ? err.message : String(err) })
   }
 }
 
@@ -95,8 +96,11 @@ export async function POST() {
   }
 
   // 清除对应渠道的订阅 ID，保留 PRO 与到期时间（到期前仍可继续使用）
+  // 用 prisma.$transaction 包裹（虽然只有单条 update 天然原子，但显式事务便于未来加多条改动时仍原子）
   if (data.creemSubscriptionId !== undefined || data.stripeSubscriptionId !== undefined) {
-    await prisma.user.update({ where: { id: session.user.id }, data })
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({ where: { id: session.user.id }, data })
+    })
   }
 
   // 部分取消成功：返 207 Multi-Status 让用户感知到部分失败，全成功才返 200

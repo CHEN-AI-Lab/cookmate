@@ -1011,3 +1011,66 @@ Neon 自动备份，无需手动操作。如果担心，可以在 Neon 控制台
 # 定期备份这个目录即可
 tar -czf cookmate-data-backup-$(date +%Y%m%d).tar.gz /opt/cookmate/data/
 ```
+
+---
+
+## 附录E：Webhook 事件 → 行为参考表
+
+本文档说明 CookMate 各支付渠道 Webhook 事件与系统行为的映射关系，供部署后排查问题时参考。
+
+### E.1 Creem 事件矩阵
+
+| 事件类型 | 触发时机 | CookMate 行为 | 是否授权/降级 |
+|----------|----------|---------------|---------------|
+| checkout.completed | 用户完成结账 | 记录订单 PENDING→PAID，同步订阅ID | 否（升级交给 subscription.paid） |
+| subscription.active | 订阅创建/激活 | 仅同步订阅ID | 否 |
+| subscription.paid | 订阅付款成功 | **唯一升级点**：授予 PRO，写入官方 current_period_end_date | ✅ 升级 |
+| subscription.canceled | 用户主动取消 | 清空 creemSubscriptionId，保留 PRO 到到期日 | 否（到期自然失效） |
+| subscription.expired | 周期结束未续费 | 降级 FREE，清空到期日 | ❌ 降级 |
+| subscription.paused | 订阅暂停 | 降级 FREE，保留订阅ID（恢复时可重新授权） | ❌ 降级 |
+| subscription.past_due | 扣款失败待重试 | 降级 FREE，保留订阅ID | ❌ 降级 |
+| subscription.scheduled_cancel | 计划到期取消 | 不操作（等 subscription.expired 处理） | 否 |
+| subscription.update | 订阅信息变更 | active+有到期日 → 同步并授权；其他 → 仅同步ID | 条件授权 |
+| subscription.trialing | 试用中（CookMate 无试用） | 仅记录 | 否 |
+| refund.created | 退款成功 | 立即降级 FREE | ❌ 降级 |
+
+### E.2 Stripe 事件矩阵
+
+| 事件类型 | 触发时机 | CookMate 行为 | 是否授权/降级 |
+|----------|----------|---------------|---------------|
+| checkout.session.completed | 用户完成结账 | 记录订单 PAID，同步客户/订阅ID | 否 |
+| customer.subscription.created | 订阅创建 | 状态 active/trialing → 授权 PRO；其他 → 降级 | 条件授权/降级 |
+| customer.subscription.updated | 订阅更新 | 同上逻辑 | 条件授权/降级 |
+| customer.subscription.deleted | 订阅删除 | 降级 FREE | ❌ 降级 |
+| invoice.paid | 发票付款成功 | 仅记录 | 否 |
+| invoice.payment_failed | 发票付款失败 | 仅记录警告 | 否 |
+
+### E.3 支付宝事件矩阵
+
+| 通知状态 | 触发时机 | CookMate 行为 |
+|----------|----------|---------------|
+| TRADE_SUCCESS / TRADE_FINISHED | 支付成功 | 验证金额匹配 → 幂等升级 PRO，到期日累加 |
+| 其他状态（如 WAIT_BUYER_PAY） | 支付未完成 | 不处理，返回 failure |
+
+### E.4 安全加固要点
+
+1. **验签优先**：所有 Webhook 在验签通过前不写库、不处理业务
+2. **幂等去重**：使用 eventId 唯一约束防止重复处理
+3. **fail-closed**：验签失败、配置缺失、解析失败时拒绝处理而非静默放行
+4. **金额校验**：支付宝回调强制校验 total_amount 与本地订单金额一致
+5. **迟到降级防护**：Creem 的 expired/paused/past_due 事件会检查用户是否已有更新的到期日，避免旧事件覆盖新状态
+6. **审计日志**：所有事件写入 WebhookLog 表，支持对账和排查
+
+### E.5 Vercel Cron 配置（推荐）
+
+在 apps/web/vercel.json 中配置每日过期订阅扫描：
+
+```json
+{
+  "crons": [
+    { "path": "/api/cron/expire-sweep", "schedule": "0 3 * * *" }
+  ]
+}
+```
+
+对应路由 apps/web/src/app/api/cron/expire-sweep/route.ts 会调用 scripts/expire-sweep.mjs 逻辑，将所有过期的 PRO 用户降级为 FREE。

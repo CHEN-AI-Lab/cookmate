@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
+import { isDemoUser } from "@/lib/auth-helpers"
 import { createCheckout, retrieveCheckout, isCreemConfigured } from "@cookmate/shared/api/creem"
 import { prisma } from "@/lib/prisma"
 import { generateOrderId } from "@cookmate/shared/utils/order-id"
@@ -11,6 +12,10 @@ export async function POST(req: Request) {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json({ error: "请先登录" }, { status: 401 })
+    }
+
+    if (isDemoUser(session)) {
+      return NextResponse.json({ error: "体验用户不支持付费，请注册后使用" }, { status: 403 })
     }
 
     if (!isCreemConfigured()) {

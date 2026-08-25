@@ -129,6 +129,13 @@ export function makePrisma() {
       }),
     },
     webhookLog: {
+      findMany: vi.fn(async ({ where, orderBy, take }: any) => {
+        let list = [...stores.logs.values()]
+        if (where?.source) list = list.filter((l: any) => l.source === where.source)
+        if (orderBy?.createdAt === 'desc') list.sort((a: any, b: any) => b.createdAt - a.createdAt)
+        if (take) list = list.slice(0, take)
+        return list
+      }),
       findFirst: vi.fn(async ({ where }: any) => {
         for (const l of stores.logs.values()) {
           if (where.eventId && l.eventId === where.eventId && (!where.status || l.status === where.status)) return l
@@ -243,8 +250,17 @@ export function makePrisma() {
         return rec
       }),
     },
+    $transaction: vi.fn(async (fn: any) => {
+      return fn({
+        user: {
+          findUnique: prismaMock.user.findUnique,
+          update: prismaMock.user.update,
+        },
+      })
+    }),
   }
 }
+
 
 export const prismaMock = makePrisma()
 
