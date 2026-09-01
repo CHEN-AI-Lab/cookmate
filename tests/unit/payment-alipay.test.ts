@@ -14,6 +14,10 @@ vi.mock('@cookmate/shared/api/alipay-pay', () => ({
   verifyNotify: vi.fn(),
 }))
 import { createPagePay, isAlipayConfigured, verifyNotify } from '@cookmate/shared/api/alipay-pay'
+// 期望值必须用业务同款 addMonths/addYears（带月末钳制）。
+// 若用裸 setUTCMonth/setUTCFullYear，JS 会溢出（1/31 +1月 → 3/3），而业务钳制为 2/28，
+// 导致一年中有 52/1096 天（1/29、1/30、1/31 及各月 31 号、闰年 2/29）测试误报失败。
+import { addMonths, addYears } from '@cookmate/shared/utils/subscription'
 
 import { POST as createPOST } from '@/app/api/alipay/create/route'
 import { POST as notifyPOST } from '@/app/api/alipay/notify/route'
@@ -98,7 +102,7 @@ describe('支付宝异步通知', () => {
     const u = stores.users.get('u1')
     expect(u.subscriptionTier).toBe('PRO')
     expect(stores.orders.get('CKALmonth').status).toBe('PAID')
-    const expected = new Date(); expected.setUTCMonth(expected.getUTCMonth() + 1)
+    const expected = addMonths(new Date(), 1)
     expect(Math.abs(u.subscriptionExpiryDate.getTime() - expected.getTime())).toBeLessThan(2000)
   })
   it('年付成功 → 到期 +12 月（修复缺陷：原实现只 +1 月）', async () => {
@@ -106,7 +110,7 @@ describe('支付宝异步通知', () => {
     stores.orders.set('CKALyear', { id: 'CKALyear', orderId: 'CKALyear', userId: 'u2', channel: 'alipay', amount: 11900, status: 'PENDING' })
     await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALyear', total_amount: '119.00' }))
     const u = stores.users.get('u2')
-    const expected = new Date(); expected.setUTCFullYear(expected.getUTCFullYear() + 1)
+    const expected = addYears(new Date(), 1)
     expect(Math.abs(u.subscriptionExpiryDate.getTime() - expected.getTime())).toBeLessThan(2000)
   })
   it('重复通知幂等：第二次不重复延长', async () => {
@@ -125,11 +129,11 @@ describe('支付宝异步通知', () => {
   })
   it('续费累加：已 PRO 且未到期，+1 月从现有到期日起算', async () => {
     const now = new Date()
-    const future = new Date(now); future.setUTCMonth(future.getUTCMonth() + 3)
+    const future = addMonths(now, 3)
     stores.users.set('u3', { id: 'u3', subscriptionTier: 'PRO', subscriptionExpiryDate: future, creemSubscriptionId: null, stripeCustomerId: null, stripeSubscriptionId: null })
     stores.orders.set('CKALr', { id: 'CKALr', orderId: 'CKALr', userId: 'u3', channel: 'alipay', amount: 2000, status: 'PENDING' })
     await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALr', total_amount: '20.00' }))
-    const expected = new Date(future); expected.setUTCMonth(expected.getUTCMonth() + 1)
+    const expected = addMonths(future, 1)
     expect(Math.abs(stores.users.get('u3').subscriptionExpiryDate.getTime() - expected.getTime())).toBeLessThan(2000)
   })
 
