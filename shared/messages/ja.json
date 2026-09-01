@@ -307,7 +307,20 @@
     "pickerTip": "3〜5日ずつ生成すると、より詳細なレシピが得られます。残りの日は後から追加生成できます。",
     "confirmGenerate": "生成",
     "pickerLegendGenerate": "生成範囲",
-    "pickerLegendExisting": "既存（保持）"
+    "pickerLegendExisting": "既存（保持）",
+    "fallbackNoKey": "AI サービスが未設定のため、既定の週間プランを表示しています",
+    "fallbackAiBusy": "AI が混み合っているため、既定の週間プランを表示しています",
+    "notSavedHint": "（この結果は保存されていません。更新すると消えます）",
+    "genError_network": "ネットワーク接続に失敗しました。接続を確認して再試行してください",
+    "genError_timeout": "生成がタイムアウトしました。日数を減らすか、しばらくしてから再試行してください",
+    "genError_unauthorized": "ログインの有効期限が切れました。再度ログインしてください",
+    "genError_rateLimit": "本日の生成回数の上限に達しました。明日またお試しください",
+    "genError_server": "サーバーエラーが発生しました。しばらくしてからお試しください",
+    "genError_paymentRequired": "この機能を利用するにはプランのアップグレードが必要です",
+    "genError_aiBusy": "AI サービスが混み合っています。しばらくしてからお試しください",
+    "genError_emptyData": "生成結果が空でした。再試行してください",
+    "genError_unknown": "生成に失敗しました。しばらくしてからお試しください"
+
   },
   "grocery": {
     "title": "買い物リスト",

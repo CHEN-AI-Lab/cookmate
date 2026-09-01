@@ -1,11 +1,22 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useTranslations, useLocale } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { MealPlanGrid } from "@/components/features/MealPlanGrid"
 import { MealPlanDetailModal } from "@/components/features/MealPlanDetailModal"
 import { getDemoMealPlan } from "@cookmate/shared/demo-data"
+import { API_TIMEOUT } from "@cookmate/shared/constants/api-errors"
+import {
+  fetchWithTimeout,
+  parseJsonSafely,
+  classifyNetworkError,
+  classifyHttpError,
+  emptyDataError,
+  kindToMessageKey,
+  errorLogContext,
+  type ApiErrorInfo,
+} from "@cookmate/shared/utils/api-error"
 
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
@@ -49,6 +60,10 @@ export default function MealPlanPage() {
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState("")
+  // 结构化错误信息：用于「是否可重试」判断与控制台日志定位（不直接展示 detail）
+  const [errorInfo, setErrorInfo] = useState<ApiErrorInfo | null>(null)
+  // AI 降级等"有结果但不完美"的提示，用提示条而非红字错误
+  const [notice, setNotice] = useState("")
   const [detail, setDetail] = useState<{ day: number; meal: string } | null>(null)
   const [starToast, setStarToast] = useState("")
   const [deleteConfirm, setDeleteConfirm] = useState(false)
@@ -58,6 +73,11 @@ export default function MealPlanPage() {
   const [showPicker, setShowPicker] = useState(false)
   const [pickStart, setPickStart] = useState<number | null>(null)
   const [pickEnd, setPickEnd] = useState<number | null>(null)
+
+  // 防重复点击：setState 有渲染延迟，连续点击时用 ref 立即拦截
+  const generatingRef = useRef(false)
+  // 记住上次生成的天数，失败重试时直接复用
+  const lastDaysRef = useRef<number[] | null>(null)
 
   useEffect(() => {
     fetch("/api/meal-plan")
@@ -98,6 +118,68 @@ export default function MealPlanPage() {
     }
   }
 
+  /** 把失败写进 state + 控制台（保留 detail 便于定位，界面只展示分类文案） */
+  const failWith = useCallback(
+    (info: ApiErrorInfo) => {
+      console.error(errorLogContext("meal-plan:generate", info))
+      setErrorInfo(info)
+      setError(t(kindToMessageKey(info.kind)))
+    },
+    [t]
+  )
+
+  const runGenerate = useCallback(
+    async (days: number[]) => {
+      if (generatingRef.current) return // 重复点击直接忽略
+      generatingRef.current = true
+      lastDaysRef.current = days
+
+      setGenerating(true)
+      setError("")
+      setErrorInfo(null)
+      setNotice("")
+      try {
+        const res = await fetchWithTimeout("/api/meal-plan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ days }),
+          // 后端 maxDuration=60s，前端必须比它长，否则后端还在生成前端就断了
+          timeoutMs: API_TIMEOUT.mealPlanGenerate,
+        })
+        const data = await parseJsonSafely(res)
+
+        // 平台超时（504）返回的往往是 HTML，parseJsonSafely 会得到 null
+        if (!res.ok || !data) {
+          failWith(classifyHttpError(res, data))
+          return
+        }
+
+        const slots = (data.plan as { slots?: unknown } | null)?.slots
+        if (!Array.isArray(slots) || slots.length === 0) {
+          failWith(emptyDataError(`plan.slots is empty; response keys=${Object.keys(data).join(",")}`))
+          return
+        }
+
+        setPlan(data.plan as MealPlan)
+
+        // AI 降级：数据可用，只是不是 AI 生成的 → 用提示条，不再伪装成"失败"
+        if (data.fallback) {
+          const reason = typeof data.reason === "string" ? data.reason : "ai_error"
+          setNotice(
+            reason === "no_key" ? t("fallbackNoKey") : t("fallbackAiBusy")
+          )
+          if (data.saved === false) setNotice((prev) => `${prev}${t("notSavedHint")}`)
+        }
+      } catch (err) {
+        failWith(classifyNetworkError(err, API_TIMEOUT.mealPlanGenerate))
+      } finally {
+        generatingRef.current = false
+        setGenerating(false)
+      }
+    },
+    [failWith, t]
+  )
+
   const confirmGenerate = async () => {
     if (pickStart === null || pickEnd === null) return
     const lo = Math.min(pickStart, pickEnd)
@@ -106,29 +188,12 @@ export default function MealPlanPage() {
     for (let i = lo; i <= hi; i++) days.push(i)
 
     setShowPicker(false)
-    setGenerating(true)
-    setError("")
-    try {
-      const res = await fetch("/api/meal-plan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ days }),
-      })
-      const data = await res.json()
-      if (res.ok && data.plan) {
-        setPlan(data.plan)
-        if (data.fallback) {
-          setError(t("aiFallback"))
-        }
-      } else {
-        setError(data.detail ? `${data.error} (${data.detail})` : (data.error || t("generateFailed")))
-      }
-    } catch (err) {
-      console.error("generate plan error:", err)
-      setError(t("networkError"))
-    } finally {
-      setGenerating(false)
-    }
+    await runGenerate(days)
+  }
+
+  /** 失败重试：复用上次选中的天数 */
+  const retryGenerate = () => {
+    if (lastDaysRef.current) void runGenerate(lastDaysRef.current)
   }
 
   const getSlot = (day: number, meal: string): MealSlot | undefined =>
@@ -205,7 +270,27 @@ export default function MealPlanPage() {
         </button>
       </div>
 
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {/* AI 降级提示：有数据可用，只是不是 AI 生成的，用提示条区分于真正的错误 */}
+      {notice && (
+        <p className="mb-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5">
+          {notice}
+        </p>
+      )}
+
+      {error && (
+        <div className="mb-4 flex items-center justify-between gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5">
+          <p className="text-sm text-red-700">{error}</p>
+          {errorInfo?.retryable && (
+            <button
+              onClick={retryGenerate}
+              disabled={generating}
+              className="shrink-0 text-sm font-medium text-red-700 underline disabled:opacity-50"
+            >
+              {tc("retry")}
+            </button>
+          )}
+        </div>
+      )}
 
       {!plan && !generating && (
         <div className="text-center py-16">
@@ -383,16 +468,16 @@ export default function MealPlanPage() {
               </button>
               <button
                 onClick={confirmGenerate}
-                disabled={pickStart === null || pickEnd === null}
+                disabled={pickStart === null || pickEnd === null || generating}
                 className="flex-1 py-3 rounded-xl text-[14px] font-semibold transition-all"
                 style={{
                   border: "none",
-                  background: pickStart === null || pickEnd === null ? "#fed7aa" : "#FF6B35",
+                  background: pickStart === null || pickEnd === null || generating ? "#fed7aa" : "#FF6B35",
                   color: "#fff",
-                  cursor: pickStart === null || pickEnd === null ? "not-allowed" : "pointer",
+                  cursor: pickStart === null || pickEnd === null || generating ? "not-allowed" : "pointer",
                 }}
               >
-                {t("confirmGenerate")}
+                {generating ? t("generating") : t("confirmGenerate")}
               </button>
             </div>
           </div>

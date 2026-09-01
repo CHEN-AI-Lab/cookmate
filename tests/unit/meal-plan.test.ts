@@ -90,17 +90,57 @@ describe('meal-plan POST', () => {
     expect(res.status).toBe(200)
     expect(prismaMock.recipe.create).toHaveBeenCalledTimes(6)
   })
-  it('fallback=true → 不落库，直接返回生成数据', async () => {
+  it('fallback=true → 不落库，但仍返回可渲染的计划（修复前返回 plan:null，前端直接判失败）', async () => {
     ;(generateWeeklyPlan as any).mockResolvedValue({
       plan: { 周一: { breakfast: mkRecipe('早'), lunch: mkRecipe('午'), dinner: mkRecipe('晚') } },
       fallback: true,
+      reason: 'ai_error',
     })
     const res = await POST(postReq({ days: [0] }))
     expect(res.status).toBe(200)
     const json = await res.json()
     expect(json.fallback).toBe(true)
-    expect(json.plan).toBeNull()
+    expect(json.saved).toBe(false)
+    expect(json.reason).toBe('ai_error')
+    // 关键回归点：降级时前端也要拿到可渲染的数据，而不是 null
+    expect(json.plan).toBeTruthy()
+    expect(Array.isArray(json.plan.slots)).toBe(true)
+    expect(json.plan.slots).toHaveLength(3)
+    expect(json.plan.slots[0].recipe.title).toBe('早')
+    // 降级数据不能写库，避免覆盖用户已有的真实计划
     expect(prismaMock.recipe.create).not.toHaveBeenCalled()
+    expect(prismaMock.mealPlan.create).not.toHaveBeenCalled()
+  })
+  it('fallback=false 且保存成功 → saved=true 且 plan.slots 为数组', async () => {
+    ;(generateWeeklyPlan as any).mockResolvedValue({
+      plan: { 周一: { breakfast: mkRecipe('早'), lunch: mkRecipe('午'), dinner: mkRecipe('晚') } },
+      fallback: false,
+    })
+    const res = await POST(postReq({ days: [0] }))
+    const json = await res.json()
+    expect(json.saved).toBe(true)
+    expect(Array.isArray(json.plan.slots)).toBe(true)
+    expect(json.plan.slots).toHaveLength(3)
+  })
+  it('保存 DB 失败 → 仍返回未落库的计划，不抛 500', async () => {
+    ;(generateWeeklyPlan as any).mockResolvedValue({
+      plan: { 周一: { breakfast: mkRecipe('早'), lunch: mkRecipe('午'), dinner: mkRecipe('晚') } },
+      fallback: false,
+    })
+    ;(prismaMock.recipe.create as any).mockRejectedValueOnce(new Error('db down'))
+    const res = await POST(postReq({ days: [0] }))
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.saved).toBe(false)
+    expect(json.plan).toBeTruthy()
+    expect(Array.isArray(json.plan.slots)).toBe(true)
+  })
+  it('AI 返回空对象 → 500 并带 detail（不再返回空壳数据）', async () => {
+    ;(generateWeeklyPlan as any).mockResolvedValue({ plan: {}, fallback: false })
+    const res = await POST(postReq({ days: [0] }))
+    expect(res.status).toBe(500)
+    const json = await res.json()
+    expect(json.detail).toBe('empty weekly plan')
   })
 })
 

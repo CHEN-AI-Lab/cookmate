@@ -209,8 +209,15 @@ export function makePrisma() {
       findUnique: vi.fn(async ({ where }: any) => stores.mealPlans.get(where.id) || null),
       create: vi.fn(async ({ data }: any) => {
         const id = `mp_${Date.now()}_${Math.random().toString(36).slice(2)}`
-        const slots = (data.slots?.create || []).map((s: any) => ({ id: `ms_${Math.random().toString(36).slice(2)}`, ...s }))
-        const rec = { id, slots, ...data }
+        // 对齐真实 Prisma：入参 slots.create 会被展开成返回记录里的 slots 数组，
+        // 不能再把 `...data` 放在后面覆盖掉它（否则调用方拿到的始终不是数组）。
+        const { slots: slotsInput, ...rest } = data
+        const slots = (slotsInput?.create || []).map((s: any) => ({
+          id: `ms_${Math.random().toString(36).slice(2)}`,
+          mealPlanId: id,
+          ...s,
+        }))
+        const rec = { id, ...rest, slots }
         stores.mealPlans.set(id, rec)
         stores.mealSlots.push(...slots)
         return rec

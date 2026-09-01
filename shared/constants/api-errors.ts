@@ -74,3 +74,22 @@ export function apiError(key: ErrorKey, locale: string): string {
   if (!msg) return key
   return locale === "en" || locale.startsWith("en") ? msg.en : msg.zh
 }
+
+// ─── 前端请求超时（毫秒）───
+// 后端 /api/meal-plan 与 /api/recipes/generate 的 maxDuration = 60s（Vercel Hobby 上限）。
+// 前端超时必须**大于**后端上限，否则后端还在跑、前端就先断开，用户只会看到"网络错误"，
+// 而后端其实马上就要返回了。这里留 30s 余量给网络往返。
+export const API_TIMEOUT = {
+  /** AI 周计划生成：后端最长 60s + 网络往返余量 */
+  mealPlanGenerate: 90_000,
+  /** AI 菜谱生成：同上 */
+  recipesGenerate: 90_000,
+  /** 普通接口 */
+  default: 30_000,
+} as const
+
+// ─── AI 调用超时（毫秒）───
+// 必须**小于** Vercel 函数上限（Hobby 60s），让 AI 超时能走进代码里的 catch 优雅降级，
+// 而不是被平台直接掐断返回 504（前端表现为"网络错误"，看不到任何真实原因）。
+// 55s 留 5s 给 sanitizeWeeklyPlan + DB 写入（21 餐约 1.5-2s），同时覆盖 Vercel cold start（1-3s）。
+export const AI_TIMEOUT_MS = 55_000

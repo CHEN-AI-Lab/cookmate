@@ -307,7 +307,20 @@
     "pickerTip": "Generating 3-5 days at a time gives more detailed recipes. Remaining days can be generated later.",
     "confirmGenerate": "Generate",
     "pickerLegendGenerate": "Generate range",
-    "pickerLegendExisting": "Existing (kept)"
+    "pickerLegendExisting": "Existing (kept)",
+    "fallbackNoKey": "AI service is not enabled — showing the default weekly plan",
+    "fallbackAiBusy": "AI is busy — showing the default weekly plan",
+    "notSavedHint": " (This result isn't saved and will disappear after refresh)",
+    "genError_network": "Network connection failed. Please check your connection and retry",
+    "genError_timeout": "Generation timed out. The AI is slow — retry or generate fewer days",
+    "genError_unauthorized": "Your session expired. Please log in again",
+    "genError_rateLimit": "Daily generation limit reached. Please try again tomorrow",
+    "genError_paymentRequired": "Please upgrade your plan to use this feature",
+    "genError_server": "Server error. Please try again later",
+    "genError_aiBusy": "AI service is busy. Please try again later",
+    "genError_emptyData": "Generation returned no data. Please retry",
+    "genError_unknown": "Generation failed. Please try again later"
+
   },
   "grocery": {
     "title": "🛒 Grocery List",

@@ -3,6 +3,7 @@
  */
 
 import OpenAI from "openai"
+import { AI_TIMEOUT_MS } from "../constants/api-errors"
 
 let openaiInstance: OpenAI | null = null
 
@@ -12,7 +13,9 @@ function getOpenAI() {
       apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
       baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
       dangerouslyAllowBrowser: false,
-      timeout: 120000,
+      // 必须小于 Vercel 函数上限（Hobby 60s）：AI 超时要能走进下面的 catch 优雅降级，
+      // 否则函数被平台掐断 → 前端只收到 504 HTML → 一律显示"网络错误"，看不到真实原因。
+      timeout: AI_TIMEOUT_MS,
       maxRetries: 2,
     })
   }
@@ -324,6 +327,35 @@ export async function generateRecipes(
   }
 }
 
+/** 周计划降级原因：no_key=未配置 AI；ai_error=调用失败/超时；invalid_data=AI 返回空或结构错乱 */
+export type WeeklyPlanFallbackReason = "no_key" | "ai_error" | "invalid_data"
+
+interface WeeklyPlan {
+  breakfast: RecipeResult
+  lunch: RecipeResult
+  dinner: RecipeResult
+}
+
+export interface WeeklyPlanResult {
+  plan: Record<string, WeeklyPlan>
+  fallback: boolean
+  /** 仅 fallback=true 时有值，供前端/日志区分降级原因 */
+  reason?: WeeklyPlanFallbackReason
+}
+
+/** 把 AI 错误信息压缩成一行，便于日志定位（含 HTTP status / 错误码 / 是否超时） */
+function describeAIError(err: unknown): string {
+  if (err instanceof Error) {
+    const anyErr = err as Error & { status?: number; code?: string; type?: string }
+    const parts = [err.name, err.message]
+    if (anyErr.status !== undefined) parts.push(`status=${anyErr.status}`)
+    if (anyErr.code) parts.push(`code=${anyErr.code}`)
+    if (anyErr.type) parts.push(`type=${anyErr.type}`)
+    return parts.filter(Boolean).join(" ")
+  }
+  return String(err)
+}
+
 export async function generateWeeklyPlan(
   preferences: {
     dietType?: string
@@ -334,7 +366,7 @@ export async function generateWeeklyPlan(
   pantryItems?: string[],
   locale?: string,
   days?: number[]
-): Promise<{ plan: Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }>; fallback: boolean }> {
+): Promise<WeeklyPlanResult> {
   const isEnglish = locale === "en"
   const targetDays = days ?? [0, 1, 2, 3, 4, 5, 6]
   const dayNames = isEnglish
@@ -342,13 +374,15 @@ export async function generateWeeklyPlan(
     : ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 
   if (!hasAIKey()) {
-    return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true }
+    console.warn("[weekly-plan] 未配置 AI_API_KEY / OPENAI_API_KEY，使用 mock 周计划")
+    return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true, reason: "no_key" }
   }
 
   const planClient = new OpenAI({
       apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
       baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
-      timeout: 120000,
+      // 周计划输出量大，是最容易超时的接口。超时必须 < 平台函数上限，才能降级而不是被掐断。
+      timeout: AI_TIMEOUT_MS,
       maxRetries: 0,
     })
 
@@ -404,17 +438,18 @@ export async function generateWeeklyPlan(
     }
     if (totalMeals === 0) {
       console.warn(`[weekly-plan] AI 返回 0 餐（可能结构错乱），降级 mock. Raw:`, content.substring(0, 500))
-      return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true }
+      return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true, reason: "invalid_data" }
     }
     if (emptyMeals / totalMeals > 0.5) {
       console.warn(`[weekly-plan] AI 返回大量空数据 (${emptyMeals}/${totalMeals} 未命名)，降级 mock. Raw:`, content.substring(0, 500))
-      return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true }
+      return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true, reason: "invalid_data" }
     }
 
     return { plan: rawPlan, fallback: false }
   } catch (err) {
-    console.error("AI weekly plan generation failed, falling back to mock data:", err)
-    return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true }
+    // 关键：错误信息要落到日志，否则线上只能看到"网络错误"四个字，无法定位
+    console.error("[weekly-plan] AI 调用失败，降级 mock:", describeAIError(err))
+    return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true, reason: "ai_error" }
   }
 }
 

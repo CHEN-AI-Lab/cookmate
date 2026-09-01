@@ -307,7 +307,20 @@
     "pickerTip": "每次生成 3-5 天菜谱细节更丰富，剩余天数可随时补充生成",
     "confirmGenerate": "生成",
     "pickerLegendGenerate": "生成区间",
-    "pickerLegendExisting": "已有（保留）"
+    "pickerLegendExisting": "已有（保留）",
+    "fallbackNoKey": "当前未启用 AI 服务，以下为默认推荐周计划",
+    "fallbackAiBusy": "AI 服务繁忙，已为你推荐默认周计划",
+    "notSavedHint": "（本次结果未保存，刷新后不会保留）",
+    "genError_network": "网络连接失败，请检查网络后重试",
+    "genError_timeout": "生成超时，AI 响应较慢，请重试或减少生成天数",
+    "genError_unauthorized": "登录已失效，请重新登录后重试",
+    "genError_rateLimit": "今日生成次数已用完，请明天再试",
+    "genError_paymentRequired": "需要升级套餐后才能使用该功能",
+    "genError_server": "服务端异常，请稍后重试",
+    "genError_aiBusy": "AI 服务繁忙，请稍后重试",
+    "genError_emptyData": "生成结果为空，请重试",
+    "genError_unknown": "生成失败，请稍后重试"
+
   },
   "grocery": {
     "title": "🛒 购物清单",
