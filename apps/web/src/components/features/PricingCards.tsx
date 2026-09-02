@@ -51,6 +51,12 @@ export function PricingCards() {
             onCta={() => router.push("/register")}
           />
         </div>
+
+        {/* 退款政策声明 — 在「选择计划」白色模块内部，与卡片一体化 */}
+        <div className="mt-10 max-w-3xl mx-auto text-center">
+          <h3 className="text-sm font-semibold text-text-primary">{t("refundPolicyTitle")}</h3>
+          <p className="mt-2 text-xs leading-relaxed text-text-secondary">{t("refundNotice")}</p>
+        </div>
       </div>
     </section>
   )
