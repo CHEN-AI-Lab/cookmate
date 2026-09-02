@@ -270,6 +270,9 @@ export default function BillingPage() {
               loading={false}
             />
           </div>
+
+          {/* 退款声明（套餐区底部，小字融入卡片，与结算弹窗文案一致） */}
+          <p className="mt-4 text-center text-xs text-text-secondary">{t("checkoutRefundNotice")}</p>
         </div>
       )}
 

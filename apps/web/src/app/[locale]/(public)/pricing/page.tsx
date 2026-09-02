@@ -30,12 +30,10 @@ export default async function PricingPage({ params }: { params: Promise<{ locale
 
       <PricingCards />
 
-      {/* 退款政策声明（正式版） */}
-      <section className="max-w-3xl mx-auto px-8 pb-16">
-        <div className="rounded-2xl border border-gray-100 bg-card p-6">
-          <h2 className="text-sm font-semibold text-text-primary">{tb("refundPolicyTitle")}</h2>
-          <p className="mt-2 text-xs leading-relaxed text-text-secondary">{tb("refundNotice")}</p>
-        </div>
+      {/* 退款政策声明（正式版）—— 无卡片框，与页面背景融为一体 */}
+      <section className="max-w-3xl mx-auto px-8 pb-16 text-center">
+        <h2 className="text-sm font-semibold text-text-primary">{tb("refundPolicyTitle")}</h2>
+        <p className="mt-2 text-xs leading-relaxed text-text-secondary">{tb("refundNotice")}</p>
       </section>
 
       <PublicFooter />
