@@ -82,7 +82,7 @@ describe('creem create-checkout GET（轮询支付状态）', () => {
   })
   it('已支付 checkout 属于当前用户 → 升级 PRO + 写入到期', async () => {
     ;(retrieveCheckout as any).mockResolvedValue({ status: 'completed', metadata: { userId: 'u1', period: 'monthly' } })
-    stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null, stripeCustomerId: null, stripeSubscriptionId: null })
+    stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null })
     // 必须 seed 与 retrieveCheckout 返回的 checkoutId 一致的 externalCheckoutId，否则无法精确匹配
     stores.orders.set('CKCRpending', { id: 'CKCRpending', userId: 'u1', channel: 'creem', status: 'PENDING', orderId: 'CKCRpending', externalCheckoutId: 'ch_1', amount: 2000 })
     const res = await GET(getReq('http://localhost/api/creem/create-checkout?checkoutId=ch_1'))
@@ -101,7 +101,7 @@ describe('creem create-checkout GET（轮询支付状态）', () => {
   // P0 加固：Creem GET 路径不再用「最近 PENDING」匹配，改用 externalCheckoutId 精确反查
   it('多个 PENDING 订单时，只匹配 externalCheckoutId 一致的那个（防止匹配错订单）', async () => {
     ;(retrieveCheckout as any).mockResolvedValue({ status: 'completed', metadata: { userId: 'u1', period: 'monthly' } })
-    stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null, stripeCustomerId: null, stripeSubscriptionId: null })
+    stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null })
     // 种两个 PENDING：一个旧 abandoned（externalCheckoutId=ch_old），一个新刚 checkout 的（externalCheckoutId=ch_new）
     stores.orders.set('CKCRold', { id: 'CKCRold', orderId: 'CKCRold', externalCheckoutId: 'ch_old', userId: 'u1', channel: 'creem', status: 'PENDING', amount: 2000, createdAt: Date.now() - 10000 })
     stores.orders.set('CKCRnew', { id: 'CKCRnew', orderId: 'CKCRnew', externalCheckoutId: 'ch_new', userId: 'u1', channel: 'creem', status: 'PENDING', amount: 2000, createdAt: Date.now() })

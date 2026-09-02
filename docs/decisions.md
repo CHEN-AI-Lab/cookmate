@@ -61,6 +61,8 @@
 ---
 
 ## ADR-006: Stripe + PayJS Dual Payment
+
+> **[2026-09-02 已废弃 Superseded]**：Stripe 需要境外银行账户且未实际启用，已从代码中整体删除。当前支付渠道 = Creem（订阅）+ 支付宝（一次性付款）。保留本 ADR 作为历史决策记录。
 **Date**: 2025-03-01
 **Status**: Draft
 

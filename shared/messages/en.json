@@ -320,7 +320,6 @@
     "genError_aiBusy": "AI service is busy. Please try again later",
     "genError_emptyData": "Generation returned no data. Please retry",
     "genError_unknown": "Generation failed. Please try again later"
-
   },
   "grocery": {
     "title": "🛒 Grocery List",
@@ -489,7 +488,6 @@
     "subtitle": "Manage your subscription plan and payment methods",
     "currentPlan": "Current Plan",
     "upgrade": "Upgrade Plan",
-    "manageStripe": "Manage Stripe Subscription",
     "noSubscription": "No subscription records",
     "proPlan": "Pro",
     "familyPlan": "Family Plan",
@@ -558,7 +556,6 @@
     "alipay": "Alipay",
     "alipayDesc": "¥20/month",
     "creditCard": "Credit Card",
-    "creditCardDesc": "$3/month via Stripe",
     "creem": "Creem",
     "creemDesc": "Credit Card · Multiple Payments",
     "checkPayment": "Check Payment Status",
@@ -575,10 +572,8 @@
     "currentPlanFree": "Free",
     "currentPlanPro": "Pro",
     "alipayPay": "Alipay",
-    "stripePay": "Credit Card",
     "creemPay": "Creem",
     "payFrom": "¥20/mo",
-    "payFromStripe": "$3/mo via Stripe",
     "success": "✅ Payment successful! Upgraded to Pro.",
     "canceled": "Canceled",
     "paymentNotFound": "Payment record not found",
@@ -594,7 +589,10 @@
     "paymentSuccess": "✅ Payment successful!",
     "keepPro": "Keep Pro",
     "downgradeToFree": "Downgrade to Free",
-    "daysLeft": "{days} days left"
+    "daysLeft": "{days} days left",
+    "refundPolicyTitle": "Refund Policy",
+    "refundNotice": "Membership is a virtual online service provided on a prepaid basis. The membership fee is the price of the service you purchase, not a prepayment, deposit or down payment. Once activated, the membership is non-refundable and non-transferable, except where mandatory provisions of applicable laws apply, or where the service is materially defective and completely unusable. After cancellation, your membership benefits remain active until the end of the current billing cycle; remaining days are neither convertible to cash nor refundable.",
+    "checkoutRefundNotice": "Membership is a virtual product and is non-refundable once activated (except as required by law). After cancellation, benefits remain active until the end of the current billing cycle."
   },
   "orders": {
     "title": "📋 Order History",
@@ -619,7 +617,6 @@
     "deleteConfirmHint": "This action cannot be undone.",
     "deleteSuccess": "Order deleted",
     "channelAlipay": "Alipay",
-    "channelStripe": "Stripe",
     "channelCreem": "Creem",
     "backToBilling": "← Back to Billing",
     "loading": "Loading..."
@@ -677,7 +674,7 @@
     "infoCollect1": "Account information: email address, phone number, username",
     "infoCollect2": "Usage data: dietary preferences, cuisine preferences, cooking history",
     "infoCollect3": "Device information: browser type, operating system, IP address",
-    "infoCollect4": "Payment records (actual payment processed by Stripe/Alipay)",
+    "infoCollect4": "Payment records (actual payment processed by Creem/Alipay)",
     "usageTitle": "2. How We Use Your Information",
     "usageDesc": "We use the collected information to:",
     "usage1": "Provide and improve AI recipe recommendations",

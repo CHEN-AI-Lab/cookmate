@@ -320,7 +320,6 @@
     "genError_aiBusy": "AI 服务繁忙，请稍后重试",
     "genError_emptyData": "生成结果为空，请重试",
     "genError_unknown": "生成失败，请稍后重试"
-
   },
   "grocery": {
     "title": "🛒 购物清单",
@@ -489,7 +488,6 @@
     "subtitle": "管理你的订阅计划和付款方式",
     "currentPlan": "当前计划",
     "upgrade": "升级套餐",
-    "manageStripe": "管理 Stripe 订阅",
     "noSubscription": "暂无订阅记录",
     "proPlan": "Pro（专业版）",
     "familyPlan": "家庭计划",
@@ -558,7 +556,6 @@
     "alipay": "支付宝",
     "alipayDesc": "¥20/月起",
     "creditCard": "信用卡",
-    "creditCardDesc": "$3/月起 · Stripe",
     "creem": "Creem",
     "creemDesc": "信用卡 · 多种支付",
     "checkPayment": "检测付款状态",
@@ -575,10 +572,8 @@
     "currentPlanFree": "Free（免费版）",
     "currentPlanPro": "Pro（专业版）",
     "alipayPay": "支付宝",
-    "stripePay": "信用卡",
     "creemPay": "Creem",
     "payFrom": "¥20/月起",
-    "payFromStripe": "$3/月起 · Stripe",
     "success": "✅ 支付成功！已升级到 Pro。",
     "canceled": "已取消",
     "paymentNotFound": "未找到支付记录",
@@ -594,7 +589,10 @@
     "paymentSuccess": "✅ 支付成功！",
     "keepPro": "保留 Pro",
     "downgradeToFree": "降级到免费版",
-    "daysLeft": "{days, number} 天"
+    "daysLeft": "{days, number} 天",
+    "refundPolicyTitle": "退款政策",
+    "refundNotice": "会员服务系网络虚拟商品，采用先付费后服务的方式。会员费用为所购会员服务对应的价格，而非预付款、存款或定金。会员服务一经开通即不支持退款、不可转让（法律法规另有强制性规定，或服务存在重大瑕疵致使您完全无法使用的情形除外）。取消订阅后，会员权益将持续至当前计费周期届满，剩余天数不予折现或退还。",
+    "checkoutRefundNotice": "会员服务为虚拟商品，一经开通不支持退款（法定例外情形除外）。取消订阅后，权益持续至当前计费周期届满。"
   },
   "orders": {
     "title": "📋 订单记录",
@@ -619,7 +617,6 @@
     "deleteConfirmHint": "删除后不可恢复，请谨慎操作。",
     "deleteSuccess": "订单已删除",
     "channelAlipay": "支付宝",
-    "channelStripe": "Stripe",
     "channelCreem": "Creem",
     "backToBilling": "← 返回账单",
     "loading": "加载中..."
@@ -677,7 +674,7 @@
     "infoCollect1": "注册信息：邮箱地址、手机号、用户名",
     "infoCollect2": "使用数据：饮食偏好、菜系偏好、烹饪记录",
     "infoCollect3": "设备信息：浏览器类型、操作系统、IP 地址",
-    "infoCollect4": "支付信息：支付记录（实际支付由 Stripe / 支付宝等第三方处理）",
+    "infoCollect4": "支付信息：支付记录（实际支付由 Creem / 支付宝等第三方处理）",
     "usageTitle": "2. 信息使用",
     "usageDesc": "收集的信息用于以下目的：",
     "usage1": "提供和优化 AI 菜谱推荐服务",

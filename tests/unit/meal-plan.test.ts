@@ -40,7 +40,7 @@ beforeEach(() => {
   resetPrisma()
   ;(auth as any).mockResolvedValue({ user: { id: 'u1' } })
   ;(generateWeeklyPlan as any).mockReset()
-  stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null, stripeCustomerId: null, stripeSubscriptionId: null, dietType: null, cuisinePref: null, servingSize: 2 })
+  stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null, dietType: null, cuisinePref: null, servingSize: 2 })
 })
 
 describe('meal-plan GET', () => {

@@ -4,7 +4,7 @@ import { verifyNotify } from "@cookmate/shared/api/alipay-pay"
 import { PRICING } from "@cookmate/shared/constants/pricing"
 import { addMonths } from "@cookmate/shared/utils/subscription"
 
-// 支付宝异步通知写入 WebhookLog（与 Creem / Stripe 一致，便于对账 + 审计追溯）
+// 支付宝异步通知写入 WebhookLog（与 Creem 一致，便于对账 + 审计追溯）
 // 失败时 console.error（Vercel Logs 自动聚合），不再完全静默
 async function logWebhook(eventType: string | null, status: string, rawBody?: string): Promise<void> {
   try {

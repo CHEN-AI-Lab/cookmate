@@ -17,7 +17,7 @@ function getReq() {
 
 const sampleLogs = [
   { id: 'wl1', source: 'cancel', eventType: 'creem', status: 'completed', rawBody: JSON.stringify({ userId: 'u1', subscriptionId: 'sub_1' }), createdAt: new Date('2026-08-25T10:00:00Z') },
-  { id: 'wl2', source: 'cancel', eventType: 'stripe', status: 'failed', rawBody: JSON.stringify({ userId: 'u2', subscriptionId: 'sub_2', error: 'api down' }), createdAt: new Date('2026-08-25T09:00:00Z') },
+  { id: 'wl2', source: 'cancel', eventType: 'creem', status: 'failed', rawBody: JSON.stringify({ userId: 'u2', subscriptionId: 'sub_2', error: 'api down' }), createdAt: new Date('2026-08-25T09:00:00Z') },
 ]
 
 beforeEach(() => {
@@ -79,7 +79,7 @@ describe('admin cancel-logs GET', () => {
     })
     expect(json.logs[1]).toMatchObject({
       id: 'wl2',
-      channel: 'stripe',
+      channel: 'creem',
       status: 'failed',
       userId: 'u2',
       subscriptionId: 'sub_2',

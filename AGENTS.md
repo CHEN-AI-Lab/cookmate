@@ -7,7 +7,7 @@
 - **数据库**: PostgreSQL (Neon) + Prisma ORM
 - **认证**: NextAuth.js v5
 - **AI**: OpenAI 兼容接口
-- **支付**: Stripe + PayJS
+- **支付**: Creem（订阅）+ 支付宝（一次性付款）
 - **部署**: Vercel
 - **包管理**: pnpm monorepo
 
@@ -27,7 +27,7 @@ cookmate/
 │   ├── prisma/            # Prisma schema
 │   └── tests/             # 测试
 ├── shared/                # 跨平台共享代码
-│   ├── api/               # API 客户端（openai, alipay, stripe, payment）
+│   ├── api/               # API 客户端（openai, alipay, creem, payment）
 │   ├── constants/         # 常量
 │   ├── hooks/             # React hooks
 │   ├── messages/          # 国际化
@@ -63,5 +63,4 @@ bash scripts/check.sh  # 全量质量检查
 
 - 依赖方向: UI → Components → API → Lib/Prisma (单向)
 - AI 调用封装在 shared/api/openai.ts，API route 不直接调用 OpenAI SDK
-- 所有 Stripe 操作走 webhook，不从前端直接处理支付逻辑
 - 用户数据只通过 session 获取 userId，禁止从前端传 userId

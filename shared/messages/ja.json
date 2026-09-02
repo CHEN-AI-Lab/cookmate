@@ -320,7 +320,6 @@
     "genError_aiBusy": "AI サービスが混み合っています。しばらくしてからお試しください",
     "genError_emptyData": "生成結果が空でした。再試行してください",
     "genError_unknown": "生成に失敗しました。しばらくしてからお試しください"
-
   },
   "grocery": {
     "title": "買い物リスト",
@@ -549,7 +548,6 @@
     "saveAmount": "{amount}お得",
     "alipayDesc": "¥20/月〜",
     "creditCard": "クレジットカード",
-    "creditCardDesc": "$3/月〜 via Stripe",
     "creemDesc": "クレジットカード · 複数決済",
     "checkPayment": "支払い状況を確認",
     "checkPaymentDesc": "支払い後にクリックして確認",
@@ -562,9 +560,7 @@
     "inUse": "利用中",
     "freeLabel": "無料",
     "currentPlanFree": "Free（無料）",
-    "stripePay": "クレジットカード",
     "payFrom": "¥20/月〜",
-    "payFromStripe": "$3/月〜 via Stripe",
     "success": "✅ 支払い成功！Proにアップグレードしました。",
     "canceled": "キャンセル済み",
     "paymentNotFound": "支払い記録が見つかりません",
@@ -581,7 +577,6 @@
     "keepPro": "Proを維持",
     "downgradeToFree": "無料にダウングレード",
     "daysLeft": "{days, number} 日残り",
-    "manageStripe": "Stripeサブスクリプション管理",
     "noSubscription": "サブスクリプション記録がありません",
     "upgrade": "プランアップグレード",
     "proPlan": "Pro",
@@ -594,7 +589,10 @@
     "proLabel": "Pro",
     "currentPlanPro": "Pro",
     "alipayPay": "Alipay",
-    "creemPay": "Creem"
+    "creemPay": "Creem",
+    "refundPolicyTitle": "返金ポリシー",
+    "refundNotice": "会員サービスはネットワーク上の仮想商品であり、先払い・後サービスの方式を採用しています。会員費用は購入された会員サービスの価格であり、前払金・預り金・手付金ではありません。会員サービスは一度開通すると、法令に強制的な定めがある場合、またはサービスに重大な欠陥があり全く利用できない場合を除き、返金・譲渡はできません。解約後も会員特典は現在の課金期間の終了まで有効となり、残日数の現金化・返金はいたしかねます。",
+    "checkoutRefundNotice": "会員サービスは仮想商品のため、開通後の返金はできません（法令で定められた場合を除く）。解約後も特典は現在の課金期間の終了まで有効です。"
   },
   "orders": {
     "title": "📋 注文履歴",
@@ -621,7 +619,6 @@
     "deleteSuccess": "注文を削除しました",
     "plan": "プラン",
     "channelAlipay": "Alipay",
-    "channelStripe": "Stripe",
     "channelCreem": "Creem"
   },
   "blog": {
@@ -680,7 +677,7 @@
     "rightsTitle": "6. お客様の権利",
     "infoCollect2": "利用データ：食事の好み、料理の好み、調理履歴",
     "infoCollect3": "デバイス情報：ブラウザタイプ、OS、IPアドレス",
-    "infoCollect4": "支払い記録（実際の支払いはStripe/Alipayが処理）",
+    "infoCollect4": "支払い記録（実際の支払いはCreem/Alipayが処理）",
     "infoCollectDesc": "サービス提供のために、以下の情報を収集する場合があります：",
     "infoCollectTitle": "1. 収集する情報",
     "infoCollect1": "アカウント情報：メールアドレス、電話番号、ユーザー名",
@@ -725,7 +722,7 @@
     "q2": "サブスクリプションはいつでもキャンセルできますか？",
     "a2": "はい、いつでもキャンセルできます。キャンセル後も現在の請求期間が終了するまでPro機能をご利用いただけます。",
     "q3": "支払い方法は？",
-    "a3": "Alipay（支付宝）とクレジットカード（Stripe/Creem）に対応しています。",
+    "a3": "Alipay（支付宝）とクレジットカード（Creem）に対応しています。",
     "q4": "データは安全ですか？",
     "a4": "はい、すべてのデータは暗号化され、安全に保管されています。詳細はプライバシーポリシーをご覧ください。",
     "q5": "レシピはどのように生成されますか？",

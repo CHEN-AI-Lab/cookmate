@@ -50,7 +50,7 @@ beforeEach(() => {
   verifyWebhook.mockReturnValue(true)
   stores.users.set('u1', {
     id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null,
-    creemSubscriptionId: null, stripeCustomerId: null, stripeSubscriptionId: null,
+    creemSubscriptionId: null,
   })
 })
 

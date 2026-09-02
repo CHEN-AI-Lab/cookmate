@@ -20,7 +20,6 @@
 | 4 | DeepSeek AI | AI 生成菜谱功能 | ✅ 必须 | 按量计费，先充 10 元够用很久 |
 | 5 | QQ 邮箱 SMTP | 发送邮箱验证码 | ✅ 必须 | 免费 |
 | 6 | 阿里云短信服务 | 发送手机验证码 | 二选一 | 0.045 元/条，预充 10 元够测试 |
-| 7 | Stripe | 国际信用卡支付（国外用户） | 可选 | 按交易抽成 2.9%+$0.30 |
 | 8 | PayJS | 国内微信/支付宝支付 | 可选 | 按交易抽成，约 1%~2% |
 
 **最小的可以跑起来的组合**（只要 1~5 项）：
@@ -337,61 +336,10 @@ CookMate 需要通过邮箱发送登录验证码。推荐使用 **QQ 邮箱 SMTP
 
 > **这一整章都是可选的。** 如果你暂时不需要付费订阅功能，可以直接跳过，CookMate 的核心功能（AI 生成菜谱、食材管理、膳食计划）都不需要支付。
 
-CookMate 支持两种支付方式：
-- **Stripe**：面向国外用户的国际信用卡支付（Visa、Mastercard 等）
+CookMate 支持的支付方式：
 - **PayJS**：面向国内用户的微信支付 / 支付宝
 
 你只需要配置其中一个即可，也可以两个都不配。
-
-### 7.1 Stripe（国际信用卡支付，可选）
-
-#### 注册
-
-1. 访问 https://dashboard.stripe.com/register 注册账号。
-2. 填写邮箱、姓名、国家（选 China）、密码。
-3. 激活账号：Stripe 会要求填写一些商家信息（可以用个人身份注册）。
-
-#### 获取 API Keys
-
-1. 登录 Stripe Dashboard，左侧菜单点击「Developers」→「API keys」。
-2. 你会看到两个 Key：
-   - **Publishable key**：以 `pk_live_` 开头
-   - **Secret key**：以 `sk_live_` 开头（点击「Reveal」显示）
-3. 复制这两个 Key 保存。
-
-#### 创建产品和价格
-
-1. 左侧菜单点击「Products」→「Add product」。
-2. 创建月度订阅产品：
-   - Name: `CookMate Pro - Monthly`
-   - Price: 填写你的定价（如 29 元/月）
-   - Billing period: Monthly
-   - 点击「Save product」
-3. 创建后，在产品详情页找到 **Price ID**（格式如 `price_xxxxxxxxxxxx`），复制保存。
-4. 同样操作再创建一个年度订阅产品（Name: `CookMate Pro - Yearly`，Billing period: Yearly），获取其 Price ID。
-
-#### 配置 Webhook
-
-Webhook 是 Stripe 在支付成功后通知你服务器的机制。
-
-1. 左侧菜单点击「Developers」→「Webhooks」→「Add endpoint」。
-2. Endpoint URL 填写：`https://你的域名.com/api/stripe/webhook`
-   - （例如域名是 `mycookmate.com`，就填 `https://mycookmate.com/api/stripe/webhook`）
-3. Events to send：选择 `checkout.session.completed`。
-4. 点击「Add endpoint」。
-5. 创建后，点击「Reveal」查看 **Signing secret**（以 `whsec_` 开头），复制保存。
-
-#### 记录以下信息
-
-| 项目 | 值 |
-|------|----|
-| Secret Key | `sk_live_xxxxxxxxxxxx` |
-| Publishable Key | `pk_live_xxxxxxxxxxxx` |
-| Pro 月度 Price ID | `price_xxxxxxxxxxxx` |
-| Pro 年度 Price ID | `price_yyyyyyyyyyyy` |
-| Webhook Signing Secret | `whsec_xxxxxxxxxxxx` |
-
----
 
 ### 7.2 PayJS（国内微信支付，可选）
 
@@ -518,18 +466,6 @@ AI_BASE_URL="https://api.deepseek.com"
 AI_MODEL="deepseek-chat"
 ```
 
-#### Stripe 支付（可选）
-
-| 变量名 | 填什么 | 是否必须 |
-|--------|--------|----------|
-| `STRIPE_SECRET_KEY` | `"sk_live_xxxxxxxxxxxx"` | 可选 |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `"pk_live_xxxxxxxxxxxx"` | 可选 |
-| `STRIPE_PRO_PRICE_ID` | `"price_xxxxxxxxxxxx"` | 可选 |
-| `STRIPE_WEBHOOK_SECRET` | `"whsec_xxxxxxxxxxxx"` | 可选 |
-
-> 不配 Stripe 就留空，不影响核心功能。
-
-#### PayJS 支付（可选）
 
 | 变量名 | 填什么 | 是否必须 |
 |--------|--------|----------|
@@ -1033,17 +969,6 @@ tar -czf cookmate-data-backup-$(date +%Y%m%d).tar.gz /opt/cookmate/data/
 | subscription.update | 订阅信息变更 | active+有到期日 → 同步并授权；其他 → 仅同步ID | 条件授权 |
 | subscription.trialing | 试用中（CookMate 无试用） | 仅记录 | 否 |
 | refund.created | 退款成功 | 立即降级 FREE | ❌ 降级 |
-
-### E.2 Stripe 事件矩阵
-
-| 事件类型 | 触发时机 | CookMate 行为 | 是否授权/降级 |
-|----------|----------|---------------|---------------|
-| checkout.session.completed | 用户完成结账 | 记录订单 PAID，同步客户/订阅ID | 否 |
-| customer.subscription.created | 订阅创建 | 状态 active/trialing → 授权 PRO；其他 → 降级 | 条件授权/降级 |
-| customer.subscription.updated | 订阅更新 | 同上逻辑 | 条件授权/降级 |
-| customer.subscription.deleted | 订阅删除 | 降级 FREE | ❌ 降级 |
-| invoice.paid | 发票付款成功 | 仅记录 | 否 |
-| invoice.payment_failed | 发票付款失败 | 仅记录警告 | 否 |
 
 ### E.3 支付宝事件矩阵
 

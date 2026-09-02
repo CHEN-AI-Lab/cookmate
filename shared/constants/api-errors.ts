@@ -48,10 +48,6 @@ export const API_ERRORS = {
 
   // ── Webhook ──
   creemWebhookError:         { zh: "Webhook 处理失败",                   en: "Webhook processing failed" },
-  stripeWebhookError:        { zh: "Stripe Webhook 处理失败",            en: "Stripe webhook processing failed" },
-
-  // ── Stripe ──
-  stripeNotConfigured:       { zh: "Stripe 尚未配置",                    en: "Stripe is not configured" },
 
   // ── Alipay ──
   invalidAlipayNotify:       { zh: "无效的支付宝通知",                   en: "Invalid Alipay notification" },

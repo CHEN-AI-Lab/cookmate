@@ -3,15 +3,14 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { isDemoUser } from "@/lib/auth-helpers"
 import { cancelSubscription } from "@cookmate/shared/api/creem"
-import { cancelStripeSubscription } from "@cookmate/shared/api/stripe"
 
 // 取消审计日志：记录每次取消尝试（成功 completed / 失败 failed）。
 // 目的：上游取消 API 偶发失败时，fail-closed 会保留本地订阅ID（便于 webhook 到期降级 + 可重试），
-// 但我们不能「静默」失败 —— 必须留痕，方便对账脚本/后台第一时间发现并去 Creem/Stripe 后台补刀。
+// 但我们不能「静默」失败 —— 必须留痕，方便对账脚本/后台第一时间发现并去 Creem 后台补刀。
 // 注意：WebhookLog 模型无 userId / subscriptionId 列，用户与渠道上下文以 JSON 存入 rawBody。
 // 写入失败 console.error 报警（Vercel Logs 自动聚合），不再完全静默
 async function logCancelAudit(
-  channel: "creem" | "stripe",
+  channel: "creem",
   userId: string,
   subscriptionId: string | null,
   status: "completed" | "failed",
@@ -46,7 +45,7 @@ export async function POST() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { subscriptionTier: true, creemSubscriptionId: true, stripeSubscriptionId: true },
+    select: { subscriptionTier: true, creemSubscriptionId: true },
   })
 
   if (user?.subscriptionTier === "FREE") {
@@ -56,14 +55,14 @@ export async function POST() {
   // 防「PRO + 无任何渠道订阅ID」误返 200：
   // 支付宝一次性付款 / webhook 失败遗留 / 两个渠道都错过回调等场景下，用户会「以为取消但实际没取消」；
   // 这种情况下没有上游订阅可调，无需任何操作 + PRO 会在到期后自动失效。
-  if (!user?.creemSubscriptionId && !user?.stripeSubscriptionId) {
+  if (!user?.creemSubscriptionId) {
     return NextResponse.json({
       error: "当前无活跃订阅渠道（可能是一次性付款或历史遗留状态），PRO 将在到期后自动失效，无需取消",
     }, { status: 409 })
   }
 
-  const data: { creemSubscriptionId?: null; stripeSubscriptionId?: null } = {}
-  const results: { creem?: "completed" | "failed"; stripe?: "completed" | "failed" } = {}
+  const data: { creemSubscriptionId?: null } = {}
+  const results: { creem?: "completed" | "failed" } = {}
 
   // 取消 Creem 订阅（立即取消，避免下个周期续费扣款）
   if (user?.creemSubscriptionId) {
@@ -80,31 +79,15 @@ export async function POST() {
     }
   }
 
-  // 取消 Stripe 订阅（原实现只处理 Creem，Stripe 用户点「取消」实际不取消、仍继续扣费）
-  if (user?.stripeSubscriptionId) {
-    try {
-      await cancelStripeSubscription(user.stripeSubscriptionId)
-      data.stripeSubscriptionId = null
-      results.stripe = "completed"
-      await logCancelAudit("stripe", session.user.id, user.stripeSubscriptionId, "completed")
-    } catch (err) {
-      console.error("Stripe cancel error:", err)
-      // fail-closed：本地订阅ID 保留，写失败审计日志便于对账
-      results.stripe = "failed"
-      await logCancelAudit("stripe", session.user.id, user.stripeSubscriptionId, "failed", err)
-    }
-  }
-
   // 清除对应渠道的订阅 ID，保留 PRO 与到期时间（到期前仍可继续使用）
-  // 用 prisma.$transaction 包裹（虽然只有单条 update 天然原子，但显式事务便于未来加多条改动时仍原子）
-  if (data.creemSubscriptionId !== undefined || data.stripeSubscriptionId !== undefined) {
+  if (data.creemSubscriptionId !== undefined) {
     await prisma.$transaction(async (tx) => {
       await tx.user.update({ where: { id: session.user.id }, data })
     })
   }
 
-  // 部分取消成功：返 207 Multi-Status 让用户感知到部分失败，全成功才返 200
-  const anyFailed = results.creem === "failed" || results.stripe === "failed"
+  // 取消失败：返 207 Multi-Status 让用户感知到失败
+  const anyFailed = results.creem === "failed"
   const status = anyFailed ? 207 : 200
   return NextResponse.json({
     success: !anyFailed,

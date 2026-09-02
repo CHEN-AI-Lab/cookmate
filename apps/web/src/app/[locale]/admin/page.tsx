@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+
+// ── 类型 ──
 
 interface CancelLog {
   id: string
@@ -21,31 +23,129 @@ interface CancelLogsResponse {
   error?: string
 }
 
-export default function AdminCancelPage() {
-  const [data, setData] = useState<CancelLogsResponse | null>(null)
+interface AdminOrder {
+  id: string
+  orderId: string
+  channel: string
+  period: string | null
+  amount: number
+  status: string
+  createdAt: string
+  userEmail: string | null
+}
+
+interface OrdersResponse {
+  total?: number
+  paidCount?: number
+  totalRevenue?: number
+  orders?: AdminOrder[]
+  error?: string
+}
+
+interface WebhookLogItem {
+  id: string
+  source: string
+  eventType: string | null
+  status: string
+  eventId: string | null
+  createdAt: string
+  rawPreview: string
+}
+
+interface WebhookLogsResponse {
+  total?: number
+  failed?: number
+  logs?: WebhookLogItem[]
+  error?: string
+}
+
+type Tab = "orders" | "webhooks" | "cancels"
+
+// ── 工具 ──
+
+function fmtTime(iso: string) {
+  try {
+    return new Date(iso).toLocaleString("zh-CN", { hour12: false })
+  } catch {
+    return iso
+  }
+}
+
+function fmtAmount(fen: number) {
+  return `¥${(fen / 100).toFixed(2)}`
+}
+
+function fmtPeriod(period: string | null) {
+  if (period === "annual") return "年付"
+  if (period === "monthly") return "月付"
+  return "-"
+}
+
+// 并发拉取订单 / 回调流水 / 取消审计三组数据
+function fetchAdminData() {
+  return Promise.all([
+    fetch("/api/admin/orders").then(async (r) => ({ ok: r.ok, data: await r.json() })),
+    fetch("/api/admin/webhook-logs").then(async (r) => ({ ok: r.ok, data: await r.json() })),
+    fetch("/api/admin/cancel-logs").then(async (r) => ({ ok: r.ok, data: await r.json() })),
+  ])
+}
+
+// ── 页面 ──
+
+export default function AdminPage() {
+  const [tab, setTab] = useState<Tab>("orders")
+
+  // 订单
+  const [ordersData, setOrdersData] = useState<OrdersResponse | null>(null)
+  // 回调流水
+  const [webhookData, setWebhookData] = useState<WebhookLogsResponse | null>(null)
+  // 取消审计
+  const [cancelData, setCancelData] = useState<CancelLogsResponse | null>(null)
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const load = () => {
+  // 统一处理三个接口的返回结果（写 state 的部分抽出来，供 effect 首次加载和手动刷新复用）
+  const applyResult = useCallback((results: { ok: boolean; data: { error?: string } }[]) => {
+    const [orders, webhooks, cancels] = results
+    const firstErr = results.find((x) => !x.ok)
+    if (firstErr) {
+      setError(firstErr.data.error || `请求失败`)
+      return
+    }
+    setOrdersData(orders.data as OrdersResponse)
+    setWebhookData(webhooks.data as WebhookLogsResponse)
+    setCancelData(cancels.data as CancelLogsResponse)
+  }, [])
+
+  // 首次加载：loading/error 已由 useState 默认值（true/null）提供，
+  // effect 内不同步 setState，避免级联渲染（react-hooks 规则）
+  useEffect(() => {
+    let cancelled = false
+    fetchAdminData()
+      .then((res) => {
+        if (!cancelled) applyResult(res)
+      })
+      .catch((e) => {
+        if (!cancelled) setError(String(e))
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [applyResult])
+
+  // 手动刷新（事件处理器内允许同步 setState）
+  const refresh = useCallback(() => {
     setLoading(true)
     setError(null)
-    fetch("/api/admin/cancel-logs")
-      .then(async (r) => {
-        const json = await r.json()
-        if (!r.ok) {
-          setError(json.error || `请求失败 (${r.status})`)
-          setData(null)
-        } else {
-          setData(json)
-        }
-      })
+    fetchAdminData()
+      .then((res) => applyResult(res))
       .catch((e) => setError(String(e)))
       .finally(() => setLoading(false))
-  }
-
-  useEffect(() => {
-    load()
-  }, [])
+  }, [applyResult])
 
   if (loading) {
     return <div className="text-center py-16 text-text-secondary">加载中…</div>
@@ -64,19 +164,208 @@ export default function AdminCancelPage() {
     )
   }
 
-  const logs = data?.logs ?? []
+  const tabs: Array<{ key: Tab; label: string; badge?: number; badgeTone?: "red" | "gray" }> = [
+    { key: "orders", label: "订单列表", badge: ordersData?.total ?? 0, badgeTone: "gray" },
+    { key: "webhooks", label: "回调流水", badge: webhookData?.total ?? 0, badgeTone: "gray" },
+    {
+      key: "cancels",
+      label: "取消审计",
+      badge: (cancelData?.failed ?? 0) > 0 ? cancelData?.failed : undefined,
+      badgeTone: "red",
+    },
+  ]
 
   return (
-    <div className="max-w-5xl mx-auto py-10 px-4 space-y-6">
+    <div className="max-w-6xl mx-auto py-10 px-4 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-text-primary tracking-tight">取消订阅审计</h1>
+        <h1 className="text-2xl font-bold text-text-primary tracking-tight">支付后台</h1>
         <p className="text-text-secondary text-sm mt-1">
-          这里记录每一次「取消订阅」尝试。状态为「失败」= 上游（Creem / Stripe）没取消成功，
-          需去对应后台补刀，或让用户重新点一次「取消」。
+          订单 / 回调 / 取消审计 一站式查看。各列表最多展示最近 200 条（最新在前）。
         </p>
       </div>
 
-      {/* 统计卡片 */}
+      {/* Tab 栏 */}
+      <div className="flex gap-2 border-b border-gray-200">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`px-4 py-2.5 text-sm font-medium rounded-t-xl transition-colors flex items-center gap-2 ${
+              tab === t.key
+                ? "bg-card text-text-primary border border-b-0 border-gray-200"
+                : "text-text-secondary hover:text-text-primary"
+            }`}
+          >
+            {t.label}
+            {t.badge !== undefined && t.badge > 0 && (
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                  t.badgeTone === "red" ? "bg-red-100 text-red-600" : "bg-surface text-text-secondary"
+                }`}
+              >
+                {t.badge}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {tab === "orders" && <OrdersTab data={ordersData} />}
+      {tab === "webhooks" && <WebhooksTab data={webhookData} />}
+      {tab === "cancels" && <CancelsTab data={cancelData} />}
+
+      <div className="flex justify-end">
+        <button
+          onClick={refresh}
+          className="px-4 py-2 rounded-xl border border-gray-200 text-text-secondary text-sm hover:bg-gray-50"
+        >
+          刷新
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── Tab 1：订单列表 ──
+
+function OrdersTab({ data }: { data: OrdersResponse | null }) {
+  const orders = data?.orders ?? []
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard label="总订单" value={data?.total ?? 0} tone="gray" />
+        <StatCard label="已支付" value={data?.paidCount ?? 0} tone="green" />
+        <StatCard label="累计收入" value={fmtAmount(data?.totalRevenue ?? 0)} tone="amber" />
+      </div>
+
+      {orders.length === 0 ? (
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-text-secondary">
+          暂无订单
+        </div>
+      ) : (
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-text-secondary">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap">时间</th>
+                  <th className="text-left px-4 py-3 font-medium">订单号</th>
+                  <th className="text-left px-4 py-3 font-medium">渠道</th>
+                  <th className="text-left px-4 py-3 font-medium">周期</th>
+                  <th className="text-left px-4 py-3 font-medium">金额</th>
+                  <th className="text-left px-4 py-3 font-medium">状态</th>
+                  <th className="text-left px-4 py-3 font-medium">用户邮箱</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {orders.map((o) => (
+                  <tr key={o.id} className={o.status === "PAID" ? "" : "opacity-60"}>
+                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(o.createdAt)}</td>
+                    <td className="px-4 py-3 text-gray-700 font-mono text-xs">{o.orderId}</td>
+                    <td className="px-4 py-3 text-gray-700">{o.channel}</td>
+                    <td className="px-4 py-3 text-gray-700">{fmtPeriod(o.period)}</td>
+                    <td className="px-4 py-3 text-gray-700 font-medium">{fmtAmount(o.amount)}</td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={o.status} />
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 text-xs">{o.userEmail ?? "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Tab 2：回调流水 ──
+
+function WebhooksTab({ data }: { data: WebhookLogsResponse | null }) {
+  const logs = data?.logs ?? []
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <StatCard label="回调总数" value={data?.total ?? 0} tone="gray" />
+        <StatCard label="失败回调" value={data?.failed ?? 0} tone={(data?.failed ?? 0) > 0 ? "red" : "gray"} />
+      </div>
+
+      {logs.length === 0 ? (
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-text-secondary">
+          暂无回调记录
+        </div>
+      ) : (
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-text-secondary">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap">时间</th>
+                  <th className="text-left px-4 py-3 font-medium">来源</th>
+                  <th className="text-left px-4 py-3 font-medium">事件</th>
+                  <th className="text-left px-4 py-3 font-medium">状态</th>
+                  <th className="text-left px-4 py-3 font-medium">事件ID</th>
+                  <th className="text-left px-4 py-3 font-medium">原文</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {logs.map((l) => (
+                  <tr key={l.id} className={l.status.startsWith("failed") ? "bg-red-50/50" : ""}>
+                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
+                    <td className="px-4 py-3 text-gray-700">{l.source}</td>
+                    <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.eventType ?? "-"}</td>
+                    <td className="px-4 py-3">
+                      <WebhookStatusBadge status={l.status} />
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 font-mono text-xs max-w-[160px] truncate" title={l.eventId ?? ""}>
+                      {l.eventId ?? "-"}
+                    </td>
+                    <td className="px-4 py-3 text-xs">
+                      {l.rawPreview ? (
+                        <button
+                          onClick={() => setExpandedId(expandedId === l.id ? null : l.id)}
+                          className="text-accent hover:underline"
+                        >
+                          {expandedId === l.id ? "收起" : "查看"}
+                        </button>
+                      ) : (
+                        "-"
+                      )}
+                      {expandedId === l.id && (
+                        <pre className="mt-2 p-2 bg-gray-50 rounded-lg text-xs max-w-md overflow-x-auto whitespace-pre-wrap break-all">
+                          {l.rawPreview}
+                        </pre>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Tab 3：取消审计 ──
+
+function CancelsTab({ data }: { data: CancelLogsResponse | null }) {
+  const logs = data?.logs ?? []
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-text-secondary text-sm">
+          记录每一次「取消订阅」尝试。状态为「失败」= 上游（Creem）没取消成功，
+          需去 Creem 后台补刀，或让用户重新点一次「取消」。
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard label="失败取消" value={data?.failed ?? 0} tone="red" />
         <StatCard label="成功取消" value={data?.completed ?? 0} tone="green" />
@@ -123,22 +412,21 @@ export default function AdminCancelPage() {
           </div>
         </div>
       )}
-
-      <div className="flex justify-end">
-        <button
-          onClick={load}
-          className="px-4 py-2 rounded-xl border border-gray-200 text-text-secondary text-sm hover:bg-gray-50"
-        >
-          刷新
-        </button>
-      </div>
     </div>
   )
 }
 
-function StatCard({ label, value, tone }: { label: string; value: number; tone: "red" | "green" | "gray" }) {
+// ── 通用组件 ──
+
+function StatCard({ label, value, tone }: { label: string; value: number | string; tone: "red" | "green" | "gray" | "amber" }) {
   const toneClass =
-    tone === "red" ? "text-red-600" : tone === "green" ? "text-green-600" : "text-text-primary"
+    tone === "red"
+      ? "text-red-600"
+      : tone === "green"
+        ? "text-green-600"
+        : tone === "amber"
+          ? "text-amber-600"
+          : "text-text-primary"
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-5">
       <p className="text-text-secondary text-sm">{label}</p>
@@ -147,11 +435,25 @@ function StatCard({ label, value, tone }: { label: string; value: number; tone: 
   )
 }
 
-function fmtTime(iso: string) {
-  try {
-    const d = new Date(iso)
-    return d.toLocaleString("zh-CN", { hour12: false })
-  } catch {
-    return iso
+function StatusBadge({ status }: { status: string }) {
+  if (status === "PAID") {
+    return <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">已支付</span>
   }
+  if (status === "PENDING") {
+    return <span className="inline-flex px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-xs font-semibold">待支付</span>
+  }
+  return <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">{status}</span>
+}
+
+function WebhookStatusBadge({ status }: { status: string }) {
+  if (status === "processed") {
+    return <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">已处理</span>
+  }
+  if (status === "duplicate") {
+    return <span className="inline-flex px-2 py-0.5 rounded-full bg-blue-100 text-blue-600 text-xs font-semibold">重复跳过</span>
+  }
+  if (status.startsWith("failed")) {
+    return <span className="inline-flex px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold" title={status}>失败</span>
+  }
+  return <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">{status}</span>
 }

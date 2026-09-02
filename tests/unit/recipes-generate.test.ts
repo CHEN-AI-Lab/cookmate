@@ -34,7 +34,7 @@ beforeEach(() => {
   resetPrisma()
   ;(auth as any).mockResolvedValue({ user: { id: 'u1' } })
   ;(generateRecipes as any).mockReset()
-  stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null, stripeCustomerId: null, stripeSubscriptionId: null })
+  stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null })
 })
 
 describe('recipes/generate — 鉴权与校验', () => {

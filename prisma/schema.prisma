@@ -19,8 +19,6 @@ model User {
   subscriptionTier String @default("FREE")
   subscriptionExpiryDate DateTime?
   creemSubscriptionId String?
-  stripeCustomerId String? @unique
-  stripeSubscriptionId String?
   dietType       String?  @default("不限")
   cuisinePref    String?  @default("不限")
   servingSize    Int      @default(2)
@@ -177,8 +175,9 @@ model UsageDaily {
 model PaymentOrder {
   id                 String   @id @default(cuid())
   orderId            String   @unique               // 业务订单号（本地 CKCRxxx）
-  externalCheckoutId String?                         // 支付平台侧的 checkout/session ID（Creem ch_xxx / Stripe cs_xxx），用于 webhook + GET 精确反查本地订单
-  channel            String                          // 支付渠道: alipay, creem, stripe
+  externalCheckoutId String?                         // 支付平台侧的 checkout/session ID（Creem ch_xxx），用于 webhook + GET 精确反查本地订单
+  channel            String                          // 支付渠道: alipay, creem
+  period             String?                         // 订阅周期: monthly / annual（webhook 回调时写入，后台展示用）
   amount             Int                             // 金额（分）
   status             String   @default("PENDING")    // PENDING / PAID / EXPIRED
   createdAt          DateTime @default(now())
@@ -192,7 +191,7 @@ model PaymentOrder {
 
 model WebhookLog {
   id        String   @id @default(cuid())
-  source    String                        // creem / alipay / stripe
+  source    String                        // creem / alipay / cancel（取消审计）
   eventType String?
   status    String   @default("received") // received / processed / failed / duplicate / ignored
   rawBody   String?

@@ -1,12 +1,12 @@
 /**
  * 取消订阅对账脚本
  * ───────────────────────────────────────────────────────────────────────────
- * 背景：CookMate 取消订阅走「fail-closed」策略 —— 当 Creem / Stripe 上游取消 API
+ * 背景：CookMate 取消订阅走「fail-closed」策略 —— 当 Creem 上游取消 API
  * 偶发失败时，本地订阅ID 故意保留（便于 webhook 到期降级 + 可重试），同时在
  * WebhookLog 写入一条 source='cancel'、status='failed' 的审计记录。
  *
  * 本脚本扫描所有「失败」的取消记录，列出谁、哪个渠道、哪个订阅、何时、什么错误，
- * 方便第一时间发现并去 Creem / Stripe 后台补刀（或让用户重新点一次「取消」即可重试，
+ * 方便第一时间发现并去 Creem 后台补刀（或让用户重新点一次「取消」即可重试，
  * 因为本地订阅ID 仍保留着）。
  *
  * 运行（无需安装任何依赖，node 直接跑）：
@@ -86,7 +86,6 @@ async function main() {
   console.log("  1) 直接让用户重新点一次「取消订阅」→ 后端会重试上游取消，成功即闭环；")
   console.log("  2) 或登录对应后台手动取消，避免下个周期继续扣费：")
   console.log("     · Creem：https://www.creem.io/dashboard → Subscriptions")
-  console.log("     · Stripe：https://dashboard.stripe.com/subscriptions")
 }
 
 main()

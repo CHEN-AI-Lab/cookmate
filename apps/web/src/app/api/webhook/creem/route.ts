@@ -161,19 +161,26 @@ async function resolveUserId(event: Record<string, unknown>): Promise<string | n
 
 // ── 业务函数 ──
 
-// 记录订单（checkout.completed 用：标记 PENDING → PAID）
+// 记录订单（checkout.completed 用：标记 PENDING → PAID，同时写入订阅周期 period）
 // 用 Creem 的 checkoutId（externalCheckoutId）精确反查本地订单，不再用"按最近 PENDING"匹配
 // （避免历史存在多个 abandoned checkout 时匹配错订单）
-async function recordOrder(userId: string, externalCheckoutId: string) {
+// D2 幂等兜底：updateMany 带status="PENDING" 条件原子更新 —— 同一事件重复/并发触发时，
+// 第二次 count=0（订单已是 PAID），不会重复写入；period 也不会被重复覆盖。
+async function recordOrder(userId: string, externalCheckoutId: string, period?: string) {
   const existing = await prisma.paymentOrder.findFirst({
     where: { userId, channel: "creem", status: "PENDING", externalCheckoutId },
   })
 
   if (existing) {
-    await prisma.paymentOrder.update({
-      where: { id: existing.id },
-      data: { status: "PAID" },
+    const result = await prisma.paymentOrder.updateMany({
+      where: { id: existing.id, status: "PENDING" },
+      data: { status: "PAID", ...(period ? { period } : {}) },
     })
+    if (result.count === 0) {
+      console.warn(
+        `[creem-webhook] recordOrder: order ${existing.id} already marked PAID (duplicate/concurrent event); skip`,
+      )
+    }
     return
   }
 
@@ -332,7 +339,7 @@ export async function POST(req: Request) {
       const subscriptionId = extractSubscriptionId(event)
 
       if (userId && externalCheckoutId) {
-        await recordOrder(userId, externalCheckoutId)
+        await recordOrder(userId, externalCheckoutId, extractPeriod(event))
       }
       // 同步订阅ID（为后续事件的 userId 反查做准备）
       if (userId && subscriptionId) {

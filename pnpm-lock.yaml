@@ -38,9 +38,6 @@ importers:
       '@prisma/client':
         specifier: ^6.19.3
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
-      '@stripe/stripe-js':
-        specifier: ^9.6.0
-        version: 9.7.0
       bcryptjs:
         specifier: ^3.0.3
         version: 3.0.3
@@ -71,9 +68,6 @@ importers:
       react-dom:
         specifier: ^19.2.8
         version: 19.2.8(react@19.2.8)
-      stripe:
-        specifier: ^22.1.1
-        version: 22.2.0(@types/node@20.19.41)
       tailwind-merge:
         specifier: ^3.6.0
         version: 3.6.0
@@ -120,9 +114,6 @@ importers:
       openai:
         specifier: ^6.38.0
         version: 6.41.0(zod@3.25.76)
-      stripe:
-        specifier: ^22.1.1
-        version: 22.2.0(@types/node@20.19.41)
       tailwind-merge:
         specifier: ^3.6.0
         version: 3.6.0
@@ -1058,10 +1049,6 @@ packages:
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
-
-  '@stripe/stripe-js@9.7.0':
-    resolution: {integrity: sha512-r1ElolvWXM4aYnZZVHvKW3EDL8JcwEuIgTuWxlB5lvC+YsvjkQ0gX35x9d8dTDubX395fViLVqkaolVs1PmIQQ==}
-    engines: {node: '>=12.16'}
 
   '@swc/core-darwin-arm64@1.15.47':
     resolution: {integrity: sha512-GsoMtan3ojGGMGFbl31mmRu5ctZ56re8grGE8mO/OHJ8O+JRkzod02fe7X6ZQ8JvamA3imkEkx/h3u+vsOgPgA==}
@@ -3092,15 +3079,6 @@ packages:
   strip-literal@2.1.1:
     resolution: {integrity: sha512-631UJ6O00eNGfMiWG78ck80dfBab8X6IVFB51jZK5Icd7XAs60Z5y7QdSd/wGIklnWvRbUNloVzhOKKmutxQ6Q==}
 
-  stripe@22.2.0:
-    resolution: {integrity: sha512-WFGpMOom9QZqso1kcnSwJsCdC1QHDlMoCOxBZRf3JraMzhkfw7dgSdD2a1CFZrqC+mzAfqeEtYILrZhWKIDruA==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@types/node': '>=18'
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-
   styled-jsx@5.1.6:
     resolution: {integrity: sha512-qSVyDTeMotdvQYoHWLNGwRFJHC+i+ZvdBRYosOFgC+Wg1vx4frN2/RG/NA7SYqqvKNLf39P2LSRA2pu6n0XYZA==}
     engines: {node: '>= 12.0.0'}
@@ -4204,8 +4182,6 @@ snapshots:
   '@sinclair/typebox@0.27.10': {}
 
   '@standard-schema/spec@1.1.0': {}
-
-  '@stripe/stripe-js@9.7.0': {}
 
   '@swc/core-darwin-arm64@1.15.47':
     optional: true
@@ -6452,10 +6428,6 @@ snapshots:
   strip-literal@2.1.1:
     dependencies:
       js-tokens: 9.0.1
-
-  stripe@22.2.0(@types/node@20.19.41):
-    optionalDependencies:
-      '@types/node': 20.19.41
 
   styled-jsx@5.1.6(@babel/core@7.29.7)(react@19.2.8):
     dependencies:

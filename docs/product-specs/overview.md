@@ -72,7 +72,7 @@
 | 食材库 | /app/pantry | 管理冰箱食材 |
 | 定价 | /pricing | 套餐对比 |
 | 设置 | /app/settings | 偏好 + 账号 |
-| 账单 | /app/billing | Stripe 管理 |
+| 账单 | /app/billing | Creem 订阅管理 |
 | 营养追踪 | /app/nutrition | 热量+蛋白质统计 ⏸️ |
 | 社区菜谱 | /community | 用户分享菜谱 ⏸️ |
 
@@ -92,4 +92,4 @@
 - 支持中文 + 英文菜谱
 - AI 生成响应时间 < 5s
 - 菜谱数据不存本地，高频请求走缓存
-- 支付走 Stripe，支持支付宝（后期）
+- 支付走 Creem（订阅）+ 支付宝（一次性付款），Stripe 已移除

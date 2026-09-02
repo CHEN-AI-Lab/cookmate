@@ -7,7 +7,6 @@ import crypto from "node:crypto"
 const CHANNEL_PREFIX: Record<string, string> = {
   alipay: "AL",
   creem: "CR",
-  stripe: "ST",
 }
 
 // 使用密码学安全的随机数生成器，避免订单号被猜测（原实现使用 Math.random）

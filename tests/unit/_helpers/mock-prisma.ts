@@ -39,9 +39,6 @@ export function makePrisma() {
     user: {
       findUnique: vi.fn(async ({ where }: any) => {
         if (where.id) return stores.users.get(where.id) || null
-        if (where.stripeCustomerId) {
-          for (const u of stores.users.values()) if (u.stripeCustomerId === where.stripeCustomerId) return u
-        }
         return null
       }),
       findFirst: vi.fn(async ({ where }: any) => {

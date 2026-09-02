@@ -9,7 +9,6 @@ import { cn } from "@cookmate/shared/utils"
 
 interface BillingInfo {
   subscriptionTier: string
-  stripeConfigured: boolean
   subscriptionExpiryDate?: string | null
   isDemoUser: boolean
   creemConfigured: boolean
@@ -55,7 +54,6 @@ export default function BillingPage() {
       .then((data) => {
         setInfo({
           subscriptionTier: data.subscriptionTier || "FREE",
-          stripeConfigured: !!data.stripeConfigured,
           subscriptionExpiryDate: data.subscriptionExpiryDate,
           isDemoUser: !!data.isDemoUser,
           creemConfigured: !!data.creemConfigured,
@@ -414,6 +412,11 @@ export default function BillingPage() {
                 </button>
               )}
             </div>
+
+            {/* 退款声明：虚拟商品一经开通不支持退款（正式法律措辞见定价页） */}
+            <p className="mt-4 text-xs leading-relaxed text-text-secondary">
+              {t("checkoutRefundNotice")}
+            </p>
 
             <button
               onClick={() => { setShowCheckoutModal(false); setError("") }}

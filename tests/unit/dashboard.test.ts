@@ -1,4 +1,4 @@
-// dashboard GET 路由测试：订阅等级判定、cancelled 标记（含 Stripe 不被误判）、过期降级、体验用户
+// dashboard GET 路由测试：订阅等级判定、cancelled 标记、过期降级、体验用户
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { prismaMock, resetPrisma, stores } from './_helpers/mock-prisma'
 
@@ -26,7 +26,7 @@ beforeEach(() => {
 function seed(overrides: any = {}) {
   stores.users.set('u1', {
     id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null,
-    creemSubscriptionId: null, stripeCustomerId: null, stripeSubscriptionId: null,
+    creemSubscriptionId: null,
     email: 'u1@x.com', ...overrides,
   })
 }
@@ -46,13 +46,6 @@ describe('dashboard GET', () => {
   })
   it('PRO + creemSubscriptionId → PRO, cancelled=false', async () => {
     seed({ subscriptionTier: 'PRO', creemSubscriptionId: 'creem_sub_1' })
-    const res = await GET(getReq())
-    const json = await res.json()
-    expect(json.subscriptionTier).toBe('PRO')
-    expect(json.cancelled).toBe(false)
-  })
-  it('PRO + 仅 stripeSubscriptionId → PRO, cancelled=false（Stripe 订阅不被误判取消）', async () => {
-    seed({ subscriptionTier: 'PRO', stripeSubscriptionId: 'sub_stripe_1' })
     const res = await GET(getReq())
     const json = await res.json()
     expect(json.subscriptionTier).toBe('PRO')
@@ -78,7 +71,7 @@ describe('dashboard GET', () => {
   it('体验用户 → isDemoUser=true', async () => {
     seed()
     ;(auth as any).mockResolvedValue({ user: { id: 'demo', email: 'demo@cookmate.local' } })
-    stores.users.set('demo', { id: 'demo', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null, stripeCustomerId: null, stripeSubscriptionId: null, email: 'demo@cookmate.local' })
+    stores.users.set('demo', { id: 'demo', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null, email: 'demo@cookmate.local' })
     const res = await GET(getReq())
     const json = await res.json()
     expect(json.isDemoUser).toBe(true)

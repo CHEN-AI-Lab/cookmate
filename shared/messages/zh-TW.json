@@ -320,7 +320,6 @@
     "genError_aiBusy": "AI 服務繁忙，請稍後重試",
     "genError_emptyData": "生成結果為空，請重試",
     "genError_unknown": "生成失敗，請稍後重試"
-
   },
   "grocery": {
     "title": "🛒 購物清單",
@@ -489,7 +488,6 @@
     "subtitle": "管理你的訂閱計劃和付款方式",
     "currentPlan": "當前計劃",
     "upgrade": "升級套餐",
-    "manageStripe": "管理 Stripe 訂閱",
     "noSubscription": "暫無訂閱記錄",
     "proPlan": "Pro（專業版）",
     "familyPlan": "家庭計劃",
@@ -581,20 +579,20 @@
     "saveAmount": "省 {amount}",
     "alipayDesc": "¥20/月起",
     "creditCard": "信用卡",
-    "creditCardDesc": "$3/月起 · Stripe",
     "creem": "Creem",
     "manageAction": "管理",
     "inUse": "使用中",
     "proLabel": "Pro",
-    "stripePay": "信用卡",
     "creemPay": "Creem",
     "payFrom": "¥20/月起",
-    "payFromStripe": "$3/月起 · Stripe",
     "canceled": "已取消",
     "quarterlyPlan": "季付",
     "halfyearPlan": "半年付",
     "paymentSuccess": "✅ 支付成功！",
-    "keepPro": "保留 Pro"
+    "keepPro": "保留 Pro",
+    "refundPolicyTitle": "退款政策",
+    "refundNotice": "會員服務係網路虛擬商品，採用先付費後服務的方式。會員費用為所購會員服務對應的價格，而非預付款、存款或定金。會員服務一經開通即不支持退款、不可轉讓（法規另有強制規定，或服務存在重大瑕疵致使您完全無法使用的情形除外）。取消訂閱後，會員權益將持續至當前計費週期屆滿，剩餘天數不予折現或退還。",
+    "checkoutRefundNotice": "會員服務為虛擬商品，一經開通不支持退款（法定例外情形除外）。取消訂閱後，權益持續至當前計費週期屆滿。"
   },
   "orders": {
     "title": "📋 訂單記錄",
@@ -621,7 +619,6 @@
     "completed": "已支付",
     "refunded": "已退款",
     "cancelled": "已取消",
-    "channelStripe": "Stripe",
     "channelCreem": "Creem"
   },
   "blog": {
@@ -676,7 +673,7 @@
     "infoCollect1": "註冊信息：郵箱地址、手機號、用戶名",
     "infoCollect2": "使用數據：飲食偏好、菜系偏好、烹飪記錄",
     "infoCollect3": "設備信息：瀏覽器類型、操作系統、IP 地址",
-    "infoCollect4": "支付信息：支付記錄（實際支付由 Stripe / 支付寶等第三方處理）",
+    "infoCollect4": "支付信息：支付記錄（實際支付由 Creem / 支付寶等第三方處理）",
     "usageDesc": "收集的信息用於以下目的：",
     "usage1": "提供和優化 AI 菜譜推薦服務",
     "usage2": "生成周計劃和購物清單",

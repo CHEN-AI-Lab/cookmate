@@ -1,19 +1,13 @@
 import { NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { requireAdmin } from "@/lib/admin-auth"
 
 // 管理员专用：读取「取消订阅」审计日志（WebhookLog 中 source='cancel' 的记录）。
-// 仅当登录用户的邮箱匹配环境变量 ADMIN_EMAIL 才放行；未配置 ADMIN_EMAIL 时一律拒绝（安全默认）。
+// 鉴权见 requireAdmin（仅 ADMIN_EMAIL 白名单放行；未配置时一律拒绝，fail-closed）。
 export async function GET() {
-  const session = await auth()
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "未登录" }, { status: 401 })
-  }
-
-  const adminEmail = process.env.ADMIN_EMAIL
-  const userEmail = session.user.email?.toLowerCase()
-  if (!adminEmail || !userEmail || userEmail !== adminEmail.toLowerCase()) {
-    return NextResponse.json({ error: "无权限访问" }, { status: 403 })
+  const gate = await requireAdmin()
+  if (!gate.ok) {
+    return NextResponse.json({ error: gate.error }, { status: gate.status })
   }
 
   const logs = await prisma.webhookLog.findMany({
@@ -34,7 +28,7 @@ export async function GET() {
     return {
       id: l.id,
       createdAt: l.createdAt,
-      channel: l.eventType, // "creem" | "stripe"
+      channel: l.eventType, // "creem"
       status: l.status, // "failed" | "completed"
       userId: detail.userId ?? null,
       subscriptionId: detail.subscriptionId ?? null,
