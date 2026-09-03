@@ -88,7 +88,7 @@ export function PricingCard({
                 </span>
               </div>
 
-              {/* Period description — only render when non-empty (annual shows savings, monthly hidden) */}
+              {/* Period description — monthly: "随时取消", annual: "≈ ¥9.92/月 · 省50%" */}
               {period && (
                 <p
                   className={cn(
