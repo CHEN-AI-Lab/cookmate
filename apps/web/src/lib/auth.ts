@@ -27,7 +27,6 @@ import GitHub from "next-auth/providers/github"
 import Credentials from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
 import { PrismaAdapter } from "@auth/prisma-adapter"
-import AlipayProvider from "@/lib/providers/alipay"
 import WeChatProvider from "@/lib/providers/wechat"
 import { hasDemoCookie, DEMO_SESSION } from "@cookmate/shared/utils/demo-cookie"
 import { cookies } from "next/headers"
@@ -211,19 +210,6 @@ if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID,
       clientSecret: process.env.AUTH_GITHUB_SECRET,
-    })
-  )
-}
-
-// 支付宝 OAuth 登录 — 安全警告：该 provider 的 token/userinfo 仍是 mock 实现（固定返回测试用户），
-// 绝不能随真实凭证启用（否则任何人登录都会变成同一测试用户）。
-// 仅在显式设置 ALIPAY_MOCK_LOGIN=true 的本地调试环境注册；生产环境该变量不存在则不加载。
-// 真实支付宝登录走 /api/auth/callback/alipay 自定义回调 + alipay-auth 一次性令牌，不经过此 provider。
-if (process.env.ALIPAY_MOCK_LOGIN === "true" && process.env.AUTH_ALIPAY_ID && process.env.AUTH_ALIPAY_PRIVATE_KEY) {
-  providers.push(
-    AlipayProvider({
-      clientId: process.env.AUTH_ALIPAY_ID,
-      clientSecret: process.env.AUTH_ALIPAY_PRIVATE_KEY,
     })
   )
 }

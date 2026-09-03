@@ -108,10 +108,13 @@ export async function hasDemoCookie(cookieHeader: string | null): Promise<boolea
 export async function buildSetDemoCookieHeader(): Promise<string> {
   const value = await signDemoToken()
   const expires = new Date(Date.now() + DEMO_TOKEN_TTL * 1000).toUTCString()
-  return `${DEMO_COOKIE_NAME}=${value}; Path=/; HttpOnly; SameSite=Lax; Expires=${expires}`
+  // 生产环境（HTTPS）加 Secure 标志，防止 cookie 在 HTTP 下明文传输
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : ""
+  return `${DEMO_COOKIE_NAME}=${value}; Path=/; HttpOnly; SameSite=Lax${secure}; Expires=${expires}`
 }
 
 /** Build a Set-Cookie header value to clear the demo cookie. */
 export function buildClearDemoCookieHeader(): string {
-  return `${DEMO_COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : ""
+  return `${DEMO_COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=0`
 }

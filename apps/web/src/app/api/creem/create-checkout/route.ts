@@ -60,10 +60,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: checkoutUrl, sessionId })
   } catch (error: unknown) {
     console.error("Creem checkout error:", error)
-    return NextResponse.json(
-      { error: (error instanceof Error ? error.message : String(error)) || "创建支付失败" },
-      { status: 500 }
-    )
+    // 对外只返回固定文案，内部错误细节仅服务端日志记录（防信息泄露）
+    return NextResponse.json({ error: "创建支付失败" }, { status: 500 })
   }
 }
 
@@ -153,10 +151,11 @@ export async function GET(req: Request) {
       message: `支付状态: ${checkout.status}，请完成支付`,
     })
   } catch (error: unknown) {
+    console.error("Creem checkout query error:", error)
+    // 对外只返回固定文案，内部错误细节仅服务端日志记录（防信息泄露）
     return NextResponse.json({
       paid: false,
-      error: error instanceof Error ? error.message : String(error),
-      message: "查询 Creem 订单失败",
+      error: "查询 Creem 订单失败",
     })
   }
 }
