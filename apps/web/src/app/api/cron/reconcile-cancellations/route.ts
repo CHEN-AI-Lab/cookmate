@@ -12,6 +12,19 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
+async function logCron(eventType: string, status: string, detail: Record<string, unknown>) {
+  await prisma.webhookLog.create({
+    data: {
+      source: "cron",
+      eventType,
+      status,
+      rawBody: JSON.stringify(detail),
+    },
+  }).catch((err: unknown) => {
+    console.error(`[cron/${eventType}] 日志写入失败:`, err)
+  })
+}
+
 function pad(s: string, n: number): string {
   s = String(s)
   return s.length > n ? s.slice(0, n - 1) + "…" : s.padEnd(n)
@@ -89,6 +102,7 @@ export async function POST(req: Request) {
 
     const text = output.join("\n")
     console.log(text)
+    await logCron("reconcile-cancellations", "processed", { completedCount, failedCount: failed.length, executedAt: new Date().toISOString() })
     return NextResponse.json({
       success: true,
       completedCount,
@@ -97,6 +111,7 @@ export async function POST(req: Request) {
     })
   } catch (err: unknown) {
     console.error("[cron/reconcile-cancellations] 失败:", err)
+    await logCron("reconcile-cancellations", "failed", { error: String(err), executedAt: new Date().toISOString() })
     return NextResponse.json({ error: "执行失败，请查看服务端日志" }, { status: 500 })
   }
 }

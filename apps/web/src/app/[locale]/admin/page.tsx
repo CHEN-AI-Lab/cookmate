@@ -59,7 +59,41 @@ interface WebhookLogsResponse {
   error?: string
 }
 
-type Tab = "orders" | "webhooks" | "cancels"
+interface AdminUser {
+  id: string
+  email: string | null
+  name: string | null
+  phone: string | null
+  subscriptionTier: string
+  subscriptionExpiryDate: string | null
+  onboardingCompleted: boolean
+  createdAt: string
+  orderCount: number
+}
+
+interface UsersResponse {
+  total?: number
+  proCount?: number
+  freeCount?: number
+  users?: AdminUser[]
+  error?: string
+}
+
+interface CronLogItem {
+  id: string
+  eventType: string | null
+  status: string
+  detail: Record<string, unknown>
+  createdAt: string
+}
+
+interface CronLogsResponse {
+  total?: number
+  logs?: CronLogItem[]
+  error?: string
+}
+
+type Tab = "orders" | "webhooks" | "cancels" | "users" | "crons"
 
 // ── 工具 ──
 
@@ -81,12 +115,14 @@ function fmtPeriod(period: string | null) {
   return "-"
 }
 
-// 并发拉取订单 / 回调流水 / 取消审计三组数据
+// 并发拉取订单 / 回调流水 / 取消审计 / 用户列表 / Cron 日志五组数据
 function fetchAdminData() {
   return Promise.all([
     fetch("/api/admin/orders").then(async (r) => ({ ok: r.ok, data: await r.json() })),
     fetch("/api/admin/webhook-logs").then(async (r) => ({ ok: r.ok, data: await r.json() })),
     fetch("/api/admin/cancel-logs").then(async (r) => ({ ok: r.ok, data: await r.json() })),
+    fetch("/api/admin/users").then(async (r) => ({ ok: r.ok, data: await r.json() })),
+    fetch("/api/admin/cron-logs").then(async (r) => ({ ok: r.ok, data: await r.json() })),
   ])
 }
 
@@ -101,13 +137,17 @@ export default function AdminPage() {
   const [webhookData, setWebhookData] = useState<WebhookLogsResponse | null>(null)
   // 取消审计
   const [cancelData, setCancelData] = useState<CancelLogsResponse | null>(null)
+  // 用户列表
+  const [usersData, setUsersData] = useState<UsersResponse | null>(null)
+  // Cron 日志
+  const [cronData, setCronData] = useState<CronLogsResponse | null>(null)
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // 统一处理三个接口的返回结果（写 state 的部分抽出来，供 effect 首次加载和手动刷新复用）
+  // 统一处理五个接口的返回结果
   const applyResult = useCallback((results: { ok: boolean; data: { error?: string } }[]) => {
-    const [orders, webhooks, cancels] = results
+    const [orders, webhooks, cancels, users, crons] = results
     const firstErr = results.find((x) => !x.ok)
     if (firstErr) {
       setError(firstErr.data.error || `请求失败`)
@@ -116,6 +156,8 @@ export default function AdminPage() {
     setOrdersData(orders.data as OrdersResponse)
     setWebhookData(webhooks.data as WebhookLogsResponse)
     setCancelData(cancels.data as CancelLogsResponse)
+    setUsersData(users.data as UsersResponse)
+    setCronData(crons.data as CronLogsResponse)
   }, [])
 
   // 首次加载：loading/error 已由 useState 默认值（true/null）提供，
@@ -157,7 +199,7 @@ export default function AdminPage() {
         <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
           <p className="text-red-600 font-semibold">{error}</p>
           <p className="text-text-secondary text-sm mt-2">
-            只有管理员（环境变量 ADMIN_EMAIL 配置的邮箱，且用该邮箱登录）才能访问此页面。
+            只有管理员（环境变量 ADMIN_EMAILS 配置的邮箱，且用该邮箱登录）才能访问此页面。
           </p>
         </div>
       </div>
@@ -171,6 +213,13 @@ export default function AdminPage() {
       key: "cancels",
       label: "取消审计",
       badge: (cancelData?.failed ?? 0) > 0 ? cancelData?.failed : undefined,
+      badgeTone: "red",
+    },
+    { key: "users", label: "用户列表", badge: usersData?.total ?? 0, badgeTone: "gray" },
+    {
+      key: "crons",
+      label: "Cron 日志",
+      badge: (cronData?.logs ?? []).some((l) => l.status === "failed") ? 1 : undefined,
       badgeTone: "red",
     },
   ]
@@ -213,6 +262,8 @@ export default function AdminPage() {
       {tab === "orders" && <OrdersTab data={ordersData} />}
       {tab === "webhooks" && <WebhooksTab data={webhookData} />}
       {tab === "cancels" && <CancelsTab data={cancelData} />}
+      {tab === "users" && <UsersTab data={usersData} />}
+      {tab === "crons" && <CronsTab data={cronData} />}
 
       <div className="flex justify-end">
         <button
@@ -405,6 +456,123 @@ function CancelsTab({ data }: { data: CancelLogsResponse | null }) {
                     <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.userId ?? "-"}</td>
                     <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.subscriptionId ?? "-"}</td>
                     <td className="px-4 py-3 text-red-600 text-xs max-w-xs break-words">{l.error || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Tab 4：用户列表 ──
+
+function UsersTab({ data }: { data: UsersResponse | null }) {
+  const users = data?.users ?? []
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard label="用户总数" value={data?.total ?? 0} tone="gray" />
+        <StatCard label="Pro 用户" value={data?.proCount ?? 0} tone="green" />
+        <StatCard label="免费用户" value={data?.freeCount ?? 0} tone="gray" />
+      </div>
+
+      {users.length === 0 ? (
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-text-secondary">
+          暂无用户
+        </div>
+      ) : (
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-text-secondary">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap">注册时间</th>
+                  <th className="text-left px-4 py-3 font-medium">邮箱</th>
+                  <th className="text-left px-4 py-3 font-medium">用户名</th>
+                  <th className="text-left px-4 py-3 font-medium">套餐</th>
+                  <th className="text-left px-4 py-3 font-medium">到期时间</th>
+                  <th className="text-left px-4 py-3 font-medium">订单数</th>
+                  <th className="text-left px-4 py-3 font-medium">引导完成</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {users.map((u) => (
+                  <tr key={u.id}>
+                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(u.createdAt)}</td>
+                    <td className="px-4 py-3 text-gray-700 text-xs">{u.email ?? u.phone ?? "-"}</td>
+                    <td className="px-4 py-3 text-gray-700">{u.name ?? "-"}</td>
+                    <td className="px-4 py-3">
+                      {u.subscriptionTier === "PRO" ? (
+                        <span className="inline-flex px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-xs font-semibold">Pro</span>
+                      ) : (
+                        <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">Free</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
+                      {u.subscriptionExpiryDate ? fmtTime(u.subscriptionExpiryDate) : "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700">{u.orderCount}</td>
+                    <td className="px-4 py-3 text-gray-700">{u.onboardingCompleted ? "✅" : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Tab 5：Cron 日志 ──
+
+function CronsTab({ data }: { data: CronLogsResponse | null }) {
+  const logs = data?.logs ?? []
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-text-secondary text-sm">
+          Vercel Cron 定时任务执行记录（每日 03:00 过期降级 / 04:00 取消对账）。
+          状态为「失败」= 定时任务执行出错，需检查服务端日志。
+        </p>
+      </div>
+
+      {logs.length === 0 ? (
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-text-secondary">
+          暂无 Cron 执行记录（部署后每日自动执行，执行时写入）
+        </div>
+      ) : (
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-text-secondary">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap">执行时间</th>
+                  <th className="text-left px-4 py-3 font-medium">任务</th>
+                  <th className="text-left px-4 py-3 font-medium">状态</th>
+                  <th className="text-left px-4 py-3 font-medium">详情</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {logs.map((l) => (
+                  <tr key={l.id} className={l.status === "failed" ? "bg-red-50/50" : ""}>
+                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
+                    <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.eventType ?? "-"}</td>
+                    <td className="px-4 py-3">
+                      {l.status === "failed" ? (
+                        <span className="inline-flex px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold">失败</span>
+                      ) : (
+                        <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">成功</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 text-xs max-w-md break-words">
+                      <pre className="whitespace-pre-wrap break-all font-mono text-xs">{JSON.stringify(l.detail)}</pre>
+                    </td>
                   </tr>
                 ))}
               </tbody>

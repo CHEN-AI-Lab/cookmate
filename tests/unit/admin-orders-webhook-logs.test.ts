@@ -24,7 +24,7 @@ const sampleWebhookLogs = [
 
 beforeEach(() => {
   resetPrisma()
-  process.env.ADMIN_EMAIL = 'admin@cookmate.com'
+  process.env.ADMIN_EMAILS = 'admin@cookmate.com'
   prismaMock.paymentOrder.findMany.mockResolvedValue(sampleOrders)
   prismaMock.webhookLog.findMany.mockResolvedValue(sampleWebhookLogs)
 })
@@ -42,7 +42,8 @@ describe('admin orders GET', () => {
     expect(res.status).toBe(403)
   })
 
-  it('ADMIN_EMAIL 未配置 → 403（fail-closed）', async () => {
+  it('ADMIN_EMAILS 未配置 → 403（fail-closed）', async () => {
+    delete process.env.ADMIN_EMAILS
     delete process.env.ADMIN_EMAIL
     ;(auth as any).mockResolvedValue({ user: { id: 'u1', email: 'admin@cookmate.com' } })
     const res = await ordersGET()

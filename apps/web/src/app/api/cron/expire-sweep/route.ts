@@ -13,6 +13,19 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
+async function logCron(eventType: string, status: string, detail: Record<string, unknown>) {
+  await prisma.webhookLog.create({
+    data: {
+      source: "cron",
+      eventType,
+      status,
+      rawBody: JSON.stringify(detail),
+    },
+  }).catch((err: unknown) => {
+    console.error(`[cron/${eventType}] 日志写入失败:`, err)
+  })
+}
+
 export async function POST(req: Request) {
   // Bearer token 校验
   const authHeader = req.headers.get("authorization")
@@ -38,6 +51,7 @@ export async function POST(req: Request) {
       },
     })
     console.log(`[cron/expire-sweep] ${result.count} 个 PRO 用户已降级为 FREE（截至 ${now.toISOString()}）`)
+    await logCron("expire-sweep", "processed", { count: result.count, executedAt: now.toISOString() })
     return NextResponse.json({
       success: true,
       count: result.count,
@@ -45,6 +59,7 @@ export async function POST(req: Request) {
     })
   } catch (err: unknown) {
     console.error("[cron/expire-sweep] 失败:", err)
+    await logCron("expire-sweep", "failed", { error: String(err), executedAt: new Date().toISOString() })
     return NextResponse.json({ error: "执行失败，请查看服务端日志" }, { status: 500 })
   }
 }

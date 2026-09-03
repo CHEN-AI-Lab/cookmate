@@ -1,4 +1,4 @@
-// admin/cancel-logs GET 路由测试：鉴权、权限校验（ADMIN_EMAIL 缺失 / 大小写 / 正常路径）
+// admin/cancel-logs GET 路由测试：鉴权、权限校验（ADMIN_EMAILS 缺失 / 多邮箱 / 大小写 / 正常路径）
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { prismaMock, resetPrisma, stores } from './_helpers/mock-prisma'
 
@@ -22,7 +22,7 @@ const sampleLogs = [
 
 beforeEach(() => {
   resetPrisma()
-  process.env.ADMIN_EMAIL = 'admin@cookmate.com'
+  process.env.ADMIN_EMAILS = 'admin@cookmate.com,backup@cookmate.com'
   // mock prisma.webhookLog.findMany 返回样本日志
   prismaMock.webhookLog.findMany.mockResolvedValue(sampleLogs)
 })
@@ -34,13 +34,14 @@ describe('admin cancel-logs GET', () => {
     expect(res.status).toBe(401)
   })
 
-  it('非管理员（邮箱不匹配）→ 403', async () => {
+  it('非管理员（邮箱不在白名单）→ 403', async () => {
     ;(auth as any).mockResolvedValue({ user: { id: 'u1', email: 'user@cookmate.com' } })
     const res = await GET(getReq())
     expect(res.status).toBe(403)
   })
 
-  it('ADMIN_EMAIL 未配置 → 403（安全默认，fail-closed）', async () => {
+  it('ADMIN_EMAILS 未配置 → 403（安全默认，fail-closed）', async () => {
+    delete process.env.ADMIN_EMAILS
     delete process.env.ADMIN_EMAIL
     ;(auth as any).mockResolvedValue({ user: { id: 'u1', email: 'admin@cookmate.com' } })
     const res = await GET(getReq())
@@ -49,7 +50,13 @@ describe('admin cancel-logs GET', () => {
     expect(prismaMock.webhookLog.findMany).not.toHaveBeenCalled()
   })
 
-  it('邮箱大小写不敏感 → 放行（ADMIN_EMAIL=admin@cookmate.com, user email=ADMIN@CookMate.COM）', async () => {
+  it('多邮箱白名单 — 第二个邮箱放行', async () => {
+    ;(auth as any).mockResolvedValue({ user: { id: 'u2', email: 'backup@cookmate.com' } })
+    const res = await GET(getReq())
+    expect(res.status).toBe(200)
+  })
+
+  it('邮箱大小写不敏感 → 放行（ADMIN_EMAILS=admin@cookmate.com, user email=ADMIN@CookMate.COM）', async () => {
     ;(auth as any).mockResolvedValue({ user: { id: 'u1', email: 'ADMIN@CookMate.COM' } })
     const res = await GET(getReq())
     expect(res.status).toBe(200)
@@ -58,6 +65,14 @@ describe('admin cancel-logs GET', () => {
     expect(json.failed).toBe(1)
     expect(json.completed).toBe(1)
     expect(json.logs).toHaveLength(2)
+  })
+
+  it('向后兼容旧的单邮箱 ADMIN_EMAIL 变量', async () => {
+    delete process.env.ADMIN_EMAILS
+    process.env.ADMIN_EMAIL = 'legacy@cookmate.com'
+    ;(auth as any).mockResolvedValue({ user: { id: 'u1', email: 'legacy@cookmate.com' } })
+    const res = await GET(getReq())
+    expect(res.status).toBe(200)
   })
 
   it('正常路径 → 返回解析后的日志 + 统计', async () => {
