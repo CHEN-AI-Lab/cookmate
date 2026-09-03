@@ -4,9 +4,11 @@ import { useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { PricingCard } from "./PricingCard"
 
-export function PricingCards() {
+export function PricingCards({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   const t = useTranslations("billing")
   const router = useRouter()
+  // 已登录用户点订阅直达账单页；未登录先去注册
+  const handleSubscribe = () => router.push(isLoggedIn ? "/app/billing" : "/register")
 
   return (
     <section id="pricing" className="py-16 bg-card">
@@ -35,7 +37,7 @@ export function PricingCards() {
             highlighted={false}
             isCurrent={false}
             ctaLabel={t("subscribePro")}
-            onCta={() => router.push("/register")}
+            onCta={handleSubscribe}
           />
           {/* Pro Annual — highlighted with savings badge */}
           <PricingCard
@@ -48,7 +50,7 @@ export function PricingCards() {
             highlighted={true}
             isCurrent={false}
             ctaLabel={t("subscribePro")}
-            onCta={() => router.push("/register")}
+            onCta={handleSubscribe}
           />
         </div>
 

@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server"
+import { auth } from "@/lib/auth"
 import PublicNavbar from "@/components/layout/PublicNavbar"
 import PublicFooter from "@/components/layout/PublicFooter"
 import { PricingCards } from "@/components/features/PricingCards"
@@ -17,6 +18,7 @@ export default async function PricingPage({ params }: { params: Promise<{ locale
   const { locale } = await params
   setRequestLocale(locale)
 
+  const session = await auth()
   const tb = await getTranslations("billing")
 
   return (
@@ -28,7 +30,7 @@ export default async function PricingPage({ params }: { params: Promise<{ locale
         <p className="mt-3 text-lg text-text-secondary">{tb("upgradeNow")}</p>
       </section>
 
-      <PricingCards />
+      <PricingCards isLoggedIn={!!session?.user} />
 
       <PublicFooter />
     </div>
