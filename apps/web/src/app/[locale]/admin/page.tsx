@@ -199,7 +199,7 @@ export default function AdminPage() {
         <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
           <p className="text-red-600 font-semibold">{error}</p>
           <p className="text-text-secondary text-sm mt-2">
-            只有管理员（环境变量 ADMIN_EMAILS 配置的邮箱，且用该邮箱登录）才能访问此页面。
+            无权限访问此页面，仅限管理员使用。
           </p>
         </div>
       </div>

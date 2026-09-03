@@ -15,12 +15,9 @@ export default async function AppLayout({ children, params }: { children: React.
   const onboardingCompleted = session.user.onboardingCompleted ?? false
   const isDemoUser = session.user.id.startsWith("demo")
 
-  // 管理员判定（服务端）：登录邮箱需匹配环境变量 ADMIN_EMAIL；未配置则一律非管理员
-  const adminEmail = process.env.ADMIN_EMAIL
-  const isAdmin =
-    !!adminEmail &&
-    !!session.user.email &&
-    session.user.email.toLowerCase() === adminEmail.toLowerCase()
+  // 管理员判定（服务端）：复用 shared/admin-auth 的 isAdminEmail（ADMIN_EMAILS 白名单）
+  const { isAdminEmail } = await import("@/lib/admin-auth")
+  const isAdmin = isAdminEmail(session.user.email)
 
   // Server-side guard: redirect demo users away from onboarding-preview
   if (isDemoUser) {
