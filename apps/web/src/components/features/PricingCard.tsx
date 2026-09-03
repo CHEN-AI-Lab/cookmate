@@ -88,15 +88,17 @@ export function PricingCard({
                 </span>
               </div>
 
-              {/* Period description */}
-              <p
-                className={cn(
-                  "text-xs mt-1.5",
-                  "text-text-secondary"
-                )}
-              >
-                {period}
-              </p>
+              {/* Period description — only render when non-empty (annual shows savings, monthly hidden) */}
+              {period && (
+                <p
+                  className={cn(
+                    "text-xs mt-1.5",
+                    "text-text-secondary"
+                  )}
+                >
+                  {period}
+                </p>
+              )}
 
               {/* Divider */}
               <div className="w-full h-px my-4 bg-surface" />

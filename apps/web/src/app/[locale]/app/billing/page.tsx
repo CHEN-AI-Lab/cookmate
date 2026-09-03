@@ -350,9 +350,11 @@ export default function BillingPage() {
             <div className="bg-gradient-to-r from-amber-500 to-amber-400 rounded-xl p-4 text-white mb-4 text-center">
               <p className="text-sm text-white/80">{t("proPlan")}</p>
               <p className="text-2xl font-bold mt-1">{checkoutPriceDisplay}{checkoutPeriodLabel}</p>
-              <p className="text-xs text-white/70 mt-1">
-                {selectedPeriod === "annual" ? t("yearlyPeriod") : t("monthlyPeriod")}
-              </p>
+              {selectedPeriod === "annual" && (
+                <p className="text-xs text-white/70 mt-1">
+                  {t("yearlyPeriod")}
+                </p>
+              )}
             </div>
 
             {error && (
