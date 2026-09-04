@@ -190,13 +190,17 @@ model PaymentOrder {
 }
 
 model WebhookLog {
-  id        String   @id @default(cuid())
-  source    String                        // creem / alipay / cancel（取消审计）
-  eventType String?
-  status    String   @default("received") // received / processed / failed / duplicate / ignored
-  rawBody   String?
-  eventId   String?  @unique              // Creem 事件唯一ID（evt_xxx）：一个事件只保留一行，received → processed 原地更新
-  createdAt DateTime @default(now())
+  id             String   @id @default(cuid())
+  source         String                        // creem / alipay / cancel / cron
+  eventType      String?
+  status         String   @default("received") // received / processed / failed / duplicate / ignored
+  rawBody        String?
+  eventId        String?  @unique              // Creem 事件唯一ID（evt_xxx）
+  userId         String?                       // 关联用户ID（方便按用户查询）
+  subscriptionId String?                       // 关联订阅ID
+  orderId        String?                       // 关联订单ID
+  createdAt      DateTime @default(now())
 
   @@index([source, createdAt])
+  @@index([userId])
 }

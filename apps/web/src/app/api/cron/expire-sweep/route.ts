@@ -1,7 +1,7 @@
 /**
  * Cron 路由：过期订阅自动降级
  * ───────────────────────────────────────────────────────────────────────────
- * 触发方式：Vercel Cron 定时调用，或手动 curl -H "Authorization: Bearer $CRON_SECRET"
+ * 触发方式：Vercel Cron 定时调用（通过 vercel.json headers 自动带 Bearer token），或手动 curl -H "Authorization: Bearer ***"
  *
  * 功能：
  *   - 扫描所有 subscriptionTier='PRO' 且 subscriptionExpiryDate < now() 的用户

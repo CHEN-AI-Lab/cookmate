@@ -17,15 +17,30 @@ export async function GET() {
     take: 200,
   })
 
-  const parsed = logs.map((l) => ({
-    id: l.id,
-    source: l.source, // "creem" | "alipay"
-    eventType: l.eventType,
-    status: l.status, // received / processed / failed / failed:signature / failed:unresolved / duplicate / ignored
-    eventId: l.eventId,
-    createdAt: l.createdAt,
-    rawPreview: l.rawBody ?? "",
-  }))
+  // 批量查用户邮箱（join User 表）
+  const userIds = [...new Set(logs.map((l) => l.userId).filter(Boolean))] as string[]
+  const users = userIds.length > 0
+    ? await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, email: true, name: true } })
+    : []
+  const userMap = new Map(users.map((u) => [u.id, u]))
+
+  const parsed = logs.map((l) => {
+    const user = l.userId ? userMap.get(l.userId) : undefined
+    return {
+      id: l.id,
+      source: l.source,
+      eventType: l.eventType,
+      status: l.status,
+      eventId: l.eventId,
+      userId: l.userId,
+      userEmail: user?.email ?? null,
+      userName: user?.name ?? null,
+      subscriptionId: l.subscriptionId,
+      orderId: l.orderId,
+      createdAt: l.createdAt,
+      rawPreview: l.rawBody ?? "",
+    }
+  })
 
   const failed = parsed.filter((l) => l.status.startsWith("failed")).length
 

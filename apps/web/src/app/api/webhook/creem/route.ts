@@ -281,26 +281,28 @@ async function logWebhook(
   status: string,
   rawBody?: string,
   eventId?: string,
+  context?: { userId?: string; subscriptionId?: string; orderId?: string },
 ): Promise<void> {
   try {
     const isFirstRecord = status === "received" || status === "failed:signature"
+    const ctx = context ?? {}
     if (isFirstRecord || !eventId) {
       // 首次记录或无 eventId（如 failed:error 兜底）：直接插入
       // 唯一约束保证一个 eventId 只有一行；重复事件 create 冲突时静默
       await prisma.webhookLog.create({
-        data: { source, eventType, status, rawBody, eventId },
+        data: { source, eventType, status, rawBody, eventId, ...ctx },
       })
     } else {
       // 后续状态（processed / duplicate / failed:xxx）：更新已存在的 received 行
       // where status="received"：只更新初始行，避免已 processed 的记录被后续状态覆盖
       const updated = await prisma.webhookLog.updateMany({
         where: { eventId, status: "received" },
-        data: { status },
+        data: { status, ...ctx },
       })
       // 找不到 received 行（极端情况：received 写入失败或事件无 received）→ 兜底插入
       if (updated.count === 0) {
         await prisma.webhookLog.create({
-          data: { source, eventType, status, rawBody, eventId },
+          data: { source, eventType, status, rawBody, eventId, ...ctx },
         })
       }
     }
@@ -399,7 +401,7 @@ export async function POST(req: Request) {
         }
       }
 
-      await logWebhook("creem", "checkout.completed", "processed", undefined, eventId ?? undefined)
+      await logWebhook("creem", "checkout.completed", "processed", undefined, eventId ?? undefined, { userId: userId ?? undefined, subscriptionId: subscriptionId ?? undefined, orderId: externalCheckoutId ?? undefined })
       return NextResponse.json({ success: true })
     }
 
@@ -414,7 +416,7 @@ export async function POST(req: Request) {
         await syncSubscription(userId, subscriptionId)
       }
 
-      await logWebhook("creem", "subscription.active", "processed", undefined, eventId ?? undefined)
+      await logWebhook("creem", "subscription.active", "processed", undefined, eventId ?? undefined, { userId: userId ?? undefined, subscriptionId: subscriptionId ?? undefined })
       return NextResponse.json({ success: true })
     }
 
@@ -432,7 +434,7 @@ export async function POST(req: Request) {
       // 用户付款后永久无法升级。这里返回 500，让 Creem 按退避策略重试，
       // 待 checkout.completed 同步订阅ID后即可解析到用户并重试成功。
       if (!userId || !subscriptionId) {
-        await logWebhook("creem", "subscription.paid", "failed:unresolved", undefined, eventId ?? undefined)
+        await logWebhook("creem", "subscription.paid", "failed:unresolved", undefined, eventId ?? undefined, { userId: userId ?? undefined, subscriptionId: subscriptionId ?? undefined })
         return NextResponse.json({ error: "user or subscription not resolvable yet" }, { status: 500 })
       }
 
@@ -442,12 +444,12 @@ export async function POST(req: Request) {
       // grantAccess 返回 user-not-found：metadata.userId/subscriptionId 与 DB 不匹配，
       // 可能是恶意构造的回调；返回 500 让 Creem 重试（虽然 Creem 不会真的改 userId，但显式失败便于对账）
       if (result.reason === "user-not-found") {
-        await logWebhook("creem", "subscription.paid", "failed:user-not-found", undefined, eventId ?? undefined)
+        await logWebhook("creem", "subscription.paid", "failed:user-not-found", undefined, eventId ?? undefined, { userId: userId ?? undefined, subscriptionId: subscriptionId ?? undefined })
         return NextResponse.json({ error: "user not found for metadata.userId" }, { status: 500 })
       }
 
       // result.reason === "already-pro"：幂等跳过，不算失败，正常返回
-      await logWebhook("creem", "subscription.paid", "processed", undefined, eventId ?? undefined)
+      await logWebhook("creem", "subscription.paid", "processed", undefined, eventId ?? undefined, { userId: userId ?? undefined, subscriptionId: subscriptionId ?? undefined })
       return NextResponse.json({ success: true })
     }
 
@@ -461,7 +463,7 @@ export async function POST(req: Request) {
           data: { creemSubscriptionId: null },
         }).catch(() => {})
       }
-      await logWebhook("creem", "subscription.canceled", "processed", undefined, eventId ?? undefined)
+      await logWebhook("creem", "subscription.canceled", "processed", undefined, eventId ?? undefined, { userId: userId ?? undefined })
       return NextResponse.json({ success: true })
     }
 
@@ -474,12 +476,12 @@ export async function POST(req: Request) {
         const periodEnd = extractPeriodEndDate(event)
         if (await isLateDowngrade(userId, periodEnd)) {
           console.warn("[creem-webhook] subscription.expired late downgrade skipped (user already upgraded later)", { userId, eventId })
-          await logWebhook("creem", "subscription.expired", "ignored:late-downgrade", undefined, eventId ?? undefined)
+          await logWebhook("creem", "subscription.expired", "ignored:late-downgrade", undefined, eventId ?? undefined, { userId: userId ?? undefined })
           return NextResponse.json({ success: true })
         }
         await revokeAccess(userId)
       }
-      await logWebhook("creem", "subscription.expired", "processed", undefined, eventId ?? undefined)
+      await logWebhook("creem", "subscription.expired", "processed", undefined, eventId ?? undefined, { userId: userId ?? undefined })
       return NextResponse.json({ success: true })
     }
 
@@ -492,12 +494,12 @@ export async function POST(req: Request) {
         const periodEnd = extractPeriodEndDate(event)
         if (await isLateDowngrade(userId, periodEnd)) {
           console.warn("[creem-webhook] subscription.paused late downgrade skipped", { userId, eventId })
-          await logWebhook("creem", "subscription.paused", "ignored:late-downgrade", undefined, eventId ?? undefined)
+          await logWebhook("creem", "subscription.paused", "ignored:late-downgrade", undefined, eventId ?? undefined, { userId: userId ?? undefined })
           return NextResponse.json({ success: true })
         }
         await revokeAccess(userId, false)
       }
-      await logWebhook("creem", "subscription.paused", "processed", undefined, eventId ?? undefined)
+      await logWebhook("creem", "subscription.paused", "processed", undefined, eventId ?? undefined, { userId: userId ?? undefined })
       return NextResponse.json({ success: true })
     }
 
@@ -510,19 +512,20 @@ export async function POST(req: Request) {
         const periodEnd = extractPeriodEndDate(event)
         if (await isLateDowngrade(userId, periodEnd)) {
           console.warn("[creem-webhook] subscription.past_due late downgrade skipped", { userId, eventId })
-          await logWebhook("creem", "subscription.past_due", "ignored:late-downgrade", undefined, eventId ?? undefined)
+          await logWebhook("creem", "subscription.past_due", "ignored:late-downgrade", undefined, eventId ?? undefined, { userId: userId ?? undefined })
           return NextResponse.json({ success: true })
         }
         await revokeAccess(userId, false)
       }
-      await logWebhook("creem", "subscription.past_due", "processed", undefined, eventId ?? undefined)
+      await logWebhook("creem", "subscription.past_due", "processed", undefined, eventId ?? undefined, { userId: userId ?? undefined })
       return NextResponse.json({ success: true })
     }
 
     // ── subscription.scheduled_cancel ──
     // 计划到期取消 → 不操作（仍有效，到期后 subscription.expired 会处理降级）
     if (event.eventType === "subscription.scheduled_cancel") {
-      await logWebhook("creem", "subscription.scheduled_cancel", "processed", undefined, eventId ?? undefined)
+      const userId = await resolveUserId(event)
+      await logWebhook("creem", "subscription.scheduled_cancel", "processed", undefined, eventId ?? undefined, { userId: userId ?? undefined })
       return NextResponse.json({ success: true })
     }
 
@@ -545,17 +548,18 @@ export async function POST(req: Request) {
         }
       } else if (subscriptionId && status === "active" && periodEndDate) {
         // 升级型更新却暂无法解析用户：返回 500，让 Creem 重试（待 checkout.completed 同步订阅ID）
-        await logWebhook("creem", "subscription.update", "failed:unresolved", undefined, eventId ?? undefined)
+        await logWebhook("creem", "subscription.update", "failed:unresolved", undefined, eventId ?? undefined, { userId: userId ?? undefined, subscriptionId: subscriptionId ?? undefined })
         return NextResponse.json({ error: "user not resolvable yet" }, { status: 500 })
       }
-      await logWebhook("creem", "subscription.update", "processed", undefined, eventId ?? undefined)
+      await logWebhook("creem", "subscription.update", "processed", undefined, eventId ?? undefined, { userId: userId ?? undefined, subscriptionId: subscriptionId ?? undefined })
       return NextResponse.json({ success: true })
     }
 
     // ── subscription.trialing ──
     // CookMate 没有试用功能 → 仅记录
     if (event.eventType === "subscription.trialing") {
-      await logWebhook("creem", "subscription.trialing", "processed", undefined, eventId ?? undefined)
+      const userId = await resolveUserId(event)
+      await logWebhook("creem", "subscription.trialing", "processed", undefined, eventId ?? undefined, { userId: userId ?? undefined })
       return NextResponse.json({ success: true })
     }
 
@@ -572,13 +576,14 @@ export async function POST(req: Request) {
         }
         await revokeAccess(userId)
       }
-      await logWebhook("creem", "refund.created", "processed", undefined, eventId ?? undefined)
+      await logWebhook("creem", "refund.created", "processed", undefined, eventId ?? undefined, { userId: userId ?? undefined })
       return NextResponse.json({ success: true })
     }
 
     // ── 未知事件 ──
     // 记录但不处理，返回 200（防止 Creem 重试）
-    await logWebhook("creem", rawEventType, "ignored", undefined, eventId ?? undefined)
+    const unknownUserId = await resolveUserId(event)
+    await logWebhook("creem", rawEventType, "ignored", undefined, eventId ?? undefined, { userId: unknownUserId ?? undefined })
     return NextResponse.json({ received: true })
   } catch (error: unknown) {
     console.error("Creem webhook error:", error)

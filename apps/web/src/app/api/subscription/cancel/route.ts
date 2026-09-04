@@ -5,10 +5,8 @@ import { isDemoUser } from "@/lib/auth-helpers"
 import { cancelSubscription } from "@cookmate/shared/api/creem"
 
 // 取消审计日志：记录每次取消尝试（成功 completed / 失败 failed）。
-// 目的：上游取消 API 偶发失败时，fail-closed 会保留本地订阅ID（便于 webhook 到期降级 + 可重试），
-// 但我们不能「静默」失败 —— 必须留痕，方便对账脚本/后台第一时间发现并去 Creem 后台补刀。
-// 注意：WebhookLog 模型无 userId / subscriptionId 列，用户与渠道上下文以 JSON 存入 rawBody。
-// 写入失败 console.error 报警（Vercel Logs 自动聚合），不再完全静默
+// userId / subscriptionId 现在作为独立列写入，方便后台按用户筛选。
+// rawBody 仍保留完整错误信息（向后兼容）。
 async function logCancelAudit(
   channel: "creem",
   userId: string,
@@ -22,6 +20,8 @@ async function logCancelAudit(
         source: "cancel",
         eventType: channel,
         status,
+        userId,
+        subscriptionId,
         rawBody: JSON.stringify({
           userId,
           subscriptionId,

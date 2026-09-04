@@ -10,6 +10,8 @@ interface CancelLog {
   channel: string | null
   status: string
   userId: string | null
+  userEmail: string | null
+  userName: string | null
   subscriptionId: string | null
   error: string
 }
@@ -48,6 +50,11 @@ interface WebhookLogItem {
   eventType: string | null
   status: string
   eventId: string | null
+  userId: string | null
+  userEmail: string | null
+  userName: string | null
+  subscriptionId: string | null
+  orderId: string | null
   createdAt: string
   rawPreview: string
 }
@@ -93,7 +100,20 @@ interface CronLogsResponse {
   error?: string
 }
 
-type Tab = "orders" | "webhooks" | "cancels" | "users" | "crons"
+interface ConfigResponse {
+  ok?: boolean
+  config?: {
+    app: { url: string }
+    creem: { apiKey: string; monthlyProductId: string; annualProductId: string; webhookSecret: string }
+    alipay: { appId: string; privateKey: string; publicKey: string }
+    auth: { authSecret: string; adminEmails: string }
+    cron: { cronSecret: string }
+    database: { directUrl: string }
+  }
+  error?: string
+}
+
+type Tab = "orders" | "webhooks" | "cancels" | "users" | "crons" | "config"
 
 // ── 工具 ──
 
@@ -115,7 +135,7 @@ function fmtPeriod(period: string | null) {
   return "-"
 }
 
-// 并发拉取订单 / 回调流水 / 取消审计 / 用户列表 / Cron 日志五组数据
+// 并发拉取订单 / 回调流水 / 取消审计 / 用户列表 / Cron 日志 / 支付配置六组数据
 function fetchAdminData() {
   return Promise.all([
     fetch("/api/admin/orders").then(async (r) => ({ ok: r.ok, data: await r.json() })),
@@ -123,6 +143,7 @@ function fetchAdminData() {
     fetch("/api/admin/cancel-logs").then(async (r) => ({ ok: r.ok, data: await r.json() })),
     fetch("/api/admin/users").then(async (r) => ({ ok: r.ok, data: await r.json() })),
     fetch("/api/admin/cron-logs").then(async (r) => ({ ok: r.ok, data: await r.json() })),
+    fetch("/api/admin/config").then(async (r) => ({ ok: r.ok, data: await r.json() })),
   ])
 }
 
@@ -141,13 +162,15 @@ export default function AdminPage() {
   const [usersData, setUsersData] = useState<UsersResponse | null>(null)
   // Cron 日志
   const [cronData, setCronData] = useState<CronLogsResponse | null>(null)
+  // 支付配置
+  const [configData, setConfigData] = useState<ConfigResponse | null>(null)
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   // 统一处理五个接口的返回结果
   const applyResult = useCallback((results: { ok: boolean; data: { error?: string } }[]) => {
-    const [orders, webhooks, cancels, users, crons] = results
+    const [orders, webhooks, cancels, users, crons, config] = results
     const firstErr = results.find((x) => !x.ok)
     if (firstErr) {
       setError(firstErr.data.error || `请求失败`)
@@ -158,6 +181,7 @@ export default function AdminPage() {
     setCancelData(cancels.data as CancelLogsResponse)
     setUsersData(users.data as UsersResponse)
     setCronData(crons.data as CronLogsResponse)
+    setConfigData(config.data as ConfigResponse)
   }, [])
 
   // 首次加载：loading/error 已由 useState 默认值（true/null）提供，
@@ -212,8 +236,8 @@ export default function AdminPage() {
     {
       key: "cancels",
       label: "取消审计",
-      badge: (cancelData?.failed ?? 0) > 0 ? cancelData?.failed : undefined,
-      badgeTone: "red",
+      badge: cancelData?.total ?? 0,
+      badgeTone: "gray",
     },
     { key: "users", label: "用户列表", badge: usersData?.total ?? 0, badgeTone: "gray" },
     {
@@ -222,6 +246,7 @@ export default function AdminPage() {
       badge: (cronData?.logs ?? []).some((l) => l.status === "failed") ? 1 : undefined,
       badgeTone: "red",
     },
+    { key: "config", label: "支付配置" },
   ]
 
   return (
@@ -264,6 +289,7 @@ export default function AdminPage() {
       {tab === "cancels" && <CancelsTab data={cancelData} />}
       {tab === "users" && <UsersTab data={usersData} />}
       {tab === "crons" && <CronsTab data={cronData} />}
+      {tab === "config" && <ConfigTab data={configData} />}
 
       <div className="flex justify-end">
         <button
@@ -359,7 +385,8 @@ function WebhooksTab({ data }: { data: WebhookLogsResponse | null }) {
                   <th className="text-left px-4 py-3 font-medium">来源</th>
                   <th className="text-left px-4 py-3 font-medium">事件</th>
                   <th className="text-left px-4 py-3 font-medium">状态</th>
-                  <th className="text-left px-4 py-3 font-medium">事件ID</th>
+                  <th className="text-left px-4 py-3 font-medium">用户</th>
+                  <th className="text-left px-4 py-3 font-medium">订阅ID</th>
                   <th className="text-left px-4 py-3 font-medium">原文</th>
                 </tr>
               </thead>
@@ -372,8 +399,11 @@ function WebhooksTab({ data }: { data: WebhookLogsResponse | null }) {
                     <td className="px-4 py-3">
                       <WebhookStatusBadge status={l.status} />
                     </td>
-                    <td className="px-4 py-3 text-gray-700 font-mono text-xs max-w-[160px] truncate" title={l.eventId ?? ""}>
-                      {l.eventId ?? "-"}
+                    <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
+                      {l.userEmail ?? (l.userId ? l.userId.slice(0, 8) + "…" : "-")}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 font-mono text-xs max-w-[120px] truncate" title={l.subscriptionId ?? ""}>
+                      {l.subscriptionId ?? "-"}
                     </td>
                     <td className="px-4 py-3 text-xs">
                       {l.rawPreview ? (
@@ -436,7 +466,7 @@ function CancelsTab({ data }: { data: CancelLogsResponse | null }) {
                   <th className="text-left px-4 py-3 font-medium whitespace-nowrap">时间</th>
                   <th className="text-left px-4 py-3 font-medium">渠道</th>
                   <th className="text-left px-4 py-3 font-medium">状态</th>
-                  <th className="text-left px-4 py-3 font-medium">用户ID</th>
+                  <th className="text-left px-4 py-3 font-medium">用户</th>
                   <th className="text-left px-4 py-3 font-medium">订阅ID</th>
                   <th className="text-left px-4 py-3 font-medium">错误</th>
                 </tr>
@@ -453,7 +483,9 @@ function CancelsTab({ data }: { data: CancelLogsResponse | null }) {
                         <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">成功</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.userId ?? "-"}</td>
+                    <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
+                      {l.userEmail ?? (l.userId ? l.userId.slice(0, 8) + "…" : "-")}
+                    </td>
                     <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.subscriptionId ?? "-"}</td>
                     <td className="px-4 py-3 text-red-600 text-xs max-w-xs break-words">{l.error || "-"}</td>
                   </tr>
@@ -646,5 +678,87 @@ function WebhookStatusBadge({ status }: { status: string }) {
     >
       {status}
     </span>
+  )
+}
+
+// ── Tab 6：支付配置 ──
+
+function ConfigRow({ label, value, required }: { label: string; value: string; required?: boolean }) {
+  const missing = value === "未配置"
+  return (
+    <tr className={missing && required ? "bg-red-50/50" : ""}>
+      <td className="px-4 py-3 text-gray-700 font-medium whitespace-nowrap">{label}{required ? " *" : ""}</td>
+      <td className="px-4 py-3 text-gray-700 font-mono text-xs break-all">{value}</td>
+      <td className="px-4 py-3">
+        {missing ? (
+          <span className="inline-flex px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold">未配置</span>
+        ) : (
+          <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">已配置</span>
+        )}
+      </td>
+    </tr>
+  )
+}
+
+function ConfigTab({ data }: { data: ConfigResponse | null }) {
+  const c = data?.config
+  if (!c) {
+    return <div className="text-center py-16 text-text-secondary">无法加载配置</div>
+  }
+
+  const sections = [
+    { title: "应用", rows: [{ label: "应用地址", value: c.app.url }] },
+    {
+      title: "Creem 支付",
+      rows: [
+        { label: "API Key", value: c.creem.apiKey, required: true },
+        { label: "月付产品 ID", value: c.creem.monthlyProductId, required: true },
+        { label: "年付产品 ID", value: c.creem.annualProductId, required: true },
+        { label: "Webhook 密钥", value: c.creem.webhookSecret, required: true },
+      ],
+    },
+    {
+      title: "支付宝",
+      rows: [
+        { label: "App ID", value: c.alipay.appId },
+        { label: "私钥", value: c.alipay.privateKey },
+        { label: "公钥", value: c.alipay.publicKey },
+      ],
+    },
+    {
+      title: "认证",
+      rows: [
+        { label: "AUTH_SECRET", value: c.auth.authSecret, required: true },
+        { label: "管理员邮箱", value: c.auth.adminEmails },
+      ],
+    },
+    {
+      title: "Cron 定时任务",
+      rows: [{ label: "CRON_SECRET", value: c.cron.cronSecret, required: true }],
+    },
+    {
+      title: "数据库",
+      rows: [{ label: "直连 URL", value: c.database.directUrl, required: true }],
+    },
+  ]
+
+  return (
+    <div className="space-y-4">
+      <p className="text-text-secondary text-sm">
+        生产环境配置核对（只显示是否已配置，不暴露密钥原文）。带 * 为必填项，标红「未配置」会导致对应功能不可用。
+      </p>
+      {sections.map((s) => (
+        <div key={s.title} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          <h3 className="px-4 py-3 font-semibold text-text-primary bg-gray-50 border-b border-gray-100">{s.title}</h3>
+          <table className="w-full text-sm">
+            <tbody className="divide-y divide-gray-100">
+              {s.rows.map((r) => (
+                <ConfigRow key={r.label} label={r.label} value={r.value} required={r.required} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </div>
   )
 }

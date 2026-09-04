@@ -16,22 +16,32 @@ export async function GET() {
     take: 200,
   })
 
+  // 批量查用户邮箱
+  const userIds = [...new Set(logs.map((l) => l.userId).filter(Boolean))] as string[]
+  const users = userIds.length > 0
+    ? await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, email: true, name: true } })
+    : []
+  const userMap = new Map(users.map((u) => [u.id, u]))
+
   const parsed = logs.map((l) => {
+    const user = l.userId ? userMap.get(l.userId) : undefined
+    // 兼容：旧记录可能没有独立 userId 字段，从 rawBody 里解析
     let detail: { userId?: string | null; subscriptionId?: string | null; error?: string } = {}
     if (l.rawBody) {
-      try {
-        detail = JSON.parse(l.rawBody)
-      } catch {
-        detail = {}
-      }
+      try { detail = JSON.parse(l.rawBody) } catch { detail = {} }
     }
+    const resolvedUserId = l.userId ?? detail.userId ?? null
+    const resolvedSubId = l.subscriptionId ?? detail.subscriptionId ?? null
+    const resolvedUser = resolvedUserId ? userMap.get(resolvedUserId) : undefined
     return {
       id: l.id,
       createdAt: l.createdAt,
-      channel: l.eventType, // "creem"
-      status: l.status, // "failed" | "completed"
-      userId: detail.userId ?? null,
-      subscriptionId: detail.subscriptionId ?? null,
+      channel: l.eventType,
+      status: l.status,
+      userId: resolvedUserId,
+      userEmail: resolvedUser?.email ?? null,
+      userName: resolvedUser?.name ?? null,
+      subscriptionId: resolvedSubId,
       error: detail.error ?? "",
     }
   })
