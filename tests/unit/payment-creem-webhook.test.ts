@@ -175,12 +175,15 @@ describe('Creem webhook — P0 加固', () => {
     expect(failed.rawBody).toBeUndefined()
   })
 
-  // 验签通过后才有"received"日志（顺序保护）
-  it('签名通过 → webhookLog 存在 status:received 记录', async () => {
+  // 验签通过后写入 webhookLog，处理后同一行状态从 received → processed（一行，非两行）
+  it('签名通过 → webhookLog 存在单条记录，处理后状态为 processed', async () => {
     await POST(creemReq(mkCreem('subscription.paid', subObj(), 'e1')))
-    const received = Array.from(stores.logs.values()).find((l: any) => l.status === 'received')
-    expect(received).toBeDefined()
-    expect(received.eventId).toBe('e1')
+    const entry = Array.from(stores.logs.values()).find((l: any) => l.eventId === 'e1')
+    expect(entry).toBeDefined()
+    expect(entry.status).toBe('processed')
+    // 同一个 eventId 只保留一行（received → processed 原地更新）
+    const sameEvent = Array.from(stores.logs.values()).filter((l: any) => l.eventId === 'e1')
+    expect(sameEvent.length).toBe(1)
   })
 
   // recordOrder：本地没有 PENDING 订单时不要回退创建新订单（防「一次付款产生两条订单」）

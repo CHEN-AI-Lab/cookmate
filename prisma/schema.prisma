@@ -195,9 +195,8 @@ model WebhookLog {
   eventType String?
   status    String   @default("received") // received / processed / failed / duplicate / ignored
   rawBody   String?
-  eventId   String?                     // Creem 事件唯一ID（evt_xxx），用于幂等去重（非唯一约束，避免 received/processed 双写冲突）
+  eventId   String?  @unique              // Creem 事件唯一ID（evt_xxx）：一个事件只保留一行，received → processed 原地更新
   createdAt DateTime @default(now())
 
   @@index([source, createdAt])
-  @@index([eventId])
 }

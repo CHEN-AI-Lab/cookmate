@@ -271,9 +271,10 @@ async function isAlreadyProcessed(eventId: string): Promise<boolean> {
   return !!existing
 }
 
-// 记录 webhook 日志
-// 失败时 console.error（Vercel Logs 自动聚合），不再完全静默；
-// eventId 唯一冲突 = 重复事件，正常并发，无需报警；其他错误（schema 不匹配 / DB 断连）需告警
+// 记录 webhook 日志 —— 一个 eventId 只保留一行（@unique 约束）
+// received / failed:signature（尚无 received 行）→ create 首次插入，带 rawBody
+// processed / duplicate / failed:xxx → updateMany 更新同一条 received 行，不新增记录
+// 失败时 console.error（Vercel Logs 自动聚合）；eventId 唯一冲突 = 重复事件，正常并发，静默
 async function logWebhook(
   source: string,
   eventType: string | null,
@@ -282,9 +283,27 @@ async function logWebhook(
   eventId?: string,
 ): Promise<void> {
   try {
-    await prisma.webhookLog.create({
-      data: { source, eventType, status, rawBody, eventId },
-    })
+    const isFirstRecord = status === "received" || status === "failed:signature"
+    if (isFirstRecord || !eventId) {
+      // 首次记录或无 eventId（如 failed:error 兜底）：直接插入
+      // 唯一约束保证一个 eventId 只有一行；重复事件 create 冲突时静默
+      await prisma.webhookLog.create({
+        data: { source, eventType, status, rawBody, eventId },
+      })
+    } else {
+      // 后续状态（processed / duplicate / failed:xxx）：更新已存在的 received 行
+      // where status="received"：只更新初始行，避免已 processed 的记录被后续状态覆盖
+      const updated = await prisma.webhookLog.updateMany({
+        where: { eventId, status: "received" },
+        data: { status },
+      })
+      // 找不到 received 行（极端情况：received 写入失败或事件无 received）→ 兜底插入
+      if (updated.count === 0) {
+        await prisma.webhookLog.create({
+          data: { source, eventType, status, rawBody, eventId },
+        })
+      }
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     // eventId @unique 冲突是预期的（重复事件）—— 静默；其他错误报警

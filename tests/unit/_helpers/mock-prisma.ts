@@ -145,6 +145,18 @@ export function makePrisma() {
         stores.logs.set(id, rec)
         return rec
       }),
+      updateMany: vi.fn(async ({ where, data }: any) => {
+        let count = 0
+        for (const l of [...stores.logs.values()]) {
+          const eventIdOk = where.eventId ? l.eventId === where.eventId : true
+          const statusOk = where.status ? l.status === where.status : true
+          if (eventIdOk && statusOk) {
+            Object.assign(l, data)
+            count++
+          }
+        }
+        return { count }
+      }),
     },
     recipe: {
       count: vi.fn(async ({ where }: any) => {
