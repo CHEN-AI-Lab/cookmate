@@ -24,7 +24,7 @@ export async function GET() {
     status: l.status, // received / processed / failed / failed:signature / failed:unresolved / duplicate / ignored
     eventId: l.eventId,
     createdAt: l.createdAt,
-    rawPreview: l.rawBody ? l.rawBody.slice(0, 300) : "",
+    rawPreview: l.rawBody ?? "",
   }))
 
   const failed = parsed.filter((l) => l.status.startsWith("failed")).length

@@ -102,13 +102,13 @@ describe('admin webhook-logs GET', () => {
     expect(json.logs[1].rawPreview).toBe('')
   })
 
-  it('超长 rawBody → rawPreview 截断到 300 字符', async () => {
+  it('rawBody 完整返回不截断', async () => {
     prismaMock.webhookLog.findMany.mockResolvedValue([
       { id: 'w3', source: 'creem', eventType: 'x', status: 'received', eventId: null, createdAt: new Date(), rawBody: 'x'.repeat(1000) },
     ])
     ;(auth as any).mockResolvedValue({ user: { id: 'u1', email: 'admin@cookmate.com' } })
     const res = await webhookLogsGET()
     const json = await res.json()
-    expect(json.logs[0].rawPreview).toHaveLength(300)
+    expect(json.logs[0].rawPreview).toHaveLength(1000)
   })
 })
