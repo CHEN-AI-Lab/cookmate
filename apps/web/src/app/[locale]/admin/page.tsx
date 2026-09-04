@@ -387,7 +387,7 @@ function WebhooksTab({ data }: { data: WebhookLogsResponse | null }) {
                         "-"
                       )}
                       {expandedId === l.id && (
-                        <pre className="mt-2 p-2 bg-gray-50 rounded-lg text-xs max-w-md overflow-x-auto whitespace-pre-wrap break-all">
+                        <pre className="mt-2 p-2 bg-gray-50 rounded-lg text-xs max-w-md max-h-48 overflow-auto whitespace-pre-wrap break-all">
                           {l.rawPreview}
                         </pre>
                       )}
