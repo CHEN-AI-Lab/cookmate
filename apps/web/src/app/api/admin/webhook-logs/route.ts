@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/admin-auth"
 
 // 管理员专用：支付回调流水（Creem / Alipay 的 WebhookLog），供后台「回调流水」Tab 展示。
 // 取消审计（source='cancel'）不在本接口，走 /api/admin/cancel-logs。
-// rawBody 原文可能很大，只返回前 300 字符预览。
+// rawBody 完整返回（原始 JSON，供管理员查看回调原文）。
 export async function GET() {
   const gate = await requireAdmin()
   if (!gate.ok) {
