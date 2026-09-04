@@ -696,16 +696,16 @@ function ConfigRow({ label, value, required }: { label: string; value: string; r
   const isMasked = value === "已配置" || value === "未配置"
   const isMissing = value === "未配置"
   const rowBg = isMissing && required ? "bg-red-50/50" : ""
-  const valColor = isMasked
-    ? isMissing ? "text-red-600" : "text-green-600"
+  const valClass = isMasked
+    ? isMissing ? "text-red-700 font-semibold bg-red-50" : "text-green-700 font-semibold bg-green-50"
     : "text-gray-700"
   return (
     <tr className={rowBg}>
       <td className="px-4 py-2.5 text-gray-700 font-medium whitespace-nowrap w-[140px]">
         {label}{required ? <span className="text-red-500">*</span> : ""}
       </td>
-      <td className={`px-4 py-2.5 font-mono text-xs break-all ${valColor}`}>
-        {isMasked ? `● ${value}` : value}
+      <td className={`px-4 py-2.5 font-mono text-xs break-all rounded ${valClass}`}>
+        {value}
       </td>
     </tr>
   )
