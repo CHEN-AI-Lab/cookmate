@@ -1,7 +1,7 @@
 /**
  * Cron 路由：过期订阅自动降级
  * ───────────────────────────────────────────────────────────────────────────
- * 触发方式：Vercel Cron 定时调用（通过 vercel.json headers 自动带 Bearer token），或手动 curl -H "Authorization: Bearer ***"
+ * 触发方式：Vercel Cron 定时调用（Vercel 自动注入 Authorization: Bearer ${CRON_SECRET}），或手动 curl -H "Authorization: Bearer ***"
  *
  * 功能：
  *   - 扫描所有 subscriptionTier='PRO' 且 subscriptionExpiryDate < now() 的用户
@@ -26,7 +26,7 @@ async function logCron(eventType: string, status: string, detail: Record<string,
   })
 }
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
   // Bearer token 校验
   const authHeader = req.headers.get("authorization")
   const expected = process.env.CRON_SECRET

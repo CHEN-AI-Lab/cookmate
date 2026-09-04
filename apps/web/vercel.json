@@ -5,17 +5,11 @@
   "crons": [
     {
       "path": "/api/cron/expire-sweep",
-      "schedule": "0 3 * * *",
-      "headers": {
-        "Authorization": "Bearer ${CRON_SECRET}"
-      }
+      "schedule": "0 3 * * *"
     },
     {
       "path": "/api/cron/reconcile-cancellations",
-      "schedule": "0 4 * * *",
-      "headers": {
-        "Authorization": "Bearer ${CRON_SECRET}"
-      }
+      "schedule": "0 4 * * *"
     }
   ]
 }

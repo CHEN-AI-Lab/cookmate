@@ -561,7 +561,7 @@
     "checkPayment": "检测付款状态",
     "checkPaymentDesc": "付完款后点击确认",
     "redirecting": "跳转中...",
-    "paymentRetryHint": "如果支付页面无法打开或支付失败，请重新发起订单",
+    "paymentRetryHint": "如遇支付页面加载异常，请返回后重新点击支付",
     "querying": "查询中...",
     "orderHistory": "📋 查看订单记录 →",
     "loading": "加载中...",

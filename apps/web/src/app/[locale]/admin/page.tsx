@@ -236,8 +236,8 @@ export default function AdminPage() {
     {
       key: "cancels",
       label: "取消审计",
-      badge: cancelData?.total ?? 0,
-      badgeTone: "gray",
+      badge: (cancelData?.failed ?? 0) > 0 ? cancelData?.failed : undefined,
+      badgeTone: "red",
     },
     { key: "users", label: "用户列表", badge: usersData?.total ?? 0, badgeTone: "gray" },
     {
@@ -326,13 +326,13 @@ function OrdersTab({ data }: { data: OrdersResponse | null }) {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-text-secondary">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap">时间</th>
-                  <th className="text-left px-4 py-3 font-medium">订单号</th>
-                  <th className="text-left px-4 py-3 font-medium">渠道</th>
-                  <th className="text-left px-4 py-3 font-medium">周期</th>
-                  <th className="text-left px-4 py-3 font-medium">金额</th>
-                  <th className="text-left px-4 py-3 font-medium">状态</th>
-                  <th className="text-left px-4 py-3 font-medium">用户邮箱</th>
+                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap" title="订单创建时间">时间</th>
+                  <th className="text-left px-4 py-3 font-medium" title="Creem/支付宝生成的订单号">订单号</th>
+                  <th className="text-left px-4 py-3 font-medium" title="支付渠道：creem 或 alipay">渠道</th>
+                  <th className="text-left px-4 py-3 font-medium" title="订阅周期：monthly 月付 / annual 年付">周期</th>
+                  <th className="text-left px-4 py-3 font-medium" title="订单金额（CNY）">金额</th>
+                  <th className="text-left px-4 py-3 font-medium" title="订单状态：待支付/已支付/已取消/已退款/已过期">状态</th>
+                  <th className="text-left px-4 py-3 font-medium" title="下单用户的邮箱">用户邮箱</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -381,13 +381,14 @@ function WebhooksTab({ data }: { data: WebhookLogsResponse | null }) {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-text-secondary">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap">时间</th>
-                  <th className="text-left px-4 py-3 font-medium">来源</th>
-                  <th className="text-left px-4 py-3 font-medium">事件</th>
-                  <th className="text-left px-4 py-3 font-medium">状态</th>
-                  <th className="text-left px-4 py-3 font-medium">用户</th>
-                  <th className="text-left px-4 py-3 font-medium">订阅ID</th>
-                  <th className="text-left px-4 py-3 font-medium">原文</th>
+                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap" title="回调到达时间">时间</th>
+                  <th className="text-left px-4 py-3 font-medium" title="回调来源渠道（creem/alipay）">来源</th>
+                  <th className="text-left px-4 py-3 font-medium" title="Creem/支付宝的事件类型，如 checkout.completed、subscription.paid">事件</th>
+                  <th className="text-left px-4 py-3 font-medium" title="本条回调的处理结果：已收到/已处理/失败/重复跳过">状态</th>
+                  <th className="text-left px-4 py-3 font-medium" title="Creem 分配的事件唯一标识（evt_xxx），用于去重，同一事件只保留一条">事件ID</th>
+                  <th className="text-left px-4 py-3 font-medium" title="触发此回调的用户邮箱">用户</th>
+                  <th className="text-left px-4 py-3 font-medium" title="Creem 订阅ID（sub_xxx），关联用户的订阅记录">订阅ID</th>
+                  <th className="text-left px-4 py-3 font-medium" title="Creem 原始请求体 JSON，点击可展开查看">原文</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -398,6 +399,9 @@ function WebhooksTab({ data }: { data: WebhookLogsResponse | null }) {
                     <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.eventType ?? "-"}</td>
                     <td className="px-4 py-3">
                       <WebhookStatusBadge status={l.status} />
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 font-mono text-xs max-w-[160px] truncate" title={l.eventId ?? ""}>
+                      {l.eventId ?? "-"}
                     </td>
                     <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
                       {l.userEmail ?? (l.userId ? l.userId.slice(0, 8) + "…" : "-")}
@@ -463,12 +467,13 @@ function CancelsTab({ data }: { data: CancelLogsResponse | null }) {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-text-secondary">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap">时间</th>
-                  <th className="text-left px-4 py-3 font-medium">渠道</th>
-                  <th className="text-left px-4 py-3 font-medium">状态</th>
-                  <th className="text-left px-4 py-3 font-medium">用户</th>
-                  <th className="text-left px-4 py-3 font-medium">订阅ID</th>
-                  <th className="text-left px-4 py-3 font-medium">错误</th>
+                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap" title="取消操作时间">时间</th>
+                  <th className="text-left px-4 py-3 font-medium" title="支付渠道：creem 或 alipay">渠道</th>
+                  <th className="text-left px-4 py-3 font-medium" title="取消结果：成功=Creem确认取消/失败=上游拒绝">状态</th>
+                  <th className="text-left px-4 py-3 font-medium" title="发起取消的用户ID（内部标识）">用户ID</th>
+                  <th className="text-left px-4 py-3 font-medium" title="发起取消的用户邮箱">用户</th>
+                  <th className="text-left px-4 py-3 font-medium" title="Creem 订阅ID（sub_xxx）">订阅ID</th>
+                  <th className="text-left px-4 py-3 font-medium" title="失败时的错误信息">错误</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -483,8 +488,11 @@ function CancelsTab({ data }: { data: CancelLogsResponse | null }) {
                         <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">成功</span>
                       )}
                     </td>
+                    <td className="px-4 py-3 text-gray-700 font-mono text-xs" title={l.userId ?? ""}>
+                      {l.userId ?? "-"}
+                    </td>
                     <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
-                      {l.userEmail ?? (l.userId ? l.userId.slice(0, 8) + "…" : "-")}
+                      {l.userEmail ?? "-"}
                     </td>
                     <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.subscriptionId ?? "-"}</td>
                     <td className="px-4 py-3 text-red-600 text-xs max-w-xs break-words">{l.error || "-"}</td>
@@ -522,13 +530,13 @@ function UsersTab({ data }: { data: UsersResponse | null }) {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-text-secondary">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap">注册时间</th>
-                  <th className="text-left px-4 py-3 font-medium">邮箱</th>
-                  <th className="text-left px-4 py-3 font-medium">用户名</th>
-                  <th className="text-left px-4 py-3 font-medium">套餐</th>
-                  <th className="text-left px-4 py-3 font-medium">到期时间</th>
-                  <th className="text-left px-4 py-3 font-medium">订单数</th>
-                  <th className="text-left px-4 py-3 font-medium">引导完成</th>
+                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap" title="用户注册时间">注册时间</th>
+                  <th className="text-left px-4 py-3 font-medium" title="注册邮箱">邮箱</th>
+                  <th className="text-left px-4 py-3 font-medium" title="用户昵称">用户名</th>
+                  <th className="text-left px-4 py-3 font-medium" title="当前套餐：FREE 免费版 / PRO 付费版">套餐</th>
+                  <th className="text-left px-4 py-3 font-medium" title="付费到期时间（FREE 用户为空）">到期时间</th>
+                  <th className="text-left px-4 py-3 font-medium" title="该用户创建的订单总数">订单数</th>
+                  <th className="text-left px-4 py-3 font-medium" title="新用户引导是否完成">引导完成</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -584,10 +592,10 @@ function CronsTab({ data }: { data: CronLogsResponse | null }) {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-text-secondary">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap">执行时间</th>
-                  <th className="text-left px-4 py-3 font-medium">任务</th>
-                  <th className="text-left px-4 py-3 font-medium">状态</th>
-                  <th className="text-left px-4 py-3 font-medium">详情</th>
+                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap" title="Cron 任务执行时间">执行时间</th>
+                  <th className="text-left px-4 py-3 font-medium" title="定时任务名称：expire-sweep 过期降级 / reconcile-cancellations 取消对账">任务</th>
+                  <th className="text-left px-4 py-3 font-medium" title="执行结果：success 成功 / error 失败">状态</th>
+                  <th className="text-left px-4 py-3 font-medium" title="处理详情：受影响的用户数、失败数等">详情</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -670,13 +678,14 @@ function WebhookStatusBadge({ status }: { status: string }) {
     : ignored
       ? "bg-gray-100 text-gray-500"
       : tone[status] || "bg-gray-100 text-gray-500"
-  const title = cnLabel[status] || status
+  // 显示中文，悬浮显示英文原文
+  const cnText = cnLabel[status] || status
   return (
     <span
       className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${cls}`}
-      title={title}
+      title={status}
     >
-      {status}
+      {cnText}
     </span>
   )
 }

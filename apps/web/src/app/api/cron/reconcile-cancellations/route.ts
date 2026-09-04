@@ -1,7 +1,7 @@
 /**
  * Cron 路由：取消订阅对账
  * ───────────────────────────────────────────────────────────────────────────
- * 触发方式：Vercel Cron 定时调用（通过 vercel.json headers 自动带 Bearer token），或手动 curl -H "Authorization: Bearer ***"
+ * 触发方式：Vercel Cron 定时调用（Vercel 自动注入 Authorization: Bearer ${CRON_SECRET}），或手动 curl -H "Authorization: Bearer ***"
  *
  * 功能：
  *   - 扫描所有 WebhookLog.source='cancel' & status='failed' 的记录
@@ -44,7 +44,7 @@ function parseRaw(rawBody?: string | null): { userId: string | null; subscriptio
   }
 }
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
   // Bearer token 校验
   const authHeader = req.headers.get("authorization")
   const expected = process.env.CRON_SECRET
