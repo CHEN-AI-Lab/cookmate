@@ -36,9 +36,11 @@ const subObj = (overrides: any = {}) => ({
   ...overrides,
 })
 // checkout.completed / refund.created 事件对象（订阅嵌套在 subscription 字段）
+// 严格按 Creem 官方 checkout.completed payload 构造：order.status = "paid"（F2 升级依据）
 const nestedObj = (overrides: any = {}) => ({
   id: 'ord_1',
   metadata: { userId: 'u1', period: 'annual' },
+  order: { id: 'ord_1', status: 'paid' },
   subscription: { object: 'subscription', id: 'creem_sub_1' },
   ...overrides,
 })
@@ -76,14 +78,23 @@ describe('Creem webhook — 授权事件', () => {
     expect(res.status).toBe(500)
     expect(stores.users.get('u1').subscriptionTier).toBe('FREE')
   })
-  it('checkout.completed → 记录订单并同步订阅ID，不升级', async () => {
+  it('checkout.completed → 记录订单并同步订阅ID + 升级兜底', async () => {
     // 真实流程：create-checkout 先创建本地 PENDING 订单（orderId=CKCRxxx，externalCheckoutId=Creem ch_xxx），
     // webhook 随后到达携带 Creem 的 ch_xxx；recordOrder 按 externalCheckoutId 精确匹配本地订单并更新为 PAID
+    // F2：checkout.completed 现在也升级（不再依赖 subscription.paid 必须到达）
     stores.orders.set('CKCRlocal', { id: 'CKCRlocal', orderId: 'CKCRlocal', externalCheckoutId: 'ord_1', userId: 'u1', channel: 'creem', amount: 2000, status: 'PENDING' })
     await POST(creemReq(mkCreem('checkout.completed', nestedObj(), 'e_co')))
-    expect(stores.users.get('u1').subscriptionTier).toBe('FREE')
+    expect(stores.users.get('u1').subscriptionTier).toBe('PRO')
     expect(stores.users.get('u1').creemSubscriptionId).toBe('creem_sub_1')
     expect(stores.orders.get('CKCRlocal').status).toBe('PAID')
+  })
+  it('checkout.completed 用户已是 PRO 且到期日更晚 → 幂等不重复加时长', async () => {
+    // 已 PRO（到期日 2099），再来一次 checkout.completed（周期 annual → 2097-09-04 左右）→ 不覆盖
+    stores.users.set('u1', { id: 'u1', subscriptionTier: 'PRO', subscriptionExpiryDate: new Date('2099-01-01T00:00:00Z'), creemSubscriptionId: null })
+    await POST(creemReq(mkCreem('checkout.completed', nestedObj(), 'e_co2')))
+    const u = stores.users.get('u1')
+    expect(u.subscriptionTier).toBe('PRO')
+    expect(u.subscriptionExpiryDate).toEqual(new Date('2099-01-01T00:00:00Z')) // 不被 annual 的 2097 覆盖
   })
   it('subscription.update active → 同步并授权', async () => {
     await POST(creemReq(mkCreem('subscription.update', subObj({ status: 'active' }), 'e1')))
@@ -187,7 +198,7 @@ describe('Creem webhook — P0 加固', () => {
   })
 
   // recordOrder：本地没有 PENDING 订单时不要回退创建新订单（防「一次付款产生两条订单」）
-  it('checkout.completed 无本地 PENDING → 不创建新订单（仅写 warning，PRO 升级交给 subscription.paid）', async () => {
+  it('checkout.completed 无本地 PENDING → 不创建新订单（但升级兜底仍生效）', async () => {
     // 故意不在 stores.orders 中种任何 PENDING 订单（极端 race：webhook 先到 / create-checkout 后到）
     expect(stores.orders.size).toBe(0)
     const res = await POST(creemReq(mkCreem('checkout.completed', nestedObj({ id: 'ch_xxx' }), 'e_co')))
@@ -196,6 +207,8 @@ describe('Creem webhook — P0 加固', () => {
     expect(stores.orders.size).toBe(0)
     // 订阅ID 同步仍然发生（syncSubscription 不依赖订单）
     expect(stores.users.get('u1').creemSubscriptionId).toBe('creem_sub_1')
+    // F2：即使没有本地订单，订单已支付（order.status=paid）且用户是 FREE → 升级兜底生效
+    expect(stores.users.get('u1').subscriptionTier).toBe('PRO')
   })
 
   // grantAccess 用户不存在 → 500 + failed 审计（防 metadata.userId 篡改攻击）

@@ -74,11 +74,18 @@ describe('creem create-checkout GET（轮询支付状态）', () => {
     const res = await GET(getReq('http://localhost/api/creem/create-checkout?checkoutId=ch_1'))
     expect(res.status).toBe(401)
   })
-  it('无 checkoutId → 返回 PENDING 订单的 externalCheckoutId', async () => {
-    stores.orders.set('CKCRpending', { id: 'CKCRpending', userId: 'u1', channel: 'creem', status: 'PENDING', orderId: 'CKCRpending', externalCheckoutId: 'ch_seed_1', amount: 2000 })
+  it('无 checkoutId → 返回最近 Creem 订单的 externalCheckoutId（不限状态）', async () => {
+    // F1：即使订单已被 webhook 置 PAID（支付成功回 ?success=true 场景），也要返回 checkoutId 让轮询兜底执行
+    stores.orders.set('CKCRpaid', { id: 'CKCRpaid', userId: 'u1', channel: 'creem', status: 'PAID', orderId: 'CKCRpaid', externalCheckoutId: 'ch_seed_1', amount: 2000, createdAt: Date.now() })
     const res = await GET(getReq('http://localhost/api/creem/create-checkout'))
     const json = await res.json()
-    expect(json.checkoutId).toBe('ch_seed_1') // 现在返回 externalCheckoutId（Creem ch_xxx）而非本地 orderId
+    expect(json.checkoutId).toBe('ch_seed_1') // PAID 订单也能拿到 checkoutId
+  })
+  it('无 checkoutId 且无任何 Creem 订单 → 提示没有待处理订单', async () => {
+    const res = await GET(getReq('http://localhost/api/creem/create-checkout'))
+    const json = await res.json()
+    expect(json.checkoutId).toBeUndefined()
+    expect(json.message).toBeTruthy()
   })
   it('已支付 checkout 属于当前用户 → 升级 PRO + 写入到期', async () => {
     ;(retrieveCheckout as any).mockResolvedValue({ status: 'completed', metadata: { userId: 'u1', period: 'monthly' } })

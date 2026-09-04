@@ -85,16 +85,19 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   const checkoutId = searchParams.get("checkoutId")
 
-  // 如果没有传 checkoutId，查这个用户最近的 Creem PENDING 订单，返回其 externalCheckoutId 给前端轮询
+  // 如果没有传 checkoutId，查这个用户最近的 Creem 订单（不限状态），返回其 externalCheckoutId 给前端轮询
+  // 注：支付成功后 webhook checkout.completed 会把订单从 PENDING 置为 PAID，
+  // 若只查 PENDING 会导致 ?success=true 回来时查不到订单、拿不到 checkoutId、兜底轮询中断。
+  // 所以这里查最近一条 Creem 订单（PAID 也行），让 GET?checkoutId=xxx 的升级兜底始终能执行。
   if (!checkoutId) {
-    const pending = await prisma.paymentOrder.findFirst({
-      where: { userId: session.user.id, channel: "creem", status: "PENDING" },
+    const latest = await prisma.paymentOrder.findFirst({
+      where: { userId: session.user.id, channel: "creem" },
       orderBy: { createdAt: "desc" },
     })
-    if (!pending) {
+    if (!latest) {
       return NextResponse.json({ message: "没有待处理的 Creem 订单" })
     }
-    return NextResponse.json({ checkoutId: pending.externalCheckoutId ?? pending.orderId })
+    return NextResponse.json({ checkoutId: latest.externalCheckoutId ?? latest.orderId })
   }
 
   try {

@@ -350,19 +350,53 @@ export async function POST(req: Request) {
     }
 
     // ── checkout.completed ──
-    // 记录订单（PENDING → PAID）+ 同步订阅ID，不升级用户
-    // 升级交给 subscription.paid（官方推荐）
+    // 记录订单（PENDING → PAID）+ 同步订阅ID + 升级兜底
+    // 官方推荐 subscription.paid 作为升级入口，但该事件并非必然到达（如测试模式只发 checkout.completed）；
+    // 为保证「支付成功必然升级」，这里在订单确认已支付后也做一次幂等升级：
+    //   - 用户非 PRO，或 PRO 到期日早于本次应得周期 → 升级（用官方周期推算到期日）
+    //   - 用户已 PRO 且到期日更晚 → 幂等跳过（不重复加时长）
+    // 后续 subscription.paid 到达时 grantAccess 同样幂等（到期日比较），不会重复延长。
     if (event.eventType === "checkout.completed") {
       const userId = await resolveUserId(event)
       const externalCheckoutId = extractOrderId(event)
       const subscriptionId = extractSubscriptionId(event)
+      const period = extractPeriod(event)
 
       if (userId && externalCheckoutId) {
-        await recordOrder(userId, externalCheckoutId, extractPeriod(event))
+        await recordOrder(userId, externalCheckoutId, period)
       }
       // 同步订阅ID（为后续事件的 userId 反查做准备）
       if (userId && subscriptionId) {
         await syncSubscription(userId, subscriptionId)
+      }
+
+      // 升级兜底：订单已支付（order.status === "paid" 或 checkout.status === "completed"）
+      // 且用户尚未获得本次应得权益 → 升级
+      const obj = event.object as Record<string, unknown> | undefined
+      const orderPaid = (() => {
+        const order = obj?.order as Record<string, unknown> | undefined
+        if (order?.status === "paid") return true
+        const checkoutStatus = obj?.status
+        return checkoutStatus === "completed"
+      })()
+      if (userId && orderPaid) {
+        const expiryDate = computeFallbackExpiry(period)
+        // 幂等：已 PRO 且到期日 >= 本次应得到期日 → 跳过，不重复加时长
+        const user = await prisma.user.findUnique({ where: { id: userId } })
+        const needsUpgrade = user
+          && (user.subscriptionTier !== "PRO"
+            || !user.subscriptionExpiryDate
+            || user.subscriptionExpiryDate < expiryDate)
+        if (needsUpgrade && user) {
+          await prisma.user.update({
+            where: { id: userId },
+            data: {
+              subscriptionTier: "PRO",
+              subscriptionExpiryDate: expiryDate,
+              ...(subscriptionId ? { creemSubscriptionId: subscriptionId } : {}),
+            },
+          })
+        }
       }
 
       await logWebhook("creem", "checkout.completed", "processed", undefined, eventId ?? undefined)
