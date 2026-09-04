@@ -693,17 +693,19 @@ function WebhookStatusBadge({ status }: { status: string }) {
 // ── Tab 6：支付配置 ──
 
 function ConfigRow({ label, value, required }: { label: string; value: string; required?: boolean }) {
-  const missing = value === "未配置"
+  const isMasked = value === "已配置" || value === "未配置"
+  const isMissing = value === "未配置"
+  const rowBg = isMissing && required ? "bg-red-50/50" : ""
+  const valColor = isMasked
+    ? isMissing ? "text-red-600" : "text-green-600"
+    : "text-gray-700"
   return (
-    <tr className={missing && required ? "bg-red-50/50" : ""}>
-      <td className="px-4 py-3 text-gray-700 font-medium whitespace-nowrap">{label}{required ? " *" : ""}</td>
-      <td className="px-4 py-3 text-gray-700 font-mono text-xs break-all">{value}</td>
-      <td className="px-4 py-3">
-        {missing ? (
-          <span className="inline-flex px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold">未配置</span>
-        ) : (
-          <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">已配置</span>
-        )}
+    <tr className={rowBg}>
+      <td className="px-4 py-2.5 text-gray-700 font-medium whitespace-nowrap w-[140px]">
+        {label}{required ? <span className="text-red-500">*</span> : ""}
+      </td>
+      <td className={`px-4 py-2.5 font-mono text-xs break-all ${valColor}`}>
+        {isMasked ? `● ${value}` : value}
       </td>
     </tr>
   )
