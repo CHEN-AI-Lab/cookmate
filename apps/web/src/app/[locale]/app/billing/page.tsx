@@ -12,7 +12,7 @@ interface BillingInfo {
   subscriptionExpiryDate?: string | null
   isDemoUser: boolean
   creemConfigured: boolean
-  cancelled: boolean
+  canceled: boolean
   todayUsage: number
   orders?: Array<{
     id: string
@@ -57,7 +57,7 @@ export default function BillingPage() {
           subscriptionExpiryDate: data.subscriptionExpiryDate,
           isDemoUser: !!data.isDemoUser,
           creemConfigured: !!data.creemConfigured,
-          cancelled: !!data.cancelled,
+          canceled: !!data.canceled,
           todayUsage: data.todayUsage ?? 0,
           orders: data.orders || [],
         })
@@ -149,7 +149,7 @@ export default function BillingPage() {
 
       {/* ── Current Plan Card ── */}
       <div className="bg-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {!isFree && !info?.cancelled && (
+        {!isFree && !info?.canceled && (
           <div className="h-1 bg-gradient-to-r from-amber-400 to-amber-200" />
         )}
         <div className="p-6">
@@ -170,15 +170,15 @@ export default function BillingPage() {
               "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold",
               isFree
                 ? "bg-surface text-text-secondary"
-                : info?.cancelled
+                : info?.canceled
                   ? "bg-surface text-text-secondary"
                   : "bg-amber-50 text-amber-600"
             )}>
-              {isFree ? t("freeBadge") : info?.cancelled ? t("canceled") : t("proBadge")}
+              {isFree ? t("freeBadge") : info?.canceled ? t("canceled") : t("proBadge")}
             </span>
           </div>
 
-        {!isFree && info?.subscriptionExpiryDate && !info?.cancelled && (
+        {!isFree && info?.subscriptionExpiryDate && !info?.canceled && (
           <div className="mt-4 flex items-center gap-3">
             <div className={cn(
               "text-sm font-medium px-3 py-1 rounded-full",
@@ -191,7 +191,7 @@ export default function BillingPage() {
             </span>
           </div>
         )}
-        {!isFree && info?.subscriptionExpiryDate && info?.cancelled && (
+        {!isFree && info?.subscriptionExpiryDate && info?.canceled && (
           <p className="text-xs text-text-secondary mt-2">
             {t("expiryDate", { date: new Date(info.subscriptionExpiryDate).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" }) })}
           </p>
@@ -216,7 +216,7 @@ export default function BillingPage() {
       </div>
 
       {/* ── Pricing Section (FREE + PRO active users) ── */}
-      {((isFree && !isDemo) || (!isFree && !info?.cancelled)) && (
+      {((isFree && !isDemo) || (!isFree && !info?.canceled)) && (
         <div className="bg-card rounded-2xl border border-gray-100 shadow-sm p-6">
           <h3 className="font-bold text-text-primary mb-4 text-center">
             {isFree ? t("selectPlan") : t("extendTitle")}
@@ -293,7 +293,7 @@ export default function BillingPage() {
       )}
 
       {/* ── PRO: Manage Subscription (cancel) ── */}
-      {!isFree && !info?.cancelled && (
+      {!isFree && !info?.canceled && (
         <div className="bg-card rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between">
           <div>
             <h3 className="font-semibold text-text-primary">{t("subscriptionManage")}</h3>
@@ -313,7 +313,7 @@ export default function BillingPage() {
       )}
 
       {/* ── PRO Cancelled ── */}
-      {!isFree && info?.cancelled && (
+      {!isFree && info?.canceled && (
         <div className="bg-card rounded-2xl border border-gray-100 shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>

@@ -1,4 +1,4 @@
-// dashboard GET 路由测试：订阅等级判定、cancelled 标记、过期降级、体验用户
+// dashboard GET 路由测试：订阅等级判定、canceled 标记、过期降级、体验用户
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { prismaMock, resetPrisma, stores } from './_helpers/mock-prisma'
 
@@ -37,26 +37,26 @@ describe('dashboard GET', () => {
     const res = await GET(getReq())
     expect(res.status).toBe(401)
   })
-  it('FREE → tier FREE, cancelled=false', async () => {
+  it('FREE → tier FREE, canceled=false', async () => {
     seed()
     const res = await GET(getReq())
     const json = await res.json()
     expect(json.subscriptionTier).toBe('FREE')
-    expect(json.cancelled).toBe(false)
+    expect(json.canceled).toBe(false)
   })
-  it('PRO + creemSubscriptionId → PRO, cancelled=false', async () => {
+  it('PRO + creemSubscriptionId → PRO, canceled=false', async () => {
     seed({ subscriptionTier: 'PRO', creemSubscriptionId: 'creem_sub_1' })
     const res = await GET(getReq())
     const json = await res.json()
     expect(json.subscriptionTier).toBe('PRO')
-    expect(json.cancelled).toBe(false)
+    expect(json.canceled).toBe(false)
   })
-  it('PRO + 无任何订阅ID → cancelled=true', async () => {
+  it('PRO + 无任何订阅ID → canceled=true', async () => {
     seed({ subscriptionTier: 'PRO' })
     const res = await GET(getReq())
     const json = await res.json()
     expect(json.subscriptionTier).toBe('PRO')
-    expect(json.cancelled).toBe(true)
+    expect(json.canceled).toBe(true)
   })
   it('PRO 但已过期 → 返回 FREE（降级由 expire-sweep 定时任务处理，GET 不写库）', async () => {
     const past = new Date()

@@ -47,7 +47,7 @@ export async function GET(req: Request) {
 
     const tier = await checkSubscription(userId, user)
     // 仅当为 PRO 且不存在有效订阅记录时才视为已取消。
-    const cancelled = tier === "PRO" && !user?.creemSubscriptionId
+    const canceled = tier === "PRO" && !user?.creemSubscriptionId
 
     // 最近订单
     const orders = await prisma.paymentOrder.findMany({
@@ -62,7 +62,7 @@ export async function GET(req: Request) {
       mealPlanCount,
       todayUsage: usage?.recipeCount ?? 0,
       subscriptionTier: tier,
-      cancelled,
+      canceled,
       subscriptionExpiryDate: user?.subscriptionExpiryDate?.toISOString() ?? null,
       paymentConfigured: isAlipayConfigured(),
       creemConfigured: isCreemConfigured(),
