@@ -174,7 +174,7 @@ export default function BillingPage() {
                   ? "bg-surface text-text-secondary"
                   : "bg-amber-50 text-amber-600"
             )}>
-              {isFree ? t("freeBadge") : info?.cancelled ? t("cancelled") : t("proBadge")}
+              {isFree ? t("freeBadge") : info?.cancelled ? t("canceled") : t("proBadge")}
             </span>
           </div>
 
