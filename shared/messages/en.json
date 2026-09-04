@@ -561,6 +561,7 @@
     "checkPayment": "Check Payment Status",
     "checkPaymentDesc": "Click to confirm after payment",
     "redirecting": "Redirecting...",
+    "paymentRetryHint": "If first load fails, please retry",
     "querying": "Checking...",
     "orderHistory": "📋 View Order History →",
     "loading": "Loading...",

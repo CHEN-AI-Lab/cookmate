@@ -538,6 +538,7 @@
     "checkPayment": "檢測付款狀態",
     "checkPaymentDesc": "付完款後點擊確認",
     "redirecting": "跳轉中...",
+    "paymentRetryHint": "如首次載入失敗請重試",
     "querying": "查詢中...",
     "orderHistory": "📋 查看訂單記錄 →",
     "loading": "加載中...",

@@ -75,14 +75,14 @@ export default function BillingPage() {
           }
           return null
         })
-        .then((result) => {
-          if (result?.paid || result?.message?.includes("没有待处理")) {
-            setRefreshKey((k) => k + 1)
-          }
+        .then(() => {
+          // 无论轮询结果如何，都刷新 dashboard（GET 接口内部已处理升级兜底）
+          setRefreshKey((k) => k + 1)
         })
         .catch(() => { /* silent */ })
       window.history.replaceState({}, "", window.location.pathname)
     } else if (params.get("canceled") === "true") {
+      fetch("/api/creem/create-checkout?cancel=true", { method: "POST" }).catch(() => {})
       window.history.replaceState({}, "", window.location.pathname)
     }
   }, [refreshKey, t])
@@ -414,6 +414,7 @@ export default function BillingPage() {
                   {actionLoading === "creem" && <span className="text-xs text-text-secondary shrink-0">{t("redirecting")}</span>}
                 </button>
               )}
+              <p className="text-xs text-text-secondary/70 px-1">{t("paymentRetryHint")}</p>
             </div>
 
             {/* 退款声明：虚拟商品一经开通不支持退款（正式法律措辞见定价页） */}

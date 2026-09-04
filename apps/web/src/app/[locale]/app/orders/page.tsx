@@ -54,10 +54,11 @@ export default function OrdersPage() {
   }, [])
 
   const channelLabel: Record<string, string> = { alipay: t("channelAlipay"), creem: t("channelCreem") }
-  const statusLabel: Record<string, string> = { PAID: t("completed"), PENDING: t("pending"), EXPIRED: t("expired") }
+  const statusLabel: Record<string, string> = { PAID: t("completed"), PENDING: t("pending"), CANCELED: t("cancelled"), EXPIRED: t("expired") }
   const statusColor: Record<string, string> = {
     PAID: "text-green-600 bg-green-50",
-    PENDING: "text-text-secondary bg-surface",
+    PENDING: "text-amber-600 bg-amber-50",
+    CANCELED: "text-text-secondary bg-surface",
     EXPIRED: "text-text-secondary bg-surface",
   }
 

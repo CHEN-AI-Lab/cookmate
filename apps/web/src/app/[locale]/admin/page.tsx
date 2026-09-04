@@ -614,14 +614,37 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function WebhookStatusBadge({ status }: { status: string }) {
-  if (status === "processed") {
-    return <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">已处理</span>
+  const cnLabel: Record<string, string> = {
+    received: "已收到",
+    processed: "已处理",
+    duplicate: "重复跳过",
+    ignored: "已忽略",
+    "failed:signature": "签名失败",
+    "failed:unresolved": "无法解析",
+    "failed:user-not-found": "用户不存在",
+    "failed:error": "处理异常",
+    "ignored:late-downgrade": "迟到降级跳过",
   }
-  if (status === "duplicate") {
-    return <span className="inline-flex px-2 py-0.5 rounded-full bg-blue-100 text-blue-600 text-xs font-semibold">重复跳过</span>
+  const tone: Record<string, string> = {
+    received: "bg-amber-100 text-amber-600",
+    processed: "bg-green-100 text-green-600",
+    duplicate: "bg-blue-100 text-blue-600",
+    ignored: "bg-gray-100 text-gray-500",
   }
-  if (status.startsWith("failed")) {
-    return <span className="inline-flex px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold" title={status}>失败</span>
-  }
-  return <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">{status}</span>
+  const failed = status.startsWith("failed")
+  const ignored = status.startsWith("ignored")
+  const cls = failed
+    ? "bg-red-100 text-red-600"
+    : ignored
+      ? "bg-gray-100 text-gray-500"
+      : tone[status] || "bg-gray-100 text-gray-500"
+  const title = cnLabel[status] || status
+  return (
+    <span
+      className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${cls}`}
+      title={title}
+    >
+      {status}
+    </span>
+  )
 }

@@ -22,6 +22,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Creem 支付正在配置中" }, { status: 503 })
     }
 
+    // 支付取消分支：用户从 Creem 跳回 ?canceled=true 时，把最近 PENDING 订单标记为 CANCELED
+    const url = new URL(req.url)
+    if (url.searchParams.get("cancel") === "true") {
+      await prisma.paymentOrder.updateMany({
+        where: { userId: session.user.id, channel: "creem", status: "PENDING" },
+        data: { status: "CANCELED" },
+      }).catch(() => {})
+      return NextResponse.json({ success: true })
+    }
+
     let period: "monthly" | "annual" = "monthly"
     try {
       const body = await req.json()
@@ -99,43 +109,43 @@ export async function GET(req: Request) {
     const isPaid = checkout.status === "completed"
 
     if (isPaid) {
-      // 精确反查：用 Creem 的 checkoutId（externalCheckoutId）匹配本地 PENDING 订单，
-      // 避免「按最近 PENDING 匹配」在历史存在多个 abandoned checkout 时匹配错订单
-      const pendingOrder = await prisma.paymentOrder.findFirst({
-        where: {
-          userId: session.user.id,
-          channel: "creem",
-          status: "PENDING",
-          externalCheckoutId: checkoutId,
-        },
+      // 标记本地订单 PAID（不管之前是 PENDING 还是已被 webhook 标过 PAID）
+      const localOrder = await prisma.paymentOrder.findFirst({
+        where: { userId: session.user.id, channel: "creem", externalCheckoutId: checkoutId },
       })
-
       let upgraded = false
-      if (pendingOrder) {
-        const updated = await prisma.paymentOrder.updateMany({
-          where: { id: pendingOrder.id, status: "PENDING" },
+      if (localOrder && localOrder.status === "PENDING") {
+        await prisma.paymentOrder.updateMany({
+          where: { id: localOrder.id, status: "PENDING" },
           data: { status: "PAID" },
         })
+      }
 
-        if (updated.count > 0) {
-          // 升级用户 — 根据 metadata.period 计算过期时间（annual → 1 年，其余 → 1 月）
-          // 续费累加：从 max(now, 现有到期日) 起算，避免吞掉剩余天数
-          const user = await prisma.user.findUnique({ where: { id: session.user.id } })
-          const now = new Date()
-          const base = user?.subscriptionExpiryDate && user.subscriptionExpiryDate > now
-            ? user.subscriptionExpiryDate
-            : now
-          const period = checkoutMeta.period
-          const expiryDate = period === "annual" ? addYears(base, 1) : addMonths(base, 1)
-          await prisma.user.update({
-            where: { id: session.user.id },
-            data: {
-              subscriptionTier: "PRO",
-              subscriptionExpiryDate: expiryDate,
-            },
-          })
-          upgraded = true
-        }
+      // 升级兜底：checkout 已完成，且用户还不是 PRO（或 PRO 到期日早于本次应得周期）→ 升级
+      // 这是 webhook subscription.paid 失败时的关键兜底路径
+      const user = await prisma.user.findUnique({ where: { id: session.user.id } })
+      const now = new Date()
+      const period = checkoutMeta.period
+      const newExpiry = period === "annual" ? addYears(now, 1) : addMonths(now, 1)
+      const needsUpgrade = user
+        && (user.subscriptionTier !== "PRO"
+          || !user.subscriptionExpiryDate
+          || user.subscriptionExpiryDate < newExpiry)
+
+      if (needsUpgrade && user) {
+        // 续费累加：从 max(now, 现有到期日) 起算
+        const base = user.subscriptionExpiryDate && user.subscriptionExpiryDate > now
+          ? user.subscriptionExpiryDate
+          : now
+        const expiryDate = period === "annual" ? addYears(base, 1) : addMonths(base, 1)
+        await prisma.user.update({
+          where: { id: session.user.id },
+          data: {
+            subscriptionTier: "PRO",
+            subscriptionExpiryDate: expiryDate,
+          },
+        })
+        upgraded = true
       }
 
       return NextResponse.json({
