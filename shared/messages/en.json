@@ -485,8 +485,8 @@
   },
   "billing": {
     "title": "💳 Billing & Subscription",
-    "subtitle": "Manage your subscription plan and payment methods",
-    "currentPlan": "Current Plan",
+    "subtitle": "Manage your subscription scheme and payment methods",
+    "currentPlan": "Current Subscription",
     "upgrade": "Upgrade Plan",
     "noSubscription": "No subscription records",
     "proPlan": "Pro",

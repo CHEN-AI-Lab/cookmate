@@ -486,7 +486,7 @@
   "billing": {
     "title": "課金管理",
     "subtitle": "サブスクリプションを管理",
-    "currentPlan": "現在のプラン",
+    "currentPlan": "現在のサブスクリプション",
     "familyPlan": "ファミリープラン",
     "perMonth": "/月",
     "perYear": "/年",

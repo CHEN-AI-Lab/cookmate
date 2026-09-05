@@ -485,8 +485,8 @@
   },
   "billing": {
     "title": "💳 賬單與訂閱",
-    "subtitle": "管理你的訂閱計劃和付款方式",
-    "currentPlan": "當前計劃",
+    "subtitle": "管理你的訂閱方案和付款方式",
+    "currentPlan": "當前訂閱",
     "upgrade": "升級套餐",
     "noSubscription": "暫無訂閱記錄",
     "proPlan": "Pro（專業版）",
