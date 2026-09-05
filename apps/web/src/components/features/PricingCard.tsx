@@ -17,6 +17,7 @@ interface PricingCardProps {
   onCta: () => void
   disabled?: boolean
   loading?: boolean
+  ctaHint?: string
 }
 
 function CurrencySymbol({ locale }: { locale: string }) {
@@ -36,6 +37,7 @@ export function PricingCard({
   onCta,
   disabled,
   loading,
+  ctaHint,
 }: PricingCardProps) {
   const locale = useLocale()
   const t = useTranslations("billing")
@@ -120,6 +122,7 @@ export function PricingCard({
               <button
                 onClick={onCta}
                 disabled={disabled || loading}
+                title={ctaHint}
                 className={cn(
                   "mt-6 w-full py-2.5 rounded-xl text-sm font-semibold transition-all",
                   highlighted
