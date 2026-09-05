@@ -58,6 +58,22 @@ describe('dashboard GET', () => {
     expect(json.subscriptionTier).toBe('PRO')
     expect(json.canceled).toBe(true)
   })
+  it('返回 paymentChannel（最近 PAID 订单的渠道）', async () => {
+    seed({ subscriptionTier: 'PRO', creemSubscriptionId: 'creem_sub_1' })
+    const old = new Date('2026-01-01T00:00:00Z')
+    const recent = new Date('2026-09-01T00:00:00Z')
+    stores.orders.set('o1', { id: 'o1', orderId: 'o1', userId: 'u1', channel: 'creem', amount: 2000, status: 'PAID', createdAt: old })
+    stores.orders.set('o2', { id: 'o2', orderId: 'o2', userId: 'u1', channel: 'alipay', amount: 2000, status: 'PAID', createdAt: recent })
+    const res = await GET(getReq())
+    const json = await res.json()
+    expect(json.paymentChannel).toBe('alipay') // recent > old，取最新的
+  })
+  it('无 PAID 订单 → paymentChannel=null', async () => {
+    seed()
+    const res = await GET(getReq())
+    const json = await res.json()
+    expect(json.paymentChannel).toBeNull()
+  })
   it('PRO 但已过期 → 返回 FREE（降级由 expire-sweep 定时任务处理，GET 不写库）', async () => {
     const past = new Date()
     past.setDate(past.getDate() - 1)

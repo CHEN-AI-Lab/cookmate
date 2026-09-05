@@ -228,3 +228,82 @@ describe('Creem webhook — P0 加固', () => {
     expect(stores.users.get('u1').subscriptionTier).toBe('FREE')
   })
 })
+
+// ── 续费累加测试 ──
+describe('Creem webhook — 续费累加', () => {
+  it('subscription.paid 首次购买 monthly → 到期日 = now + 1月', async () => {
+    stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null })
+    await POST(creemReq(mkCreem('subscription.paid', subObj({ metadata: { userId: 'u1', period: 'monthly' } }), 'e_first_m')))
+    const u = stores.users.get('u1')
+    expect(u.subscriptionTier).toBe('PRO')
+    const expected = new Date()
+    expected.setUTCMonth(expected.getUTCMonth() + 1)
+    expect(u.subscriptionExpiryDate?.getUTCMonth()).toBe(expected.getUTCMonth())
+    expect(u.subscriptionExpiryDate?.getUTCFullYear()).toBe(expected.getUTCFullYear())
+  })
+
+  it('subscription.paid 首次购买 annual → 到期日 = now + 1年', async () => {
+    stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null })
+    await POST(creemReq(mkCreem('subscription.paid', subObj({ metadata: { userId: 'u1', period: 'annual' } }), 'e_first_y')))
+    const u = stores.users.get('u1')
+    expect(u.subscriptionTier).toBe('PRO')
+    const expected = new Date()
+    expected.setUTCFullYear(expected.getUTCFullYear() + 1)
+    expect(u.subscriptionExpiryDate?.getUTCFullYear()).toBe(expected.getUTCFullYear())
+  })
+
+  it('subscription.paid 续费 monthly → 到期日在现有到期日 + 1月（不从 now 算）', async () => {
+    // 用户已有 PRO，到期日 = 未来某天
+    const existingExpiry = new Date()
+    existingExpiry.setUTCMonth(existingExpiry.getUTCMonth() + 3) // 3个月后到期
+    stores.users.set('u1', {
+      id: 'u1',
+      subscriptionTier: 'PRO',
+      subscriptionExpiryDate: existingExpiry,
+      creemSubscriptionId: 'creem_sub_1',
+    })
+    await POST(creemReq(mkCreem('subscription.paid', subObj({ metadata: { userId: 'u1', period: 'monthly' } }), 'e_renew_m')))
+    const u = stores.users.get('u1')
+    // 新到期日 = 现有到期日 + 1月 = 4个月后（不是 now + 1月 = 1个月后）
+    const expected = new Date(existingExpiry)
+    expected.setUTCMonth(expected.getUTCMonth() + 1)
+    expect(u.subscriptionExpiryDate?.getUTCMonth()).toBe(expected.getUTCMonth())
+    expect(u.subscriptionExpiryDate?.getUTCFullYear()).toBe(expected.getUTCFullYear())
+  })
+
+  it('subscription.paid 续费 annual → 到期日在现有到期日 + 1年', async () => {
+    const existingExpiry = new Date()
+    existingExpiry.setUTCMonth(existingExpiry.getUTCMonth() + 3) // 3个月后到期
+    stores.users.set('u1', {
+      id: 'u1',
+      subscriptionTier: 'PRO',
+      subscriptionExpiryDate: existingExpiry,
+      creemSubscriptionId: 'creem_sub_1',
+    })
+    await POST(creemReq(mkCreem('subscription.paid', subObj({ metadata: { userId: 'u1', period: 'annual' } }), 'e_renew_y')))
+    const u = stores.users.get('u1')
+    // 新到期日 = 现有到期日 + 1年
+    const expected = new Date(existingExpiry)
+    expected.setUTCFullYear(expected.getUTCFullYear() + 1)
+    expect(u.subscriptionExpiryDate?.getUTCFullYear()).toBe(expected.getUTCFullYear())
+    expect(u.subscriptionExpiryDate?.getUTCMonth()).toBe(expected.getUTCMonth())
+  })
+
+  it('相同 eventId 重复投递续费 → 不重复累加（幂等保护）', async () => {
+    const existingExpiry = new Date()
+    existingExpiry.setUTCMonth(existingExpiry.getUTCMonth() + 3)
+    stores.users.set('u1', {
+      id: 'u1',
+      subscriptionTier: 'PRO',
+      subscriptionExpiryDate: existingExpiry,
+      creemSubscriptionId: 'creem_sub_1',
+    })
+    const ev = mkCreem('subscription.paid', subObj({ metadata: { userId: 'u1', period: 'monthly' } }), 'evt_renew_dup')
+    await POST(creemReq(ev, 's1'))
+    const afterFirst = stores.users.get('u1').subscriptionExpiryDate
+    // 重复投递同一事件
+    const res = await POST(creemReq(ev, 's2'))
+    expect(res.status).toBe(200)
+    expect(stores.users.get('u1').subscriptionExpiryDate).toEqual(afterFirst) // 到期日不变
+  })
+})
