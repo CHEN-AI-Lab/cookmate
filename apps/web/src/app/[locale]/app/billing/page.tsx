@@ -129,13 +129,13 @@ export default function BillingPage() {
   }
 
   // Pro 卡按钮文案：
-  // FREE → 升级到 Pro 月付 / 升级到 Pro 年付（区分周期）
+  // FREE → 订阅（不区分周期，周期在卡片价格旁已显示）
   // 已取消 → 重新开通
   // Creem 活跃 + 当前周期卡 → 当前计划（禁用）
   // Creem 活跃 + 非当前周期卡 → 已订阅（禁用）
   // 支付宝续费 → 续费延长
   const getProCtaLabel = (period: "monthly" | "annual") => {
-    if (isFree) return period === "annual" ? t("upgradeAnnual") : t("upgradeMonthly")
+    if (isFree) return t("subscribePro")
     if (info?.canceled) return t("reactivateAction")
     if (isCreemActive) {
       return isCurrentProPlan(period) ? t("currentPlan") : t("currentSubscribed")
@@ -267,10 +267,11 @@ export default function BillingPage() {
               features={t.raw("freePlanFeatures") as string[]}
               highlighted={false}
               isCurrent={isFree}
-              ctaLabel={isFree ? t("inUse") : t("currentFree")}
+              ctaLabel={t("inUse")}
               onCta={() => {}}
               disabled={true}
               loading={false}
+              hideButton={!isFree}
             />
 
             {/* Pro Monthly */}

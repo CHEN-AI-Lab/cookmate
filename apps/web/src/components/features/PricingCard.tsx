@@ -18,6 +18,7 @@ interface PricingCardProps {
   disabled?: boolean
   loading?: boolean
   ctaHint?: string
+  hideButton?: boolean
 }
 
 function CurrencySymbol({ locale }: { locale: string }) {
@@ -38,6 +39,7 @@ export function PricingCard({
   disabled,
   loading,
   ctaHint,
+  hideButton,
 }: PricingCardProps) {
   const locale = useLocale()
   const t = useTranslations("billing")
@@ -119,27 +121,23 @@ export function PricingCard({
               </ul>
 
               {/* CTA Button */}
-              <button
-                onClick={onCta}
-                disabled={disabled || loading}
-                title={ctaHint}
-                className={cn(
-                  "mt-6 w-full py-2.5 rounded-xl text-sm font-semibold transition-all",
-                  highlighted
-                    ? "bg-amber-500 text-white hover:bg-amber-600 active:scale-[0.98]"
-                    : "bg-surface text-text-primary border border-border hover:bg-surface active:scale-[0.98]",
-                  (disabled || loading) && "opacity-50 cursor-not-allowed active:scale-100"
-                )}
-              >
-                {loading ? t("processing") : ctaLabel}
-              </button>
-
-              {/* Current plan indicator */}
-              {isCurrent && (
-                <div className="mt-3 text-xs font-medium text-amber-600">
-                  {t("currentPlan")}
-                </div>
+              {!hideButton && (
+                <button
+                  onClick={onCta}
+                  disabled={disabled || loading}
+                  title={ctaHint}
+                  className={cn(
+                    "mt-6 w-full py-2.5 rounded-xl text-sm font-semibold transition-all",
+                    highlighted
+                      ? "bg-amber-500 text-white hover:bg-amber-600 active:scale-[0.98]"
+                      : "bg-surface text-text-primary border border-border hover:bg-surface active:scale-[0.98]",
+                    (disabled || loading) && "opacity-50 cursor-not-allowed active:scale-100"
+                  )}
+                >
+                  {loading ? t("processing") : ctaLabel}
+                </button>
               )}
+              {hideButton && <div className="mt-6" />}
             </div>
     </div>
   )
