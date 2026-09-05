@@ -197,7 +197,7 @@ export default function BillingPage() {
               isFree
                 ? "bg-surface text-text-secondary"
                 : info?.canceled
-                  ? "bg-surface text-text-secondary"
+                  ? "bg-orange-50 text-orange-600"
                   : "bg-amber-50 text-amber-600"
             )}>
               {isFree ? t("freeBadge") : info?.canceled ? t("canceled") : t("proBadge")}
@@ -379,7 +379,7 @@ export default function BillingPage() {
       {/* ── Checkout Modal ── */}
       {showCheckoutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => { setShowCheckoutModal(false); setError("") }}>
-          <div className="bg-card rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-card rounded-2xl shadow-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold text-lg text-text-primary mb-4 text-center">
               {isFree ? t("checkoutTitle") : t("extendTitle")}
             </h3>
@@ -396,7 +396,8 @@ export default function BillingPage() {
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">{error}</div>
             )}
 
-            <p className="text-sm font-medium text-text-primary mb-3">{t("paymentMethods")}</p>
+            <p className="text-sm font-medium text-text-primary mb-1">{t("paymentMethods")}</p>
+            <p className="text-xs text-text-secondary/70 mb-3 px-1">{t("paymentRetryHint")}</p>
             <div className="space-y-2">
               <button
                 onClick={async () => {
@@ -451,7 +452,6 @@ export default function BillingPage() {
                   {actionLoading === "creem" && <span className="text-xs text-text-secondary shrink-0">{t("redirecting")}</span>}
                 </button>
               )}
-              <p className="text-xs text-text-secondary/70 px-1">{t("paymentRetryHint")}</p>
             </div>
 
             {/* 退款声明：虚拟商品一经开通不支持退款（正式法律措辞见定价页） */}
