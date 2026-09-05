@@ -430,7 +430,7 @@ export default function BillingPage() {
                 </svg>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-text-primary text-sm">{t("alipay")}</p>
-                  <p className="text-xs text-text-secondary">{checkoutPriceDisplay}{checkoutPeriodLabel}</p>
+                  <p className="text-xs text-text-secondary">{t("alipayDesc")}</p>
                 </div>
                 {paying && <span className="text-xs text-text-secondary shrink-0">{t("redirecting")}</span>}
               </button>
