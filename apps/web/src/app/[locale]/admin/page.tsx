@@ -760,16 +760,18 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
       <p className="text-text-secondary text-sm">
         生产环境配置核对（只显示是否已配置，不暴露密钥原文）。带 * 为必填项，标红「未配置」会导致对应功能不可用。
       </p>
-      {sections.map((s) => (
-        <div key={s.title} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-          <h3 className="px-4 py-3 font-semibold text-text-primary bg-gray-50 border-b border-gray-100">{s.title}</h3>
-          <div>
-            {s.rows.map((r) => (
-              <ConfigRow key={r.label} label={r.label} value={r.value} required={r.required} />
-            ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {sections.map((s) => (
+          <div key={s.title} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+            <h3 className="px-4 py-3 font-semibold text-text-primary bg-gray-50 border-b border-gray-100">{s.title}</h3>
+            <div>
+              {s.rows.map((r) => (
+                <ConfigRow key={r.label} label={r.label} value={r.value} required={r.required} />
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   )
 }
