@@ -496,6 +496,7 @@
     "checkoutPay": "確認支付",
     "extendTitle": "續費延長",
     "extendAction": "續費延長",
+    "reactivateAction": "重新開通",
     "downgradeLabel": "降級",
     "downgradeTitle": "降級確認",
     "downgradeConfirm": "確定要降級到免費版嗎？降級後當前週期內仍可使用 Pro 功能，到期後自動降級。",

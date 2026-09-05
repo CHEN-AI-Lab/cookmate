@@ -501,6 +501,7 @@
     "checkoutCancel": "取消",
     "extendTitle": "续费延长",
     "extendAction": "续费延长",
+    "reactivateAction": "重新开通",
     "downgradeLabel": "降级",
     "downgradeTitle": "降级确认",
     "downgradeConfirm": "确定要降级到免费版吗？降级后当前周期内仍可使用 Pro 功能，到期后自动降级。",

@@ -258,7 +258,7 @@ export default function BillingPage() {
               features={t.raw("proPlanFeatures") as string[]}
               highlighted={false}
               isCurrent={false}
-              ctaLabel={isFree ? t("upgradeAction") : t("extendAction")}
+              ctaLabel={isFree ? t("upgradeAction") : info?.canceled ? t("reactivateAction") : t("extendAction")}
               onCta={() => { setSelectedPeriod("monthly"); setShowCheckoutModal(true) }}
               disabled={false}
               loading={false}
@@ -274,7 +274,7 @@ export default function BillingPage() {
               features={t.raw("proPlanFeatures") as string[]}
               highlighted={true}
               isCurrent={false}
-              ctaLabel={isFree ? t("upgradeAction") : t("extendAction")}
+              ctaLabel={isFree ? t("upgradeAction") : info?.canceled ? t("reactivateAction") : t("extendAction")}
               onCta={() => { setSelectedPeriod("annual"); setShowCheckoutModal(true) }}
               disabled={false}
               loading={false}

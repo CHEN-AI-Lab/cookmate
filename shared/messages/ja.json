@@ -497,6 +497,7 @@
     "checkoutCancel": "キャンセル",
     "extendTitle": "サブスクリプション延長",
     "extendAction": "延長",
+    "reactivateAction": "再開する",
     "downgradeLabel": "ダウングレード",
     "downgradeTitle": "ダウングレード確認",
     "downgradeConfirm": "無料プランにダウングレードしてもよろしいですか？現在の請求期間が終了するまでPro機能をご利用いただけます。",
