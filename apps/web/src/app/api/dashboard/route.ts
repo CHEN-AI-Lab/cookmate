@@ -49,13 +49,14 @@ export async function GET(req: Request) {
     // 仅当为 PRO 且不存在有效订阅记录时才视为已取消。
     const canceled = tier === "PRO" && !user?.creemSubscriptionId
 
-    // 查最近一笔 PAID 订单的渠道（creem/alipay），用于前端区分按钮显示
+    // 查最近一笔 PAID 订单的渠道和周期，用于前端区分按钮显示
     const lastPaidOrder = await prisma.paymentOrder.findFirst({
       where: { userId, status: "PAID" },
       orderBy: { createdAt: "desc" },
-      select: { channel: true },
+      select: { channel: true, period: true },
     }).catch(() => null)
     const paymentChannel = lastPaidOrder?.channel ?? null
+    const subscriptionPeriod = lastPaidOrder?.period ?? null
 
     // 最近订单
     const orders = await prisma.paymentOrder.findMany({
@@ -72,6 +73,7 @@ export async function GET(req: Request) {
       subscriptionTier: tier,
       canceled,
       paymentChannel,
+      subscriptionPeriod,
       subscriptionExpiryDate: user?.subscriptionExpiryDate?.toISOString() ?? null,
       paymentConfigured: isAlipayConfigured(),
       creemConfigured: isCreemConfigured(),

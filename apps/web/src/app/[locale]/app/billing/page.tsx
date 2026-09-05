@@ -14,6 +14,7 @@ interface BillingInfo {
   creemConfigured: boolean
   canceled: boolean
   paymentChannel: string | null
+  subscriptionPeriod: string | null
   todayUsage: number
   orders?: Array<{
     id: string
@@ -60,6 +61,7 @@ export default function BillingPage() {
           creemConfigured: !!data.creemConfigured,
           canceled: !!data.canceled,
           paymentChannel: data.paymentChannel ?? null,
+          subscriptionPeriod: data.subscriptionPeriod ?? null,
           todayUsage: data.todayUsage ?? 0,
           orders: data.orders || [],
         })
@@ -119,13 +121,25 @@ export default function BillingPage() {
   const isFree = info?.subscriptionTier === "FREE"
   const isDemo = info?.isDemoUser
   const isCreemActive = !isFree && !info?.canceled && info?.paymentChannel === "creem"
+  const currentPeriod = info?.subscriptionPeriod // "monthly" | "annual" | null
+
+  // 判断某张 Pro 卡是否是当前订阅的周期
+  const isCurrentProPlan = (period: "monthly" | "annual") => {
+    return !isFree && !info?.canceled && currentPeriod === period
+  }
 
   // Pro 卡按钮文案：
-  // FREE → 升级到 Pro | 已取消 → 重新开通 | Creem 活跃 → 已订阅 | 支付宝续费 → 续费延长
-  const getProCtaLabel = (_period: "monthly" | "annual") => {
-    if (isFree) return t("upgradeAction")
+  // FREE → 升级到 Pro 月付 / 升级到 Pro 年付（区分周期）
+  // 已取消 → 重新开通
+  // Creem 活跃 + 当前周期卡 → 当前计划（禁用）
+  // Creem 活跃 + 非当前周期卡 → 已订阅（禁用）
+  // 支付宝续费 → 续费延长
+  const getProCtaLabel = (period: "monthly" | "annual") => {
+    if (isFree) return period === "annual" ? t("upgradeAnnual") : t("upgradeMonthly")
     if (info?.canceled) return t("reactivateAction")
-    if (isCreemActive) return t("currentSubscribed")
+    if (isCreemActive) {
+      return isCurrentProPlan(period) ? t("currentPlan") : t("currentSubscribed")
+    }
     return t("extendAction")
   }
   const currency = locale === "zh-CN" ? "CNY" : "USD"
@@ -253,9 +267,9 @@ export default function BillingPage() {
               features={t.raw("freePlanFeatures") as string[]}
               highlighted={false}
               isCurrent={isFree}
-              ctaLabel={isFree ? t("inUse") : t("downgradeLabel")}
-              onCta={() => { if (!isFree) setShowDowngradeModal(true) }}
-              disabled={isFree}
+              ctaLabel={isFree ? t("inUse") : t("currentFree")}
+              onCta={() => {}}
+              disabled={true}
               loading={false}
             />
 
@@ -267,12 +281,12 @@ export default function BillingPage() {
               period={t("monthlyPeriod")}
               features={t.raw("proPlanFeatures") as string[]}
               highlighted={false}
-              isCurrent={false}
+              isCurrent={isCurrentProPlan("monthly")}
               ctaLabel={getProCtaLabel("monthly")}
               onCta={() => { setSelectedPeriod("monthly"); setShowCheckoutModal(true) }}
-              disabled={isCreemActive}
+              disabled={isCreemActive || isCurrentProPlan("monthly")}
               loading={false}
-              ctaHint={isCreemActive ? t("creemActiveCtaHint") : undefined}
+              ctaHint={isCreemActive && !isCurrentProPlan("monthly") ? t("creemActiveCtaHint") : undefined}
             />
 
             {/* Pro Annual */}
@@ -284,12 +298,12 @@ export default function BillingPage() {
               saving={t("yearlySaving")}
               features={t.raw("proPlanFeatures") as string[]}
               highlighted={true}
-              isCurrent={false}
+              isCurrent={isCurrentProPlan("annual")}
               ctaLabel={getProCtaLabel("annual")}
               onCta={() => { setSelectedPeriod("annual"); setShowCheckoutModal(true) }}
-              disabled={isCreemActive}
+              disabled={isCreemActive || isCurrentProPlan("annual")}
               loading={false}
-              ctaHint={isCreemActive ? t("creemActiveCtaHint") : undefined}
+              ctaHint={isCreemActive && !isCurrentProPlan("annual") ? t("creemActiveCtaHint") : undefined}
             />
           </div>
 
