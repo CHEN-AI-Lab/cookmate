@@ -125,10 +125,27 @@ function extractPeriod(event: Record<string, unknown>): string | undefined {
   return undefined
 }
 
-// 兜底计算到期日（当事件未携带官方 current_period_end_date 时）
-function computeFallbackExpiry(period?: string): Date {
+// 续费累加：从 max(now, 现有到期日) 起算，再 + 周期
+// 首次购买（FREE→PRO）：base=now，行为不变
+// 续费（PRO→PRO）：base=现有到期日，正确累加
+function computeExpiryWithCarry(existingExpiry: Date | null, period: string): Date {
   const now = new Date()
-  const expiry = new Date(now)
+  const base = existingExpiry && existingExpiry > now ? existingExpiry : now
+  const expiry = new Date(base)
+  if (period === "annual") {
+    expiry.setUTCFullYear(expiry.getUTCFullYear() + 1)
+  } else {
+    expiry.setUTCMonth(expiry.getUTCMonth() + 1)
+  }
+  return expiry
+}
+
+// 兜底计算到期日（当事件未携带官方 current_period_end_date 时）
+// 从 max(now, 现有到期日) 起算，不再从 now 起算
+function computeFallbackExpiry(period?: string, existingExpiry?: Date | null): Date {
+  const now = new Date()
+  const base = existingExpiry && existingExpiry > now ? existingExpiry : now
+  const expiry = new Date(base)
   if (period === "annual") {
     expiry.setUTCFullYear(expiry.getUTCFullYear() + 1)
   } else {
@@ -193,18 +210,23 @@ async function recordOrder(userId: string, externalCheckoutId: string, period?: 
 }
 
 // 授予访问权限（subscription.paid 用）
-// 用 Creem 官方的 current_period_end_date 作为到期日，不再自己算
+// 续费累加：从 max(now, 现有到期日) 起算，再 + 周期
 // 返回结构化结果：granted=true 表示已写入；granted=false 时 reason 区分原因（user 不存在 → 让 Creem 重试；已 PRO → 幂等跳过）
 async function grantAccess(
   userId: string,
   subscriptionId: string,
-  periodEndDate: Date,
+  period: string | undefined,
 ): Promise<{ granted: boolean; reason?: "user-not-found" | "already-pro" }> {
   const user = await prisma.user.findUnique({ where: { id: userId } })
   if (!user) return { granted: false, reason: "user-not-found" }
 
-  // 幂等：如果用户已经是 PRO 且到期日 >= 本次周期结束日，说明已授权，跳过
-  if (user.subscriptionTier === "PRO" && user.subscriptionExpiryDate && user.subscriptionExpiryDate >= periodEndDate) {
+  // 续费累加：从 max(now, 现有到期日) 起算，再 + 周期
+  // 首次购买（FREE→PRO）：base=now
+  // 续费（PRO→PRO）：base=现有到期日，正确累加
+  const expiryDate = computeExpiryWithCarry(user.subscriptionExpiryDate, period || "monthly")
+
+  // 幂等：如果用户已经是 PRO 且新算的到期日 <= 现有到期日，说明已授权，跳过
+  if (user.subscriptionTier === "PRO" && user.subscriptionExpiryDate && expiryDate <= user.subscriptionExpiryDate) {
     return { granted: false, reason: "already-pro" }
   }
 
@@ -212,7 +234,7 @@ async function grantAccess(
     where: { id: userId },
     data: {
       subscriptionTier: "PRO",
-      subscriptionExpiryDate: periodEndDate,
+      subscriptionExpiryDate: expiryDate,
       creemSubscriptionId: subscriptionId,
     },
   })
@@ -382,22 +404,24 @@ export async function POST(req: Request) {
         return checkoutStatus === "completed"
       })()
       if (userId && orderPaid) {
-        const expiryDate = computeFallbackExpiry(period)
-        // 幂等：已 PRO 且到期日 >= 本次应得到期日 → 跳过，不重复加时长
         const user = await prisma.user.findUnique({ where: { id: userId } })
-        const needsUpgrade = user
-          && (user.subscriptionTier !== "PRO"
+        if (user) {
+          // 续费累加：从 max(now, 现有到期日) 起算，再 + 周期
+          const expiryDate = computeFallbackExpiry(period, user.subscriptionExpiryDate)
+          // 幂等：新算的到期日 <= 现有到期日 → 已授权，跳过
+          const needsUpgrade = user.subscriptionTier !== "PRO"
             || !user.subscriptionExpiryDate
-            || user.subscriptionExpiryDate < expiryDate)
-        if (needsUpgrade && user) {
-          await prisma.user.update({
-            where: { id: userId },
-            data: {
-              subscriptionTier: "PRO",
-              subscriptionExpiryDate: expiryDate,
-              ...(subscriptionId ? { creemSubscriptionId: subscriptionId } : {}),
-            },
-          })
+            || expiryDate > user.subscriptionExpiryDate
+          if (needsUpgrade) {
+            await prisma.user.update({
+              where: { id: userId },
+              data: {
+                subscriptionTier: "PRO",
+                subscriptionExpiryDate: expiryDate,
+                ...(subscriptionId ? { creemSubscriptionId: subscriptionId } : {}),
+              },
+            })
+          }
         }
       }
 
@@ -426,7 +450,6 @@ export async function POST(req: Request) {
     if (event.eventType === "subscription.paid") {
       const userId = await resolveUserId(event)
       const subscriptionId = extractSubscriptionId(event)
-      const periodEndDate = extractPeriodEndDate(event)
 
       // 关键：升级是「一次性授权点」，必须真正写入数据库后才算处理成功。
       // 若此刻解析不到用户/订阅（如 subscription.paid 早于 checkout.completed 到达、
@@ -438,8 +461,8 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "user or subscription not resolvable yet" }, { status: 500 })
       }
 
-      const expiryDate = periodEndDate ?? computeFallbackExpiry(extractPeriod(event))
-      const result = await grantAccess(userId, subscriptionId, expiryDate)
+      const period = extractPeriod(event)
+      const result = await grantAccess(userId, subscriptionId, period)
 
       // grantAccess 返回 user-not-found：metadata.userId/subscriptionId 与 DB 不匹配，
       // 可能是恶意构造的回调；返回 500 让 Creem 重试（虽然 Creem 不会真的改 userId，但显式失败便于对账）

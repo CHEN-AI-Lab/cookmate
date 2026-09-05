@@ -13,6 +13,7 @@ interface BillingInfo {
   isDemoUser: boolean
   creemConfigured: boolean
   canceled: boolean
+  paymentChannel: string | null
   todayUsage: number
   orders?: Array<{
     id: string
@@ -58,6 +59,7 @@ export default function BillingPage() {
           isDemoUser: !!data.isDemoUser,
           creemConfigured: !!data.creemConfigured,
           canceled: !!data.canceled,
+          paymentChannel: data.paymentChannel ?? null,
           todayUsage: data.todayUsage ?? 0,
           orders: data.orders || [],
         })
@@ -215,8 +217,11 @@ export default function BillingPage() {
       </div>
       </div>
 
-      {/* ── Pricing Section (FREE + PRO active users) ── */}
-      {((isFree && !isDemo) || (!isFree && !info?.canceled)) && (
+      {/* ── Pricing Section (FREE + PRO canceled/alipay users) ── */}
+      {/* Creem 订阅有效（PRO + 有 creemSubscriptionId）→ 不显示定价区（Creem 自动续费）
+          支付宝（PRO + 无 creemSubscriptionId + 未取消）→ 显示「续费延长」
+          FREE / 已取消 → 显示「升级/重新开通」 */}
+      {((isFree && !isDemo) || (!isFree && !info?.canceled && info?.paymentChannel !== "creem")) && (
         <div className="bg-card rounded-2xl border border-gray-100 shadow-sm p-6">
           <h3 className="font-bold text-text-primary mb-4 text-center">
             {isFree ? t("selectPlan") : t("extendTitle")}

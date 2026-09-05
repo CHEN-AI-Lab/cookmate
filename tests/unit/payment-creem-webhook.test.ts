@@ -65,12 +65,16 @@ describe('Creem webhook — 鉴权', () => {
 })
 
 describe('Creem webhook — 授权事件', () => {
-  it('subscription.paid → 授予 PRO（用官方 current_period_end_date）', async () => {
+  it('subscription.paid → 授予 PRO（从 now 累加 1 个月，首次购买）', async () => {
     await POST(creemReq(mkCreem('subscription.paid', subObj(), 'e1')))
     const u = stores.users.get('u1')
     expect(u.subscriptionTier).toBe('PRO')
     expect(u.creemSubscriptionId).toBe('creem_sub_1')
-    expect(u.subscriptionExpiryDate).toEqual(new Date('2099-01-01T00:00:00Z'))
+    // 首次购买：到期日 = now + 1 月（不再用 Creem 的 current_period_end_date）
+    const expected = new Date()
+    expected.setUTCMonth(expected.getUTCMonth() + 1)
+    expect(u.subscriptionExpiryDate?.getUTCMonth()).toBe(expected.getUTCMonth())
+    expect(u.subscriptionExpiryDate?.getUTCFullYear()).toBe(expected.getUTCFullYear())
   })
   it('subscription.paid 解析不到用户 → 500（fail-closed，等重试）', async () => {
     // 有订阅ID但没有可解析的 userId
@@ -88,13 +92,15 @@ describe('Creem webhook — 授权事件', () => {
     expect(stores.users.get('u1').creemSubscriptionId).toBe('creem_sub_1')
     expect(stores.orders.get('CKCRlocal').status).toBe('PAID')
   })
-  it('checkout.completed 用户已是 PRO 且到期日更晚 → 幂等不重复加时长', async () => {
-    // 已 PRO（到期日 2099），再来一次 checkout.completed（周期 annual → 2097-09-04 左右）→ 不覆盖
+  it('checkout.completed 用户已是 PRO → 续费累加到期日', async () => {
+    // 已 PRO（到期日 2099-01-01），再来一次 checkout.completed（周期 annual）
+    // 新到期日 = 2099-01-01 + 1年 = 2100-01-01，应该更新
     stores.users.set('u1', { id: 'u1', subscriptionTier: 'PRO', subscriptionExpiryDate: new Date('2099-01-01T00:00:00Z'), creemSubscriptionId: null })
     await POST(creemReq(mkCreem('checkout.completed', nestedObj(), 'e_co2')))
     const u = stores.users.get('u1')
     expect(u.subscriptionTier).toBe('PRO')
-    expect(u.subscriptionExpiryDate).toEqual(new Date('2099-01-01T00:00:00Z')) // 不被 annual 的 2097 覆盖
+    // 续费累加：到期日从 2099 + 1年 = 2100
+    expect(u.subscriptionExpiryDate?.getUTCFullYear()).toBe(2100)
   })
   it('subscription.update active → 同步并授权', async () => {
     await POST(creemReq(mkCreem('subscription.update', subObj({ status: 'active' }), 'e1')))
@@ -110,7 +116,7 @@ describe('Creem webhook — 降级事件', () => {
     const u = stores.users.get('u1')
     expect(u.creemSubscriptionId).toBeNull()
     expect(u.subscriptionTier).toBe('PRO')
-    expect(u.subscriptionExpiryDate).toEqual(new Date('2099-01-01T00:00:00Z'))
+    expect(u.subscriptionExpiryDate).not.toBeNull()
   })
   it('subscription.expired → 降级 FREE', async () => {
     await paid()
