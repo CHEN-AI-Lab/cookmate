@@ -251,11 +251,20 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-6xl mx-auto py-10 px-4 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-text-primary tracking-tight">支付后台</h1>
-        <p className="text-text-secondary text-sm mt-1">
-          订单 / 回调 / 取消审计 一站式查看。各列表最多展示最近 200 条（最新在前）。
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary tracking-tight">支付后台</h1>
+          <p className="text-text-secondary text-sm mt-1">
+            订单 / 回调 / 取消审计 一站式查看。各列表最多展示最近 200 条（最新在前）。
+          </p>
+        </div>
+        <button
+          onClick={refresh}
+          disabled={loading}
+          className="px-4 py-2 rounded-xl border border-gray-200 text-text-secondary text-sm hover:bg-gray-50 disabled:opacity-50 shrink-0"
+        >
+          {loading ? "刷新中…" : "刷新"}
+        </button>
       </div>
 
       {/* Tab 栏 */}
@@ -290,15 +299,6 @@ export default function AdminPage() {
       {tab === "users" && <UsersTab data={usersData} />}
       {tab === "crons" && <CronsTab data={cronData} />}
       {tab === "config" && <ConfigTab data={configData} />}
-
-      <div className="flex justify-end">
-        <button
-          onClick={refresh}
-          className="px-4 py-2 rounded-xl border border-gray-200 text-text-secondary text-sm hover:bg-gray-50"
-        >
-          刷新
-        </button>
-      </div>
     </div>
   )
 }
@@ -695,19 +695,21 @@ function WebhookStatusBadge({ status }: { status: string }) {
 function ConfigRow({ label, value, required }: { label: string; value: string; required?: boolean }) {
   const isMasked = value === "已配置" || value === "未配置"
   const isMissing = value === "未配置"
-  const rowBg = isMissing && required ? "bg-red-50/50" : ""
-  const valClass = isMasked
-    ? isMissing ? "text-red-700 font-semibold bg-red-50" : "text-green-700 font-semibold bg-green-50"
-    : "text-gray-700"
   return (
-    <tr className={rowBg}>
-      <td className="px-4 py-2.5 text-gray-700 font-medium whitespace-nowrap w-[140px]">
-        {label}{required ? <span className="text-red-500">*</span> : ""}
-      </td>
-      <td className={`px-4 py-2.5 font-mono text-xs break-all rounded ${valClass}`}>
-        {value}
-      </td>
-    </tr>
+    <div className={`flex items-center px-4 py-2.5 border-t border-gray-100 ${isMissing && required ? "bg-red-50/50" : ""}`}>
+      <div className="w-[130px] shrink-0 text-gray-700 font-medium text-sm whitespace-nowrap">
+        {label}{required ? <span className="text-red-500 ml-0.5">*</span> : ""}
+      </div>
+      <div className="flex-1 min-w-0 text-sm">
+        {isMasked ? (
+          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${isMissing ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+            {isMissing ? "✗" : "✓"} {value}
+          </span>
+        ) : (
+          <span className="font-mono text-xs break-all">{value}</span>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -761,13 +763,11 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
       {sections.map((s) => (
         <div key={s.title} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
           <h3 className="px-4 py-3 font-semibold text-text-primary bg-gray-50 border-b border-gray-100">{s.title}</h3>
-          <table className="w-full text-sm">
-            <tbody className="divide-y divide-gray-100">
-              {s.rows.map((r) => (
-                <ConfigRow key={r.label} label={r.label} value={r.value} required={r.required} />
-              ))}
-            </tbody>
-          </table>
+          <div>
+            {s.rows.map((r) => (
+              <ConfigRow key={r.label} label={r.label} value={r.value} required={r.required} />
+            ))}
+          </div>
         </div>
       ))}
     </div>

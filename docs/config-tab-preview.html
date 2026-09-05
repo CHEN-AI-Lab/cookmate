@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>支付配置 Tab 预览</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6 max-w-3xl mx-auto">
+  <h1 class="text-xl font-bold mb-4">支付配置 Tab — 预览</h1>
+
+  <div class="space-y-4">
+    <p class="text-gray-500 text-sm">
+      生产环境配置核对（只显示是否已配置，不暴露密钥原文）。带 * 为必填项，标红「未配置」会导致对应功能不可用。
+    </p>
+
+    <!-- 应用 -->
+    <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <h3 class="px-4 py-3 font-semibold text-gray-900 bg-gray-50 border-b border-gray-100">应用</h3>
+      <div>
+        <div class="flex items-center px-4 py-2.5 border-t border-gray-100">
+          <div class="w-[130px] shrink-0 text-gray-700 font-medium text-sm whitespace-nowrap">应用地址</div>
+          <div class="flex-1 min-w-0 text-sm"><span class="font-mono text-xs break-all">https://cookmate.aaigc.online</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Creem 支付 -->
+    <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <h3 class="px-4 py-3 font-semibold text-gray-900 bg-gray-50 border-b border-gray-100">Creem 支付</h3>
+      <div>
+        <div class="flex items-center px-4 py-2.5 border-t border-gray-100">
+          <div class="w-[130px] shrink-0 text-gray-700 font-medium text-sm whitespace-nowrap">API Key<span class="text-red-500 ml-0.5">*</span></div>
+          <div class="flex-1 min-w-0 text-sm">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-green-100 text-green-700">✓ 已配置</span>
+          </div>
+        </div>
+        <div class="flex items-center px-4 py-2.5 border-t border-gray-100">
+          <div class="w-[130px] shrink-0 text-gray-700 font-medium text-sm whitespace-nowrap">月付产品 ID<span class="text-red-500 ml-0.5">*</span></div>
+          <div class="flex-1 min-w-0 text-sm"><span class="font-mono text-xs break-all">prod_3pcofZ4pTXtuvdDb1j2MMp</span></div>
+        </div>
+        <div class="flex items-center px-4 py-2.5 border-t border-gray-100">
+          <div class="w-[130px] shrink-0 text-gray-700 font-medium text-sm whitespace-nowrap">年付产品 ID<span class="text-red-500 ml-0.5">*</span></div>
+          <div class="flex-1 min-w-0 text-sm"><span class="font-mono text-xs break-all">prod_abc123</span></div>
+        </div>
+        <div class="flex items-center px-4 py-2.5 border-t border-gray-100">
+          <div class="w-[130px] shrink-0 text-gray-700 font-medium text-sm whitespace-nowrap">Webhook 密钥<span class="text-red-500 ml-0.5">*</span></div>
+          <div class="flex-1 min-w-0 text-sm">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-green-100 text-green-700">✓ 已配置</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 支付宝 -->
+    <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <h3 class="px-4 py-3 font-semibold text-gray-900 bg-gray-50 border-b border-gray-100">支付宝</h3>
+      <div>
+        <div class="flex items-center px-4 py-2.5 border-t border-gray-100">
+          <div class="w-[130px] shrink-0 text-gray-700 font-medium text-sm whitespace-nowrap">App ID</div>
+          <div class="flex-1 min-w-0 text-sm">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-green-100 text-green-700">✓ 已配置</span>
+          </div>
+        </div>
+        <div class="flex items-center px-4 py-2.5 border-t border-gray-100">
+          <div class="w-[130px] shrink-0 text-gray-700 font-medium text-sm whitespace-nowrap">私钥</div>
+          <div class="flex-1 min-w-0 text-sm">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-green-100 text-green-700">✓ 已配置</span>
+          </div>
+        </div>
+        <div class="flex items-center px-4 py-2.5 border-t border-gray-100">
+          <div class="w-[130px] shrink-0 text-gray-700 font-medium text-sm whitespace-nowrap">公钥</div>
+          <div class="flex-1 min-w-0 text-sm">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-green-100 text-green-700">✓ 已配置</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 认证 -->
+    <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <h3 class="px-4 py-3 font-semibold text-gray-900 bg-gray-50 border-b border-gray-100">认证</h3>
+      <div>
+        <div class="flex items-center px-4 py-2.5 border-t border-gray-100">
+          <div class="w-[130px] shrink-0 text-gray-700 font-medium text-sm whitespace-nowrap">AUTH_SECRET<span class="text-red-500 ml-0.5">*</span></div>
+          <div class="flex-1 min-w-0 text-sm">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-green-100 text-green-700">✓ 已配置</span>
+          </div>
+        </div>
+        <div class="flex items-center px-4 py-2.5 border-t border-gray-100">
+          <div class="w-[130px] shrink-0 text-gray-700 font-medium text-sm whitespace-nowrap">管理员邮箱</div>
+          <div class="flex-1 min-w-0 text-sm"><span class="font-mono text-xs break-all">admin@aaigc.online</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cron 定时任务 -->
+    <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <h3 class="px-4 py-3 font-semibold text-gray-900 bg-gray-50 border-b border-gray-100">Cron 定时任务</h3>
+      <div>
+        <div class="flex items-center px-4 py-2.5 border-t border-gray-100 bg-red-50/50">
+          <div class="w-[130px] shrink-0 text-gray-700 font-medium text-sm whitespace-nowrap">CRON_SECRET<span class="text-red-500 ml-0.5">*</span></div>
+          <div class="flex-1 min-w-0 text-sm">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-red-100 text-red-700">✗ 未配置</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 数据库 -->
+    <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <h3 class="px-4 py-3 font-semibold text-gray-900 bg-gray-50 border-b border-gray-100">数据库</h3>
+      <div>
+        <div class="flex items-center px-4 py-2.5 border-t border-gray-100">
+          <div class="w-[130px] shrink-0 text-gray-700 font-medium text-sm whitespace-nowrap">直连 URL<span class="text-red-500 ml-0.5">*</span></div>
+          <div class="flex-1 min-w-0 text-sm">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-green-100 text-green-700">✓ 已配置</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="text-xs text-gray-400 mt-6 text-center">
+    预览页 — 数据为模拟值，实际配置请查看管理后台
+  </p>
+</body>
+</html>
