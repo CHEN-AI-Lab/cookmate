@@ -217,14 +217,19 @@ export default function BillingPage() {
       </div>
       </div>
 
-      {/* ── Pricing Section (FREE + PRO canceled/alipay users) ── */}
-      {/* Creem 订阅有效（PRO + 有 creemSubscriptionId）→ 不显示定价区（Creem 自动续费）
-          支付宝（PRO + 无 creemSubscriptionId + 未取消）→ 显示「续费延长」
-          FREE / 已取消 → 显示「升级/重新开通」 */}
-      {((isFree && !isDemo) || (!isFree && !info?.canceled && info?.paymentChannel !== "creem")) && (
+      {/* ── Pricing Section ── */}
+      {/* 只在「Creem 活跃订阅」时隐藏定价区（Creem 会自动续费，手动续费会创建第二个订阅导致重复扣款）
+          其他所有情况都显示定价区：
+          - FREE → 升级
+          - PRO + 支付宝（无 creemSubscriptionId）→ 续费延长
+          - PRO + 已取消 → 重新开通（关键：取消后必须能重新订阅） */}
+      {(() => {
+        const isCreemActive = !isFree && !info?.canceled && info?.paymentChannel === "creem"
+        return !isDemo && !isCreemActive
+      })() && (
         <div className="bg-card rounded-2xl border border-gray-100 shadow-sm p-6">
           <h3 className="font-bold text-text-primary mb-4 text-center">
-            {isFree ? t("selectPlan") : t("extendTitle")}
+            {isFree || info?.canceled ? t("selectPlan") : t("extendTitle")}
           </h3>
 
           {/* 3 cards: Free, Pro Monthly, Pro Annual */}
