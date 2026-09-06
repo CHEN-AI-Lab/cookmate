@@ -58,7 +58,8 @@ export default function LanguageSwitcher({
         sessionStorage.setItem("demoLangToast", msg)
         setTimeout(() => { setToast(""); sessionStorage.removeItem("demoLangToast") }, 2500)
       }
-      router.push(pathname, { locale: nextLocale })
+      // replace 而非 push：切换语言不往历史栈加记录，返回按钮回到上一个界面而不是上一个语言
+      router.replace(pathname, { locale: nextLocale })
     },
     [pathname, router, isDemoUser],
   )
