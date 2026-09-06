@@ -60,19 +60,19 @@ describe('支付宝创建订单', () => {
     const res = await createPOST(makeJsonReq({ period: 'monthly' }))
     expect(res.status).toBe(503)
   })
-  it('monthly → 成功，订单金额 2000 分', async () => {
+  it('monthly → 成功，订单金额 2900 分', async () => {
     const res = await createPOST(makeJsonReq({ period: 'monthly' }))
     expect(res.status).toBe(200)
     const data = await res.json()
     expect(data.payUrl).toBeTruthy()
-    expect(prismaMock.paymentOrder.create.mock.calls[0][0].data.amount).toBe(2000)
+    expect(prismaMock.paymentOrder.create.mock.calls[0][0].data.amount).toBe(2900)
     expect(prismaMock.paymentOrder.create.mock.calls[0][0].data.channel).toBe('alipay')
     expect(prismaMock.paymentOrder.create.mock.calls[0][0].data.status).toBe('PENDING')
   })
-  it('annual → 成功，订单金额 11900 分', async () => {
+  it('annual → 成功，订单金额 19900 分', async () => {
     const res = await createPOST(makeJsonReq({ period: 'annual' }))
     expect(res.status).toBe(200)
-    expect(prismaMock.paymentOrder.create.mock.calls[0][0].data.amount).toBe(11900)
+    expect(prismaMock.paymentOrder.create.mock.calls[0][0].data.amount).toBe(19900)
   })
 })
 
@@ -96,8 +96,8 @@ describe('支付宝异步通知', () => {
   })
   it('月付成功 → 幂等升级，到期 +1 月', async () => {
     stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null })
-    stores.orders.set('CKALmonth', { id: 'CKALmonth', orderId: 'CKALmonth', userId: 'u1', channel: 'alipay', amount: 2000, status: 'PENDING' })
-    const res = await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALmonth', total_amount: '20.00' }))
+    stores.orders.set('CKALmonth', { id: 'CKALmonth', orderId: 'CKALmonth', userId: 'u1', channel: 'alipay', amount: 2900, status: 'PENDING' })
+    const res = await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALmonth', total_amount: '29.00' }))
     expect(await res.text()).toBe('success')
     const u = stores.users.get('u1')
     expect(u.subscriptionTier).toBe('PRO')
@@ -107,23 +107,23 @@ describe('支付宝异步通知', () => {
   })
   it('年付成功 → 到期 +12 月（修复缺陷：原实现只 +1 月）', async () => {
     stores.users.set('u2', { id: 'u2', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null })
-    stores.orders.set('CKALyear', { id: 'CKALyear', orderId: 'CKALyear', userId: 'u2', channel: 'alipay', amount: 11900, status: 'PENDING' })
-    await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALyear', total_amount: '119.00' }))
+    stores.orders.set('CKALyear', { id: 'CKALyear', orderId: 'CKALyear', userId: 'u2', channel: 'alipay', amount: 19900, status: 'PENDING' })
+    await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALyear', total_amount: '199.00' }))
     const u = stores.users.get('u2')
     const expected = addYears(new Date(), 1)
     expect(Math.abs(u.subscriptionExpiryDate.getTime() - expected.getTime())).toBeLessThan(2000)
   })
   it('重复通知幂等：第二次不重复延长', async () => {
     stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null })
-    stores.orders.set('CKALm', { id: 'CKALm', orderId: 'CKALm', userId: 'u1', channel: 'alipay', amount: 2000, status: 'PENDING' })
-    await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALm', total_amount: '20.00' }))
+    stores.orders.set('CKALm', { id: 'CKALm', orderId: 'CKALm', userId: 'u1', channel: 'alipay', amount: 2900, status: 'PENDING' })
+    await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALm', total_amount: '29.00' }))
     const before = stores.users.get('u1').subscriptionExpiryDate
-    await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALm', total_amount: '20.00' }))
+    await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALm', total_amount: '29.00' }))
     expect(stores.users.get('u1').subscriptionExpiryDate).toEqual(before)
   })
   it('非成功状态（WAIT_BUYER_PAY）→ 不升级', async () => {
     stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null })
-    stores.orders.set('CKALw', { id: 'CKALw', orderId: 'CKALw', userId: 'u1', channel: 'alipay', amount: 2000, status: 'PENDING' })
+    stores.orders.set('CKALw', { id: 'CKALw', orderId: 'CKALw', userId: 'u1', channel: 'alipay', amount: 2900, status: 'PENDING' })
     await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'WAIT_BUYER_PAY', out_trade_no: 'CKALw' }))
     expect(stores.users.get('u1').subscriptionTier).toBe('FREE')
   })
@@ -131,8 +131,8 @@ describe('支付宝异步通知', () => {
     const now = new Date()
     const future = addMonths(now, 3)
     stores.users.set('u3', { id: 'u3', subscriptionTier: 'PRO', subscriptionExpiryDate: future, creemSubscriptionId: null })
-    stores.orders.set('CKALr', { id: 'CKALr', orderId: 'CKALr', userId: 'u3', channel: 'alipay', amount: 2000, status: 'PENDING' })
-    await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALr', total_amount: '20.00' }))
+    stores.orders.set('CKALr', { id: 'CKALr', orderId: 'CKALr', userId: 'u3', channel: 'alipay', amount: 2900, status: 'PENDING' })
+    await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALr', total_amount: '29.00' }))
     const expected = addMonths(future, 1)
     expect(Math.abs(stores.users.get('u3').subscriptionExpiryDate.getTime() - expected.getTime())).toBeLessThan(2000)
   })
@@ -140,9 +140,9 @@ describe('支付宝异步通知', () => {
   // P0 加固：金额校验 — 防止优惠/汇率/调价场景下「实付 ≠ 应付」但仍升 PRO
   it('total_amount 与本地订单金额不一致 → 400 failure 且不升级', async () => {
     stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null })
-    // 订单金额 2000 分（¥20.00），但回调 total_amount = 19.99（少 0.01）
-    stores.orders.set('CKALamt', { id: 'CKALamt', orderId: 'CKALamt', userId: 'u1', channel: 'alipay', amount: 2000, status: 'PENDING' })
-    const res = await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALamt', total_amount: '19.99' }))
+    // 订单金额 2900 分（¥29.00），但回调 total_amount = 28.99（少 0.01）
+    stores.orders.set('CKALamt', { id: 'CKALamt', orderId: 'CKALamt', userId: 'u1', channel: 'alipay', amount: 2900, status: 'PENDING' })
+    const res = await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALamt', total_amount: '28.99' }))
     expect(res.status).toBe(400)
     expect(await res.text()).toBe('failure')
     expect(stores.users.get('u1').subscriptionTier).toBe('FREE')
@@ -165,8 +165,8 @@ describe('支付宝异步通知', () => {
   // 加固：Alipay notify 必须写 WebhookLog 审计（与 Creem 一致）
   it('Alipay notify 处理成功 → WebhookLog 写入 received + processed', async () => {
     stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null })
-    stores.orders.set('CKALaudit', { id: 'CKALaudit', orderId: 'CKALaudit', userId: 'u1', channel: 'alipay', amount: 2000, status: 'PENDING' })
-    await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALaudit', total_amount: '20.00' }))
+    stores.orders.set('CKALaudit', { id: 'CKALaudit', orderId: 'CKALaudit', userId: 'u1', channel: 'alipay', amount: 2900, status: 'PENDING' })
+    await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALaudit', total_amount: '29.00' }))
     const logs = Array.from(stores.logs.values()).filter((l: any) => l.source === 'alipay')
     const received = logs.find((l: any) => l.status === 'received')
     const processed = logs.find((l: any) => l.status === 'processed')

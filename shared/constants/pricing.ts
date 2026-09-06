@@ -8,20 +8,20 @@ export const PRICING = {
 
   plans: {
     monthly: {
-      cny: { amount: 2000, display: "20" },       // ¥20.00
-      usd: { amount: 299, display: "2.99" },         // $2.99
+      cny: { amount: 2900, display: "29" },       // ¥29.00
+      usd: { amount: 499, display: "4.99" },        // $4.99
     },
     quarterly: {
-      cny: { amount: 5100, display: "51" },         // ¥51.00
-      usd: { amount: 799, display: "7.99" },          // $7.99
+      cny: { amount: 7800, display: "78" },       // ¥78.00 (¥26/月)
+      usd: { amount: 1299, display: "12.99" },       // $12.99 ($4.33/月)
     },
     semiannual: {
-      cny: { amount: 9000, display: "90" },         // ¥90.00
-      usd: { amount: 1399, display: "13.99" },        // $13.99
+      cny: { amount: 13800, display: "138" },     // ¥138.00 (¥23/月)
+      usd: { amount: 2399, display: "23.99" },      // $23.99 ($3.99/月)
     },
     annual: {
-      cny: { amount: 11900, display: "119" },       // ¥119.00
-      usd: { amount: 1699, display: "16.99" },        // $16.99
+      cny: { amount: 19900, display: "199" },     // ¥199.00 (¥16.6/月)
+      usd: { amount: 3999, display: "39.99" },       // $39.99 ($3.33/月)
     },
   } as const,
 
