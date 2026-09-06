@@ -544,14 +544,7 @@
     "cancelling": "Cancelling...",
     "yearlyPro": "Pro Yearly",
     "monthlyPro": "Pro Monthly",
-    "yearlyPrice": "16.99",
-    "monthlyPrice": "2.99",
-    "yearlyPeriod": "≈ $3.33/mo · Save 33%",
-    "yearlySaving": "🔥 Recommended · Save $20",
-    "yearlySavingShort": "Save $20",
-    "yearlySavingAlt": "Annual $39.99/yr, save $20",
     "monthlyPeriod": "Cancel anytime",
-    "otherPlans": "Quarterly $12.99/3mo · Save 13%  |  Half-year $23.99/6mo · Save 20%",
     "demoBillingTitle": "🔒 Demo Mode",
     "demoBillingDesc": "Demo users cannot use payment features. Sign up to upgrade to Pro for unlimited AI generation and meal plans.",
     "savePercent": "Save {percent}%",
@@ -597,7 +590,9 @@
     "daysLeft": "{days} days left",
     "refundPolicyTitle": "Refund Policy",
     "refundNotice": "Membership is a virtual online service provided on a prepaid basis. The membership fee is the price of the service you purchase, not a prepayment, deposit or down payment. Once activated, the membership is non-refundable and non-transferable, except where mandatory provisions of applicable laws apply, or where the service is materially defective and completely unusable. After cancellation, your membership benefits remain active until the end of the current billing cycle; remaining days are neither convertible to cash nor refundable.",
-    "checkoutRefundNotice": "Membership is a virtual product and is non-refundable once activated (except as required by law). After cancellation, benefits remain active until the end of the current billing cycle."
+    "checkoutRefundNotice": "Membership is a virtual product and is non-refundable once activated (except as required by law). After cancellation, benefits remain active until the end of the current billing cycle.",
+    "yearlyPeriodTpl": "≈ ${perMonth}/mo · Save {percent}%",
+    "yearlySavingTpl": "🔥 Recommended · Save {amount}"
   },
   "orders": {
     "title": "📋 Order History",

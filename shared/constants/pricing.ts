@@ -32,3 +32,38 @@ export const PRICING = {
 } as const
 
 export type BillingPeriod = keyof typeof PRICING.plans
+
+// ── 自动计算的宣传文案 — 不用手写价格数字 ──
+
+/** 月付价格作为基准，计算各周期的折扣 */
+function getMonthlyAmount(currency: "CNY" | "USD") {
+  return PRICING.get("monthly", currency).amount
+}
+
+/** 折算每月价格（分→元/美元，保留2位小数，末尾0去掉） */
+export function getPerMonthDisplay(period: BillingPeriod, currency: "CNY" | "USD"): string {
+  const totalMonths: Record<BillingPeriod, number> = { monthly: 1, quarterly: 3, semiannual: 6, annual: 12 }
+  const amount = PRICING.get(period, currency).amount
+  const perMonth = amount / totalMonths[period] / 100
+  // toFixed(2) 保留两位小数，再去掉末尾的 .0/.00
+  const fixed = perMonth.toFixed(2)
+  return fixed.replace(/\.?0+$/, '')
+}
+
+/** 省了多少金额（绝对值，分） */
+export function getSaveAmount(period: BillingPeriod, currency: "CNY" | "USD"): number {
+  const totalMonths: Record<BillingPeriod, number> = { monthly: 1, quarterly: 3, semiannual: 6, annual: 12 }
+  const monthlyAmount = getMonthlyAmount(currency)
+  const periodAmount = PRICING.get(period, currency).amount
+  return monthlyAmount * totalMonths[period] - periodAmount
+}
+
+/** 省了百分之几（整数） */
+export function getSavePercent(period: BillingPeriod, currency: "CNY" | "USD"): number {
+  const totalMonths: Record<BillingPeriod, number> = { monthly: 1, quarterly: 3, semiannual: 6, annual: 12 }
+  const monthlyAmount = getMonthlyAmount(currency)
+  const periodAmount = PRICING.get(period, currency).amount
+  const fullPrice = monthlyAmount * totalMonths[period]
+  if (fullPrice === 0) return 0
+  return Math.round((fullPrice - periodAmount) / fullPrice * 100)
+}

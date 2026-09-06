@@ -539,12 +539,7 @@
     "cancelling": "キャンセル中...",
     "yearlyPro": "Pro年払い",
     "monthlyPro": "Pro月払い",
-    "yearlyPeriod": "≈ $3.33/月 · 33%お得",
-    "yearlySaving": "🔥 おすすめ · $20お得",
-    "yearlySavingShort": "$20お得",
-    "yearlySavingAlt": "年払い $39.99/年、$20お得",
     "monthlyPeriod": "いつでも解約可",
-    "otherPlans": "3ヶ月 $12.99/3ヶ月 · 13%お得  |  6ヶ月 $23.99/6ヶ月 · 20%お得",
     "demoBillingTitle": "🔒 デモモード",
     "demoBillingDesc": "デモユーザーは支払い機能を利用できません。登録してProにアップグレードすると、無制限のAI生成と週間献立が利用できます。",
     "demoBillingRegister": "無料登録",
@@ -587,8 +582,6 @@
     "proPlan": "Pro",
     "freePlan": "無料",
     "proBadge": "🌟 Pro",
-    "yearlyPrice": "16.99",
-    "monthlyPrice": "2.99",
     "alipay": "Alipay",
     "creem": "Creem",
     "proLabel": "Pro",
@@ -597,7 +590,9 @@
     "creemPay": "Creem",
     "refundPolicyTitle": "返金ポリシー",
     "refundNotice": "会員サービスはネットワーク上の仮想商品であり、先払い・後サービスの方式を採用しています。会員費用は購入された会員サービスの価格であり、前払金・預り金・手付金ではありません。会員サービスは一度開通すると、法令に強制的な定めがある場合、またはサービスに重大な欠陥があり全く利用できない場合を除き、返金・譲渡はできません。解約後も会員特典は現在の課金期間の終了まで有効となり、残日数の現金化・返金はいたしかねます。",
-    "checkoutRefundNotice": "会員サービスは仮想商品のため、開通後の返金はできません（法令で定められた場合を除く）。解約後も特典は現在の課金期間の終了まで有効です。"
+    "checkoutRefundNotice": "会員サービスは仮想商品のため、開通後の返金はできません（法令で定められた場合を除く）。解約後も特典は現在の課金期間の終了まで有効です。",
+    "yearlyPeriodTpl": "≈ ${perMonth}/月 · {percent}%お得",
+    "yearlySavingTpl": "🔥 おすすめ · {amount}お得"
   },
   "orders": {
     "title": "📋 注文履歴",

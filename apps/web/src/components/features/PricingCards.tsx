@@ -1,14 +1,30 @@
 "use client"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 
 import { useRouter } from "@/i18n/navigation"
 import { PricingCard } from "./PricingCard"
+import { PRICING, getPerMonthDisplay, getSaveAmount, getSavePercent } from "@cookmate/shared/constants/pricing"
 
 export function PricingCards({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   const t = useTranslations("billing")
   const router = useRouter()
+  const locale = useLocale()
+  const currency = locale === "zh-CN" ? "CNY" : "USD" as const
   // 已登录用户点订阅直达账单页；未登录先去注册
   const handleSubscribe = () => router.push(isLoggedIn ? "/app/billing" : "/register")
+
+  const monthlyPrice = PRICING.get("monthly", currency).display
+  const annualPrice = PRICING.get("annual", currency).display
+  const annualPerMonth = getPerMonthDisplay("annual", currency)
+  const annualSavePercent = getSavePercent("annual", currency)
+  const annualSaveAmount = getSaveAmount("annual", currency)
+  const saveAmountDisplay = currency === "CNY"
+    ? `¥${(annualSaveAmount / 100).toFixed(0)}`
+    : `$${(annualSaveAmount / 100).toFixed(0)}`
+
+  // 宣传文案用模板 key + 代码传参，价格数字全从 PRICING 算
+  const yearlyPeriodText = t("yearlyPeriodTpl", { perMonth: annualPerMonth, percent: annualSavePercent })
+  const yearlySavingText = t("yearlySavingTpl", { amount: saveAmountDisplay })
 
   return (
     <section id="pricing" className="py-16 bg-card">
@@ -30,7 +46,7 @@ export function PricingCards({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
           {/* Pro Monthly */}
           <PricingCard
             name={t("monthlyPro")}
-            price={t("monthlyPrice")}
+            price={monthlyPrice}
             periodLabel={t("perMonth")}
             period={t("monthlyPeriod")}
             features={t.raw("proPlanFeatures") as string[]}
@@ -42,10 +58,10 @@ export function PricingCards({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
           {/* Pro Annual — highlighted with savings badge */}
           <PricingCard
             name={t("yearlyPro")}
-            price={t("yearlyPrice")}
+            price={annualPrice}
             periodLabel={t("perYear")}
-            period={t("yearlyPeriod")}
-            saving={t("yearlySaving")}
+            period={yearlyPeriodText}
+            saving={yearlySavingText}
             features={t.raw("proPlanFeatures") as string[]}
             highlighted={true}
             isCurrent={false}

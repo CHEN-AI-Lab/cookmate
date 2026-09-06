@@ -533,7 +533,6 @@
     "subscriptionCancelled": "已取消，到期後自動降級為免費版",
     "cancelConfirm": "確定要取消訂閱嗎？取消後當前週期內仍可使用 Pro 功能，到期後降級為免費版。",
     "cancelFailed": "取消失敗",
-    "yearlySaving": "🔥 推薦 · 省 ¥149",
     "demoBillingTitle": "🔒 體驗模式",
     "demoBillingDesc": "體驗用戶無法使用支付功能。註冊賬號後可升級到 Pro，解鎖無限 AI 生成和周計劃功能。",
     "demoBillingRegister": "免費註冊",
@@ -573,13 +572,7 @@
     "cancelling": "取消中...",
     "yearlyPro": "Pro 年付",
     "monthlyPro": "Pro 月付",
-    "yearlyPrice": "119",
-    "monthlyPrice": "20",
-    "yearlyPeriod": "≈ ¥16.6/月 · 省43%",
-    "yearlySavingShort": "省 ¥149",
-    "yearlySavingAlt": "年付 ¥199/年，省 ¥149",
     "monthlyPeriod": "隨時取消",
-    "otherPlans": "季付 ¥78/3月 · 省10%  |  半年付 ¥138/6月 · 省21%",
     "savePercent": "省 {percent}%",
     "saveAmount": "省 {amount}",
     "alipayDesc": "¥20/月起",
@@ -597,7 +590,9 @@
     "keepPro": "保留 Pro",
     "refundPolicyTitle": "退款政策",
     "refundNotice": "會員服務係網路虛擬商品，採用先付費後服務的方式。會員費用為所購會員服務對應的價格，而非預付款、存款或定金。會員服務一經開通即不支持退款、不可轉讓（法規另有強制規定，或服務存在重大瑕疵致使您完全無法使用的情形除外）。取消訂閱後，會員權益將持續至當前計費週期屆滿，剩餘天數不予折現或退還。",
-    "checkoutRefundNotice": "會員服務為虛擬商品，一經開通不支持退款（法定例外情形除外）。取消訂閱後，權益持續至當前計費週期屆滿。"
+    "checkoutRefundNotice": "會員服務為虛擬商品，一經開通不支持退款（法定例外情形除外）。取消訂閱後，權益持續至當前計費週期屆滿。",
+    "yearlyPeriodTpl": "≈ ¥{perMonth}/月 · 省{percent}%",
+    "yearlySavingTpl": "🔥 推薦 · 省 {amount}"
   },
   "orders": {
     "title": "📋 訂單記錄",

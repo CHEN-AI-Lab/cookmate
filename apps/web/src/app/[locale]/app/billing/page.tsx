@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useTranslations, useLocale } from "next-intl"
 import { PricingCard } from "@/components/features/PricingCard"
-import { PRICING } from "@cookmate/shared/constants/pricing"
+import { PRICING, getPerMonthDisplay, getSaveAmount, getSavePercent } from "@cookmate/shared/constants/pricing"
 import { cn } from "@cookmate/shared/utils"
 
 interface BillingInfo {
@@ -147,6 +147,16 @@ export default function BillingPage() {
     ? (locale === "zh-CN" ? "/年" : "/yr")
     : (locale === "zh-CN" ? "/月" : "/mo")
 
+  // 自动计算年付宣传文案 — 价格改了不用手改翻译文件
+  const annualPerMonth = getPerMonthDisplay("annual", currency)
+  const annualSavePercent = getSavePercent("annual", currency)
+  const annualSaveAmount = getSaveAmount("annual", currency)
+  const saveAmountDisplay = currency === "CNY"
+    ? `¥${(annualSaveAmount / 100).toFixed(0)}`
+    : `$${(annualSaveAmount / 100).toFixed(0)}`
+  const yearlyPeriodText = t("yearlyPeriodTpl", { perMonth: annualPerMonth, percent: annualSavePercent })
+  const yearlySavingText = t("yearlySavingTpl", { amount: saveAmountDisplay })
+
   const daysLeft = info?.subscriptionExpiryDate ? daysRemaining(info.subscriptionExpiryDate) : 0
 
   return (
@@ -268,8 +278,8 @@ export default function BillingPage() {
               name={t("yearlyPro")}
               price={annualPrice.display}
               periodLabel={locale === "zh-CN" ? "/年" : "/yr"}
-              period={t("yearlyPeriod")}
-              saving={t("yearlySaving")}
+              period={yearlyPeriodText}
+              saving={yearlySavingText}
               features={t.raw("proPlanFeatures") as string[]}
               highlighted={true}
               isCurrent={isCurrentProPlan("annual")}
@@ -360,7 +370,7 @@ export default function BillingPage() {
             <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border border-amber-200/50 rounded-xl p-4 mb-4 text-center">
               <p className="text-sm text-amber-700 dark:text-amber-300">{t("proPlan")}</p>
               <p className="text-xs text-text-secondary mt-1">
-                {selectedPeriod === "annual" ? t("yearlyPeriod") : t("monthlyPeriod")}
+                {selectedPeriod === "annual" ? yearlyPeriodText : t("monthlyPeriod")}
               </p>
             </div>
 

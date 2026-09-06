@@ -544,14 +544,7 @@
     "cancelling": "取消中...",
     "yearlyPro": "Pro 年付",
     "monthlyPro": "Pro 月付",
-    "yearlyPrice": "119",
-    "monthlyPrice": "20",
-    "yearlyPeriod": "≈ ¥16.6/月 · 省43%",
-    "yearlySaving": "🔥 推荐 · 省 ¥149",
-    "yearlySavingShort": "省 ¥149",
-    "yearlySavingAlt": "年付 ¥199/年，省 ¥149",
     "monthlyPeriod": "随时取消",
-    "otherPlans": "季付 ¥78/3月 · 省10%  |  半年付 ¥138/6月 · 省21%",
     "demoBillingTitle": "🔒 体验模式",
     "demoBillingDesc": "体验用户无法使用支付功能。注册账号后可升级到 Pro，解锁无限 AI 生成和周计划功能。",
     "savePercent": "省 {percent}%",
@@ -597,7 +590,9 @@
     "daysLeft": "{days, number} 天",
     "refundPolicyTitle": "退款政策",
     "refundNotice": "会员服务系网络虚拟商品，采用先付费后服务的方式。会员费用为所购会员服务对应的价格，而非预付款、存款或定金。会员服务一经开通即不支持退款、不可转让（法律法规另有强制性规定，或服务存在重大瑕疵致使您完全无法使用的情形除外）。取消订阅后，会员权益将持续至当前计费周期届满，剩余天数不予折现或退还。",
-    "checkoutRefundNotice": "会员服务为虚拟商品，一经开通不支持退款（法定例外情形除外）。取消订阅后，权益持续至当前计费周期届满。"
+    "checkoutRefundNotice": "会员服务为虚拟商品，一经开通不支持退款（法定例外情形除外）。取消订阅后，权益持续至当前计费周期届满。",
+    "yearlyPeriodTpl": "≈ ¥{perMonth}/月 · 省{percent}%",
+    "yearlySavingTpl": "🔥 推荐 · 省 {amount}"
   },
   "orders": {
     "title": "📋 订单记录",
