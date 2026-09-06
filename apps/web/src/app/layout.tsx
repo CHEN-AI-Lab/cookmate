@@ -5,10 +5,8 @@ import "./globals.css"
 // Global metadata — title.default is used when no page-level metadata exists,
 // title.template appends "— CookMate" to page-level titles.
 export const metadata: Metadata = {
-  title: {
-    default: "CookMate",
-    template: "%s — CookMate",
-  },
+  title: "CookMate — AI Recipe & Meal Planning",
+  description: "Tell me what ingredients you have, get a recipe in 3 seconds. Weekly meal plans + shopping lists, never wonder what to cook again.",
   icons: { icon: "/favicon.svg" },
 }
 
