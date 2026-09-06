@@ -248,24 +248,8 @@ export default function BillingPage() {
             {isFree || info?.canceled ? t("selectPlan") : t("extendTitle")}
           </h3>
 
-          {/* 3 cards: Free, Pro Monthly, Pro Annual */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto items-stretch">
-            {/* Free card */}
-            <PricingCard
-              name="Free"
-              price="0"
-              periodLabel=""
-              period={t("freeTier")}
-              features={t.raw("freePlanFeatures") as string[]}
-              highlighted={false}
-              isCurrent={isFree}
-              ctaLabel={t("inUse")}
-              onCta={() => {}}
-              disabled={true}
-              loading={false}
-              hideButton={!isFree}
-            />
-
+          {/* 2 cards: Pro Monthly, Pro Annual（Free 不显示，登录后 Free 是默认状态无需选择） */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto items-stretch">
             {/* Pro Monthly */}
             <PricingCard
               name={t("monthlyPro")}
