@@ -240,7 +240,7 @@ export default function BillingPage() {
         <div className="bg-card rounded-2xl border border-gray-100 shadow-sm p-6">
           {/* Creem 活跃订阅提示 */}
           {isCreemActive && (
-            <div className="mb-4 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-700 text-center">
+            <div className="mb-4 rounded-xl bg-orange-50 border border-orange-200 px-4 py-3 text-sm text-orange-700 text-center">
               {t("creemActiveHint")}
             </div>
           )}
