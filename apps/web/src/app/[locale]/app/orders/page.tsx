@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useTranslations, useLocale } from "next-intl"
+import { PRICING, type BillingPeriod } from "@cookmate/shared/constants/pricing"
 
 interface Order {
   id: string
@@ -19,18 +20,30 @@ const CHANNEL_ICONS: Record<string, string> = {
 }
 
 function planLabel(amount: number, locale: string, t: (key: string) => string): string {
-  const yuan = amount / 100
-  if (locale === "zh-CN" || locale === "zh-TW") {
-    if (yuan === 119 || yuan === 1699) return locale === "zh-CN" ? "Pro 年付" : "Pro 年付"
-    if (yuan === 20 || yuan === 299) return locale === "zh-CN" ? "Pro 月付" : "Pro 月付"
-    if (yuan === 51 || yuan === 799) return "Pro 季付"
-    if (yuan === 90 || yuan === 1399) return "Pro 半年付"
-    return "Pro"
+  const periods: BillingPeriod[] = ["monthly", "quarterly", "semiannual", "annual"]
+  // 遍历所有周期，CNY 和 USD 两种币种都匹配
+  for (const period of periods) {
+    const cny = PRICING.get(period, "CNY").amount
+    const usd = PRICING.get(period, "USD").amount
+    if (amount === cny || amount === usd) {
+      if (locale === "zh-CN" || locale === "zh-TW") {
+        const labels: Record<BillingPeriod, string> = {
+          monthly: "Pro 月付",
+          quarterly: "Pro 季付",
+          semiannual: "Pro 半年付",
+          annual: "Pro 年付",
+        }
+        return labels[period]
+      }
+      const labels: Record<BillingPeriod, string> = {
+        monthly: t("monthlyPro"),
+        quarterly: t("quarterlyPlan"),
+        semiannual: t("halfyearPlan"),
+        annual: t("yearlyPro"),
+      }
+      return labels[period]
+    }
   }
-  if (yuan === 119 || yuan === 1699) return t("yearlyPro")
-  if (yuan === 20 || yuan === 299) return t("monthlyPro")
-  if (yuan === 51 || yuan === 799) return t("quarterlyPlan")
-  if (yuan === 90 || yuan === 1399) return t("halfyearPlan")
   return "Pro"
 }
 
