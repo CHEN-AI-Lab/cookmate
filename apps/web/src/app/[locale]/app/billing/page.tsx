@@ -384,10 +384,10 @@ export default function BillingPage() {
               {isFree ? t("checkoutTitle") : t("extendTitle")}
             </h3>
 
-            <div className="bg-gradient-to-r from-amber-500 to-amber-400 rounded-xl p-4 text-white mb-4 text-center">
-              <p className="text-sm text-white/80">{t("proPlan")}</p>
-              <p className="text-2xl font-bold mt-1">{checkoutPriceDisplay}{checkoutPeriodLabel}</p>
-              <p className="text-xs text-white/70 mt-1">
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border border-amber-200/50 rounded-xl p-4 mb-4 text-center">
+              <p className="text-sm text-amber-700 dark:text-amber-300">{t("proPlan")}</p>
+              <p className="text-2xl font-bold mt-1 text-text-primary">{checkoutPriceDisplay}{checkoutPeriodLabel}</p>
+              <p className="text-xs text-text-secondary mt-1">
                 {selectedPeriod === "annual" ? t("yearlyPeriod") : t("monthlyPeriod")}
               </p>
             </div>
@@ -397,7 +397,7 @@ export default function BillingPage() {
             )}
 
             <p className="text-sm font-medium text-text-primary mb-1">{t("paymentMethods")}</p>
-            <p className="text-xs text-text-secondary/70 mb-3 px-1">{t("paymentRetryHint")}</p>
+            <p className="text-[11px] text-text-secondary/70 mb-3 px-1">{t("paymentRetryHint")}</p>
             <div className="space-y-2">
               <button
                 onClick={async () => {
@@ -430,7 +430,7 @@ export default function BillingPage() {
                 </svg>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-text-primary text-sm">{t("alipay")}</p>
-                  <p className="text-xs text-text-secondary">{t("alipayDesc")}</p>
+                  <p className="text-xs text-text-secondary">{checkoutPriceDisplay}{checkoutPeriodLabel}</p>
                 </div>
                 {paying && <span className="text-xs text-text-secondary shrink-0">{t("redirecting")}</span>}
               </button>
@@ -455,7 +455,7 @@ export default function BillingPage() {
             </div>
 
             {/* 退款声明：虚拟商品一经开通不支持退款（正式法律措辞见定价页） */}
-            <p className="mt-4 text-xs leading-relaxed text-text-secondary">
+            <p className="mt-4 text-[11px] leading-relaxed text-text-secondary/80">
               {t("checkoutRefundNotice")}
             </p>
 

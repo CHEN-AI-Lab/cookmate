@@ -485,7 +485,7 @@
   },
   "billing": {
     "title": "💳 账单与订阅",
-    "subtitle": "管理你的订阅方案和付款方式",
+    "subtitle": "管理你的订阅计划和付款方式",
     "currentPlan": "当前订阅",
     "upgrade": "升级套餐",
     "noSubscription": "暂无订阅记录",
