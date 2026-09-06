@@ -41,13 +41,11 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [error, setError] = useState("")
-  const [message] = useState("")
   const [refreshKey, setRefreshKey] = useState(0)
   const [paying, setPaying] = useState(false)
   const [topBanner, setTopBanner] = useState("")
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showCheckoutModal, setShowCheckoutModal] = useState(false)
-  const [showDowngradeModal, setShowDowngradeModal] = useState(false)
   const [selectedPeriod, setSelectedPeriod] = useState<"monthly" | "annual">("annual")
 
   useEffect(() => {
@@ -166,12 +164,6 @@ export default function BillingPage() {
         <h1 className="text-2xl font-bold text-text-primary">{t("title")}</h1>
         <p className="text-text-secondary mt-1 text-sm">{t("subtitle")}</p>
       </div>
-
-      {message && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-600 font-medium">
-          {message}
-        </div>
-      )}
 
       {/* ── Current Plan Card ── */}
       <div className="bg-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -309,7 +301,7 @@ export default function BillingPage() {
           </div>
 
           {/* 退款声明（套餐区底部，小字融入卡片，与结算弹窗文案一致） */}
-          <p className="mt-4 text-center text-xs text-text-secondary">{t("checkoutRefundNotice")}</p>
+          <p className="mt-4 text-center text-[11px] leading-relaxed text-text-secondary">{t("checkoutRefundNotice")}</p>
         </div>
       )}
 
@@ -485,7 +477,7 @@ export default function BillingPage() {
                 onClick={() => setShowCancelModal(false)}
                 className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-gray-100 rounded-xl hover:bg-surface transition-colors"
               >
-                {locale === "en" ? "Keep Pro" : t("keepPro")}
+                {t("keepPro")}
               </button>
               <button
                 onClick={async () => {
@@ -517,55 +509,6 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* ── Downgrade Confirmation Modal (PRO → Free) ── */}
-      {showDowngradeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => setShowDowngradeModal(false)}>
-          <div className="bg-card rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="text-center mb-4">
-              <div className="mx-auto w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-3">
-                <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-lg text-text-primary">{t("downgradeTitle")}</h3>
-            </div>
-            <p className="text-sm text-text-secondary mb-4">{t("downgradeConfirm")}</p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowDowngradeModal(false)}
-                className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-gray-100 rounded-xl hover:bg-surface transition-colors"
-              >
-                {locale === "en" ? "Keep Pro" : t("keepPro")}
-              </button>
-              <button
-                onClick={async () => {
-                  setShowDowngradeModal(false)
-                  setActionLoading("cancel")
-                  try {
-                    const res = await fetch("/api/subscription/cancel", { method: "POST" })
-                    const data = await res.json()
-                    if (data.success) {
-                      setTopBanner(data.message)
-                      setTimeout(() => setTopBanner(""), 5000)
-                      setRefreshKey((k) => k + 1)
-                    } else {
-                      setError(data.error || t("cancelFailed"))
-                    }
-                  } catch {
-                    setError(t("networkError"))
-                  } finally {
-                    setActionLoading(null)
-                  }
-                }}
-                disabled={actionLoading === "cancel"}
-                className="flex-1 px-4 py-2.5 text-sm text-white bg-amber-500 rounded-xl hover:bg-amber-600 disabled:bg-surface transition-colors font-medium"
-              >
-                {locale === "en" ? "Downgrade to Free" : t("downgradeToFree")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
     </>
   )
