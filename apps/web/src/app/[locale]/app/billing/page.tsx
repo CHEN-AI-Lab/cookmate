@@ -141,11 +141,8 @@ export default function BillingPage() {
     return t("extendAction")
   }
   const currency = locale === "zh-CN" ? "CNY" : "USD"
-  const currencySymbol = locale === "zh-CN" ? "¥" : "$"
   const monthlyPrice = PRICING.get("monthly", currency)
   const annualPrice = PRICING.get("annual", currency)
-  const checkoutPrice = PRICING.get(selectedPeriod, currency)
-  const checkoutPriceDisplay = `${currencySymbol}${checkoutPrice.display}`
   const checkoutPeriodLabel = selectedPeriod === "annual"
     ? (locale === "zh-CN" ? "/年" : "/yr")
     : (locale === "zh-CN" ? "/月" : "/mo")
@@ -362,7 +359,6 @@ export default function BillingPage() {
 
             <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border border-amber-200/50 rounded-xl p-4 mb-4 text-center">
               <p className="text-sm text-amber-700 dark:text-amber-300">{t("proPlan")}</p>
-              <p className="text-2xl font-bold mt-1 text-text-primary">{checkoutPriceDisplay}{checkoutPeriodLabel}</p>
               <p className="text-xs text-text-secondary mt-1">
                 {selectedPeriod === "annual" ? t("yearlyPeriod") : t("monthlyPeriod")}
               </p>
@@ -405,7 +401,7 @@ export default function BillingPage() {
                 </svg>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-text-primary text-sm">{t("alipay")}</p>
-                  <p className="text-xs text-text-secondary">{checkoutPriceDisplay}{checkoutPeriodLabel}</p>
+                  <p className="text-xs text-text-secondary">¥{PRICING.get(selectedPeriod, "CNY").display}{checkoutPeriodLabel}</p>
                 </div>
                 {paying && <span className="text-xs text-text-secondary shrink-0">{t("redirecting")}</span>}
               </button>
@@ -421,7 +417,7 @@ export default function BillingPage() {
                   </svg>
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-text-primary text-sm">{t("creem")}</p>
-                    <p className="text-xs text-text-secondary">{t("creemDesc")}</p>
+                    <p className="text-xs text-text-secondary">${PRICING.get(selectedPeriod, "USD").display}{checkoutPeriodLabel}</p>
                   </div>
                   {actionLoading === "creem" && <span className="text-xs text-text-secondary shrink-0">{t("redirecting")}</span>}
                 </button>
