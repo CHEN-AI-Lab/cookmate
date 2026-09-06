@@ -41,9 +41,16 @@ export async function POST(req: Request) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL
 
     // 按周期选择对应的 Creem 产品 ID
+    // 月付优先用 CREEM_MONTHLY_PRODUCT_ID，兜底 CREEM_PRODUCT_ID
+    // 年付必须用 CREEM_ANNUAL_PRODUCT_ID（没有就报错，不能静默走月付产品）
     const productId = period === "annual"
       ? process.env.CREEM_ANNUAL_PRODUCT_ID
       : process.env.CREEM_MONTHLY_PRODUCT_ID || process.env.CREEM_PRODUCT_ID
+
+    if (!productId) {
+      const envKey = period === "annual" ? "CREEM_ANNUAL_PRODUCT_ID" : "CREEM_MONTHLY_PRODUCT_ID 或 CREEM_PRODUCT_ID"
+      return NextResponse.json({ error: `${envKey} 未配置` }, { status: 503 })
+    }
 
     const { checkoutUrl, sessionId } = await createCheckout({
       productId: productId || undefined,
@@ -62,6 +69,7 @@ export async function POST(req: Request) {
           externalCheckoutId: sessionId, // Creem 的 ch_xxx，用于 webhook + GET 精确匹配
           channel: "creem",
           amount: price.amount,
+          period, // 创建时即写入周期，不依赖 webhook 回调
           status: "PENDING",
         },
       })

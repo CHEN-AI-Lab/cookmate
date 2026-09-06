@@ -32,6 +32,9 @@ beforeEach(() => {
   ;(retrieveCheckout as any).mockReset()
   ;(isCreemConfigured as any).mockReturnValue(true)
   process.env.NEXT_PUBLIC_APP_URL = 'https://app.cookmate.com'
+  process.env.CREEM_PRODUCT_ID = 'prod_test'
+  process.env.CREEM_MONTHLY_PRODUCT_ID = 'prod_monthly'
+  process.env.CREEM_ANNUAL_PRODUCT_ID = 'prod_annual'
 })
 
 describe('creem create-checkout POST', () => {
@@ -57,14 +60,22 @@ describe('creem create-checkout POST', () => {
     expect(order.status).toBe('PENDING')
     expect(order.channel).toBe('creem')
     expect(order.externalCheckoutId).toBe('ch_abc') // Creem sessionId 用于精确反查
+    expect(order.period).toBe('monthly') // 创建时即写入周期
   })
-  it('annual → 使用年度产品ID', async () => {
+  it('annual → 使用年度产品ID + period=annual', async () => {
     ;(createCheckout as any).mockResolvedValue({ checkoutUrl: 'u', sessionId: 'ch_x' })
     process.env.CREEM_ANNUAL_PRODUCT_ID = 'prod_annual'
     const res = await POST(postReq({ period: 'annual' }))
     const json = await res.json()
     expect(json.sessionId).toBe('ch_x')
     expect((createCheckout as any).mock.calls[0][0].productId).toBe('prod_annual')
+    const order = stores.orders.get('CKCR20260825A1B2C3D4')
+    expect(order.period).toBe('annual')
+  })
+  it('annual 未配 CREEM_ANNUAL_PRODUCT_ID → 503', async () => {
+    delete process.env.CREEM_ANNUAL_PRODUCT_ID
+    const res = await POST(postReq({ period: 'annual' }))
+    expect(res.status).toBe(503)
   })
 })
 

@@ -44,6 +44,7 @@ export async function POST(req: Request) {
         orderId,
         channel: "alipay",
         amount: price.amount,
+        period, // 创建时即写入周期，后台订单记录正确显示
         status: "PENDING",
       },
     })
