@@ -369,6 +369,9 @@ export default function BillingPage() {
 
             <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border border-amber-200/50 rounded-xl p-4 mb-4 text-center">
               <p className="text-sm text-amber-700 dark:text-amber-300">{t("proPlan")}</p>
+              <p className="text-2xl font-bold mt-1 text-text-primary">
+                {currency === "CNY" ? "¥" : "$"}{PRICING.get(selectedPeriod, currency).display}{checkoutPeriodLabel}
+              </p>
               <p className="text-xs text-text-secondary mt-1">
                 {selectedPeriod === "annual" ? yearlyPeriodText : t("monthlyPeriod")}
               </p>
@@ -411,7 +414,7 @@ export default function BillingPage() {
                 </svg>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-text-primary text-sm">{t("alipay")}</p>
-                  <p className="text-xs text-text-secondary">¥{PRICING.get(selectedPeriod, "CNY").display}{checkoutPeriodLabel}</p>
+                  <p className="text-xs text-text-secondary">{t("payDesc")}</p>
                 </div>
                 {paying && <span className="text-xs text-text-secondary shrink-0">{t("redirecting")}</span>}
               </button>
@@ -427,7 +430,7 @@ export default function BillingPage() {
                   </svg>
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-text-primary text-sm">{t("creem")}</p>
-                    <p className="text-xs text-text-secondary">${PRICING.get(selectedPeriod, "USD").display}{checkoutPeriodLabel}</p>
+                    <p className="text-xs text-text-secondary">{t("creemDesc")}</p>
                   </div>
                   {actionLoading === "creem" && <span className="text-xs text-text-secondary shrink-0">{t("redirecting")}</span>}
                 </button>
