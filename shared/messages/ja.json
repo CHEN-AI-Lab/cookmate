@@ -1064,5 +1064,10 @@
     "languageZh": "中文",
     "languageEn": "English",
     "proPlan": "Pro"
+  },
+  "metadata": {
+    "siteTitle": "CookMate — AI レシピ＆献立アプリ",
+    "siteDescription": "冷蔵庫の食材を教えてくれると、3秒でレシピが完成。週替わり献立と買い物リストで、今日のメニューに悩まなくなります。",
+    "titleTemplate": "%s — CookMate"
   }
 }

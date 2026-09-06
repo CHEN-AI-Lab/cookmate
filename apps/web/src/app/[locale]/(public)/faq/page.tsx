@@ -1,11 +1,10 @@
 import { getTranslations } from "next-intl/server"
 import PublicNavbar from "@/components/layout/PublicNavbar"
 import PublicFooter from "@/components/layout/PublicFooter"
-import type { Metadata } from "next"
-
-export const metadata: Metadata = {
-  title: "常见问题 — CookMate",
-  description: "CookMate 常见问题解答 — 关于注册、订阅、支付、数据安全等问题的解答。",
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: "faq" })
+  return { title: t("title"), description: t("subtitle") }
 }
 
 export default async function FAQPage() {

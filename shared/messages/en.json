@@ -1064,5 +1064,10 @@
     "bindFailed": "Binding failed",
     "selectCuisineFirst": "Please select at least one cuisine",
     "codeSentToEmail": "Verification code sent to {email}"
+  },
+  "metadata": {
+    "siteTitle": "CookMate — AI Recipe & Meal Planning",
+    "siteDescription": "Tell me what ingredients you have, get a recipe in 3 seconds. Weekly meal plans + shopping lists, never wonder what to cook again.",
+    "titleTemplate": "%s — CookMate"
   }
 }
