@@ -722,12 +722,10 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
   const sections = [
     { title: "应用", rows: [{ label: "应用地址", value: c.app.url }] },
     {
-      title: "Creem 支付",
+      title: "认证",
       rows: [
-        { label: "API Key", value: c.creem.apiKey, required: true },
-        { label: "月付产品 ID", value: c.creem.monthlyProductId, required: true },
-        { label: "年付产品 ID", value: c.creem.annualProductId, required: true },
-        { label: "Webhook 密钥", value: c.creem.webhookSecret, required: true },
+        { label: "AUTH_SECRET", value: c.auth.authSecret, required: true },
+        { label: "管理员邮箱", value: c.auth.adminEmails },
       ],
     },
     {
@@ -739,10 +737,12 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
       ],
     },
     {
-      title: "认证",
+      title: "Creem 支付",
       rows: [
-        { label: "AUTH_SECRET", value: c.auth.authSecret, required: true },
-        { label: "管理员邮箱", value: c.auth.adminEmails },
+        { label: "API Key", value: c.creem.apiKey, required: true },
+        { label: "月付产品 ID", value: c.creem.monthlyProductId, required: true },
+        { label: "年付产品 ID", value: c.creem.annualProductId, required: true },
+        { label: "Webhook 密钥", value: c.creem.webhookSecret, required: true },
       ],
     },
     {
