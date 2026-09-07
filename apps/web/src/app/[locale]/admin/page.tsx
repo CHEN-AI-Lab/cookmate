@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 
 // ── 类型 ──
 
@@ -307,13 +307,41 @@ export default function AdminPage() {
 
 function OrdersTab({ data }: { data: OrdersResponse | null }) {
   const orders = data?.orders ?? []
+  const [filterChannel, setFilterChannel] = useState<string>("")
+  const [filterStatus, setFilterStatus] = useState<string>("")
+
+  const channels = useMemo(() => [...new Set(orders.map((o) => o.channel).filter(Boolean))] as string[], [orders])
+  const statuses = useMemo(() => [...new Set(orders.map((o) => o.status).filter(Boolean))] as string[], [orders])
+
+  const filtered = useMemo(() => {
+    return orders.filter((o) => (!filterChannel || o.channel === filterChannel) && (!filterStatus || o.status === filterStatus))
+  }, [orders, filterChannel, filterStatus])
+
+  const hasFilter = filterChannel || filterStatus
+  const clearFilter = () => { setFilterChannel(""); setFilterStatus("") }
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard label="总订单" value={data?.total ?? 0} tone="gray" />
-        <StatCard label="已支付" value={data?.paidCount ?? 0} tone="green" />
-        <StatCard label="累计收入" value={fmtAmount(data?.totalRevenue ?? 0)} tone="amber" />
+        <StatCard label="总订单" value={hasFilter ? filtered.length : data?.total ?? 0} tone="gray" />
+        <StatCard label="已支付" value={hasFilter ? filtered.filter((o) => o.status === "PAID").length : data?.paidCount ?? 0} tone="green" />
+        <StatCard label="累计收入" value={fmtAmount(hasFilter ? filtered.reduce((s, o) => s + o.amount, 0) : (data?.totalRevenue ?? 0))} tone="amber" />
+      </div>
+
+      {/* 筛选栏 */}
+      <div className="flex flex-wrap items-center gap-2">
+        <select value={filterChannel} onChange={(e) => setFilterChannel(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
+          <option value="">全部渠道</option>
+          {channels.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
+          <option value="">全部状态</option>
+          {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        {hasFilter && (
+          <button onClick={clearFilter} className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">清除</button>
+        )}
+        {hasFilter && <span className="text-xs text-text-secondary">筛选结果：{filtered.length} 条</span>}
       </div>
 
       {orders.length === 0 ? (
@@ -336,7 +364,7 @@ function OrdersTab({ data }: { data: OrdersResponse | null }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {orders.map((o) => (
+                {filtered.map((o) => (
                   <tr key={o.id} className={o.status === "PAID" ? "" : "opacity-60"}>
                     <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(o.createdAt)}</td>
                     <td className="px-4 py-3 text-gray-700 font-mono text-xs">{o.orderId}</td>
@@ -363,12 +391,40 @@ function OrdersTab({ data }: { data: OrdersResponse | null }) {
 function WebhooksTab({ data }: { data: WebhookLogsResponse | null }) {
   const logs = data?.logs ?? []
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [filterSource, setFilterSource] = useState<string>("")
+  const [filterStatus, setFilterStatus] = useState<string>("")
+
+  const sources = useMemo(() => [...new Set(logs.map((l) => l.source).filter(Boolean))] as string[], [logs])
+  const statuses = useMemo(() => [...new Set(logs.map((l) => l.status).filter(Boolean))] as string[], [logs])
+
+  const filtered = useMemo(() => {
+    return logs.filter((l) => (!filterSource || l.source === filterSource) && (!filterStatus || l.status === filterStatus))
+  }, [logs, filterSource, filterStatus])
+
+  const hasFilter = filterSource || filterStatus
+  const clearFilter = () => { setFilterSource(""); setFilterStatus("") }
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <StatCard label="回调总数" value={data?.total ?? 0} tone="gray" />
-        <StatCard label="失败回调" value={data?.failed ?? 0} tone={(data?.failed ?? 0) > 0 ? "red" : "gray"} />
+        <StatCard label="回调总数" value={hasFilter ? filtered.length : data?.total ?? 0} tone="gray" />
+        <StatCard label="失败回调" value={hasFilter ? filtered.filter((l) => l.status.startsWith("failed")).length : (data?.failed ?? 0)} tone={(data?.failed ?? 0) > 0 ? "red" : "gray"} />
+      </div>
+
+      {/* 筛选栏 */}
+      <div className="flex flex-wrap items-center gap-2">
+        <select value={filterSource} onChange={(e) => setFilterSource(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
+          <option value="">全部来源</option>
+          {sources.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
+          <option value="">全部状态</option>
+          {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        {hasFilter && (
+          <button onClick={clearFilter} className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">清除</button>
+        )}
+        {hasFilter && <span className="text-xs text-text-secondary">筛选结果：{filtered.length} 条</span>}
       </div>
 
       {logs.length === 0 ? (
@@ -392,7 +448,7 @@ function WebhooksTab({ data }: { data: WebhookLogsResponse | null }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {logs.map((l) => (
+                {filtered.map((l) => (
                   <tr key={l.id} className={l.status.startsWith("failed") ? "bg-red-50/50" : ""}>
                     <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
                     <td className="px-4 py-3 text-gray-700">{l.source}</td>
@@ -441,6 +497,15 @@ function WebhooksTab({ data }: { data: WebhookLogsResponse | null }) {
 
 function CancelsTab({ data }: { data: CancelLogsResponse | null }) {
   const logs = data?.logs ?? []
+  const [filterChannel, setFilterChannel] = useState<string>("")
+
+  const channels = useMemo(() => [...new Set(logs.map((l) => l.channel).filter(Boolean))] as string[], [logs])
+  const filtered = useMemo(() => {
+    return logs.filter((l) => (!filterChannel || l.channel === filterChannel))
+  }, [logs, filterChannel])
+
+  const hasFilter = filterChannel
+  const clearFilter = () => { setFilterChannel("") }
 
   return (
     <div className="space-y-4">
@@ -452,9 +517,21 @@ function CancelsTab({ data }: { data: CancelLogsResponse | null }) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard label="失败取消" value={data?.failed ?? 0} tone="red" />
-        <StatCard label="成功取消" value={data?.completed ?? 0} tone="green" />
-        <StatCard label="总记录" value={data?.total ?? 0} tone="gray" />
+        <StatCard label="失败取消" value={hasFilter ? filtered.filter((l) => l.status === "failed").length : (data?.failed ?? 0)} tone="red" />
+        <StatCard label="成功取消" value={hasFilter ? filtered.filter((l) => l.status !== "failed").length : (data?.completed ?? 0)} tone="green" />
+        <StatCard label="总记录" value={hasFilter ? filtered.length : (data?.total ?? 0)} tone="gray" />
+      </div>
+
+      {/* 筛选栏 */}
+      <div className="flex flex-wrap items-center gap-2">
+        <select value={filterChannel} onChange={(e) => setFilterChannel(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
+          <option value="">全部渠道</option>
+          {channels.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+        {hasFilter && (
+          <button onClick={clearFilter} className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">清除</button>
+        )}
+        {hasFilter && <span className="text-xs text-text-secondary">筛选结果：{filtered.length} 条</span>}
       </div>
 
       {logs.length === 0 ? (
@@ -477,7 +554,7 @@ function CancelsTab({ data }: { data: CancelLogsResponse | null }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {logs.map((l) => (
+                {filtered.map((l) => (
                   <tr key={l.id} className={l.status === "failed" ? "bg-red-50/50" : ""}>
                     <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
                     <td className="px-4 py-3 text-gray-700">{l.channel ?? "-"}</td>
@@ -511,13 +588,35 @@ function CancelsTab({ data }: { data: CancelLogsResponse | null }) {
 
 function UsersTab({ data }: { data: UsersResponse | null }) {
   const users = data?.users ?? []
+  const [filterTier, setFilterTier] = useState<string>("")
+
+  const tiers = useMemo(() => [...new Set(users.map((u) => u.subscriptionTier).filter(Boolean))] as string[], [users])
+
+  const filtered = useMemo(() => {
+    return users.filter((u) => (!filterTier || u.subscriptionTier === filterTier))
+  }, [users, filterTier])
+
+  const hasFilter = filterTier
+  const clearFilter = () => { setFilterTier("") }
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard label="用户总数" value={data?.total ?? 0} tone="gray" />
-        <StatCard label="Pro 用户" value={data?.proCount ?? 0} tone="green" />
-        <StatCard label="免费用户" value={data?.freeCount ?? 0} tone="gray" />
+        <StatCard label="用户总数" value={hasFilter ? filtered.length : (data?.total ?? 0)} tone="gray" />
+        <StatCard label="Pro 用户" value={hasFilter ? filtered.filter((u) => u.subscriptionTier === "PRO").length : (data?.proCount ?? 0)} tone="green" />
+        <StatCard label="免费用户" value={hasFilter ? filtered.filter((u) => u.subscriptionTier !== "PRO").length : (data?.freeCount ?? 0)} tone="gray" />
+      </div>
+
+      {/* 筛选栏 */}
+      <div className="flex flex-wrap items-center gap-2">
+        <select value={filterTier} onChange={(e) => setFilterTier(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
+          <option value="">全部套餐</option>
+          {tiers.map((t) => <option key={t} value={t}>{t === "PRO" ? "Pro" : "Free"}</option>)}
+        </select>
+        {hasFilter && (
+          <button onClick={clearFilter} className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">清除</button>
+        )}
+        {hasFilter && <span className="text-xs text-text-secondary">筛选结果：{filtered.length} 条</span>}
       </div>
 
       {users.length === 0 ? (
@@ -540,7 +639,7 @@ function UsersTab({ data }: { data: UsersResponse | null }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {users.map((u) => (
+                {filtered.map((u) => (
                   <tr key={u.id}>
                     <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(u.createdAt)}</td>
                     <td className="px-4 py-3 text-gray-700 text-xs">{u.email ?? u.phone ?? "-"}</td>
@@ -572,6 +671,16 @@ function UsersTab({ data }: { data: UsersResponse | null }) {
 
 function CronsTab({ data }: { data: CronLogsResponse | null }) {
   const logs = data?.logs ?? []
+  const [filterStatus, setFilterStatus] = useState<string>("")
+
+  const statuses = useMemo(() => [...new Set(logs.map((l) => l.status).filter(Boolean))] as string[], [logs])
+
+  const filtered = useMemo(() => {
+    return logs.filter((l) => (!filterStatus || l.status === filterStatus))
+  }, [logs, filterStatus])
+
+  const hasFilter = filterStatus
+  const clearFilter = () => { setFilterStatus("") }
 
   return (
     <div className="space-y-4">
@@ -580,6 +689,18 @@ function CronsTab({ data }: { data: CronLogsResponse | null }) {
           Vercel Cron 定时任务执行记录（每日 03:00 过期降级 / 04:00 取消对账）。
           状态为「失败」= 定时任务执行出错，需检查服务端日志。
         </p>
+      </div>
+
+      {/* 筛选栏 */}
+      <div className="flex flex-wrap items-center gap-2">
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
+          <option value="">全部状态</option>
+          {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        {hasFilter && (
+          <button onClick={clearFilter} className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">清除</button>
+        )}
+        {hasFilter && <span className="text-xs text-text-secondary">筛选结果：{filtered.length} 条</span>}
       </div>
 
       {logs.length === 0 ? (
@@ -599,7 +720,7 @@ function CronsTab({ data }: { data: CronLogsResponse | null }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {logs.map((l) => (
+                {filtered.map((l) => (
                   <tr key={l.id} className={l.status === "failed" ? "bg-red-50/50" : ""}>
                     <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
                     <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.eventType ?? "-"}</td>
