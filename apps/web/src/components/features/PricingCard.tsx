@@ -58,7 +58,7 @@ export function PricingCard({
       <div
               className={cn(
                 "rounded-2xl px-5 py-6 text-center flex flex-col h-full bg-card border",
-                highlighted ? "border-amber-200 ring-1 ring-amber-200" : "border-border"
+                highlighted ? "bg-bg-brand border-amber-200 ring-1 ring-amber-200" : "border-border"
               )}
             >
               {/* Plan name */}
