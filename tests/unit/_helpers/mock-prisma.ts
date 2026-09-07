@@ -10,6 +10,7 @@ export const stores = {
   mealPlans: new Map<string, any>(),
   mealSlots: [] as any[],
   usage: new Map<string, any>(), // key = `${userId}_${date.getTime()}`
+  pantries: new Map<string, any>(), // pantry items by id
 }
 
 export function resetStores() {
@@ -20,6 +21,7 @@ export function resetStores() {
   stores.mealPlans.clear()
   stores.mealSlots.length = 0
   stores.usage.clear()
+  stores.pantries.clear()
 }
 
 function usageKey(userId: string, date: any): string {
@@ -177,6 +179,9 @@ export function makePrisma() {
         }
         return null
       }),
+      findMany: vi.fn(async ({ where }: any) => {
+        return [...stores.recipes.values()].filter((r: any) => (!where?.userId || r.userId === where.userId))
+      }),
       create: vi.fn(async ({ data }: any) => {
         const id = `r_${Date.now()}_${Math.random().toString(36).slice(2)}`
         const rec = { id, ...data }
@@ -200,14 +205,6 @@ export function makePrisma() {
       }),
       findMany: vi.fn(async ({ where }: any) => {
         return [...stores.mealPlans.values()].filter((m: any) => (!where?.userId || m.userId === where.userId))
-      }),
-      findFirst: vi.fn(async ({ where }: any) => {
-        let n = 0
-        for (const m of stores.mealPlans.values()) {
-          if (where?.userId && m.userId !== where.userId) continue
-          n++
-        }
-        return n
       }),
       findFirst: vi.fn(async ({ where }: any) => {
         for (const m of stores.mealPlans.values()) {
@@ -274,6 +271,15 @@ export function makePrisma() {
         },
       })
     }),
+    pantryItem: {
+      count: vi.fn(async ({ where }: any) => {
+        return [...stores.pantries.values()].filter((p: any) => (!where?.userId || p.userId === where.userId)).length
+      }),
+      findMany: vi.fn(async () => []),
+    },
+    groceryItem: {
+      findMany: vi.fn(async () => []),
+    },
   }
 }
 

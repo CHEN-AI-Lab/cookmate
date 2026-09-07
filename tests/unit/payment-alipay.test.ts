@@ -186,4 +186,38 @@ describe('支付宝异步通知', () => {
     const params = JSON.parse(failed.rawBody)
     expect(params.app_id).toBe('wrong_app_id')
   })
+
+  // P0 边界：金额校验 — 多付（用户实际支付 > 订单金额）
+  it('total_amount 大于订单金额 → 400 failure 且不升级', async () => {
+    stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null })
+    stores.orders.set('CKALover', { id: 'CKALover', orderId: 'CKALover', userId: 'u1', channel: 'alipay', amount: 2900, status: 'PENDING' })
+    // 订单 29.00，但回调说付了 30.00
+    const res = await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALover', total_amount: '30.00' }))
+    expect(res.status).toBe(400)
+    expect(await res.text()).toBe('failure')
+    expect(stores.users.get('u1').subscriptionTier).toBe('FREE')
+    expect(stores.orders.get('CKALover').status).toBe('PENDING')
+  })
+
+  // P0 边界：空 total_amount → failure
+  it('total_amount 为空 → 400 failure', async () => {
+    const res = await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKAL1', total_amount: '' }))
+    expect(res.status).toBe(400)
+    expect(await res.text()).toBe('failure')
+  })
+
+  // P0 边界：total_amount = 0 → failure
+  it('total_amount = 0 → 400 failure', async () => {
+    const res = await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKAL1', total_amount: '0.00' }))
+    expect(res.status).toBe(400)
+    expect(await res.text()).toBe('failure')
+  })
+
+  // P0 边界：缺失 out_trade_no → 代码逻辑跳过金额校验，直接返回 success（支付宝侧会补发）
+  it('缺失 out_trade_no → 返回 success（代码设计：out_trade_no 为空时不处理订单）', async () => {
+    const res = await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS' }))
+    // out_trade_no 为空 → 进入 if (outTradeNo) 分支外 → 直接返回 success
+    expect(res.status).toBe(200)
+    expect(await res.text()).toBe('success')
+  })
 })
