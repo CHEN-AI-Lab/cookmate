@@ -13,8 +13,8 @@ import { GET as ordersGET } from '@/app/api/admin/orders/route'
 import { GET as webhookLogsGET } from '@/app/api/admin/webhook-logs/route'
 
 const sampleOrders = [
-  { id: 'o1', orderId: 'CKCR20260901AABBCCDD', channel: 'creem', period: 'annual', amount: 16900, status: 'PAID', createdAt: new Date('2026-09-01T10:00:00Z'), user: { email: 'a@x.com' } },
-  { id: 'o2', orderId: 'CKAL20260831EEFF0011', channel: 'alipay', period: null, amount: 2000, status: 'PENDING', createdAt: new Date('2026-08-31T09:00:00Z'), user: { email: null } },
+  { id: 'o1', orderId: 'CKCR20260901AABBCCDD', channel: 'creem', period: 'annual', amount: 16900, currency: 'USD', status: 'PAID', createdAt: new Date('2026-09-01T10:00:00Z'), user: { email: 'a@x.com' } },
+  { id: 'o2', orderId: 'CKAL20260831EEFF0011', channel: 'alipay', period: null, amount: 2000, currency: 'CNY', status: 'PENDING', createdAt: new Date('2026-08-31T09:00:00Z'), user: { email: null } },
 ]
 
 const sampleWebhookLogs = [

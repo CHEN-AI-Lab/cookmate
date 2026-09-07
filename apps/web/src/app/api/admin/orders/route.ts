@@ -22,6 +22,7 @@ export async function GET() {
     channel: o.channel, // "creem" | "alipay"
     period: o.period, // "monthly" | "annual" | null（历史订单可能为空）
     amount: o.amount, // 分（creem=美分，alipay=人民币分）
+    currency: o.currency, // "USD" | "CNY"，前端据此显示币种符号
     status: o.status, // PENDING / PAID / EXPIRED
     createdAt: o.createdAt,
     userEmail: o.user?.email ?? null,

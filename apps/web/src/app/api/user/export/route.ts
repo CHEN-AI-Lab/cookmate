@@ -22,7 +22,7 @@ export async function GET() {
       prisma.mealPlan.findMany({ where: { userId: session.user.id }, include: { slots: { include: { recipe: { select: { title: true } } } } } }),
       prisma.pantryItem.findMany({ where: { userId: session.user.id }, select: { name: true, category: true, quantity: true } }),
       prisma.groceryItem.findMany({ where: { userId: session.user.id }, select: { name: true, checked: true } }),
-      prisma.paymentOrder.findMany({ where: { userId: session.user.id }, select: { orderId: true, channel: true, amount: true, status: true, createdAt: true } }),
+      prisma.paymentOrder.findMany({ where: { userId: session.user.id }, select: { orderId: true, channel: true, amount: true, currency: true, status: true, createdAt: true } }),
     ])
 
   const fmt = (d: Date | string | null | undefined) => d ? new Date(d).toLocaleDateString("zh-CN") : "-"
@@ -85,7 +85,7 @@ export async function GET() {
     orders: orders.map((o) => ({
       orderId: o.orderId,
       channel: o.channel,
-      amount: `${o.channel === "creem" ? "$" : "¥"}${(o.amount / 100).toFixed(2)}`,
+      amount: `${o.currency === "USD" ? "$" : "¥"}${(o.amount / 100).toFixed(2)}`,
       status: { PENDING: "待支付", PAID: "已支付", EXPIRED: "已过期", REFUNDED: "已退款" }[o.status] || o.status,
       date: fmt(o.createdAt),
     })),

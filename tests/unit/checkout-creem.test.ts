@@ -61,7 +61,8 @@ describe('creem create-checkout POST', () => {
     expect(order.channel).toBe('creem')
     expect(order.externalCheckoutId).toBe('ch_abc') // Creem sessionId 用于精确反查
     expect(order.period).toBe('monthly') // 创建时即写入周期
-    expect(order.amount).toBe(499) // Creem 收美元：monthly $4.99 = 499 美分（不能用 CNY 2900）
+    expect(order.amount).toBe(499) // Creem 收美元：monthly $4.99 = 499 美分
+    expect(order.currency).toBe('USD') // 币种明确
   })
   it('annual → 使用年度产品ID + period=annual + 金额 USD', async () => {
     ;(createCheckout as any).mockResolvedValue({ checkoutUrl: 'u', sessionId: 'ch_x' })
@@ -73,6 +74,7 @@ describe('creem create-checkout POST', () => {
     const order = stores.orders.get('CKCR20260825A1B2C3D4')
     expect(order.period).toBe('annual')
     expect(order.amount).toBe(3999) // annual $39.99 = 3999 美分
+    expect(order.currency).toBe('USD')
   })
   it('annual 未配 CREEM_ANNUAL_PRODUCT_ID → 503', async () => {
     delete process.env.CREEM_ANNUAL_PRODUCT_ID

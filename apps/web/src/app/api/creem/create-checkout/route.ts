@@ -71,6 +71,7 @@ export async function POST(req: Request) {
           externalCheckoutId: sessionId, // Creem 的 ch_xxx，用于 webhook + GET 精确匹配
           channel: "creem",
           amount: price.amount, // 美分（USD）
+          currency: "USD",     // Creem 收美元
           period, // 创建时即写入周期，不依赖 webhook 回调
           status: "PENDING",
         },

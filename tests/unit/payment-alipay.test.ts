@@ -60,7 +60,7 @@ describe('支付宝创建订单', () => {
     const res = await createPOST(makeJsonReq({ period: 'monthly' }))
     expect(res.status).toBe(503)
   })
-  it('monthly → 成功，订单金额 2900 分', async () => {
+  it('monthly → 成功，订单金额 2900 分 + CNY', async () => {
     const res = await createPOST(makeJsonReq({ period: 'monthly' }))
     expect(res.status).toBe(200)
     const data = await res.json()
@@ -68,11 +68,13 @@ describe('支付宝创建订单', () => {
     expect(prismaMock.paymentOrder.create.mock.calls[0][0].data.amount).toBe(2900)
     expect(prismaMock.paymentOrder.create.mock.calls[0][0].data.channel).toBe('alipay')
     expect(prismaMock.paymentOrder.create.mock.calls[0][0].data.status).toBe('PENDING')
+    expect(prismaMock.paymentOrder.create.mock.calls[0][0].data.currency).toBe('CNY')
   })
-  it('annual → 成功，订单金额 19900 分', async () => {
+  it('annual → 成功，订单金额 19900 分 + CNY', async () => {
     const res = await createPOST(makeJsonReq({ period: 'annual' }))
     expect(res.status).toBe(200)
     expect(prismaMock.paymentOrder.create.mock.calls[0][0].data.amount).toBe(19900)
+    expect(prismaMock.paymentOrder.create.mock.calls[0][0].data.currency).toBe('CNY')
   })
 })
 

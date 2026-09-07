@@ -178,7 +178,8 @@ model PaymentOrder {
   externalCheckoutId String?                         // 支付平台侧的 checkout/session ID（Creem ch_xxx），用于 webhook + GET 精确反查本地订单
   channel            String                          // 支付渠道: alipay, creem
   period             String?                         // 订阅周期: monthly / annual（webhook 回调时写入，后台展示用）
-  amount             Int                             // 金额（分）
+  amount             Int                             // 金额（按 currency 对应单位：USD=美分，CNY=分）
+  currency           String?                         // 币种: USD / CNY，创建时即写入，前端据此显示符号
   status             String   @default("PENDING")    // PENDING / PAID / EXPIRED
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
@@ -187,6 +188,7 @@ model PaymentOrder {
 
   @@index([externalCheckoutId])
   @@index([userId, status])
+  @@index([currency])
 }
 
 model WebhookLog {

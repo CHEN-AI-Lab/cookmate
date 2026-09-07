@@ -10,6 +10,7 @@ interface Order {
   orderId: string
   channel: string
   amount: number
+  currency?: string
   status: string
   createdAt: string
 }
@@ -47,9 +48,12 @@ function planLabel(amount: number, locale: string, t: (key: string) => string): 
   return "Pro"
 }
 
-// 按支付渠道显示币种：creem 收美元（美分）、alipay 收人民币（分）
-function fmtOrderAmount(order: { channel: string; amount: number }): string {
-  const symbol = order.channel === "creem" ? "$" : "¥"
+// 币种符号映射：新增渠道只需加一行配置，不用改判断逻辑
+const CURRENCY_SYMBOLS: Record<string, string> = { USD: "$", CNY: "¥" }
+
+// 按订单的 currency 字段显示币种
+function fmtOrderAmount(order: { currency?: string; amount: number }): string {
+  const symbol = order.currency ? (CURRENCY_SYMBOLS[order.currency] || "?") : "?"
   return `${symbol}${(order.amount / 100).toFixed(2)}`
 }
 
