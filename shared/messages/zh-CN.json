@@ -595,7 +595,8 @@
     "starLimitReached": "收藏已达上限（10个），升级 Pro 可无限收藏",
     "recipeLimitReached": "菜谱已达上限（25个），升级 Pro 可无限保存",
     "mealPlanDaysLimit": "免费版每周最多规划 3 天，升级 Pro 解锁整周计划",
-    "pantryLimitReached": "食材库已达上限（15种），升级 Pro 无限添加"
+    "pantryLimitReached": "食材库已达上限（15种），升级 Pro 无限添加",
+    "yearlySavingTpl": "🔥 推荐 · 省 {amount}"
   },
   "orders": {
     "title": "📋 订单记录",

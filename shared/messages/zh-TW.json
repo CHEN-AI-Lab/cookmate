@@ -595,9 +595,8 @@
     "starLimitReached": "收藏已達上限（10個），升級 Pro 可無限收藏",
     "recipeLimitReached": "菜譜已達上限（25個），升級 Pro 可無限保存",
     "mealPlanDaysLimit": "免費版每週最多規劃 3 天，升級 Pro 解鎖整週計畫",
-    "pantryLimitReached": "食材庫已達上限（15種），升級 Pro 無限添加"
-  },
-  "metadata": {
+    "pantryLimitReached": "食材庫已達上限（15種），升級 Pro 無限添加",
+    "yearlySavingTpl": "🔥 推薦 · 省 {amount}"
   },
   "orders": {
     "title": "📋 訂單記錄",

@@ -595,9 +595,8 @@
     "starLimitReached": "Star limit reached (10), upgrade to Pro for unlimited",
     "recipeLimitReached": "Recipe limit reached (25), upgrade to Pro for unlimited",
     "mealPlanDaysLimit": "Free tier allows up to 3 days per week, upgrade to Pro for full week",
-    "pantryLimitReached": "Pantry limit reached (15 items), upgrade to Pro for unlimited"
-  },
-  "metadata": {
+    "pantryLimitReached": "Pantry limit reached (15 items), upgrade to Pro for unlimited",
+    "yearlySavingTpl": "🔥 Recommended · Save {amount}"
   },
   "orders": {
     "title": "📋 Order History",

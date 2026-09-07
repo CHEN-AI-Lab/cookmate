@@ -595,9 +595,8 @@
     "starLimitReached": "收藏夹已達上限（10个），升级Pro可无限收藏",
     "recipeLimitReached": "レシピが上限（25個）に達しました。Proにアップグレードして無制限に保存",
     "mealPlanDaysLimit": "無料版は週3日までの献立可能です。Proで週間計画を解除",
-    "pantryLimitReached": "パントリーが上限（15種類）に達しました。Proで無制限に追加"
-  },
-  "metadata": {
+    "pantryLimitReached": "パントリーが上限（15種類）に達しました。Proで無制限に追加",
+    "yearlySavingTpl": "🔥 おすすめ · {amount}お得"
   },
   "orders": {
     "title": "📋 注文履歴",
