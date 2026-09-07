@@ -82,6 +82,7 @@ export async function GET(req: Request) {
         orderId: o.orderId,
         channel: o.channel,
         amount: o.amount,
+        currency: o.currency,
         status: o.status,
         createdAt: o.createdAt.toISOString(),
       })),
