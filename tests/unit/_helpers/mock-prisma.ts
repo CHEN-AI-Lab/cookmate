@@ -230,6 +230,12 @@ export function makePrisma() {
       }),
     },
     mealSlot: {
+      findMany: vi.fn(async ({ where }: any) => {
+        if (where?.mealPlanId?.in) {
+          return stores.mealSlots.filter((s: any) => where.mealPlanId.in.includes(s.mealPlanId))
+        }
+        return stores.mealSlots
+      }),
       deleteMany: vi.fn(async () => {
         const before = stores.mealSlots.length
         stores.mealSlots.length = 0

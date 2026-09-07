@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { generateRecipes, normalizeIngredients } from "@cookmate/shared/api/openai"
-import { checkUsageLimit, incrementUsage } from "@/lib/auth-helpers"
+import { checkUsageLimit, incrementUsage, isFreeUser, checkRecipeCountLimit } from "@/lib/auth-helpers"
 import {
   BLACKLIST, getBlockReason,
 } from "@cookmate/shared/constants/ingredients"
@@ -45,6 +45,15 @@ export async function POST(req: Request) {
           data: { starred: starred ?? !existing.starred },
         })
         return NextResponse.json({ recipe: updated })
+      }
+
+      // 检查免费版菜谱总数上限
+      const isFree = await isFreeUser(session.user.id)
+      if (isFree) {
+        const limited = await checkRecipeCountLimit(session.user.id)
+        if (limited) {
+          return NextResponse.json({ error: e("菜谱已达上限（25个），升级 Pro 可无限保存", "Recipe limit reached (25), upgrade to Pro for unlimited") }, { status: 403 })
+        }
       }
 
       const saved = await prisma.recipe.create({
@@ -99,6 +108,15 @@ export async function POST(req: Request) {
           { error: e("今日免费次数已用完，升级 Pro 可无限使用", "Daily free limit reached. Upgrade to Pro for unlimited access") },
           { status: 403 }
         )
+      }
+    }
+
+    // 检查免费版菜谱总数上限
+    const isFree = await isFreeUser(session.user.id)
+    if (isFree) {
+      const limited = await checkRecipeCountLimit(session.user.id)
+      if (limited) {
+        return NextResponse.json({ error: e("菜谱已达上限（25个），升级 Pro 可无限保存", "Recipe limit reached (25), upgrade to Pro for unlimited") }, { status: 403 })
       }
     }
 

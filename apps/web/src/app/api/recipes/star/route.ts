@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { isFreeUser, checkStarredLimit } from "@/lib/auth-helpers"
 
 export async function GET() {
   const session = await auth()
@@ -31,6 +32,15 @@ export async function PATCH(req: Request) {
       where: { id: recipeId, userId: session.user.id },
     }).catch((err: unknown) => { console.error("findFirst recipe error:", err); return null })
     if (!recipe) return NextResponse.json({ error: "菜谱不存在" }, { status: 404 })
+
+    // 检查收藏上限（仅免费版 + 新增收藏时）
+    const isFree = await isFreeUser(session.user.id)
+    if (isFree && !recipe.starred) {
+      const limited = await checkStarredLimit(session.user.id)
+      if (limited) {
+        return NextResponse.json({ error: "starLimitReached" }, { status: 403 })
+      }
+    }
 
     // 切换收藏状态
     const updated = await prisma.recipe.update({

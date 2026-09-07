@@ -12,6 +12,8 @@ vi.mock('@/lib/auth-helpers', () => ({
   checkUsageLimit: vi.fn(async () => true),
   incrementUsage: vi.fn(async () => {}),
   isDemoUser: vi.fn(() => false),
+  isFreeUser: vi.fn(async () => true),
+  checkRecipeCountLimit: vi.fn(async () => false),
 }))
 vi.mock('@cookmate/shared/api/openai', () => ({
   generateRecipes: vi.fn(),

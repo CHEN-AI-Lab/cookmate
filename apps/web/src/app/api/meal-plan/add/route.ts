@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { isFreeUser, checkMealPlanDaysLimit } from "@/lib/auth-helpers"
 
 // 中文星期 → 数字（0=周一…6=周日，与 AI 生成一致）
 const dayMap: Record<string, number> = {
@@ -34,6 +35,15 @@ export async function POST(req: Request) {
     const mon = new Date(now)
     mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1))
     mon.setHours(0, 0, 0, 0)
+
+    // 检查免费版周计划天数上限
+    const isFree = await isFreeUser(session.user.id)
+    if (isFree) {
+      const limited = await checkMealPlanDaysLimit(session.user.id)
+      if (limited) {
+        return NextResponse.json({ error: "mealPlanDaysLimit" }, { status: 403 })
+      }
+    }
 
     // 查找或创建本周计划
     let plan = await prisma.mealPlan.findUnique({

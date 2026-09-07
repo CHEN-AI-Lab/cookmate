@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
+import { isFreeUser, checkPantryLimit } from "@/lib/auth-helpers"
 
 export async function GET(req: Request) {
   const loc = getLocaleFromCookie(req)
@@ -26,6 +27,15 @@ export async function POST(req: Request) {
   try {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: "Please log in first" }, { status: 401 })
+
+    // 检查免费版食材库上限
+    const isFree = await isFreeUser(session.user.id)
+    if (isFree) {
+      const limited = await checkPantryLimit(session.user.id)
+      if (limited) {
+        return NextResponse.json({ error: err(loc, "pantryLimitReached") }, { status: 403 })
+      }
+    }
 
     const body = await req.json()
 
