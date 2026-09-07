@@ -75,7 +75,7 @@ export default function PublicFooter() {
         </div>
 
         {/* Copyright */}
-        <div className="mt-8 pt-8 border-t border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-8 pt-8 border-t border-gray-700 text-center">
           <p className="text-xs text-text-secondary">{tfooter("copyright", { year: String(new Date().getFullYear()) })}</p>
         </div>
       </div>
