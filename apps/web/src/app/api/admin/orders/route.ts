@@ -21,19 +21,22 @@ export async function GET() {
     orderId: o.orderId,
     channel: o.channel, // "creem" | "alipay"
     period: o.period, // "monthly" | "annual" | null（历史订单可能为空）
-    amount: o.amount, // 分
+    amount: o.amount, // 分（creem=美分，alipay=人民币分）
     status: o.status, // PENDING / PAID / EXPIRED
     createdAt: o.createdAt,
     userEmail: o.user?.email ?? null,
   }))
 
   const paid = parsed.filter((o) => o.status === "PAID")
-  const totalRevenue = paid.reduce((sum, o) => sum + o.amount, 0)
+  // 收入按渠道分开统计：creem 美分、alipay 人民币分，混加无意义
+  const creemRevenue = paid.filter((o) => o.channel === "creem").reduce((sum, o) => sum + o.amount, 0)
+  const alipayRevenue = paid.filter((o) => o.channel === "alipay").reduce((sum, o) => sum + o.amount, 0)
 
   return NextResponse.json({
     total: parsed.length,
     paidCount: paid.length,
-    totalRevenue,
+    creemRevenue,
+    alipayRevenue,
     orders: parsed,
   })
 }

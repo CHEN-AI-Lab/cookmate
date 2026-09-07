@@ -85,7 +85,7 @@ export async function GET() {
     orders: orders.map((o) => ({
       orderId: o.orderId,
       channel: o.channel,
-      amount: `¥${(o.amount / 100).toFixed(2)}`,
+      amount: `${o.channel === "creem" ? "$" : "¥"}${(o.amount / 100).toFixed(2)}`,
       status: { PENDING: "待支付", PAID: "已支付", EXPIRED: "已过期", REFUNDED: "已退款" }[o.status] || o.status,
       date: fmt(o.createdAt),
     })),

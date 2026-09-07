@@ -47,6 +47,12 @@ function planLabel(amount: number, locale: string, t: (key: string) => string): 
   return "Pro"
 }
 
+// 按支付渠道显示币种：creem 收美元（美分）、alipay 收人民币（分）
+function fmtOrderAmount(order: { channel: string; amount: number }): string {
+  const symbol = order.channel === "creem" ? "$" : "¥"
+  return `${symbol}${(order.amount / 100).toFixed(2)}`
+}
+
 export default function OrdersPage() {
   const t = useTranslations("orders")
   const tb = useTranslations("billing")
@@ -121,7 +127,7 @@ export default function OrdersPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-sm font-semibold text-text-primary">¥{(order.amount / 100).toFixed(2)}</span>
+                    <span className="text-sm font-semibold text-text-primary">{fmtOrderAmount(order)}</span>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[order.status] || "text-text-secondary bg-surface"}`}>
                       {statusLabel[order.status] || order.status}
                     </span>
@@ -143,7 +149,7 @@ export default function OrdersPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-text-secondary">{t("amount")}</span>
-                      <span className="text-text-secondary font-semibold">¥{(order.amount / 100).toFixed(2)}</span>
+                      <span className="text-text-secondary font-semibold">{fmtOrderAmount(order)}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-text-secondary">{t("status")}</span>

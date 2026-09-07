@@ -51,14 +51,16 @@ describe('admin orders GET', () => {
     expect(prismaMock.paymentOrder.findMany).not.toHaveBeenCalled()
   })
 
-  it('正常路径 → 返回订单 + 统计（paidCount / totalRevenue）', async () => {
+  it('正常路径 → 返回订单 + 统计（paidCount / 分渠道收入）', async () => {
     ;(auth as any).mockResolvedValue({ user: { id: 'u1', email: 'admin@cookmate.com' } })
     const res = await ordersGET()
     expect(res.status).toBe(200)
     const json = await res.json()
     expect(json.total).toBe(2)
     expect(json.paidCount).toBe(1)
-    expect(json.totalRevenue).toBe(16900)
+    // 收入按渠道分开：PAID 只有 creem 订单（16900 美分），alipay 无 PAID → 0
+    expect(json.creemRevenue).toBe(16900)
+    expect(json.alipayRevenue).toBe(0)
     expect(json.orders[0]).toMatchObject({
       orderId: 'CKCR20260901AABBCCDD',
       channel: 'creem',

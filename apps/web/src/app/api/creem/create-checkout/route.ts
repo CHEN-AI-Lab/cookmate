@@ -59,16 +59,18 @@ export async function POST(req: Request) {
     })
 
     // 保存订单记录（用统一订单号 + 关联 Creem sessionId 用于精确反查）
+    // 金额必须用 USD：Creem 产品按美元配置，用户实付美元；
+    // 写 CNY 会导致订单金额与实付不符（严重 bug，2026-09 修复）
     if (sessionId) {
       const orderId = generateOrderId("creem")
-      const price = PRICING.get(period, "CNY")
+      const price = PRICING.get(period, "USD")
       await prisma.paymentOrder.create({
         data: {
           userId: session.user.id,
           orderId,
           externalCheckoutId: sessionId, // Creem 的 ch_xxx，用于 webhook + GET 精确匹配
           channel: "creem",
-          amount: price.amount,
+          amount: price.amount, // 美分（USD）
           period, // 创建时即写入周期，不依赖 webhook 回调
           status: "PENDING",
         },

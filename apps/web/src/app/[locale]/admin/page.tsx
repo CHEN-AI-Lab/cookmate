@@ -39,7 +39,8 @@ interface AdminOrder {
 interface OrdersResponse {
   total?: number
   paidCount?: number
-  totalRevenue?: number
+  creemRevenue?: number
+  alipayRevenue?: number
   orders?: AdminOrder[]
   error?: string
 }
@@ -125,8 +126,10 @@ function fmtTime(iso: string) {
   }
 }
 
-function fmtAmount(fen: number) {
-  return `¥${(fen / 100).toFixed(2)}`
+// 金额格式化：按渠道区分币种（creem 美元美分 → $，alipay 人民币分 → ¥）
+function fmtAmount(amount: number, channel?: string) {
+  const symbol = channel === "creem" ? "$" : "¥"
+  return `${symbol}${(amount / 100).toFixed(2)}`
 }
 
 function fmtPeriod(period: string | null) {
@@ -322,10 +325,11 @@ function OrdersTab({ data }: { data: OrdersResponse | null }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <StatCard label="总订单" value={hasFilter ? filtered.length : data?.total ?? 0} tone="gray" />
         <StatCard label="已支付" value={hasFilter ? filtered.filter((o) => o.status === "PAID").length : data?.paidCount ?? 0} tone="green" />
-        <StatCard label="累计收入" value={fmtAmount(hasFilter ? filtered.reduce((s, o) => s + o.amount, 0) : (data?.totalRevenue ?? 0))} tone="amber" />
+        <StatCard label="Creem 收入" value={fmtAmount(hasFilter ? filtered.filter((o) => o.status === "PAID" && o.channel === "creem").reduce((s, o) => s + o.amount, 0) : (data?.creemRevenue ?? 0), "creem")} tone="amber" />
+        <StatCard label="支付宝收入" value={fmtAmount(hasFilter ? filtered.filter((o) => o.status === "PAID" && o.channel === "alipay").reduce((s, o) => s + o.amount, 0) : (data?.alipayRevenue ?? 0), "alipay")} tone="amber" />
       </div>
 
       {/* 筛选栏 */}
@@ -370,7 +374,7 @@ function OrdersTab({ data }: { data: OrdersResponse | null }) {
                     <td className="px-4 py-3 text-gray-700 font-mono text-xs">{o.orderId}</td>
                     <td className="px-4 py-3 text-gray-700">{o.channel}</td>
                     <td className="px-4 py-3 text-gray-700">{fmtPeriod(o.period)}</td>
-                    <td className="px-4 py-3 text-gray-700 font-medium">{fmtAmount(o.amount)}</td>
+                    <td className="px-4 py-3 text-gray-700 font-medium">{fmtAmount(o.amount, o.channel)}</td>
                     <td className="px-4 py-3">
                       <StatusBadge status={o.status} />
                     </td>
