@@ -229,11 +229,12 @@ export default function GroceryListPage() {
             const allItems = Object.values(categories).flat()
             const checkedButGone = new Set<string>()
             
-            // 清理 checked 中已不在食材库的
+            // 只在食材本身已不在清单里时才取消勾选；
+            // 被免费版上限拦住（勾选了但没同步进食材库）的保持已选中状态，由用户决定后续处理
             for (const name of next) {
               if (manualItems.includes(name)) continue
               const inData = allItems.find((i) => i.name === name)
-              if (!inData || !inData.inPantry) checkedButGone.add(name)
+              if (!inData) checkedButGone.add(name)
             }
             
             // 清理 syncedRef 中已不在食材库的（即使没勾选，防止残留阻塞重新勾选）
