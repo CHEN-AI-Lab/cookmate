@@ -343,20 +343,28 @@ export default function MealPlanPage() {
         </p>
       )}
 
-      {error && (
-        <div className="mb-4 flex items-center justify-between gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5">
-          <p className="text-sm text-red-700">{error}</p>
-          {errorInfo?.retryable && (
-            <button
-              onClick={retryGenerate}
-              disabled={generating}
-              className="shrink-0 text-sm font-medium text-red-700 underline disabled:opacity-50"
-            >
-              {tc("retry")}
-            </button>
-          )}
-        </div>
-      )}
+      {error && (() => {
+        // 限额提示是升级引导而非报错：品牌配色；网络/服务故障保持红色。
+        // 框宽贴合文字（w-fit）并水平居中，不留大片空白（Carbon Toast 规范：提示不应占满整行）。
+        const isRateLimit = errorInfo?.kind === "rateLimit"
+        const boxCls = "mb-4 mx-auto w-fit max-w-full flex items-center gap-3 rounded-xl px-4 py-2.5 " + (isRateLimit ? "bg-bg-brand border border-accent/60" : "bg-red-50 border border-red-200")
+        const textCls = "text-sm " + (isRateLimit ? "text-text-primary" : "text-red-700")
+        const btnCls = "shrink-0 text-sm font-medium underline disabled:opacity-50 " + (isRateLimit ? "text-accent" : "text-red-700")
+        return (
+          <div className={boxCls}>
+            <p className={textCls}>{error}</p>
+            {errorInfo?.retryable && (
+              <button
+                onClick={retryGenerate}
+                disabled={generating}
+                className={btnCls}
+              >
+                {tc("retry")}
+              </button>
+            )}
+          </div>
+        )
+      })()}
 
       {/* 收藏上限：居中弹框，升级入口嵌在文案中间；收藏在详情弹窗里触发，弹框永远在视口正中 */}
       {starBanner && (
