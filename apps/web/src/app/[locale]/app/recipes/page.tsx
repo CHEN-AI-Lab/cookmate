@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import { INGREDIENT_LABELS } from "@cookmate/shared/constants/ingredients"
 import { RecipeCard } from "@/components/features/RecipeCard"
-import { UpgradeBanner, UpgradeInline } from "@/components/features/UpgradeLink"
+import { UpgradeDialog, UpgradeInline } from "@/components/features/UpgradeLink"
 
 interface Recipe {
   id: string
@@ -302,9 +302,9 @@ export default function RecipesPage() {
     <div>
       <h1 className="text-2xl font-bold text-text-primary mb-6">{t("aiRecipesTitle")}</h1>
 
-      {/* 收藏上限横幅：品牌米色底，升级入口嵌在文案中间，持久展示可关闭 */}
+      {/* 收藏上限：居中弹框，升级入口嵌在文案中间 */}
       {starBanner && (
-        <UpgradeBanner
+        <UpgradeDialog
           text={tb.rich("starLimitReached", {
             upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline>,
           })}

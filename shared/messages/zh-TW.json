@@ -310,7 +310,7 @@
     "genError_emptyData": "生成結果為空，請重試",
     "genError_unknown": "生成失敗，請稍後重試",
     "freeLimitHint": "免費版本週還可規劃 {days} 天，本次選擇超出剩餘天數",
-    "freeLimitReached": "免費版本週 3 天規劃額度已用完，升級 Pro 解鎖整週計畫",
+    "freeLimitReached": "免費版本週 3 天規劃額度已用完，<upgrade>升級 Pro</upgrade> 解鎖整週計畫",
     "genError_mealPlanDaysLimit": "免費版每週最多規劃 3 天，請減少生成天數或升級 Pro",
     "mealPlanDaysLimit": "免費版每週最多規劃 3 天，升級 Pro 解鎖整週計畫",
     "generating": "🤖 生成中...",
@@ -324,7 +324,7 @@
     "emptySlot": "未安排菜品",
     "confirmGenerate": "生成",
     "pickerLegendExisting": "已有（保留）",
-    "freeLimitExceed": "本次選擇了 {picked} 天，超出本週剩餘額度（還剩 {remaining} 天），請減少天數或升級 Pro",
+    "freeLimitExceed": "本次選擇了 {picked} 天，超出本週剩餘額度（還剩 {remaining} 天）。<upgrade>升級 Pro</upgrade> 可規劃整週",
     "genError_recipeLimit": "食譜總數已達免費版上限（25 個），週計畫會一次性寫入多個食譜，請清理食譜或升級 Pro"
   },
   "grocery": {

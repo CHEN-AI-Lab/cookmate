@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useTranslations, useLocale } from "next-intl"
 import { getDemoRecipes } from "@cookmate/shared/demo-data"
 import { CUISINE_LABELS } from "@cookmate/shared/constants"
-import { UpgradeBanner, UpgradeInline } from "@/components/features/UpgradeLink"
+import { UpgradeDialog, UpgradeInline } from "@/components/features/UpgradeLink"
 
 interface Recipe {
   id: string
@@ -299,9 +299,9 @@ export default function MyRecipesPage() {
 
   return (
     <div>
-      {/* 收藏上限横幅：品牌米色底，升级入口嵌在文案中间，持久展示可关闭 */}
+      {/* 收藏上限：居中弹框，升级入口嵌在文案中间；用户在列表底部点收藏也能立刻看到 */}
       {starBanner && (
-        <UpgradeBanner
+        <UpgradeDialog
           text={tbi.rich("starLimitReached", {
             upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline>,
           })}

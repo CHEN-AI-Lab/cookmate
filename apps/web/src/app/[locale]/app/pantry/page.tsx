@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { getDemoPantryItems } from "@cookmate/shared/demo-data"
-import { UpgradeBanner, UpgradeInline } from "@/components/features/UpgradeLink"
+import { UpgradeDialog, UpgradeInline } from "@/components/features/UpgradeLink"
 
 interface PantryItem {
   id: string
@@ -127,9 +127,9 @@ export default function PantryPage() {
       {/* 1. Title */}
       <h1 className="text-2xl font-bold text-text-primary mb-4">{t("title")}</h1>
 
-      {/* 免费版食材库上限横幅：品牌米色底，升级入口嵌在文案中间，持久展示可关闭 */}
+      {/* 免费版食材库上限：居中弹框，升级入口嵌在文案中间 */}
       {limitBanner && (
-        <UpgradeBanner
+        <UpgradeDialog
           text={tb.rich("pantryLimitReached", {
             upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline>,
           })}

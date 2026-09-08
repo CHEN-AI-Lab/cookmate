@@ -5,22 +5,6 @@ import { Link } from "@/i18n/navigation"
 import { useTranslations } from "next-intl"
 
 /**
- * 独立「升级到 Pro」链接 — 用于弹窗/提示条尾部等需要单独放置入口的场景。
- * 统一跳转账单页（登录用户可直接购买套餐）。
- */
-export function UpgradeLink({ className = "" }: { className?: string }) {
-  const t = useTranslations("billing")
-  return (
-    <Link
-      href="/app/billing"
-      className={`underline font-medium hover:opacity-80 transition-opacity ${className}`}
-    >
-      {t("upgradeAction")}
-    </Link>
-  )
-}
-
-/**
  * 内联升级链接 — 配合 next-intl 的 t.rich 使用，包在文案的 <upgrade> 标签里，
  * 让「升级 Pro」作为句子的一部分可点击，而不是孤零零挂在横幅右侧。
  */
@@ -36,21 +20,27 @@ export function UpgradeInline({ children }: { children: ReactNode }) {
 }
 
 /**
- * 免费版限制持久横幅 — 品牌米色底 + 橙色描边（全部走 CSS 变量，深色模式正常）。
- * 不用红色：限额不是出错，是引导升级，红色错误语义会让用户烦躁（Canva 设计规范同款思路）。
- * text 支持富文本（内嵌升级链接），横幅不自动消失、可手动关闭。
+ * 免费版限制提示弹框 — 居中显示、宽度紧凑、带遮罩。
+ * 为什么用弹框不用页面横幅：横幅固定在页面顶部，用户滚到页面中下部触发限制时根本看不到；
+ * 弹框永远在视口正中，触发即见。米色底 + 橙描边走 CSS 变量，深色模式正常。
+ * text 支持富文本（内嵌升级链接），点遮罩/按钮均可关闭。
  */
-export function UpgradeBanner({ text, onClose }: { text: ReactNode; onClose: () => void }) {
+export function UpgradeDialog({ text, onClose }: { text: ReactNode; onClose: () => void }) {
+  const t = useTranslations("common")
   return (
-    <div className="mb-4 flex items-center justify-between gap-3 flex-wrap text-[13px] rounded-xl px-4 py-2.5 bg-bg-brand border border-accent/60 text-text-primary">
-      <span>{text}</span>
-      <button
-        onClick={onClose}
-        className="text-text-secondary hover:text-text-primary px-1 shrink-0"
-        aria-label="close"
+    <div className="fixed inset-0 bg-overlay flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div
+        className="bg-bg-brand border border-accent/60 rounded-2xl px-6 py-5 w-full max-w-xs text-center shadow-xl"
+        onClick={(e) => e.stopPropagation()}
       >
-        ×
-      </button>
+        <p className="text-sm text-text-primary leading-relaxed">{text}</p>
+        <button
+          onClick={onClose}
+          className="mt-4 bg-accent text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-orange-600 transition-colors"
+        >
+          {t("confirm")}
+        </button>
+      </div>
     </div>
   )
 }

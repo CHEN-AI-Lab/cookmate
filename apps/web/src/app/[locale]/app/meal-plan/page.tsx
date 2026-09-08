@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { MealPlanGrid } from "@/components/features/MealPlanGrid"
 import { MealPlanDetailModal } from "@/components/features/MealPlanDetailModal"
-import { UpgradeBanner, UpgradeInline, UpgradeLink } from "@/components/features/UpgradeLink"
+import { UpgradeDialog, UpgradeInline } from "@/components/features/UpgradeLink"
 import { getDemoMealPlan } from "@cookmate/shared/demo-data"
 import { API_TIMEOUT } from "@cookmate/shared/constants/api-errors"
 import { MEAL_PLAN_DAYS_LIMIT } from "@cookmate/shared/constants/usage-limits"
@@ -343,9 +343,9 @@ export default function MealPlanPage() {
         </div>
       )}
 
-      {/* 收藏上限横幅：收藏在详情弹窗里触发，弹窗关闭后这里持久兜底 */}
+      {/* 收藏上限：居中弹框，升级入口嵌在文案中间；收藏在详情弹窗里触发，弹框永远在视口正中 */}
       {starBanner && (
-        <UpgradeBanner
+        <UpgradeDialog
           text={tb.rich("starLimitReached", {
             upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline>,
           })}
@@ -493,27 +493,16 @@ export default function MealPlanPage() {
             </div>
 
             {/* 免费版天数限制提示 — 三态：额度已用完 / 本次选择超出剩余 / 常态展示剩余额度。
-                原先只要还有额度就无条件显示「本次选择超出剩余天数」，用户刚打开弹窗也会被这句话误伤。
-                提示尾部带升级链接：只说"已达上限"不给出路，用户会卡在这里。 */}
+                配色与品牌一致（米色底 + 橙描边，CSS 变量），受限态把升级链接嵌在文案中间。 */}
             {freeUser && (freeRemainingDays <= 0 || pickedRangeLen > freeRemainingDays ? (
-              <div
-                className="mb-3 text-[13px] rounded-xl px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap"
-                style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c" }}
-              >
-                <span>
-                  {freeRemainingDays <= 0
-                    ? t("freeLimitReached")
-                    : t("freeLimitExceed", { picked: pickedRangeLen, remaining: freeRemainingDays })}
-                </span>
-                <UpgradeLink className="text-[13px] shrink-0" />
+              <div className="mb-3 text-[13px] rounded-xl px-4 py-2.5 bg-bg-brand border border-accent/60 text-text-primary leading-relaxed">
+                {freeRemainingDays <= 0
+                  ? t.rich("freeLimitReached", { upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline> })
+                  : t.rich("freeLimitExceed", { picked: pickedRangeLen, remaining: freeRemainingDays, upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline> })}
               </div>
             ) : (
-              <div
-                className="mb-3 text-[13px] rounded-xl px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap"
-                style={{ background: "#fff7ed", border: "1px solid #fed7aa", color: "#9a3412" }}
-              >
-                <span>{t("freeLimitHint", { days: freeRemainingDays })}</span>
-                <UpgradeLink className="text-[13px] shrink-0" />
+              <div className="mb-3 text-[13px] rounded-xl px-4 py-2.5 bg-bg-brand border border-accent/40 text-text-secondary">
+                {t("freeLimitHint", { days: freeRemainingDays })}
               </div>
             ))}
 

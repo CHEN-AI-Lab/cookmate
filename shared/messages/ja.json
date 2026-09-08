@@ -321,8 +321,8 @@
     "genError_emptyData": "生成結果が空でした。再試行してください",
     "genError_unknown": "生成に失敗しました。しばらくしてからお試しください",
     "freeLimitHint": "無料版は今週あと{days}日の献立を作成できます",
-    "freeLimitReached": "無料版の今週3日は使い切りました。Proにアップグレードして週間計画を解除",
-    "freeLimitExceed": "今回{picked}日を選択しましたが、今週の残り枠（あと{remaining}日）を超えています。日数を減らすか、Proにアップグレードしてください",
+    "freeLimitReached": "今週の3日間の無料枠を使い切りました。<upgrade>Proにアップグレード</upgrade>すると1週間すべて計画できます",
+    "freeLimitExceed": "{picked}日を選択しましたが、今週の残り枠（あと{remaining}日）を超えています。<upgrade>Proにアップグレード</upgrade>すると1週間すべて計画できます",
     "genError_mealPlanDaysLimit": "無料版は週3日までの献立が可能です。少ない日数を選択するか、Proにアップグレードしてください",
     "genError_recipeLimit": "レシピ数が無料版の上限（25件）に達しました。週間計画は複数のレシピを一度に作成するため、レシピを削除するかProにアップグレードしてください",
     "mealPlanDaysLimit": "無料版は週3日までの献立が可能です。Proで週間計画を解除"
