@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { classifyIngredient, normalizeIngredientName } from "@cookmate/shared/utils/grocery-categories"
+import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
+import { isFreeUser, checkPantryLimit } from "@/lib/auth-helpers"
 
 export async function POST(req: Request) {
   const session = await auth()
@@ -15,6 +17,19 @@ export async function POST(req: Request) {
     // 归一化：去掉数量后缀和括号克数，确保食材库名字干净
     const cleanName = normalizeIngredientName(trimmedName)
     const category = classifyIngredient(cleanName)
+
+    // 免费版食材库上限：购物清单勾选同步与手动添加走同一套限制。
+    // 已存在条目的 upsert 不会新增、不占额度，放行保证勾选状态能正常切换。
+    const loc = getLocaleFromCookie(req)
+    if (await isFreeUser(session.user.id)) {
+      const exists = await prisma.pantryItem.findFirst({
+        where: { userId: session.user.id, name: cleanName },
+        select: { id: true },
+      })
+      if (!exists && (await checkPantryLimit(session.user.id))) {
+        return NextResponse.json({ error: err(loc, "pantryLimitReached") }, { status: 403 })
+      }
+    }
 
     // upsert: 唯一约束保证不会重复创建，即使并发请求也不会有问题
     const item = await prisma.pantryItem.upsert({

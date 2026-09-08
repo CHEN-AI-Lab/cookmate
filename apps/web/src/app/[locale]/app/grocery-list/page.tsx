@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useTranslations } from "next-intl"
 import { getDemoGroceryList } from "@cookmate/shared/demo-data"
+import { UpgradeDialog, UpgradeInline } from "@/components/features/UpgradeLink"
 
 interface IngredientItem {
   name: string
@@ -18,6 +19,7 @@ interface CategoryGroup {
 
 export default function GroceryListPage() {
   const tg = useTranslations("grocery")
+  const tb = useTranslations("billing")
   const catLabels = tg.raw("catLabels") as Record<string, string>
   // Category name translation lookup (API returns Chinese names)
   const [categories, setCategories] = useState<CategoryGroup[]>([])
@@ -26,6 +28,7 @@ export default function GroceryListPage() {
   const [inPantryCount, setInPantryCount] = useState(0)
   const [checked, setChecked] = useState<Set<string>>(new Set())
   const [manualItems, setManualItems] = useState<string[]>([])
+  const [pantryLimit, setPantryLimit] = useState(false)
 
   // useRef 同步跟踪已同步到食材库的物品，防止 React StrictMode 双重调用导致重复创建
   const syncedRef = useRef<Set<string>>(new Set())
@@ -88,6 +91,10 @@ export default function GroceryListPage() {
         localStorage.setItem("cookmate_grocery_synced", JSON.stringify([...syncedRef.current]))
         setPurchaseNotify({ name, success: true, existing: !!data.alreadyExists })
         setTimeout(() => setPurchaseNotify(null), 2500)
+      } else if (data.error === "pantryLimitReached") {
+        // 免费版食材库已满：清掉同步标记允许重试，弹居中升级提示
+        syncedRef.current.delete(name)
+        setPantryLimit(true)
       }
     } catch (err) {
       console.error("sync to pantry error:", err)
@@ -449,6 +456,16 @@ export default function GroceryListPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* 免费版食材库上限：购物清单勾选同步被拦时居中提示 */}
+      {pantryLimit && (
+        <UpgradeDialog
+          text={tb.rich("pantryLimitReached", {
+            upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline>,
+          })}
+          onClose={() => setPantryLimit(false)}
+        />
       )}
 
       {/* 来源弹窗 */}
