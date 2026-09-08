@@ -265,7 +265,7 @@ export default function PantryPage() {
                     {/* 重复添加提示 */}
                     {dupDialog && (
                       <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setDupDialog(null)}>
-                        <div className="bg-bg-inverse text-white px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="bg-amber-50 border border-amber-200 text-amber-700 px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center" onClick={(e) => e.stopPropagation()}>
                           <span>{t("alreadyInPantry", { name: dupDialog })}</span>
                         </div>
                       </div>
