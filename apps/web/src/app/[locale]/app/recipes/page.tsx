@@ -424,7 +424,7 @@ export default function RecipesPage() {
             </div>
           )}
 
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <button
               onClick={generateRecipes}
               disabled={loading}
@@ -440,13 +440,13 @@ export default function RecipesPage() {
                 {t("clearAll")}
               </button>
             )}
+            {/* 提示紧跟触发按钮（贴近操作点），窄屏自动换到按钮下方 */}
+            {error && (() => {
+              const boxCls = "rounded-xl px-4 py-2.5 text-sm " + (errorKind === "limit" ? "bg-bg-brand border border-accent/60 text-text-primary" : errorKind === "info" ? "bg-amber-50 border border-amber-200 text-amber-700" : "bg-red-50 border border-red-200 text-red-700")
+              return <div className={boxCls}>{error}</div>
+            })()}
           </div>
         </div>
-
-        {error && (() => {
-          const boxCls = "mt-3 mx-auto w-fit max-w-full rounded-xl px-4 py-2.5 text-sm " + (errorKind === "limit" ? "bg-bg-brand border border-accent/60 text-text-primary" : errorKind === "info" ? "bg-amber-50 border border-amber-200 text-amber-700" : "bg-red-50 border border-red-200 text-red-700")
-          return <div className={boxCls}>{error}</div>
-        })()}
       </div>
 
       {loading && (
