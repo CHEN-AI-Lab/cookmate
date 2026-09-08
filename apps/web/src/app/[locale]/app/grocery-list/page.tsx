@@ -92,8 +92,15 @@ export default function GroceryListPage() {
         setPurchaseNotify({ name, success: true, existing: !!data.alreadyExists })
         setTimeout(() => setPurchaseNotify(null), 2500)
       } else if (data.error === "pantryLimitReached") {
-        // 免费版食材库已满：清掉同步标记允许重试，弹居中升级提示
+        // 免费版食材库已满：对号必须与真实结果一致（没进食材库=未勾选），立即回退并持久化
         syncedRef.current.delete(name)
+        newlyAddedRef.current.delete(name)
+        setChecked((prev) => {
+          const next = new Set(prev)
+          next.delete(name)
+          localStorage.setItem("cookmate_grocery_checked", JSON.stringify([...next]))
+          return next
+        })
         setPantryLimit(true)
       }
     } catch (err) {
@@ -229,12 +236,11 @@ export default function GroceryListPage() {
             const allItems = Object.values(categories).flat()
             const checkedButGone = new Set<string>()
             
-            // 只在食材本身已不在清单里时才取消勾选；
-            // 被免费版上限拦住（勾选了但没同步进食材库）的保持已选中状态，由用户决定后续处理
+            // 清理 checked 中已不在食材库的（勾选状态必须与食材库真实一致）
             for (const name of next) {
               if (manualItems.includes(name)) continue
               const inData = allItems.find((i) => i.name === name)
-              if (!inData) checkedButGone.add(name)
+              if (!inData || !inData.inPantry) checkedButGone.add(name)
             }
             
             // 清理 syncedRef 中已不在食材库的（即使没勾选，防止残留阻塞重新勾选）
