@@ -5,29 +5,66 @@
 import OpenAI from "openai"
 import { AI_TIMEOUT_MS } from "../constants/api-errors"
 
-let openaiInstance: OpenAI | null = null
+// ─── 按订阅层级（tier）分流的 AI 客户端 ───
+// 免费版与付费版可指向完全不同的 provider：key / baseURL / model 三者各自独立。
+// 未配置 *_FREE / *_PRO 时逐级回落到默认 AI_*，保证配置不全也不会让任何用户用不了。
+const clients = new Map<string, OpenAI>()
 
-function getOpenAI() {
-  if (!openaiInstance) {
-    openaiInstance = new OpenAI({
-      apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
-      baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
-      dangerouslyAllowBrowser: false,
-      // 必须小于 Vercel 函数上限（Hobby 60s）：AI 超时要能走进下面的 catch 优雅降级，
-      // 否则函数被平台掐断 → 前端只收到 504 HTML → 一律显示"网络错误"，看不到真实原因。
-      timeout: AI_TIMEOUT_MS,
-      maxRetries: 2,
-    })
-  }
-  return openaiInstance
+/** 归一化 tier：PRO / FAMILY 走付费端，其余（FREE、未传、未知值）走免费端 */
+function normalizeTier(subscriptionTier?: string | null): "PRO" | "FREE" {
+  const upper = (subscriptionTier || "").toUpperCase()
+  return upper === "PRO" || upper === "FAMILY" ? "PRO" : "FREE"
 }
 
-function getModel(): string {
-  return process.env.AI_MODEL || ""
+/** 某 tier 的 API Key：优先 *_PRO / *_FREE，都没有则回落到 AI_API_KEY / OPENAI_API_KEY */
+function getApiKeyForTier(tier: "PRO" | "FREE"): string {
+  const own = tier === "PRO" ? process.env.AI_API_KEY_PRO : process.env.AI_API_KEY_FREE
+  return own || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || ""
 }
 
-function hasAIKey(): boolean {
-  return !!(process.env.AI_API_KEY || process.env.OPENAI_API_KEY)
+/** 某 tier 的 baseURL：同上，逐级回落 */
+function getBaseUrlForTier(tier: "PRO" | "FREE"): string {
+  const own = tier === "PRO" ? process.env.AI_BASE_URL_PRO : process.env.AI_BASE_URL_FREE
+  return own || process.env.AI_BASE_URL || "https://api.openai.com/v1"
+}
+
+/** 某 tier 的模型名：同上，逐级回落 */
+export function getModelForTier(subscriptionTier?: string | null): string {
+  const tier = normalizeTier(subscriptionTier)
+  const own = tier === "PRO" ? process.env.AI_MODEL_PRO : process.env.AI_MODEL_FREE
+  return own || process.env.AI_MODEL || ""
+}
+
+/** 该 tier 是否配置了 AI Key（决定走真实调用还是 mock 数据） */
+export function hasAIKeyForTier(subscriptionTier?: string | null): boolean {
+  return getApiKeyForTier(normalizeTier(subscriptionTier)) !== ""
+}
+
+/**
+ * 按 tier 取（并缓存）OpenAI 客户端，未配 Key 时返回 null（调用方走 mock）。
+ * maxRetries 参与缓存 key：周计划用 0（输出量大，重试会让耗时翻倍），其余用 2。
+ */
+function getClientForTier(subscriptionTier: string | null | undefined, maxRetries: number): OpenAI | null {
+  const tier = normalizeTier(subscriptionTier)
+  const apiKey = getApiKeyForTier(tier)
+  if (!apiKey) return null
+
+  const cacheKey = tier + ":" + String(maxRetries)
+  const cached = clients.get(cacheKey)
+  if (cached) return cached
+
+  const client = new OpenAI({
+    apiKey,
+    baseURL: getBaseUrlForTier(tier),
+    dangerouslyAllowBrowser: false,
+    // 必须小于 Vercel 函数上限（Hobby 60s）：AI 超时要能走进下面的 catch 优雅降级，
+    // 否则函数被平台掐断 → 前端只收到 504 HTML → 一律显示"网络错误"，看不到真实原因。
+    timeout: AI_TIMEOUT_MS,
+    maxRetries,
+  })
+  clients.set(cacheKey, client)
+  console.log("[openai] client 初始化 tier=" + tier + " maxRetries=" + String(maxRetries) + " baseURL=" + getBaseUrlForTier(tier))
+  return client
 }
 
 /** 通用 AI 调用：先用 json_object 模式，不支持则自动降级 */
@@ -37,15 +74,18 @@ async function callAI(params: {
   maxTokens: number
   client?: OpenAI
   skipStructured?: boolean  // 跳过 json_object 模式，直接走降级（用于大输出场景，避免 reasoning 耗时翻倍）
+  subscriptionTier?: string | null  // 订阅层级，决定走哪套 provider（免费/付费可指向不同厂商）
 }): Promise<string> {
-  const { systemPrompt, userContent, maxTokens, client, skipStructured } = params
-  const ai = client || getOpenAI()
+  const { systemPrompt, userContent, maxTokens, client, skipStructured, subscriptionTier } = params
+  const ai = client || getClientForTier(subscriptionTier, 2)
+  if (!ai) throw new Error("AI 未配置（缺少 API Key），无法调用")
+  const model = getModelForTier(subscriptionTier)
 
   // 第一次：带 response_format（可跳过，用于大输出场景）
   if (!skipStructured) {
     try {
       const response = await ai.chat.completions.create({
-        model: getModel(),
+        model,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userContent },
@@ -64,7 +104,7 @@ async function callAI(params: {
 
   // 降级：不带 response_format（商汤、部分代理中转等）
   const response = await ai.chat.completions.create({
-    model: getModel(),
+    model,
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userContent },
@@ -266,11 +306,12 @@ export async function generateRecipes(
     servingSize?: number
   },
   pantryContext?: string[],
-  locale?: string
+  locale?: string,
+  subscriptionTier?: string | null
 ): Promise<{ recipes: RecipeResult[]; fallback: boolean }> {
   const isEnglish = locale === "en"
 
-  if (!hasAIKey()) {
+  if (!hasAIKeyForTier(subscriptionTier)) {
     return { recipes: isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences), fallback: true }
   }
 
@@ -313,6 +354,7 @@ export async function generateRecipes(
       systemPrompt,
       userContent,
       maxTokens: 2000,
+      subscriptionTier,
     })
     const parsed = JSON.parse(content)
     const aiRecipes = parsed.recipes || []
@@ -365,7 +407,8 @@ export async function generateWeeklyPlan(
   },
   pantryItems?: string[],
   locale?: string,
-  days?: number[]
+  days?: number[],
+  subscriptionTier?: string | null
 ): Promise<WeeklyPlanResult> {
   const isEnglish = locale === "en"
   const targetDays = days ?? [0, 1, 2, 3, 4, 5, 6]
@@ -373,18 +416,13 @@ export async function generateWeeklyPlan(
     ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     : ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 
-  if (!hasAIKey()) {
-    console.warn("[weekly-plan] 未配置 AI_API_KEY / OPENAI_API_KEY，使用 mock 周计划")
+  if (!hasAIKeyForTier(subscriptionTier)) {
+    console.warn("[weekly-plan] 该 tier 未配置 AI Key，使用 mock 周计划")
     return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true, reason: "no_key" }
   }
 
-  const planClient = new OpenAI({
-      apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
-      baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
-      // 周计划输出量大，是最容易超时的接口。超时必须 < 平台函数上限，才能降级而不是被掐断。
-      timeout: AI_TIMEOUT_MS,
-      maxRetries: 0,
-    })
+  // 周计划输出量大、最容易超时，重试会让耗时翻倍 → maxRetries=0（与默认 2 区分，缓存 key 不同）
+  const planClient = getClientForTier(subscriptionTier, 0) ?? undefined
 
   const systemPrompt = buildWeeklyPrompt(locale, targetDays)
   const dayList = targetDays.map(i => dayNames[i]).join(", ")
@@ -421,6 +459,7 @@ export async function generateWeeklyPlan(
       maxTokens: 12000,
       client: planClient,
       skipStructured: false, // 让 callAI 先试 json_object，400/403 自动降级 text；不写死适配任意提供商
+      subscriptionTier,
     })
     const rawPlan = JSON.parse(content)
 

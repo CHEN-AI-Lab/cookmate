@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { generateRecipes, normalizeIngredients } from "@cookmate/shared/api/openai"
+import { generateRecipes, normalizeIngredients, hasAIKeyForTier } from "@cookmate/shared/api/openai"
 import { canUseAiToday, incrementAiUsage, isFreeUser, checkRecipeCountLimit, checkStarredLimit } from "@/lib/auth-helpers"
 import {
   BLACKLIST, getBlockReason,
@@ -107,8 +107,14 @@ export async function POST(req: Request) {
       }, { status: 400 })
     }
 
+    // 读取用户偏好与订阅层级：tier 决定走哪套 AI provider，需在下面的 isMock 判断前取到
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { dietType: true, cuisinePref: true, servingSize: true, subscriptionTier: true },
+    }).catch((err: unknown) => { console.error("findUnique user error:", err); return null })
+
     const isDev = process.env.NODE_ENV !== "production"
-    const isMock = !(process.env.AI_API_KEY || process.env.OPENAI_API_KEY)
+    const isMock = !hasAIKeyForTier(user?.subscriptionTier ?? "FREE")
     if (!isMock && !isDev) {
       const canGenerate = await canUseAiToday(session.user.id)
       if (!canGenerate) {
@@ -128,19 +134,13 @@ export async function POST(req: Request) {
       }
     }
 
-    // 读取用户偏好设置
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { dietType: true, cuisinePref: true, servingSize: true },
-    }).catch((err: unknown) => { console.error("findUnique user error:", err); return null })
-
     T("db_user_pref_done")
 
     const { recipes: aiRecipes, fallback } = await generateRecipes(ingredients, {
       dietType: user?.dietType || undefined,
       cuisinePref: user?.cuisinePref || undefined,
       servingSize: user?.servingSize || undefined,
-    }, pantryContext, locale)
+    }, pantryContext, locale, user?.subscriptionTier ?? "FREE")
 
     T("ai_done")
 

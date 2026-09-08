@@ -6,6 +6,7 @@ import {
   generateWeeklyPlan,
   normalizeIngredients,
   sanitizeWeeklyPlan,
+  hasAIKeyForTier,
   type RecipeResult,
 } from "@cookmate/shared/api/openai"
 import { canUseAiToday, incrementAiUsage, isFreeUser, checkMealPlanDaysLimitForDays, checkRecipeCountLimitForCount } from "@/lib/auth-helpers"
@@ -144,7 +145,7 @@ export async function POST(req: Request) {
     }
 
     if (!isDev) {
-      const isMock = !(process.env.AI_API_KEY || process.env.OPENAI_API_KEY)
+      const isMock = !hasAIKeyForTier(user?.subscriptionTier ?? "FREE")
       if (!isMock) {
         // fail-closed：用量检查出错（如 DB 抖动）时拒绝生成，原实现 catch 返回 true 会让免费用户无限调用付费 AI
         const canGenerate = await canUseAiToday(userId).catch((err: unknown) => { console.error("check usage limit error:", err); return false })
@@ -167,7 +168,7 @@ export async function POST(req: Request) {
       dietType: user?.dietType || undefined,
       cuisinePref: user?.cuisinePref || undefined,
       servingSize: user?.servingSize || 2,
-    }, pantryNames, locale, targetDays)
+    }, pantryNames, locale, targetDays, user?.subscriptionTier ?? "FREE")
 
     T("ai_done")
     if (fallback) {
