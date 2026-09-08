@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import type { ReactNode } from "react"
 import { useSearchParams } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import { INGREDIENT_LABELS } from "@cookmate/shared/constants/ingredients"
@@ -43,7 +44,7 @@ export default function RecipesPage() {
   const [input, setInput] = useState("")
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [error, setError] = useState<ReactNode>("")
   const [expanded, setExpanded] = useState<string | null>(null)
   const [generated, setGenerated] = useState(false)
   const [addDialog, setAddDialog] = useState<{ recipe: Recipe; day: string; meal: string } | null>(null)
@@ -280,7 +281,12 @@ export default function RecipesPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || t("errorGenerateFailed"))
+        // 每日免费次数用完：后端返回裸 key，文案内嵌「升级 Pro」超链接
+        if (data.error === "aiDailyLimitReached") {
+          setError(t.rich("aiDailyLimitReached", { upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline> }))
+        } else {
+          setError(data.error || t("errorGenerateFailed"))
+        }
       } else {
         setRecipes(data.recipes || [])
         setGenerated(true)

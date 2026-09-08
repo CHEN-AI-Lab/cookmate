@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import type { ReactNode } from "react"
 import { useTranslations, useLocale } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { MealPlanGrid } from "@/components/features/MealPlanGrid"
@@ -63,7 +64,7 @@ export default function MealPlanPage() {
   const [plan, setPlan] = useState<MealPlan | null>(null)
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
-  const [error, setError] = useState("")
+  const [error, setError] = useState<ReactNode>("")
   // 结构化错误信息：用于「是否可重试」判断与控制台日志定位（不直接展示 detail）
   const [errorInfo, setErrorInfo] = useState<ApiErrorInfo | null>(null)
   // AI 降级等"有结果但不完美"的提示，用提示条而非红字错误
@@ -147,7 +148,13 @@ export default function MealPlanPage() {
     (info: ApiErrorInfo) => {
       console.error(errorLogContext("meal-plan:generate", info))
       setErrorInfo(info)
-      setError(t(kindToMessageKey(info.kind)))
+      const key = kindToMessageKey(info.kind)
+      // 每日次数用完：文案内嵌「升级 Pro」超链接；其余错误保持纯文本
+      setError(
+        key === "genError_rateLimit"
+          ? t.rich("genError_rateLimit", { upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline> })
+          : t(key)
+      )
     },
     [t]
   )

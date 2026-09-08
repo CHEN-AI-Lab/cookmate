@@ -113,7 +113,7 @@ export async function POST(req: Request) {
       const canGenerate = await canUseAiToday(session.user.id)
       if (!canGenerate) {
         return NextResponse.json(
-          { error: e("今日免费次数已用完，升级 Pro 可无限使用", "Daily free limit reached. Upgrade to Pro for unlimited access") },
+          { error: "aiDailyLimitReached" },
           { status: 403 }
         )
       }
