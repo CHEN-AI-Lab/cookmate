@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { MealPlanGrid } from "@/components/features/MealPlanGrid"
 import { MealPlanDetailModal } from "@/components/features/MealPlanDetailModal"
-import { UpgradeLink } from "@/components/features/UpgradeLink"
+import { UpgradeBanner, UpgradeInline, UpgradeLink } from "@/components/features/UpgradeLink"
 import { getDemoMealPlan } from "@cookmate/shared/demo-data"
 import { API_TIMEOUT } from "@cookmate/shared/constants/api-errors"
 import { MEAL_PLAN_DAYS_LIMIT } from "@cookmate/shared/constants/usage-limits"
@@ -74,6 +74,9 @@ export default function MealPlanPage() {
   const [isDemoUser, setIsDemoUser] = useState(false)
   // 免费版用户标识：与 subscriptionTier === "FREE" 一致，用于 picker 限制最多选 3 天
   const [freeUser, setFreeUser] = useState(false)
+  // 收藏上限横幅（持久显示，带内嵌升级链接）：收藏操作在详情弹窗里触发，
+  // toast 2.5 秒就没了，用户经常来不及看原因，所以再加一条横幅兜底
+  const [starBanner, setStarBanner] = useState(false)
   // 免费版剩余可规划天数：3 - 本周已规划天数（0 = 已用完）
   const [freeRemainingDays, setFreeRemainingDays] = useState(0)
 
@@ -296,9 +299,10 @@ export default function MealPlanPage() {
       setStarToast(data.starred ? t("starToast") : t("unstarToast"))
       setTimeout(() => setStarToast(""), 2500)
     } else if (data.error === "starLimitReached") {
-      // 后端返回裸 key，必须翻译展示——不然用户点收藏没反应，也不知道为什么
+      // 后端返回裸 key：toast 给即时反馈（此时弹窗还开着），横幅在关闭弹窗后持久兜底
       setStarToast(tb("starLimitReached"))
       setTimeout(() => setStarToast(""), 3000)
+      setStarBanner(true)
     }
   }
 
@@ -337,6 +341,16 @@ export default function MealPlanPage() {
             </button>
           )}
         </div>
+      )}
+
+      {/* 收藏上限横幅：收藏在详情弹窗里触发，弹窗关闭后这里持久兜底 */}
+      {starBanner && (
+        <UpgradeBanner
+          text={tb.rich("starLimitReached", {
+            upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline>,
+          })}
+          onClose={() => setStarBanner(false)}
+        />
       )}
 
       {!plan && !generating && (

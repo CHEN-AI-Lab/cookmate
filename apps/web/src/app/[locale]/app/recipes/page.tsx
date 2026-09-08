@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import { INGREDIENT_LABELS } from "@cookmate/shared/constants/ingredients"
 import { RecipeCard } from "@/components/features/RecipeCard"
+import { UpgradeBanner, UpgradeInline } from "@/components/features/UpgradeLink"
 
 interface Recipe {
   id: string
@@ -50,6 +51,8 @@ export default function RecipesPage() {
   const [conflictData, setConflictData] = useState<{ existingTitle: string; recipe: Recipe; day: string; meal: string } | null>(null)
   const [starredIds, setStarredIds] = useState<Set<string>>(new Set())
   const [starToast, setStarToast] = useState("")
+  // 收藏上限横幅（持久显示，带升级链接）；toast 太快消失，用户来不及看原因
+  const [starBanner, setStarBanner] = useState(false)
   const [dupDialog, setDupDialog] = useState<string | null>(null)
   const [deleteDialog, setDeleteDialog] = useState<Recipe | null>(null)
   const [deleteError, setDeleteError] = useState("")
@@ -103,9 +106,8 @@ export default function RecipesPage() {
       setStarToast(data.starred ? t("starToast") : t("unstarToast"))
       setTimeout(() => setStarToast(""), 2500)
     } else if (data.error === "starLimitReached") {
-      // 后端返回裸 key，必须翻译展示——不然用户点收藏没反应，也不知道为什么
-      setStarToast(tb("starLimitReached"))
-      setTimeout(() => setStarToast(""), 3000)
+      // 后端返回裸 key：用持久横幅展示（带内嵌升级链接），替代一闪而过的 toast
+      setStarBanner(true)
     }
   }
 
@@ -299,6 +301,16 @@ export default function RecipesPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-text-primary mb-6">{t("aiRecipesTitle")}</h1>
+
+      {/* 收藏上限横幅：品牌米色底，升级入口嵌在文案中间，持久展示可关闭 */}
+      {starBanner && (
+        <UpgradeBanner
+          text={tb.rich("starLimitReached", {
+            upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline>,
+          })}
+          onClose={() => setStarBanner(false)}
+        />
+      )}
 
       <div className="bg-card rounded-2xl shadow-sm border border-green-50 p-6 mb-6">
         {pantryLoaded && pantryItems.length > 0 && (

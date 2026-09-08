@@ -598,10 +598,10 @@
     "refundNotice": "Membership is a virtual online service provided on a prepaid basis. The membership fee is the price of the service you purchase, not a prepayment, deposit or down payment. Once activated, the membership is non-refundable and non-transferable, except where mandatory provisions of applicable laws apply, or where the service is materially defective and completely unusable. After cancellation, your membership benefits remain active until the end of the current billing cycle; remaining days are neither convertible to cash nor refundable.",
     "checkoutRefundNotice": "Membership is a virtual product and is non-refundable once activated (except as required by law). After cancellation, benefits remain active until the end of the current billing cycle.",
     "yearlyPeriodTpl": "≈ ${perMonth}/mo · Save {percent}%",
-    "starLimitReached": "Star limit reached (10), upgrade to Pro for unlimited",
+    "starLimitReached": "Star limit reached (10 recipes). <upgrade>Upgrade to Pro</upgrade> to star unlimited recipes",
     "recipeLimitReached": "Recipe limit reached (25), upgrade to Pro for unlimited",
     "mealPlanDaysLimit": "Free tier allows up to 3 days per week, upgrade to Pro for full week",
-    "pantryLimitReached": "Pantry limit reached (15 items), upgrade to Pro for unlimited",
+    "pantryLimitReached": "Pantry limit reached (15 items). <upgrade>Upgrade to Pro</upgrade> to add unlimited items",
     "yearlySavingTpl": "🔥 Recommended · Save {amount}"
   },
   "orders": {

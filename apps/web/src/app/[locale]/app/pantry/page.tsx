@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { getDemoPantryItems } from "@cookmate/shared/demo-data"
-import { UpgradeLink } from "@/components/features/UpgradeLink"
+import { UpgradeBanner, UpgradeInline } from "@/components/features/UpgradeLink"
 
 interface PantryItem {
   id: string
@@ -127,15 +127,14 @@ export default function PantryPage() {
       {/* 1. Title */}
       <h1 className="text-2xl font-bold text-text-primary mb-4">{t("title")}</h1>
 
-      {/* 免费版食材库上限横幅：达到 15 条上限时持久展示，带升级入口 */}
+      {/* 免费版食材库上限横幅：品牌米色底，升级入口嵌在文案中间，持久展示可关闭 */}
       {limitBanner && (
-        <div className="mb-4 flex items-center justify-between gap-3 flex-wrap text-[13px] rounded-xl px-4 py-2.5 bg-red-50 border border-red-200 text-red-700">
-          <span>{tb("pantryLimitReached")}</span>
-          <span className="flex items-center gap-2 shrink-0">
-            <UpgradeLink className="text-[13px]" />
-            <button onClick={() => setLimitBanner(false)} className="text-red-400 hover:text-red-600 px-1" aria-label="close">×</button>
-          </span>
-        </div>
+        <UpgradeBanner
+          text={tb.rich("pantryLimitReached", {
+            upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline>,
+          })}
+          onClose={() => setLimitBanner(false)}
+        />
       )}
 
 {/* 2. Search row */}

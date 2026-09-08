@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useTranslations, useLocale } from "next-intl"
 import { getDemoRecipes } from "@cookmate/shared/demo-data"
 import { CUISINE_LABELS } from "@cookmate/shared/constants"
+import { UpgradeBanner, UpgradeInline } from "@/components/features/UpgradeLink"
 
 interface Recipe {
   id: string
@@ -45,6 +46,8 @@ export default function MyRecipesPage() {
   const [addMsg, setAddMsg] = useState("")
   const [conflictData, setConflictData] = useState<{ existingTitle: string; recipe: Recipe } | null>(null)
   const [toast, setToast] = useState("")
+  // 收藏上限横幅（持久显示，带内嵌升级链接）；toast 太快消失，用户来不及看原因
+  const [starBanner, setStarBanner] = useState(false)
   const [filter, setFilter] = useState<"all" | "starred">("all")
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [isSelectMode, setIsSelectMode] = useState(false)
@@ -169,8 +172,8 @@ export default function MyRecipesPage() {
       }
       showToast(nowStarred ? tr("starToast") : tr("unstarToast"))
     } else if (data.error === "starLimitReached") {
-      // 后端返回裸 key，必须翻译展示——不然用户点收藏没反应，也不知道为什么
-      showToast(tbi("starLimitReached"))
+      // 后端返回裸 key：用持久横幅展示（带内嵌升级链接），替代一闪而过的 toast
+      setStarBanner(true)
     }
   }
 
@@ -296,6 +299,15 @@ export default function MyRecipesPage() {
 
   return (
     <div>
+      {/* 收藏上限横幅：品牌米色底，升级入口嵌在文案中间，持久展示可关闭 */}
+      {starBanner && (
+        <UpgradeBanner
+          text={tbi.rich("starLimitReached", {
+            upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline>,
+          })}
+          onClose={() => setStarBanner(false)}
+        />
+      )}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-text-primary">{tr("myRecipes")}</h1>
         <div className="flex gap-2 items-center">
