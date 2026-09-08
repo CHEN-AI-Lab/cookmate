@@ -53,6 +53,8 @@ export default function RecipesPage() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<ReactNode>("")
+  // 提示分类：limit=限额升级引导（品牌色）；info=降级/输入指引（黄色）；error=真错误（红色）
+  const [errorKind, setErrorKind] = useState<"limit" | "info" | "error">("error")
   const [expanded, setExpanded] = useState<string | null>(null)
   const [generated, setGenerated] = useState(false)
   const [addDialog, setAddDialog] = useState<{ recipe: Recipe; day: string; meal: string } | null>(null)
@@ -221,6 +223,7 @@ export default function RecipesPage() {
     const trimmed = input.trim()
     if (!trimmed) return
     if (!isValidIngredient(trimmed)) {
+      setErrorKind("info")
       setError(t("invalidIngredients"))
       return
     }
@@ -274,17 +277,20 @@ export default function RecipesPage() {
       return
     }
     if (ingredients.length === 0) {
+      setErrorKind("info")
       setError(t("errorAtLeastOneIngredient"))
       return
     }
     // 兜底过滤：跳过混在里面的纯数字/单字符，全部无效则直接提示，不发请求
     const validIngredients = ingredients.filter(isValidIngredient)
     if (validIngredients.length === 0) {
+      setErrorKind("info")
       setError(t("invalidIngredients"))
       return
     }
     setLoading(true)
     setError("")
+    setErrorKind("error")
     // 不清空上次结果，生成失败时保留旧菜谱
     setGenerated(false)
 
@@ -301,19 +307,23 @@ export default function RecipesPage() {
       if (!res.ok) {
         // 每日免费次数用完：后端返回裸 key，文案内嵌「升级 Pro」超链接
         if (data.error === "aiDailyLimitReached") {
+          setErrorKind("limit")
           setError(t.rich("aiDailyLimitReached", { upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline> }))
         } else {
+          setErrorKind("error")
           setError(data.error || t("errorGenerateFailed"))
         }
       } else {
         setRecipes(data.recipes || [])
         setGenerated(true)
         if (data.fallback) {
+          setErrorKind("info")
           setError(t("aiFallback"))
         }
       }
     } catch (err) {
       console.error("generate recipes error:", err)
+      setErrorKind("error")
       setError(t("networkError"))
     } finally {
       setLoading(false)
@@ -433,9 +443,10 @@ export default function RecipesPage() {
           </div>
         </div>
 
-        {error && (
-          <p className="mt-3 text-sm text-red-600">{error}</p>
-        )}
+        {error && (() => {
+          const boxCls = "mt-3 mx-auto w-fit max-w-full rounded-xl px-4 py-2.5 text-sm " + (errorKind === "limit" ? "bg-bg-brand border border-accent/60 text-text-primary" : errorKind === "info" ? "bg-amber-50 border border-amber-200 text-amber-700" : "bg-red-50 border border-red-200 text-red-700")
+          return <div className={boxCls}>{error}</div>
+        })()}
       </div>
 
       {loading && (
