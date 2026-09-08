@@ -5,19 +5,12 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { getDemoPantryItems } from "@cookmate/shared/demo-data"
 import { UpgradeDialog, UpgradeInline } from "@/components/features/UpgradeLink"
+import { isValidIngredient } from "@cookmate/shared/validators"
 
 interface PantryItem {
   id: string
   name: string
   category: string | null
-}
-
-/** 粗判是否像真实食材：排除纯数字、纯符号、单字符（如"123"），与 AI 菜谱页规则一致 */
-function isValidIngredient(name: string): boolean {
-  const trimmed = name.trim()
-  if ([...trimmed].length < 2) return false
-  if (/^[0-9０-９.,，。、\s\-+]+$/.test(trimmed)) return false
-  return true
 }
 
 export default function PantryPage() {
@@ -281,7 +274,7 @@ export default function PantryPage() {
                     {/* 无效输入提示（纯数字/符号等） */}
                     {invalidToast && (
                       <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
-                        <div className="bg-bg-inverse text-white px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center animate-in fade-in zoom-in-95 duration-200">
+                        <div className="bg-amber-50 border border-amber-200 text-amber-700 px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center animate-in fade-in zoom-in-95 duration-200">
                           <span>{t("invalidIngredients")}</span>
                         </div>
                       </div>

@@ -5,6 +5,7 @@ import type { ReactNode } from "react"
 import { useSearchParams } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import { INGREDIENT_LABELS } from "@cookmate/shared/constants/ingredients"
+import { isValidIngredient } from "@cookmate/shared/validators"
 import { RecipeCard } from "@/components/features/RecipeCard"
 import { UpgradeDialog, UpgradeInline } from "@/components/features/UpgradeLink"
 
@@ -27,14 +28,6 @@ interface PantryItem {
 
 const DAY_VALUES = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"] as const
 const MEAL_VALUES = ["早餐", "午餐", "晚餐"] as const
-
-/** 粗判是否像真实食材：排除纯数字、纯符号、单字符（如"1"），避免无效输入白白消耗 AI 调用 */
-function isValidIngredient(name: string): boolean {
-  const trimmed = name.trim()
-  if ([...trimmed].length < 2) return false
-  if (/^[0-9０-９.,，。、\s\-+]+$/.test(trimmed)) return false
-  return true
-}
 
 export default function RecipesPage() {
   const t = useTranslations("recipes")

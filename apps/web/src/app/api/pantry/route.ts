@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
+import { isValidIngredient } from "@cookmate/shared/validators"
 import { isFreeUser, checkPantryLimit } from "@/lib/auth-helpers"
 
 export async function GET(req: Request) {
@@ -90,7 +91,7 @@ export async function POST(req: Request) {
     if (!normalizedName) return NextResponse.json({ error: err(loc, "enterIngredientName") }, { status: 400 })
 
     // 输入校验：挡住纯数字、纯符号、单字符（如"123"）这类无意义名称，规则与前端一致
-    if ([...normalizedName].length < 2 || /^[0-9０-９.,，。、\s\-+]+$/.test(normalizedName)) {
+    if (!isValidIngredient(normalizedName)) {
       return NextResponse.json({ error: err(loc, "invalidIngredients") }, { status: 400 })
     }
 

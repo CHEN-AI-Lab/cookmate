@@ -103,6 +103,16 @@ export function translateZodErrors(errors: { message: string }[], locale: string
   return errors.map((e) => translateValidationError(e.message, locale));
 }
 
+// ─── 食材名粗校验 ───
+// 排除纯数字、纯符号、单字符（如"123"），避免无效输入白白消耗 AI 调用或污染食材库。
+// 前端（AI菜谱页、食材库页）与后端（/api/pantry）共用这一份规则，禁止在页面里再复制。
+export function isValidIngredient(name: string): boolean {
+  const trimmed = name.trim();
+  if ([...trimmed].length < 2) return false;
+  if (/^[0-9０-９.,，。、\s\-+]+$/.test(trimmed)) return false;
+  return true;
+}
+
 export type RecipeGenerateInput = z.infer<typeof recipeGenerateSchema>;
 export type MealPlanCreateInput = z.infer<typeof mealPlanCreateSchema>;
 export type PantryItemInput = z.infer<typeof pantryItemSchema>;
