@@ -7,6 +7,7 @@ import { MealPlanGrid } from "@/components/features/MealPlanGrid"
 import { MealPlanDetailModal } from "@/components/features/MealPlanDetailModal"
 import { getDemoMealPlan } from "@cookmate/shared/demo-data"
 import { API_TIMEOUT } from "@cookmate/shared/constants/api-errors"
+import { MEAL_PLAN_DAYS_LIMIT } from "@cookmate/shared/constants/usage-limits"
 import {
   fetchWithTimeout,
   parseJsonSafely,
@@ -68,6 +69,10 @@ export default function MealPlanPage() {
   const [starToast, setStarToast] = useState("")
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [isDemoUser, setIsDemoUser] = useState(false)
+  // 免费版用户标识：与 subscriptionTier === "FREE" 一致，用于 picker 限制最多选 3 天
+  const [freeUser, setFreeUser] = useState(false)
+  // 免费版剩余可规划天数：3 - 本周已规划天数（0 = 已用完）
+  const [freeRemainingDays, setFreeRemainingDays] = useState(0)
 
   // 弹窗状态
   const [showPicker, setShowPicker] = useState(false)
@@ -97,6 +102,10 @@ export default function MealPlanPage() {
           setIsDemoUser(true)
           setPlan((prev) => prev || getDemoMealPlan(locale))
         }
+        // 免费版标识：严格跟后端 isFreeUser() 保持一致——只认 subscriptionTier。
+        // 降级由 /api/cron/expire-sweep 统一处理（会把 tier 改成 FREE），
+        // 前端不能自行把「到期但仍是 PRO」的用户按免费版显示，否则用户看到自己是会员却受限。
+        if (data.subscriptionTier === "FREE" && !data.isDemoUser) setFreeUser(true)
       })
       .catch((err) => console.error("load profile error:", err))
   }, [locale])
@@ -104,8 +113,16 @@ export default function MealPlanPage() {
   const openPicker = () => {
     setPickStart(null)
     setPickEnd(null)
+    // 免费版：实时计算剩余可规划天数（3 - 本周已规划天数）
+    const plannedDays = new Set(
+      (plan?.slots || []).filter((s) => s.recipe !== null).map((s) => s.dayOfWeek)
+    )
+    setFreeRemainingDays(Math.max(0, MEAL_PLAN_DAYS_LIMIT - plannedDays.size))
     setShowPicker(true)
   }
+
+  // picker 中本次已圈选的天数长度（未选完时为 0），用于免费版额度提示的三态切换
+  const pickedRangeLen = pickStart !== null && pickEnd !== null ? Math.abs(pickEnd - pickStart) + 1 : 0
 
   const handleDayClick = (i: number) => {
     if (pickStart === null) {
@@ -150,6 +167,21 @@ export default function MealPlanPage() {
 
         // 平台超时（504）返回的往往是 HTML，parseJsonSafely 会得到 null
         if (!res.ok || !data) {
+          // 免费版限制：后端返回裸 key，前端用 t() 翻译展示具体文案
+          if (res.status === 403) {
+            if (data?.error === "mealPlanDaysLimit") {
+              console.error(errorLogContext("meal-plan:generate", { kind: "paymentRequired", status: 403, detail: "meal_plan_days_limit", retryable: false }))
+              setError(t("genError_mealPlanDaysLimit"))
+              setErrorInfo(null)
+              return
+            }
+            if (data?.error === "recipeLimit") {
+              console.error(errorLogContext("meal-plan:generate", { kind: "paymentRequired", status: 403, detail: "recipe_count_limit", retryable: false }))
+              setError(t("genError_recipeLimit"))
+              setErrorInfo(null)
+              return
+            }
+          }
           failWith(classifyHttpError(res, data))
           return
         }
@@ -168,7 +200,11 @@ export default function MealPlanPage() {
           setNotice(
             reason === "no_key" ? t("fallbackNoKey") : t("fallbackAiBusy")
           )
-          if (data.saved === false) setNotice((prev) => `${prev}${t("notSavedHint")}`)
+        }
+        // 未落库提示独立于 fallback 判断：AI 正常但写库失败时 saved 同样为 false，
+        // 原先这段挂在 if (data.fallback) 里，导致写库失败时毫无提示，用户刷新才发现计划没了。
+        if (data.saved === false) {
+          setNotice((prev) => (prev ? `${prev}${t("notSavedHint")}` : t("notSavedHint")))
         }
       } catch (err) {
         failWith(classifyNetworkError(err, API_TIMEOUT.mealPlanGenerate))
@@ -186,6 +222,10 @@ export default function MealPlanPage() {
     const hi = Math.max(pickStart, pickEnd)
     const days: number[] = []
     for (let i = lo; i <= hi; i++) days.push(i)
+
+    // 免费版前端拦截：区间天数超过剩余可规划天数时直接提示，不发请求
+    // 后端也有同样的检查（checkMealPlanDaysLimitForDays），这里是体验优化
+    if (freeUser && days.length > freeRemainingDays) return
 
     setShowPicker(false)
     await runGenerate(days)
@@ -431,6 +471,26 @@ export default function MealPlanPage() {
               </span>
             </div>
 
+            {/* 免费版天数限制提示 — 三态：额度已用完 / 本次选择超出剩余 / 常态展示剩余额度。
+                原先只要还有额度就无条件显示「本次选择超出剩余天数」，用户刚打开弹窗也会被这句话误伤。 */}
+            {freeUser && (freeRemainingDays <= 0 || pickedRangeLen > freeRemainingDays ? (
+              <div
+                className="mb-3 text-[13px] rounded-xl px-4 py-2.5"
+                style={{ background: "#fef2f2", border: "1px solid #fecaca" }}
+              >
+                {freeRemainingDays <= 0
+                  ? t("freeLimitReached")
+                  : t("freeLimitExceed", { picked: pickedRangeLen, remaining: freeRemainingDays })}
+              </div>
+            ) : (
+              <div
+                className="mb-3 text-[13px] rounded-xl px-4 py-2.5"
+                style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}
+              >
+                {t("freeLimitHint", { days: freeRemainingDays })}
+              </div>
+            ))}
+
             {/* 信息提示框 */}
             <div
               className="text-[13px] mb-4 leading-relaxed"
@@ -466,19 +526,28 @@ export default function MealPlanPage() {
               >
                 {tc("cancel")}
               </button>
-              <button
-                onClick={confirmGenerate}
-                disabled={pickStart === null || pickEnd === null || generating}
-                className="flex-1 py-3 rounded-xl text-[14px] font-semibold transition-all"
-                style={{
-                  border: "none",
-                  background: pickStart === null || pickEnd === null || generating ? "#fed7aa" : "#FF6B35",
-                  color: "#fff",
-                  cursor: pickStart === null || pickEnd === null || generating ? "not-allowed" : "pointer",
-                }}
-              >
-                {generating ? t("generating") : t("confirmGenerate")}
-              </button>
+              {(() => {
+                const lo = pickStart !== null && pickEnd !== null ? Math.min(pickStart, pickEnd) : -1
+                const hi = pickStart !== null && pickEnd !== null ? Math.max(pickStart, pickEnd) : -1
+                const rangeLen = lo >= 0 && hi >= 0 ? hi - lo + 1 : 0
+                const overFreeLimit = freeUser && rangeLen > freeRemainingDays
+                const disabled = pickStart === null || pickEnd === null || generating || overFreeLimit
+                return (
+                  <button
+                    onClick={confirmGenerate}
+                    disabled={disabled}
+                    className="flex-1 py-3 rounded-xl text-[14px] font-semibold transition-all"
+                    style={{
+                      border: "none",
+                      background: disabled ? "#fed7aa" : "#FF6B35",
+                      color: "#fff",
+                      cursor: disabled ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {generating ? t("generating") : t("confirmGenerate")}
+                  </button>
+                )
+              })()}
             </div>
           </div>
         </div>

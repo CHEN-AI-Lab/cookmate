@@ -319,7 +319,13 @@
     "genError_server": "Server error. Please try again later",
     "genError_aiBusy": "AI service is busy. Please try again later",
     "genError_emptyData": "Generation returned no data. Please retry",
-    "genError_unknown": "Generation failed. Please try again later"
+    "genError_unknown": "Generation failed. Please try again later",
+    "freeLimitHint": "Free plan: {days} days left this week",
+    "freeLimitReached": "Free plan's 3 days this week are used up. Upgrade to Pro for a full week",
+    "freeLimitExceed": "You picked {picked} days, more than this week's remaining allowance ({remaining} left). Pick fewer days or upgrade to Pro",
+    "genError_mealPlanDaysLimit": "Free plan allows up to 3 days per week. Pick fewer days or upgrade to Pro",
+    "genError_recipeLimit": "Recipe limit reached (25). A weekly plan writes several recipes at once, so delete some recipes or upgrade to Pro",
+    "mealPlanDaysLimit": "Free plan allows up to 3 days per week. Upgrade to Pro for a full week"
   },
   "grocery": {
     "title": "🛒 Grocery List",

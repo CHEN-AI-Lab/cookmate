@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: "Please log in first" }, { status: 401 })
 
-    // 检查免费版食材库上限
+    // 免费版食材库上限（入口先兜一次，避免任何写库动作）
     const isFree = await isFreeUser(session.user.id)
     if (isFree) {
       const limited = await checkPantryLimit(session.user.id)
@@ -43,9 +43,19 @@ export async function POST(req: Request) {
     if (body.items && Array.isArray(body.items)) {
       const created = []
       const skipped = []
+      let blocked = 0
       for (const item of body.items) {
         const name = (item.name || "").trim().toLowerCase()
         if (!name) continue
+        // 逐条检查上限：原先只在循环外查一次，有 14 条时传 50 个会全部写入，
+        // 最终 64 条直接突破 15 条上限。这里每条写库前重新判断当前实际条数。
+        if (isFree) {
+          const nowLimited = await checkPantryLimit(session.user.id)
+          if (nowLimited) {
+            blocked++
+            continue
+          }
+        }
         const exists = await prisma.pantryItem.findFirst({
           where: { name, userId: session.user.id },
         }).catch((err: unknown) => { console.error("findFirst pantry item error:", err); return null })
@@ -63,7 +73,15 @@ export async function POST(req: Request) {
         }).catch((err: unknown) => { console.error("create pantry item error:", err); return null })
         created.push(createdItem)
       }
-      return NextResponse.json({ items: created, count: created.length, skipped, skippedCount: skipped.length })
+      return NextResponse.json({
+        items: created.filter(Boolean),
+        count: created.filter(Boolean).length,
+        skipped,
+        skippedCount: skipped.length,
+        // 因达到免费版上限而拒绝写入的条数，前端可据此提示用户升级
+        blocked,
+        blockedCount: blocked,
+      })
     }
 
     // 单个添加

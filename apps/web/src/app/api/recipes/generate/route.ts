@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { generateRecipes, normalizeIngredients } from "@cookmate/shared/api/openai"
-import { checkUsageLimit, incrementUsage, isFreeUser, checkRecipeCountLimit } from "@/lib/auth-helpers"
+import { canUseAiToday, incrementAiUsage, isFreeUser, checkRecipeCountLimit, checkStarredLimit } from "@/lib/auth-helpers"
 import {
   BLACKLIST, getBlockReason,
 } from "@cookmate/shared/constants/ingredients"
@@ -54,6 +54,14 @@ export async function POST(req: Request) {
         if (limited) {
           return NextResponse.json({ error: e("菜谱已达上限（25个），升级 Pro 可无限保存", "Recipe limit reached (25), upgrade to Pro for unlimited") }, { status: 403 })
         }
+        // 收藏上限同样要查：本分支允许请求方直接传 starred: true 落库，
+        // 不查的话只要反复调这个接口就能绕过 10 个收藏上限。
+        if (starred) {
+          const starLimited = await checkStarredLimit(session.user.id)
+          if (starLimited) {
+            return NextResponse.json({ error: "starLimitReached" }, { status: 403 })
+          }
+        }
       }
 
       const saved = await prisma.recipe.create({
@@ -102,7 +110,7 @@ export async function POST(req: Request) {
     const isDev = process.env.NODE_ENV !== "production"
     const isMock = !(process.env.AI_API_KEY || process.env.OPENAI_API_KEY)
     if (!isMock && !isDev) {
-      const canGenerate = await checkUsageLimit(session.user.id)
+      const canGenerate = await canUseAiToday(session.user.id)
       if (!canGenerate) {
         return NextResponse.json(
           { error: e("今日免费次数已用完，升级 Pro 可无限使用", "Daily free limit reached. Upgrade to Pro for unlimited access") },
@@ -172,7 +180,7 @@ export async function POST(req: Request) {
     }
 
     if (!isMock && !isDev) {
-      await incrementUsage(session.user.id)
+      await incrementAiUsage(session.user.id)
     }
 
     T("save_done")

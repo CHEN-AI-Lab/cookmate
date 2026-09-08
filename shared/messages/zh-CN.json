@@ -319,7 +319,13 @@
     "genError_server": "服务端异常，请稍后重试",
     "genError_aiBusy": "AI 服务繁忙，请稍后重试",
     "genError_emptyData": "生成结果为空，请重试",
-    "genError_unknown": "生成失败，请稍后重试"
+    "genError_unknown": "生成失败，请稍后重试",
+    "freeLimitHint": "免费版本周还可规划 {days} 天",
+    "freeLimitReached": "免费版本周 3 天规划额度已用完，升级 Pro 解锁整周计划",
+    "freeLimitExceed": "本次选择了 {picked} 天，超出本周剩余额度（还剩 {remaining} 天），请减少天数或升级 Pro",
+    "genError_mealPlanDaysLimit": "免费版每周最多规划 3 天，请减少生成天数或升级 Pro",
+    "genError_recipeLimit": "菜谱总数已达免费版上限（25 个），周计划会一次性写入多个菜谱，请清理菜谱或升级 Pro",
+    "mealPlanDaysLimit": "免费版每周最多规划 3 天，升级 Pro 解锁整周计划"
   },
   "grocery": {
     "title": "🛒 购物清单",

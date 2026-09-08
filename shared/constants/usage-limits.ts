@@ -13,3 +13,6 @@ export const PANTRY_ITEM_LIMIT = 15
 
 /** 免费版每周周计划最大天数（按天计算，每大=早中晚三个槽） */
 export const MEAL_PLAN_DAYS_LIMIT = 3
+
+/** 免费版每日 AI 调用次数（菜谱生成与周计划生成共用同一计数器，此为设计决定） */
+export const AI_DAILY_LIMIT = 1

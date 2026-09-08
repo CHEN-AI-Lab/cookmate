@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { isFreeUser, checkMealPlanDaysLimit } from "@/lib/auth-helpers"
+import { isFreeUser, checkMealPlanDaysLimitForDays } from "@/lib/auth-helpers"
 
 // 中文星期 → 数字（0=周一…6=周日，与 AI 生成一致）
 const dayMap: Record<string, number> = {
@@ -37,9 +37,11 @@ export async function POST(req: Request) {
     mon.setHours(0, 0, 0, 0)
 
     // 检查免费版周计划天数上限
+    // 用 ForDays 版本而非 checkMealPlanDaysLimit：只看「已占天数」会把「覆盖已有那天」也拦掉，
+    // 而覆盖并不新增天数。取「本周已占用 ∪ 本次这天」的并集才是正确口径。
     const isFree = await isFreeUser(session.user.id)
     if (isFree) {
-      const limited = await checkMealPlanDaysLimit(session.user.id)
+      const limited = await checkMealPlanDaysLimitForDays(session.user.id, [dayNum])
       if (limited) {
         return NextResponse.json({ error: "mealPlanDaysLimit" }, { status: 403 })
       }

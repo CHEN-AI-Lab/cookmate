@@ -231,10 +231,20 @@ export function makePrisma() {
     },
     mealSlot: {
       findMany: vi.fn(async ({ where }: any) => {
+        let list = stores.mealSlots
         if (where?.mealPlanId?.in) {
-          return stores.mealSlots.filter((s: any) => where.mealPlanId.in.includes(s.mealPlanId))
+          list = list.filter((s: any) => where.mealPlanId.in.includes(s.mealPlanId))
         }
-        return stores.mealSlots
+        // 对齐真实 Prisma 语义：支持 recipeId: { not: null } / recipeId: null。
+        // 不加这段的话，后端过滤空槽的逻辑在测试里等于没跑。
+        if (where?.recipeId && typeof where.recipeId === 'object' && 'not' in where.recipeId) {
+          list = where.recipeId.not === null
+            ? list.filter((s: any) => s.recipeId != null)
+            : list.filter((s: any) => s.recipeId !== where.recipeId.not)
+        } else if (where && 'recipeId' in where && where.recipeId === null) {
+          list = list.filter((s: any) => s.recipeId == null)
+        }
+        return list
       }),
       deleteMany: vi.fn(async () => {
         const before = stores.mealSlots.length

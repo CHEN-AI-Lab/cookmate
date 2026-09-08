@@ -13,17 +13,50 @@ vi.mock('@/lib/auth-helpers', async (importOriginal) => {
   return {
     ...actual,
     // 让其他测试不受影响
-    checkUsageLimit: vi.fn(async () => true),
-    incrementUsage: vi.fn(async () => {}),
+    canUseAiToday: vi.fn(async () => true),
+    incrementAiUsage: vi.fn(async () => {}),
     isDemoUser: vi.fn(() => false),
   }
 })
 
-import { checkStarredLimit, checkRecipeCountLimit, checkPantryLimit, checkMealPlanDaysLimit, isFreeUser } from '@/lib/auth-helpers'
+import {
+  isFreeUser,
+  checkStarredLimit,
+  checkRecipeCountLimit,
+  checkRecipeCountLimitForCount,
+  checkPantryLimit,
+  checkMealPlanDaysLimit,
+  checkMealPlanDaysLimitForDays,
+} from '@/lib/auth-helpers'
 
 beforeEach(() => {
   resetPrisma()
 })
+
+/** 取本周一 00:00，与后端 getCurrentWeekPlanDays 的算法保持一致 */
+function thisMonday(): Date {
+  const now = new Date()
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7))
+  monday.setHours(0, 0, 0, 0)
+  return monday
+}
+
+/**
+ * 种入本周的周计划槽位。
+ * empty=true 模拟「删掉了菜谱」的状态：MealSlot 记录还在，但 recipeId 已被置空。
+ */
+function seedWeekSlots(days: number[], opts?: { empty?: boolean }) {
+  stores.mealPlans.set('mp1', { id: 'mp1', userId: 'u1', weekStart: thisMonday() })
+  days.forEach((dayOfWeek, i) => {
+    stores.mealSlots.push({
+      id: `ms${i}`,
+      mealPlanId: 'mp1',
+      dayOfWeek,
+      recipeId: opts?.empty ? null : `r${i}`,
+    })
+  })
+}
 
 describe('免费版限制 — 常量值', () => {
   it('收藏上限 = 10', () => expect(STARRED_RECIPE_LIMIT).toBe(10))
@@ -40,6 +73,26 @@ describe('免费版限制 — isFreeUser', () => {
   it('PRO 用户 → false', async () => {
     stores.users.set('u1', { id: 'u1', subscriptionTier: 'PRO', subscriptionExpiryDate: null })
     expect(await isFreeUser('u1')).toBe(false)
+  })
+  it('PRO 但已过期 → false（降级交给 cron，请求时不动手）', async () => {
+    // 设计约定：不在接口里提前把过期用户降级，避免出现「页面还显示 PRO、功能已被限」的投诉。
+    // 降级统一由 /api/cron/expire-sweep 执行，它把 tier 改成 FREE 后限制才生效。
+    const past = new Date()
+    past.setDate(past.getDate() - 1)
+    stores.users.set('u1', { id: 'u1', subscriptionTier: 'PRO', subscriptionExpiryDate: past })
+    expect(await isFreeUser('u1')).toBe(false)
+  })
+  it('FREE 但权益未过期 → false（免费体验期内不受限）', async () => {
+    const future = new Date()
+    future.setDate(future.getDate() + 30)
+    stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: future })
+    expect(await isFreeUser('u1')).toBe(false)
+  })
+  it('FREE 且权益已过期 → true', async () => {
+    const past = new Date()
+    past.setDate(past.getDate() - 1)
+    stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: past })
+    expect(await isFreeUser('u1')).toBe(true)
   })
 })
 
@@ -94,31 +147,78 @@ describe('免费版限制 — checkPantryLimit', () => {
 })
 
 describe('免费版限制 — checkMealPlanDaysLimit', () => {
-  it('本周周计划天数 < 3 → false', async () => {
-    const now = new Date()
-    const monday = new Date(now)
-    monday.setDate(now.getDate() - ((now.getDay() + 6) % 7))
-    monday.setHours(0, 0, 0, 0)
-    stores.mealPlans.set('mp1', { id: 'mp1', userId: 'u1', weekStart: monday })
-    stores.mealSlots.push(
-      { id: 'ms1', mealPlanId: 'mp1', dayOfWeek: 1 },
-      { id: 'ms2', mealPlanId: 'mp1', dayOfWeek: 2 },
-    )
+  it('本周已规划 2 天 → false（未超限）', async () => {
+    seedWeekSlots([1, 2])
     expect(await checkMealPlanDaysLimit('u1')).toBe(false)
   })
-  it('本周周计划天数 = 3 → true', async () => {
-    const now = new Date()
-    const monday = new Date(now)
-    monday.setDate(now.getDate() - ((now.getDay() + 6) % 7))
-    monday.setHours(0, 0, 0, 0)
-    stores.mealPlans.set('mp1', { id: 'mp1', userId: 'u1', weekStart: monday })
-    stores.mealPlans.set('mp2', { id: 'mp2', userId: 'u1', weekStart: monday })
-    stores.mealPlans.set('mp3', { id: 'mp3', userId: 'u1', weekStart: monday })
-    stores.mealSlots.push(
-      { id: 'ms1', mealPlanId: 'mp1', dayOfWeek: 1 },
-      { id: 'ms2', mealPlanId: 'mp2', dayOfWeek: 2 },
-      { id: 'ms3', mealPlanId: 'mp3', dayOfWeek: 3 },
-    )
+  it('本周已规划 3 天 → true（已达上限）', async () => {
+    seedWeekSlots([1, 2, 3])
     expect(await checkMealPlanDaysLimit('u1')).toBe(true)
+  })
+  it('同一天的多个槽位只算 1 天', async () => {
+    seedWeekSlots([1, 1, 1])
+    expect(await checkMealPlanDaysLimit('u1')).toBe(false)
+  })
+  it('已清空的槽位（recipeId 为 null）不计入占用', async () => {
+    // 用户把已规划的 3 天全部删空后，额度应回到可用状态；
+    // 后端若不去重空槽，这里会变成"前端显示还有额度、后端却 403"。
+    seedWeekSlots([1, 2, 3], { empty: true })
+    expect(await checkMealPlanDaysLimit('u1')).toBe(false)
+  })
+})
+
+describe('免费版限制 — checkMealPlanDaysLimitForDays（批量生成）', () => {
+  it('本周 0 天，本次选 3 天 → false', async () => {
+    seedWeekSlots([])
+    expect(await checkMealPlanDaysLimitForDays('u1', [0, 1, 2])).toBe(false)
+  })
+  it('本周 0 天，本次选 4 天 → true（一次性超上限必须拦）', async () => {
+    seedWeekSlots([])
+    expect(await checkMealPlanDaysLimitForDays('u1', [0, 1, 2, 3])).toBe(true)
+  })
+  it('本周 0 天，本次选 7 天 → true（整周绕过）', async () => {
+    seedWeekSlots([])
+    expect(await checkMealPlanDaysLimitForDays('u1', [0, 1, 2, 3, 4, 5, 6])).toBe(true)
+  })
+  it('本周已占 2 天，本次再选 1 个新天 → false（并集正好 3 天）', async () => {
+    seedWeekSlots([0, 1])
+    expect(await checkMealPlanDaysLimitForDays('u1', [2])).toBe(false)
+  })
+  it('本周已占 2 天，本次再选 2 个新天 → true（并集 4 天）', async () => {
+    seedWeekSlots([0, 1])
+    expect(await checkMealPlanDaysLimitForDays('u1', [2, 3])).toBe(true)
+  })
+  it('本周已占 3 天，本次选已占用的天 → false（覆盖不新增天数）', async () => {
+    // add 路由依赖这条：占满 3 天后仍要允许替换已有那天的菜谱
+    seedWeekSlots([0, 1, 2])
+    expect(await checkMealPlanDaysLimitForDays('u1', [1])).toBe(false)
+  })
+  it('本周已占 3 天，本次选新的一天 → true', async () => {
+    seedWeekSlots([0, 1, 2])
+    expect(await checkMealPlanDaysLimitForDays('u1', [3])).toBe(true)
+  })
+})
+
+describe('免费版限制 — checkRecipeCountLimitForCount（批量写入）', () => {
+  function seedRecipes(n: number) {
+    for (let i = 1; i <= n; i++) {
+      stores.recipes.set(`r${i}`, { id: `r${i}`, userId: 'u1' })
+    }
+  }
+  it('已有 20 个，本次新增 3 → false（合计 23 ≤ 25）', async () => {
+    seedRecipes(20)
+    expect(await checkRecipeCountLimitForCount('u1', 3)).toBe(false)
+  })
+  it('已有 20 个，本次新增 9 → true（周计划 3 天会写 9 个）', async () => {
+    seedRecipes(20)
+    expect(await checkRecipeCountLimitForCount('u1', 9)).toBe(true)
+  })
+  it('已有 24 个，本次新增 1 → false（刚好用满不算越限）', async () => {
+    seedRecipes(24)
+    expect(await checkRecipeCountLimitForCount('u1', 1)).toBe(false)
+  })
+  it('已有 24 个，本次新增 2 → true', async () => {
+    seedRecipes(24)
+    expect(await checkRecipeCountLimitForCount('u1', 2)).toBe(true)
   })
 })

@@ -236,6 +236,9 @@ export default function MyRecipesPage() {
       setConflictData({ existingTitle: data.existingTitle, recipe })
     } else if (data.success) {
       setAddMsg(tr("addedToPlan", { day: dayLabel[addDay], meal: mealLabel[addMeal] }))
+    } else if (data.error === "mealPlanDaysLimit") {
+      // 免费版周计划天数上限：后端返回裸 key，前端翻译展示（mealPlanDaysLimit 在 mealPlan 命名空间）
+      setAddMsg(tm("mealPlanDaysLimit"))
     } else {
       setAddMsg(data.error || tr("addFailed"))
     }

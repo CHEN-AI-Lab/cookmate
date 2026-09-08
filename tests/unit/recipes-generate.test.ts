@@ -9,8 +9,8 @@ vi.mock('@/lib/prisma', async () => {
 })
 vi.mock('@/lib/auth', () => ({ auth: vi.fn() }))
 vi.mock('@/lib/auth-helpers', () => ({
-  checkUsageLimit: vi.fn(async () => true),
-  incrementUsage: vi.fn(async () => {}),
+  canUseAiToday: vi.fn(async () => true),
+  incrementAiUsage: vi.fn(async () => {}),
   isDemoUser: vi.fn(() => false),
   isFreeUser: vi.fn(async () => true),
   checkRecipeCountLimit: vi.fn(async () => false),

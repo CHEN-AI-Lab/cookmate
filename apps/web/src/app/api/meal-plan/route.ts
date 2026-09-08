@@ -8,7 +8,7 @@ import {
   sanitizeWeeklyPlan,
   type RecipeResult,
 } from "@cookmate/shared/api/openai"
-import { checkUsageLimit, incrementUsage } from "@/lib/auth-helpers"
+import { canUseAiToday, incrementAiUsage, isFreeUser, checkMealPlanDaysLimitForDays, checkRecipeCountLimitForCount } from "@/lib/auth-helpers"
 import { errMsg, getDayMap } from "@cookmate/shared/utils/meal-plan"
 
 /** sanitizeWeeklyPlan 的输出类型 */
@@ -114,11 +114,40 @@ export async function POST(req: Request) {
     }
 
     const isDev = process.env.NODE_ENV !== "production"
+
+    // 免费版周计划天数限制：本次新增天数与本周已占用天数取并集，超过 3 天直接拒绝。
+    // 放在 AI 调用之前，避免白烧一次生成（一次生成 = 最多 21 个菜谱，还会占满 25 个菜谱上限）。
+    if (!isDev) {
+      const free = await isFreeUser(userId)
+      if (free) {
+        const limited = await checkMealPlanDaysLimitForDays(userId, targetDays)
+        if (limited) {
+          // 返回裸 key，前端用 t() 翻译——与 add/route.ts 的返回约定保持一致。
+          // 不用 err()：mealPlanDaysLimit 在 billing 命名空间，errors 下没有这个 key。
+          return NextResponse.json(
+            { error: "mealPlanDaysLimit", detail: "meal_plan_days_limit" },
+            { status: 403 },
+          )
+        }
+
+        // 菜谱总数上限：周计划一次写入「天数 × 3」个菜谱（每天早中晚），
+        // 只看「当前是否已满 25」会放行「已有 20 个再写 9 个 = 29」的越限写入，
+        // 所以要连带本次预计新增一起算。
+        const recipeFull = await checkRecipeCountLimitForCount(userId, targetDays.length * 3)
+        if (recipeFull) {
+          return NextResponse.json(
+            { error: "recipeLimit", detail: "recipe_count_limit" },
+            { status: 403 },
+          )
+        }
+      }
+    }
+
     if (!isDev) {
       const isMock = !(process.env.AI_API_KEY || process.env.OPENAI_API_KEY)
       if (!isMock) {
         // fail-closed：用量检查出错（如 DB 抖动）时拒绝生成，原实现 catch 返回 true 会让免费用户无限调用付费 AI
-        const canGenerate = await checkUsageLimit(userId).catch((err: unknown) => { console.error("check usage limit error:", err); return false })
+        const canGenerate = await canUseAiToday(userId).catch((err: unknown) => { console.error("check usage limit error:", err); return false })
         if (!canGenerate) {
           return NextResponse.json(
             { error: e("今日次数已用完，明天再来吧", "Daily limit reached, come back tomorrow"), detail: "usage_limit_exceeded" },
@@ -246,7 +275,7 @@ export async function POST(req: Request) {
       }
 
         saved = true
-        if (!isDev) { await incrementUsage(userId).catch((err: unknown) => { console.error("increment usage error:", err) }) }
+        if (!isDev) { await incrementAiUsage(userId).catch((err: unknown) => { console.error("increment usage error:", err) }) }
       } catch (err) {
         // 保存失败不阻断：已经生成好的菜谱仍要返回给用户，只是不落库（刷新会丢）
         console.error("Failed to save meal plan to DB (returning generated data only):", err)
