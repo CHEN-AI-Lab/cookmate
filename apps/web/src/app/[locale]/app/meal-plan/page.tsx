@@ -77,7 +77,7 @@ export default function MealPlanPage() {
   // 收藏上限横幅（持久显示，带内嵌升级链接）：收藏操作在详情弹窗里触发，
   // toast 2.5 秒就没了，用户经常来不及看原因，所以再加一条横幅兜底
   const [starBanner, setStarBanner] = useState(false)
-  const [limitDialog, setLimitDialog] = useState<null | { kind: "reached" } | { kind: "exceed"; picked: number; remaining: number }>(null)
+  const [limitNotice, setLimitNotice] = useState<null | { kind: "reached" } | { kind: "exceed"; picked: number; remaining: number }>(null)
   // 免费版剩余可规划天数：3 - 本周已规划天数（0 = 已用完）
   const [freeRemainingDays, setFreeRemainingDays] = useState(0)
 
@@ -131,6 +131,7 @@ export default function MealPlanPage() {
   // picker 中本次已圈选的天数长度（未选完时为 0），用于免费版额度提示的三态切换
 
   const handleDayClick = (i: number) => {
+    setLimitNotice(null)
     if (pickStart === null) {
       setPickStart(i)
     } else if (pickEnd === null) {
@@ -229,10 +230,10 @@ export default function MealPlanPage() {
     const days: number[] = []
     for (let i = lo; i <= hi; i++) days.push(i)
 
-    // 免费版前端拦截：区间天数超过剩余可规划天数时弹框提示，不发请求
+    // 免费版前端拦截：区间天数超过剩余可规划天数时在按钮上方提示，不发请求
     // 后端也有同样的检查（checkMealPlanDaysLimitForDays），这里是体验优化
     if (freeUser && days.length > freeRemainingDays) {
-      setLimitDialog(
+      setLimitNotice(
         freeRemainingDays <= 0
           ? { kind: "reached" }
           : { kind: "exceed", picked: days.length, remaining: freeRemainingDays },
@@ -357,18 +358,6 @@ export default function MealPlanPage() {
             upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline>,
           })}
           onClose={() => setStarBanner(false)}
-        />
-      )}
-
-      {/* 免费版周计划额度：点「确认生成」超限时弹出，升级链接嵌在文案中间 */}
-      {limitDialog && (
-        <UpgradeDialog
-          text={
-            limitDialog.kind === "reached"
-              ? t.rich("freeLimitReached", { upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline> })
-              : t.rich("freeLimitExceed", { picked: limitDialog.picked, remaining: limitDialog.remaining, upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline> })
-          }
-          onClose={() => setLimitDialog(null)}
         />
       )}
 
@@ -543,6 +532,15 @@ export default function MealPlanPage() {
                       })(),
               }}
             />
+
+            {/* 免费版超限提示：点「确认生成」时显示在此处（不用弹框，弹框会被选择器遮挡） */}
+            {limitNotice && (
+              <div className="mt-4 text-[13px] rounded-xl px-4 py-2.5 bg-bg-brand border border-accent/60 text-text-primary leading-relaxed">
+                {limitNotice.kind === "reached"
+                  ? t.rich("freeLimitReached", { upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline> })
+                  : t.rich("freeLimitExceed", { picked: limitNotice.picked, remaining: limitNotice.remaining, upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline> })}
+              </div>
+            )}
 
             {/* 按钮组 */}
             <div className="flex gap-2.5 mt-5">
