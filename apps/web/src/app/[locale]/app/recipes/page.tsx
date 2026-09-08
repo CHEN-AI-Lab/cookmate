@@ -29,6 +29,8 @@ const MEAL_VALUES = ["早餐", "午餐", "晚餐"] as const
 export default function RecipesPage() {
   const t = useTranslations("recipes")
   const tmeal = useTranslations("mealPlan")
+  // 收藏上限等 billing 命名空间的提示（后端返回裸 key，这里负责翻译）
+  const tb = useTranslations("billing")
   const locale = useLocale()
   const ingLabels = INGREDIENT_LABELS
   const displayName = (name: string) => locale === "zh-CN" || locale === "zh-TW" ? name : (ingLabels[name] || name)
@@ -100,6 +102,10 @@ export default function RecipesPage() {
       })
       setStarToast(data.starred ? t("starToast") : t("unstarToast"))
       setTimeout(() => setStarToast(""), 2500)
+    } else if (data.error === "starLimitReached") {
+      // 后端返回裸 key，必须翻译展示——不然用户点收藏没反应，也不知道为什么
+      setStarToast(tb("starLimitReached"))
+      setTimeout(() => setStarToast(""), 3000)
     }
   }
 

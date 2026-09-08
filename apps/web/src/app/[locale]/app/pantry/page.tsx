@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { getDemoPantryItems } from "@cookmate/shared/demo-data"
+import { UpgradeLink } from "@/components/features/UpgradeLink"
 
 interface PantryItem {
   id: string
@@ -15,6 +16,8 @@ export default function PantryPage() {
   const router = useRouter()
   const t = useTranslations("pantry")
   const tc = useTranslations("common")
+  // 食材库上限等 billing 命名空间的提示（后端返回裸 key，这里负责翻译）
+  const tb = useTranslations("billing")
   const [items, setItems] = useState<PantryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
@@ -22,6 +25,9 @@ export default function PantryPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [, setError] = useState<string | null>(null)
+  // 免费版食材库上限横幅：持久显示（可手动关闭），直到用户删食材腾出空间或升级。
+  // 原先报错走 setError，但这个值压根没被渲染，用户点了添加没反应也不知道原因。
+  const [limitBanner, setLimitBanner] = useState(false)
   const [dupDialog, setDupDialog] = useState<string | null>(null)
   const [isDemoUser, setIsDemoUser] = useState(false)
   const [demoToast, setDemoToast] = useState("")
@@ -83,6 +89,9 @@ export default function PantryPage() {
         if (data.error?.includes("已存在")) {
           setDupDialog(trimmed)
           setTimeout(() => setDupDialog(null), 2500)
+        } else if (data.error === "pantryLimitReached") {
+          // 后端返回裸 key，翻译后用持久横幅展示并给升级入口
+          setLimitBanner(true)
         } else {
           setError(data.error || t("addFailed"))
           setTimeout(() => setError(null), 2500)
@@ -117,6 +126,17 @@ export default function PantryPage() {
     <div>
       {/* 1. Title */}
       <h1 className="text-2xl font-bold text-text-primary mb-4">{t("title")}</h1>
+
+      {/* 免费版食材库上限横幅：达到 15 条上限时持久展示，带升级入口 */}
+      {limitBanner && (
+        <div className="mb-4 flex items-center justify-between gap-3 flex-wrap text-[13px] rounded-xl px-4 py-2.5 bg-red-50 border border-red-200 text-red-700">
+          <span>{tb("pantryLimitReached")}</span>
+          <span className="flex items-center gap-2 shrink-0">
+            <UpgradeLink className="text-[13px]" />
+            <button onClick={() => setLimitBanner(false)} className="text-red-400 hover:text-red-600 px-1" aria-label="close">×</button>
+          </span>
+        </div>
+      )}
 
 {/* 2. Search row */}
       <div className="mb-2">

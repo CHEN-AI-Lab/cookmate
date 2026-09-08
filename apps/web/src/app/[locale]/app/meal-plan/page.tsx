@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { MealPlanGrid } from "@/components/features/MealPlanGrid"
 import { MealPlanDetailModal } from "@/components/features/MealPlanDetailModal"
+import { UpgradeLink } from "@/components/features/UpgradeLink"
 import { getDemoMealPlan } from "@cookmate/shared/demo-data"
 import { API_TIMEOUT } from "@cookmate/shared/constants/api-errors"
 import { MEAL_PLAN_DAYS_LIMIT } from "@cookmate/shared/constants/usage-limits"
@@ -51,6 +52,8 @@ export default function MealPlanPage() {
   const t = useTranslations("mealPlan")
   const locale = useLocale()
   const tc = useTranslations("common")
+  // 收藏上限等 billing 命名空间的提示（后端返回裸 key，这里负责翻译）
+  const tb = useTranslations("billing")
   const DAY_LABELS = [t("monday"), t("tuesday"), t("wednesday"), t("thursday"), t("friday"), t("saturday"), t("sunday")]
   const router = useRouter()
   const MEAL_LABELS: Record<string, string> = {
@@ -292,6 +295,10 @@ export default function MealPlanPage() {
       })
       setStarToast(data.starred ? t("starToast") : t("unstarToast"))
       setTimeout(() => setStarToast(""), 2500)
+    } else if (data.error === "starLimitReached") {
+      // 后端返回裸 key，必须翻译展示——不然用户点收藏没反应，也不知道为什么
+      setStarToast(tb("starLimitReached"))
+      setTimeout(() => setStarToast(""), 3000)
     }
   }
 
@@ -472,22 +479,27 @@ export default function MealPlanPage() {
             </div>
 
             {/* 免费版天数限制提示 — 三态：额度已用完 / 本次选择超出剩余 / 常态展示剩余额度。
-                原先只要还有额度就无条件显示「本次选择超出剩余天数」，用户刚打开弹窗也会被这句话误伤。 */}
+                原先只要还有额度就无条件显示「本次选择超出剩余天数」，用户刚打开弹窗也会被这句话误伤。
+                提示尾部带升级链接：只说"已达上限"不给出路，用户会卡在这里。 */}
             {freeUser && (freeRemainingDays <= 0 || pickedRangeLen > freeRemainingDays ? (
               <div
-                className="mb-3 text-[13px] rounded-xl px-4 py-2.5"
-                style={{ background: "#fef2f2", border: "1px solid #fecaca" }}
+                className="mb-3 text-[13px] rounded-xl px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap"
+                style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c" }}
               >
-                {freeRemainingDays <= 0
-                  ? t("freeLimitReached")
-                  : t("freeLimitExceed", { picked: pickedRangeLen, remaining: freeRemainingDays })}
+                <span>
+                  {freeRemainingDays <= 0
+                    ? t("freeLimitReached")
+                    : t("freeLimitExceed", { picked: pickedRangeLen, remaining: freeRemainingDays })}
+                </span>
+                <UpgradeLink className="text-[13px] shrink-0" />
               </div>
             ) : (
               <div
-                className="mb-3 text-[13px] rounded-xl px-4 py-2.5"
-                style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}
+                className="mb-3 text-[13px] rounded-xl px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap"
+                style={{ background: "#fff7ed", border: "1px solid #fed7aa", color: "#9a3412" }}
               >
-                {t("freeLimitHint", { days: freeRemainingDays })}
+                <span>{t("freeLimitHint", { days: freeRemainingDays })}</span>
+                <UpgradeLink className="text-[13px] shrink-0" />
               </div>
             ))}
 

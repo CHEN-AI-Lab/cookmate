@@ -26,6 +26,8 @@ export default function MyRecipesPage() {
   const tr = useTranslations("recipes")
   const locale = useLocale()
   const tm = useTranslations("mealPlan")
+  // 收藏上限等 billing 命名空间的提示（后端返回裸 key，这里负责翻译）
+  const tbi = useTranslations("billing")
   const dayLabel: Record<string, string> = {
     "周一": tm("monday"), "周二": tm("tuesday"), "周三": tm("wednesday"),
     "周四": tm("thursday"), "周五": tm("friday"), "周六": tm("saturday"),
@@ -166,6 +168,9 @@ export default function MyRecipesPage() {
         )
       }
       showToast(nowStarred ? tr("starToast") : tr("unstarToast"))
+    } else if (data.error === "starLimitReached") {
+      // 后端返回裸 key，必须翻译展示——不然用户点收藏没反应，也不知道为什么
+      showToast(tbi("starLimitReached"))
     }
   }
 
