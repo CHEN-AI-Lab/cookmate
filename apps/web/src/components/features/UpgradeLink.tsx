@@ -31,7 +31,7 @@ export function UpgradeDialog({ text, onClose }: { text: ReactNode; onClose: () 
         className="bg-bg-brand border border-accent/60 rounded-2xl px-6 py-5 w-full max-w-xs text-center shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="text-sm text-text-primary leading-relaxed">{text}</p>
+        <p className="text-sm text-text-primary leading-relaxed whitespace-pre-line">{text}</p>
       </div>
     </div>
   )

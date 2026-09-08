@@ -598,10 +598,10 @@
     "refundNotice": "会员服务系网络虚拟商品，采用先付费后服务的方式。会员费用为所购会员服务对应的价格，而非预付款、存款或定金。会员服务一经开通即不支持退款、不可转让（法律法规另有强制性规定，或服务存在重大瑕疵致使您完全无法使用的情形除外）。取消订阅后，会员权益将持续至当前计费周期届满，剩余天数不予折现或退还。",
     "checkoutRefundNotice": "会员服务为虚拟商品，一经开通不支持退款（法定例外情形除外）。取消订阅后，权益持续至当前计费周期届满。",
     "yearlyPeriodTpl": "≈ ¥{perMonth}/月 · 省{percent}%",
-    "starLimitReached": "收藏已达上限（10 个），<upgrade>升级 Pro</upgrade> 即可无限收藏",
+    "starLimitReached": "收藏已达上限（10 个）\n<upgrade>升级 Pro</upgrade> 即可无限收藏",
     "recipeLimitReached": "菜谱已达上限（25个），升级 Pro 可无限保存",
     "mealPlanDaysLimit": "免费版每周最多规划 3 天，升级 Pro 解锁整周计划",
-    "pantryLimitReached": "食材库已达上限（15 种），<upgrade>升级 Pro</upgrade> 即可无限添加食材",
+    "pantryLimitReached": "食材库已达上限（15 种）\n<upgrade>升级 Pro</upgrade> 即可无限添加食材",
     "yearlySavingTpl": "🔥 推荐 · 省 {amount}"
   },
   "orders": {

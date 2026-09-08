@@ -77,6 +77,7 @@ export default function MealPlanPage() {
   // 收藏上限横幅（持久显示，带内嵌升级链接）：收藏操作在详情弹窗里触发，
   // toast 2.5 秒就没了，用户经常来不及看原因，所以再加一条横幅兜底
   const [starBanner, setStarBanner] = useState(false)
+  const [limitDialog, setLimitDialog] = useState<null | { kind: "reached" } | { kind: "exceed"; picked: number; remaining: number }>(null)
   // 免费版剩余可规划天数：3 - 本周已规划天数（0 = 已用完）
   const [freeRemainingDays, setFreeRemainingDays] = useState(0)
 
@@ -128,7 +129,6 @@ export default function MealPlanPage() {
   }
 
   // picker 中本次已圈选的天数长度（未选完时为 0），用于免费版额度提示的三态切换
-  const pickedRangeLen = pickStart !== null && pickEnd !== null ? Math.abs(pickEnd - pickStart) + 1 : 0
 
   const handleDayClick = (i: number) => {
     if (pickStart === null) {
@@ -229,9 +229,16 @@ export default function MealPlanPage() {
     const days: number[] = []
     for (let i = lo; i <= hi; i++) days.push(i)
 
-    // 免费版前端拦截：区间天数超过剩余可规划天数时直接提示，不发请求
+    // 免费版前端拦截：区间天数超过剩余可规划天数时弹框提示，不发请求
     // 后端也有同样的检查（checkMealPlanDaysLimitForDays），这里是体验优化
-    if (freeUser && days.length > freeRemainingDays) return
+    if (freeUser && days.length > freeRemainingDays) {
+      setLimitDialog(
+        freeRemainingDays <= 0
+          ? { kind: "reached" }
+          : { kind: "exceed", picked: days.length, remaining: freeRemainingDays },
+      )
+      return
+    }
 
     setShowPicker(false)
     await runGenerate(days)
@@ -350,6 +357,18 @@ export default function MealPlanPage() {
             upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline>,
           })}
           onClose={() => setStarBanner(false)}
+        />
+      )}
+
+      {/* 免费版周计划额度：点「确认生成」超限时弹出，升级链接嵌在文案中间 */}
+      {limitDialog && (
+        <UpgradeDialog
+          text={
+            limitDialog.kind === "reached"
+              ? t.rich("freeLimitReached", { upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline> })
+              : t.rich("freeLimitExceed", { picked: limitDialog.picked, remaining: limitDialog.remaining, upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline> })
+          }
+          onClose={() => setLimitDialog(null)}
         />
       )}
 
@@ -492,19 +511,12 @@ export default function MealPlanPage() {
               </span>
             </div>
 
-            {/* 免费版天数限制提示 — 三态：额度已用完 / 本次选择超出剩余 / 常态展示剩余额度。
-                配色与品牌一致（米色底 + 橙描边，CSS 变量），受限态把升级链接嵌在文案中间。 */}
-            {freeUser && (freeRemainingDays <= 0 || pickedRangeLen > freeRemainingDays ? (
-              <div className="mb-3 text-[13px] rounded-xl px-4 py-2.5 bg-bg-brand border border-accent/60 text-text-primary leading-relaxed">
-                {freeRemainingDays <= 0
-                  ? t.rich("freeLimitReached", { upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline> })
-                  : t.rich("freeLimitExceed", { picked: pickedRangeLen, remaining: freeRemainingDays, upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline> })}
-              </div>
-            ) : (
+            {/* 免费版剩余额度常态提示；额度用完或超限不在下方固定展示，改为点「确认生成」时弹框提示 */}
+            {freeUser && freeRemainingDays > 0 && (
               <div className="mb-3 text-[13px] rounded-xl px-4 py-2.5 bg-bg-brand border border-accent/40 text-text-secondary">
                 {t("freeLimitHint", { days: freeRemainingDays })}
               </div>
-            ))}
+            )}
 
             {/* 信息提示框 */}
             <div
@@ -542,11 +554,7 @@ export default function MealPlanPage() {
                 {tc("cancel")}
               </button>
               {(() => {
-                const lo = pickStart !== null && pickEnd !== null ? Math.min(pickStart, pickEnd) : -1
-                const hi = pickStart !== null && pickEnd !== null ? Math.max(pickStart, pickEnd) : -1
-                const rangeLen = lo >= 0 && hi >= 0 ? hi - lo + 1 : 0
-                const overFreeLimit = freeUser && rangeLen > freeRemainingDays
-                const disabled = pickStart === null || pickEnd === null || generating || overFreeLimit
+                const disabled = pickStart === null || pickEnd === null || generating
                 return (
                   <button
                     onClick={confirmGenerate}
