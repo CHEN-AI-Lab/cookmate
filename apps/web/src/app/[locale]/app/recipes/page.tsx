@@ -28,6 +28,14 @@ interface PantryItem {
 const DAY_VALUES = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"] as const
 const MEAL_VALUES = ["早餐", "午餐", "晚餐"] as const
 
+/** 粗判是否像真实食材：排除纯数字、纯符号、单字符（如"1"），避免无效输入白白消耗 AI 调用 */
+function isValidIngredient(name: string): boolean {
+  const trimmed = name.trim()
+  if ([...trimmed].length < 2) return false
+  if (/^[0-9０-９.,，。、\s\-+]+$/.test(trimmed)) return false
+  return true
+}
+
 export default function RecipesPage() {
   const t = useTranslations("recipes")
   const tmeal = useTranslations("mealPlan")
@@ -212,6 +220,10 @@ export default function RecipesPage() {
   const addIngredient = () => {
     const trimmed = input.trim()
     if (!trimmed) return
+    if (!isValidIngredient(trimmed)) {
+      setError(t("invalidIngredients"))
+      return
+    }
     if (ingredients.some((i) => i.toLowerCase() === trimmed.toLowerCase())) {
       setDupDialog(trimmed)
       setTimeout(() => setDupDialog(null), 2500)
@@ -265,6 +277,12 @@ export default function RecipesPage() {
       setError(t("errorAtLeastOneIngredient"))
       return
     }
+    // 兜底过滤：跳过混在里面的纯数字/单字符，全部无效则直接提示，不发请求
+    const validIngredients = ingredients.filter(isValidIngredient)
+    if (validIngredients.length === 0) {
+      setError(t("invalidIngredients"))
+      return
+    }
     setLoading(true)
     setError("")
     // 不清空上次结果，生成失败时保留旧菜谱
@@ -275,7 +293,7 @@ export default function RecipesPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ingredients,
+          ingredients: validIngredients,
           pantryContext: pantryItems.map((i) => i.name),
         }),
       })
