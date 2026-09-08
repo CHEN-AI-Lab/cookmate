@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import type { ReactNode } from "react"
 import { Link } from "@/i18n/navigation"
 
@@ -25,6 +26,14 @@ export function UpgradeInline({ children }: { children: ReactNode }) {
  * text 支持富文本（内嵌升级链接），点弹框外遮罩即可关闭。
  */
 export function UpgradeDialog({ text, onClose }: { text: ReactNode; onClose: () => void }) {
+  // 5 秒自动消失：提示是辅助信息，不该一直挡在屏幕中间；点遮罩也随时可关
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+  useEffect(() => {
+    const timer = setTimeout(() => onCloseRef.current(), 5000)
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <div className="fixed inset-0 bg-overlay flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div
