@@ -89,6 +89,11 @@ export async function POST(req: Request) {
     const normalizedName = (name || "").trim().toLowerCase()
     if (!normalizedName) return NextResponse.json({ error: err(loc, "enterIngredientName") }, { status: 400 })
 
+    // 输入校验：挡住纯数字、纯符号、单字符（如"123"）这类无意义名称，规则与前端一致
+    if ([...normalizedName].length < 2 || /^[0-9０-９.,，。、\s\-+]+$/.test(normalizedName)) {
+      return NextResponse.json({ error: err(loc, "invalidIngredients") }, { status: 400 })
+    }
+
     const existing = await prisma.pantryItem.findFirst({ where: { name: normalizedName, userId: session.user.id } }).catch((err: unknown) => { console.error("findFirst pantry item error:", err); return null })
     if (existing) return NextResponse.json({ error: err(loc, "ingredientExists") }, { status: 400 })
 

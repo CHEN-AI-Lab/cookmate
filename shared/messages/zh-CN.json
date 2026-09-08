@@ -373,6 +373,7 @@
     "addButton": "＋ 添加",
     "addItem": "添加食材",
     "addItemPlaceholder": "输入食材名称...",
+    "invalidIngredients": "请输入真实的食材名称，如：鸡肉、西兰花",
     "myItems": "📦 我的食材 ({count})",
     "empty": "点击上方添加食材",
     "selectedCount": "🍳 已选 {count} 种 · 用这些食材做菜",
@@ -895,6 +896,7 @@
     "copyright": "© {year} CookMate 保留所有权利"
   },
   "errors": {
+    "invalidIngredients": "请输入真实的食材名称，如：鸡肉、西兰花",
     "loginRequired": "请先登录",
     "notFound": "菜谱不存在",
     "permissionDenied": "无权限",

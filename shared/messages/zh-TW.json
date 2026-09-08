@@ -370,6 +370,7 @@
   "pantry": {
     "title": "🥦 食材庫",
     "addItemPlaceholder": "輸入食材名稱...",
+    "invalidIngredients": "請輸入真實的食材名稱，如：雞肉、西蘭花",
     "empty": "點擊上方添加食材",
     "selectedCount": "🍳 已選 {count} 種 · 用這些食材做菜",
     "cancelSelection": "✕ 取消選擇",
@@ -895,6 +896,7 @@
     "email": "CookMate@aaigc.online"
   },
   "errors": {
+    "invalidIngredients": "請輸入真實的食材名稱，如：雞肉、西蘭花",
     "loginRequired": "請先登錄",
     "notFound": "菜譜不存在",
     "permissionDenied": "無權限",

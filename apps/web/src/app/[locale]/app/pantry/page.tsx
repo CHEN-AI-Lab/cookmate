@@ -12,6 +12,14 @@ interface PantryItem {
   category: string | null
 }
 
+/** 粗判是否像真实食材：排除纯数字、纯符号、单字符（如"123"），与 AI 菜谱页规则一致 */
+function isValidIngredient(name: string): boolean {
+  const trimmed = name.trim()
+  if ([...trimmed].length < 2) return false
+  if (/^[0-9０-９.,，。、\s\-+]+$/.test(trimmed)) return false
+  return true
+}
+
 export default function PantryPage() {
   const router = useRouter()
   const t = useTranslations("pantry")
@@ -29,6 +37,8 @@ export default function PantryPage() {
   // 原先报错走 setError，但这个值压根没被渲染，用户点了添加没反应也不知道原因。
   const [limitBanner, setLimitBanner] = useState(false)
   const [dupDialog, setDupDialog] = useState<string | null>(null)
+  // 无效输入提示（纯数字/符号等）：居中浮层自动消失
+  const [invalidToast, setInvalidToast] = useState(false)
   const [isDemoUser, setIsDemoUser] = useState(false)
   const [demoToast, setDemoToast] = useState("")
   const [toast, setToast] = useState("")
@@ -65,6 +75,13 @@ export default function PantryPage() {
   const addItem = async (name: string, category?: string) => {
     const trimmed = name.trim()
     if (!trimmed) return
+
+    // 输入校验：挡住纯数字、纯符号、单字符（如"123"）这类无意义名称，不发请求
+    if (!isValidIngredient(trimmed)) {
+      setInvalidToast(true)
+      setTimeout(() => setInvalidToast(false), 2500)
+      return
+    }
 
     // 重复检测
     if (items.some((i) => i.name.toLowerCase() === trimmed.toLowerCase())) {
@@ -257,6 +274,15 @@ export default function PantryPage() {
                       <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setDupDialog(null)}>
                         <div className="bg-bg-inverse text-white px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center" onClick={(e) => e.stopPropagation()}>
                           <span>{t("alreadyInPantry", { name: dupDialog })}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 无效输入提示（纯数字/符号等） */}
+                    {invalidToast && (
+                      <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
+                        <div className="bg-bg-inverse text-white px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center animate-in fade-in zoom-in-95 duration-200">
+                          <span>{t("invalidIngredients")}</span>
                         </div>
                       </div>
                     )}

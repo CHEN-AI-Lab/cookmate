@@ -373,6 +373,7 @@
     "addButton": "＋ Add",
     "addItem": "Add Item",
     "addItemPlaceholder": "Enter ingredient name...",
+    "invalidIngredients": "Please enter real ingredient names, e.g. chicken, broccoli",
     "myItems": "📦 My Ingredients ({count})",
     "empty": "Click above to add ingredients",
     "selectedCount": "🍳 {count} selected · Cook with these",
@@ -895,6 +896,7 @@
     "copyright": "© {year} CookMate. All rights reserved."
   },
   "errors": {
+    "invalidIngredients": "Please enter real ingredient names, e.g. chicken, broccoli",
     "loginRequired": "Please log in first",
     "notFound": "Not found",
     "permissionDenied": "Permission denied",

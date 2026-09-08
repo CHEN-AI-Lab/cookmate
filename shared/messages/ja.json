@@ -377,6 +377,7 @@
     "added": "追加しました ",
     "addFailed": "追加に失敗しました。しばらくしてからやり直してください",
     "addItemPlaceholder": "食材名を入力...",
+    "invalidIngredients": "実際の食材名を入力してください（例：鶏肉、ブロッコリー）",
     "searchPlaceholder": "食材を検索...",
     "clickToSelect": "☝️ 食材をタップして選択",
     "selectedCount": "{count}個を選択中",
@@ -895,6 +896,7 @@
     "copyright": "© {year} CookMate. All rights reserved."
   },
   "errors": {
+    "invalidIngredients": "実際の食材名を入力してください（例：鶏肉、ブロッコリー）",
     "notFound": "ページが見つかりません",
     "requestFailed": "リクエストに失敗しました。しばらくしてからもう一度お試しください。",
     "bindFailed": "バインドに失敗しました",
