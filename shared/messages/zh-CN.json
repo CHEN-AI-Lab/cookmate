@@ -521,24 +521,25 @@
     "selectPlan": "选择计划",
     "upgradeNow": "免费开始，随时升级",
     "freePlanFeatures": [
-      "每天 1 次 AI 菜谱推荐",
-      "基础食材管理",
-      "收藏最多 10 个菜谱"
+      "AI 菜谱生成：每日 1 次",
+      "膳食规划：每周 3 天",
+      "食材库：15 个品类",
+      "菜谱保存：25 个",
+      "菜谱收藏：10 个"
     ],
     "proPlanFeatures": [
-      "无限 AI 菜谱生成",
-      "智能周计划",
-      "自动购物清单（按超市分区分类）",
-      "饮食定制（减脂/增肌/素食等）",
-      "完整食材库管理",
-      "无限收藏菜谱"
+      "AI 菜谱生成：不限次数",
+      "智能周计划：不限天数",
+      "完整食材库管理：不限品类",
+      "菜谱保存：不限数量",
+      "菜谱收藏：不限数量"
     ],
     "freeTier": "免费使用",
     "subscribePro": "订阅",
     "selectThisPlan": "选择此方案",
     "selectedPlan": "已选",
-    "freePlanDesc": "每天 1 次 AI 菜谱推荐",
-    "proPlanDesc": "无限 AI 生成，享受全部 Pro 功能",
+    "freePlanDesc": "每天 1 次 AI 菜谱生成",
+    "proPlanDesc": "解锁全部功能，不限量使用",
     "freeBadge": "🆓 免费版",
     "proBadge": "🌟 Pro",
     "expiryDate": "到期时间：{date}",
