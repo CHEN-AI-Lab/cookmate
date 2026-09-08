@@ -521,18 +521,20 @@
     "selectPlan": "Choose Your Plan",
     "upgradeNow": "Free to start, upgrade anytime",
     "freePlanFeatures": [
-      "AI recipe generation: 1 per day",
-      "Meal planning: 3 days per week",
-      "Pantry: 15 items",
-      "Recipe storage: 25",
-      "Starred recipes: 10"
+      "AI recipe generation · 1 per day",
+      "Meal planning · 3 days per week",
+      "Pantry · 15 items",
+      "My recipes · save 25",
+      "Starred recipes · 10"
     ],
     "proPlanFeatures": [
-      "AI recipe generation: unlimited",
-      "Smart meal planning: unlimited days",
-      "Full pantry management: unlimited items",
-      "Recipe storage: unlimited",
-      "Starred recipes: unlimited"
+      "AI recipe generation · unlimited",
+      "Smart meal planning · unlimited days",
+      "Pantry management · unlimited items",
+      "My recipes · unlimited storage",
+      "Starred recipes · unlimited",
+      "Shopping list · auto-generated (sorted by aisle)",
+      "Early access to new features · priority email support"
     ],
     "freeTier": "Free to Use",
     "subscribePro": "Subscribe",
