@@ -95,3 +95,19 @@
 **Decision**: Use `next-intl` for i18n. Translation files live in `shared/messages/` (zh-CN.json, en.json). Locale routing via middleware. Language switcher in the UI header.
 
 **Consequences**: All UI text must be extracted from components into translation files. API error messages use locale-aware responses. Middleware detects browser language preference. Default locale is zh-CN.
+
+
+---
+
+## ADR-009: 营养分析（Phase 2）实现约定
+**Date**: 2026-09-09
+**Status**: Planned（未实现；占位页已存在于 `apps/web/src/app/[locale]/app/nutrition/page.tsx`）
+
+**Context**: 营养分析为 Phase 2 功能。2026-09-09 评估结论：AI 生成菜谱时已要求返回每道菜卡路里（`Recipe.calories` 已存在），蛋白质/脂肪/碳水只需扩展 AI prompt 的 JSON schema；**不接第三方食物数据库**（Edamam/FatSecret 等均收费），全部营养值由 AI 估算，零额外 API 成本。
+
+**Decision**:
+1. 实现内容：`nutrition_logs` 表（user_id / date / calories / protein / fat / carbs）+ 3 个接口（`/api/nutrition/daily`、`/api/nutrition/log`、`/api/nutrition/stats`）+ 前端页面（今日摄入卡片 + 周/月统计图表）。
+2. **页面必须可见地标注「营养数据为 AI 估算，仅供参考」**——服务条款（`terms.aiDesc` / `terms.disclaimer`）已有对应免责声明，前端页面同样要有可见标注；文案进 `shared/messages/` 四语言（zh-CN / en 手写，zh-TW / ja 走翻译脚本）。
+3. 不引入图表库（图表手写 SVG 或届时再评估），不新增任何付费 API、无额外支出。
+
+**Consequences**: 实现成本低（约 1-2 天：1 次迁移 + 3 接口 + 1 页面）；AI 估算值为近似值，UI 标注与服务条款口径一致，避免合规风险。

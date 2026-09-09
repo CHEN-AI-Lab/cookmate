@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server'
 // TODO: Phase 2 - 营养追踪功能
 // 功能：每日热量+蛋白质统计
 // 状态：后期实现
+// ⚠️ 实现约定见 docs/decisions.md ADR-009：页面必须可见标注「营养数据为 AI 估算，仅供参考」（i18n 四语言）
 // 计划：
 //   - 前端页面：app/app/nutrition/page.tsx
 //   - API: /api/nutrition/daily (获取当日营养数据)
