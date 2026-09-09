@@ -826,7 +826,7 @@ function WebhookStatusBadge({ status }: { status: string }) {
   const tone: Record<string, string> = {
     received: "bg-amber-100 text-amber-600",
     processed: "bg-green-100 text-green-600",
-    duplicate: "bg-blue-100 text-blue-600",
+    duplicate: "bg-amber-100 text-amber-700",
     ignored: "bg-gray-100 text-gray-500",
   }
   const failed = status.startsWith("failed")
@@ -903,7 +903,7 @@ function EnvName({ env, href }: { env: string; href?: string | null }) {
           target="_blank"
           rel="noreferrer"
           title={`在 Vercel 查看 ${env}`}
-          className="ml-1 text-[11px] text-blue-500 hover:underline"
+          className="ml-1 text-[11px] text-accent hover:underline"
         >
           ↗
         </a>
@@ -1034,7 +1034,7 @@ function ConfigHelpDrawer({ sections, open, onClose }: {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="搜索，例如：域名 / CREEM / 对账"
-            className="mt-2 w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm outline-none focus:border-blue-400"
+            className="mt-2 w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm outline-none focus:border-accent"
           />
         </div>
         <div className="flex-1 overflow-y-auto px-4 pb-6">
@@ -1316,9 +1316,9 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
           <button
             type="button"
             onClick={toggleDesc}
-          className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${showDesc ? "border-blue-300 bg-blue-50 text-blue-700" : "border-gray-300 text-gray-600"}`}
+          className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${showDesc ? "border-accent/60 bg-orange-50 text-accent" : "border-gray-300 text-gray-600"}`}
         >
-          <span className={`relative inline-flex h-[18px] w-[32px] items-center rounded-full ${showDesc ? "bg-blue-500" : "bg-gray-300"}`}>
+          <span className={`relative inline-flex h-[18px] w-[32px] items-center rounded-full ${showDesc ? "bg-accent" : "bg-gray-300"}`}>
             <span className={`absolute h-[14px] w-[14px] rounded-full bg-white transition-transform ${showDesc ? "translate-x-[16px]" : "translate-x-[2px]"}`} />
           </span>
           {showDesc ? "隐藏说明" : "显示说明"}
@@ -1346,16 +1346,6 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
                 {s.title}
                 {s.note ? <span className="ml-2 text-[12px] font-normal text-gray-400">{s.note}</span> : null}
               </h3>
-              {c.vercelEnvUrl ? (
-                <span className="flex shrink-0 items-center gap-2 whitespace-nowrap text-[12px]">
-                  <a href={`${c.vercelEnvUrl}?tab=project`} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
-                    项目变量 ↗
-                  </a>
-                  <a href={`${c.vercelEnvUrl}?tab=shared`} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
-                    共享变量 ↗
-                  </a>
-                </span>
-              ) : null}
             </div>
             <div>
               {s.rows.map((r) => (
