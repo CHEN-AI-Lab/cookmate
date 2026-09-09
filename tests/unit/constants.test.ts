@@ -63,9 +63,9 @@ describe('DIFFICULTY_LEVELS', () => {
 describe('SUBSCRIPTION_TIERS', () => {
   it('has 3 tiers', () => {
     expect(SUBSCRIPTION_TIERS).toHaveLength(3)
-    expect(SUBSCRIPTION_TIERS).toContain('free')
-    expect(SUBSCRIPTION_TIERS).toContain('pro')
-    expect(SUBSCRIPTION_TIERS).toContain('family')
+    expect(SUBSCRIPTION_TIERS).toContain('FREE')
+    expect(SUBSCRIPTION_TIERS).toContain('PRO')
+    expect(SUBSCRIPTION_TIERS).toContain('FAMILY')
   })
 })
 

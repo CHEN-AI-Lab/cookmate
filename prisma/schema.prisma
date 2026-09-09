@@ -101,6 +101,10 @@ model Recipe {
   imageUrl     String?
   isGenerated  Boolean  @default(true)
   starred      Boolean  @default(false)
+  // AI 生成溯源：记录实际生效的模型名与当时的订阅层级，供成本/质量分析用。
+  // 手动保存、以及 AI 降级为 mock 数据产出的菜谱为 null（mock 不代表真实模型产出）。
+  aiModel      String?
+  aiTier       String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

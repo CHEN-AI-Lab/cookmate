@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { generateRecipes, normalizeIngredients, hasAIKeyForTier } from "@cookmate/shared/api/openai"
+import { generateRecipes, normalizeIngredients, hasAIKeyForTier, getModelForTier } from "@cookmate/shared/api/openai"
 import { canUseAiToday, incrementAiUsage, isFreeUser, checkRecipeCountLimit, checkStarredLimit } from "@/lib/auth-helpers"
 import {
   BLACKLIST, getBlockReason,
@@ -144,6 +144,11 @@ export async function POST(req: Request) {
 
     T("ai_done")
 
+    // 记录本次实际生效的模型与层级。fallback（AI 失败降级 mock）时不记模型，
+    // 否则会把假数据算到真实模型头上，污染后续成本/质量分析。
+    const aiTierUsed = user?.subscriptionTier ?? "FREE"
+    const aiModelUsed = fallback ? null : (getModelForTier(aiTierUsed) || null)
+
     // 保存生成的菜谱到数据库
     const savedRecipes = []
     for (const recipe of aiRecipes) {
@@ -169,6 +174,8 @@ export async function POST(req: Request) {
             cuisineType: recipe.cuisineType || null,
             difficulty: recipe.difficulty || null,
             isGenerated: true,
+            aiModel: aiModelUsed,
+            aiTier: aiTierUsed,
           },
         })
         savedRecipes.push({ ...recipe, id: saved.id })

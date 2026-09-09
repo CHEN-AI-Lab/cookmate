@@ -57,14 +57,19 @@ export async function GET() {
  */
 function aiSide(ownKey?: string, ownUrl?: string, ownModel?: string) {
   const fallbackKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY
-  const effectiveKey = ownKey || fallbackKey
-  if (!effectiveKey) {
-    return { key: "未配置", source: "未配置", baseUrl: "—", model: "—" }
+  const hasOwnKey = !!ownKey
+  if (!hasOwnKey && !fallbackKey) {
+    return { source: "未配置", key: "未配置", baseUrl: "—", model: "—" }
   }
   return {
-    key: ownKey ? "已配置" : "未配置（用默认 Key）",
-    source: ownKey ? "专用" : "回落默认",
-    baseUrl: ownUrl || process.env.AI_BASE_URL || "https://api.openai.com/v1",
-    model: ownModel || process.env.AI_MODEL || "未设置",
+    // source 是这一端的结论（结论先行，前端放在该块第一行）
+    source: hasOwnKey ? "专用配置" : "回退默认",
+    // Key 只回这两个字面值，才能命中前端 ConfigRow 的绿/红 badge；
+    // 「未配置」在这里的含义是「没配这一端专属的 Key」，不代表不可用（可能正回退默认）
+    key: hasOwnKey ? "已配置" : "未配置",
+    // 地址与模型各自独立回落。没单独配时加「（回退默认）」标注，
+    // 否则页面只显示一个值，看不出是自己填的还是从默认兜底来的。
+    baseUrl: ownUrl ? ownUrl : (process.env.AI_BASE_URL || "https://api.openai.com/v1") + "（回退默认）",
+    model: ownModel ? ownModel : (process.env.AI_MODEL || "未设置") + "（回退默认）",
   }
 }

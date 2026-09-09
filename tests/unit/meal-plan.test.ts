@@ -13,6 +13,7 @@ vi.mock('@cookmate/shared/api/openai', () => ({
   normalizeIngredients: (x: any) => (Array.isArray(x) ? x.map(String) : (x ? [String(x)] : [])),
   // false = 未配 AI Key，保持本测试原有的 isMock=true 行为（跳过用量扣减）
   hasAIKeyForTier: () => false,
+  getModelForTier: () => "",
 }))
 vi.mock('@cookmate/shared/utils/locale', () => ({
   getLocaleFromCookie: () => 'zh-CN',

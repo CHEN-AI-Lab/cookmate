@@ -22,7 +22,12 @@ export const DIETARY_PREFERENCES = [
 
 export const DIFFICULTY_LEVELS = ['easy', 'medium', 'hard'] as const;
 
-export const SUBSCRIPTION_TIERS = ['free', 'pro', 'family'] as const;
+// 订阅层级枚举。**统一用大写**：
+// ① 与数据库 User.subscriptionTier 的默认值 "FREE" 一致（Prisma schema）；
+// ② 与业务判断 user.subscriptionTier !== "FREE" 一致（auth-helpers.ts）；
+// ③ 符合 Prisma 官方枚举规范（enum Role { USER ADMIN }）与 API 枚举 UPPER_SNAKE_CASE 惯例。
+// 切勿改回小写 —— 会让常量与数据库实际值对不上，比对时静默失效。
+export const SUBSCRIPTION_TIERS = ['FREE', 'PRO', 'FAMILY'] as const;
 
 export const MAX_DAILY_FREE_RECOMMENDATIONS = 1;
 

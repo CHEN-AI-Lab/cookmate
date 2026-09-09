@@ -7,6 +7,7 @@ import {
   normalizeIngredients,
   sanitizeWeeklyPlan,
   hasAIKeyForTier,
+  getModelForTier,
   type RecipeResult,
 } from "@cookmate/shared/api/openai"
 import { canUseAiToday, incrementAiUsage, isFreeUser, checkMealPlanDaysLimitForDays, checkRecipeCountLimitForCount } from "@/lib/auth-helpers"
@@ -171,6 +172,11 @@ export async function POST(req: Request) {
     }, pantryNames, locale, targetDays, user?.subscriptionTier ?? "FREE")
 
     T("ai_done")
+
+    // 记录本次实际生效的模型与层级（AI 降级 mock 时不记模型，理由同 recipes/generate）
+    const aiTierUsed = user?.subscriptionTier ?? "FREE"
+    const aiModelUsed = fallback ? null : (getModelForTier(aiTierUsed) || null)
+
     if (fallback) {
       // 降级原因写日志：线上排查时不用再猜是没配 KEY、AI 报错还是返回了垃圾数据
       console.warn(`[meal-plan] AI 降级，reason=${reason ?? "unknown"}，返回 mock 计划（不落库）`)
@@ -223,6 +229,7 @@ export async function POST(req: Request) {
               steps: recipe.steps.join("\n"), cookingTime: recipe.cookingTime || 0,
               calories: recipe.calories || 0, cuisineType: recipe.cuisineType || "",
               difficulty: recipe.difficulty || "easy", isGenerated: true,
+              aiModel: aiModelUsed, aiTier: aiTierUsed,
             },
           })
           recipeId = created.id
@@ -242,6 +249,9 @@ export async function POST(req: Request) {
                   calories: recipe.calories || existing.calories,
                   cuisineType: recipe.cuisineType || existing.cuisineType,
                   difficulty: recipe.difficulty || existing.difficulty,
+                  // 内容被新模型覆盖，溯源信息同步更新
+                  aiModel: aiModelUsed,
+                  aiTier: aiTierUsed,
                 },
               })
               recipeId = existing.id

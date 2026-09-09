@@ -80,6 +80,12 @@ async function callAI(params: {
   const ai = client || getClientForTier(subscriptionTier, 2)
   if (!ai) throw new Error("AI 未配置（缺少 API Key），无法调用")
   const model = getModelForTier(subscriptionTier)
+  // 每次调用都打一行：client 初始化日志只在首次建连时出现，排查"这次到底用的哪个模型"看那行没用
+  console.log(
+    "[openai] 调用 tier=" + normalizeTier(subscriptionTier) +
+    " baseURL=" + getBaseUrlForTier(normalizeTier(subscriptionTier)) +
+    " model=" + (model || "(未设置)")
+  )
 
   // 第一次：带 response_format（可跳过，用于大输出场景）
   if (!skipStructured) {
