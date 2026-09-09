@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 // ── 类型 ──
@@ -140,6 +140,7 @@ interface ConfigResponse {
       fallback: { key: AiValue; model: AiPlain; baseUrl: AiPlain }
     }
     vercelEnvUrl: string | null
+    sharedEnvKeys: string[]
   }
   error?: string
 }
@@ -923,25 +924,42 @@ function EnvName({ env, href }: { env: string; href?: string | null }) {
  * - tag：值后面挂的灰色小标签，用于标注「默认」等来源信息
  * - env：环境变量名（可复制）；desc：字段说明（受顶部开关控制，ⓘ 可单独查看）
  */
-function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc, envBaseUrl }: ConfigRowSpec & {
+function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc, envBaseUrl, sharedEnvKeys }: ConfigRowSpec & {
   showDesc: boolean
   envBaseUrl?: string | null
+  sharedEnvKeys?: string[]
 }) {
   const inferred: AiTone | null = tone ?? (value === "已配置" ? "ok" : value === "未配置" ? "error" : null)
   const isMissing = inferred === "error"
   const muted = tag ? "text-text-secondary" : ""
-  // 说明气泡：鼠标悬浮在标签列上显示（触屏点按同样有效）。用 fixed 定位，避免被卡片裁切
+  // 说明气泡：鼠标停在标题上 0.5 秒才显示（避免鼠标扫过就闪），移开立即消失。
+  // 点按同样支持（触屏）。用 fixed 定位，避免被卡片 overflow-hidden 裁切。
   const [tip, setTip] = useState<{ top: number; left: number } | null>(null)
-  const showTip = (r: DOMRect) =>
-    setTip({ top: r.bottom + 8, left: Math.max(12, Math.min(r.left, window.innerWidth - 280)) })
-  const toggleTip = (r: DOMRect) => (tip ? setTip(null) : showTip(r))
+  const tipTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cancelTip = () => {
+    if (tipTimer.current) {
+      clearTimeout(tipTimer.current)
+      tipTimer.current = null
+    }
+  }
+  const showTip = (r: DOMRect) => {
+    cancelTip()
+    tipTimer.current = setTimeout(() => {
+      setTip({ top: r.bottom + 8, left: Math.max(12, Math.min(r.left, window.innerWidth - 280)) })
+    }, 500)
+  }
+  const hideTip = () => {
+    cancelTip()
+    setTip(null)
+  }
+  const toggleTip = (r: DOMRect) => (tip ? hideTip() : showTip(r))
   return (
     <div className={`flex items-center px-4 py-2.5 border-t border-gray-100 ${isMissing && required ? "bg-red-50/50" : ""}`}>
       <div className="w-[210px] shrink-0 pr-3">
         <div
           className="text-gray-700 font-medium text-sm whitespace-nowrap"
           onMouseEnter={(e) => (desc ? showTip(e.currentTarget.getBoundingClientRect()) : undefined)}
-          onMouseLeave={() => setTip(null)}
+          onMouseLeave={hideTip}
           onClick={(e) => (desc ? toggleTip(e.currentTarget.getBoundingClientRect()) : undefined)}
         >
           {label}{required ? <span className="text-red-500 ml-0.5">*</span> : ""}
@@ -949,7 +967,11 @@ function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc, env
         {env ? (
           <EnvName
             env={env}
-            href={envBaseUrl ? `${envBaseUrl}?q=${encodeURIComponent(env)}` : null}
+            href={
+              envBaseUrl
+                ? `${envBaseUrl}?tab=${sharedEnvKeys?.includes(env) ? "shared" : "project"}&q=${encodeURIComponent(env)}`
+                : null
+            }
           />
         ) : null}
         {desc && showDesc ? <div className="mt-1 text-[12px] leading-snug text-gray-500">{desc}</div> : null}
@@ -1345,6 +1367,7 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
                   desc={r.desc}
                   showDesc={showDesc}
                   envBaseUrl={c.vercelEnvUrl}
+                  sharedEnvKeys={c.sharedEnvKeys}
                 />
               ))}
             </div>

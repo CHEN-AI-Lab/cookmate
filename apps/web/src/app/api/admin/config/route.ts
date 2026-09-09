@@ -14,6 +14,21 @@ export async function GET() {
   // 默认兜底 Key：与其他 Key 行保持同一套语义（有=绿，无=红）
   const fallbackAiKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY
 
+  // 后台「在 Vercel 中管理」的基址，支持用 ~ 占位符代表项目 slug：
+  // https://vercel.com/<团队>/~/settings/environment-variables （可配成团队级共享变量）
+  // ~ 会替换为 VERCEL_PROJECT_SLUG（手动配），取不到时退回系统变量 VERCEL_GIT_REPO_SLUG
+  const vercelBase = process.env.VERCEL_ENV_CONSOLE_URL || ""
+  const vercelSlug = process.env.VERCEL_PROJECT_SLUG || process.env.VERCEL_GIT_REPO_SLUG || ""
+  const vercelEnvUrl = vercelBase.includes("~")
+    ? (vercelSlug ? vercelBase.replace("~", vercelSlug) : null)
+    : (vercelBase || null)
+
+  // 哪些变量是团队级共享变量（逗号分隔）——决定跳转时 tab=shared 还是 tab=project
+  const sharedEnvKeys = (process.env.VERCEL_SHARED_ENV_KEYS || "")
+    .split(",")
+    .map((k) => k.trim())
+    .filter(Boolean)
+
   const config = {
     app: {
       url: process.env.NEXT_PUBLIC_APP_URL || "未配置",
@@ -54,8 +69,9 @@ export async function GET() {
         model: { text: process.env.AI_MODEL || "未设置", fromDefault: false },
       },
     },
-    // 后台「在 Vercel 中管理」跳转地址，由环境变量提供，未配置则不显示该入口
-    vercelEnvUrl: process.env.VERCEL_ENV_CONSOLE_URL || null,
+    // 后台「在 Vercel 中管理」基址（已替换 ~ 为项目 slug），未配置则为 null
+    vercelEnvUrl,
+    sharedEnvKeys,
   }
 
   return NextResponse.json({ ok: true, config })
