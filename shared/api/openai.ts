@@ -1,26 +1,76 @@
+/**
+ * OpenAI 兼容 API 客户端
+ */
+
 import OpenAI from "openai"
+import { AI_TIMEOUT_MS } from "../constants/api-errors"
+import { SUBSCRIPTION_TIER } from "../constants"
 
-let openaiInstance: OpenAI | null = null
+// ─── 按订阅层级（tier）分流的 AI 客户端 ───
+// 免费版与付费版可指向完全不同的 provider：key / baseURL / model 三者各自独立。
+// 未配置 *_FREE / *_PRO 时逐级回落到默认 AI_*，保证配置不全也不会让任何用户用不了。
+const clients = new Map<string, OpenAI>()
 
-function getOpenAI() {
-  if (!openaiInstance) {
-    openaiInstance = new OpenAI({
-      apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
-      baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
-      dangerouslyAllowBrowser: false,
-      timeout: 120000,
-      maxRetries: 2,
-    })
-  }
-  return openaiInstance
+/** 归一化 tier：PRO / FAMILY 走付费端，其余（FREE、未传、未知值）走免费端 */
+/** 归一化后的层级只有 PRO / FREE（FAMILY 已归入 PRO），与 SubscriptionTier 的子集关系 */
+type NormalizedTier = typeof SUBSCRIPTION_TIER.PRO | typeof SUBSCRIPTION_TIER.FREE
+
+function normalizeTier(subscriptionTier?: string | null): NormalizedTier {
+  const upper = (subscriptionTier || "").toUpperCase()
+  return upper === SUBSCRIPTION_TIER.PRO || upper === SUBSCRIPTION_TIER.FAMILY
+    ? SUBSCRIPTION_TIER.PRO
+    : SUBSCRIPTION_TIER.FREE
 }
 
-function getModel(): string {
-  return process.env.AI_MODEL || "gpt-4o-mini"
+/** 某 tier 的 API Key：优先 *_PRO / *_FREE，都没有则回落到 AI_API_KEY / OPENAI_API_KEY */
+function getApiKeyForTier(tier: NormalizedTier): string {
+  const own = tier === SUBSCRIPTION_TIER.PRO ? process.env.AI_API_KEY_PRO : process.env.AI_API_KEY_FREE
+  return own || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || ""
 }
 
-function hasAIKey(): boolean {
-  return !!(process.env.AI_API_KEY || process.env.OPENAI_API_KEY)
+/** 某 tier 的 baseURL：同上，逐级回落 */
+function getBaseUrlForTier(tier: NormalizedTier): string {
+  const own = tier === SUBSCRIPTION_TIER.PRO ? process.env.AI_BASE_URL_PRO : process.env.AI_BASE_URL_FREE
+  return own || process.env.AI_BASE_URL || "https://api.openai.com/v1"
+}
+
+/** 某 tier 的模型名：同上，逐级回落 */
+export function getModelForTier(subscriptionTier?: string | null): string {
+  const tier = normalizeTier(subscriptionTier)
+  const own = tier === SUBSCRIPTION_TIER.PRO ? process.env.AI_MODEL_PRO : process.env.AI_MODEL_FREE
+  return own || process.env.AI_MODEL || ""
+}
+
+/** 该 tier 是否配置了 AI Key（决定走真实调用还是 mock 数据） */
+export function hasAIKeyForTier(subscriptionTier?: string | null): boolean {
+  return getApiKeyForTier(normalizeTier(subscriptionTier)) !== ""
+}
+
+/**
+ * 按 tier 取（并缓存）OpenAI 客户端，未配 Key 时返回 null（调用方走 mock）。
+ * maxRetries 参与缓存 key：周计划用 0（输出量大，重试会让耗时翻倍），其余用 2。
+ */
+function getClientForTier(subscriptionTier: string | null | undefined, maxRetries: number): OpenAI | null {
+  const tier = normalizeTier(subscriptionTier)
+  const apiKey = getApiKeyForTier(tier)
+  if (!apiKey) return null
+
+  const cacheKey = tier + ":" + String(maxRetries)
+  const cached = clients.get(cacheKey)
+  if (cached) return cached
+
+  const client = new OpenAI({
+    apiKey,
+    baseURL: getBaseUrlForTier(tier),
+    dangerouslyAllowBrowser: false,
+    // 必须小于 Vercel 函数上限（Hobby 60s）：AI 超时要能走进下面的 catch 优雅降级，
+    // 否则函数被平台掐断 → 前端只收到 504 HTML → 一律显示"网络错误"，看不到真实原因。
+    timeout: AI_TIMEOUT_MS,
+    maxRetries,
+  })
+  clients.set(cacheKey, client)
+  console.log("[openai] client 初始化 tier=" + tier + " maxRetries=" + String(maxRetries) + " baseURL=" + getBaseUrlForTier(tier))
+  return client
 }
 
 /** 通用 AI 调用：先用 json_object 模式，不支持则自动降级 */
@@ -28,60 +78,71 @@ async function callAI(params: {
   systemPrompt: string
   userContent: string
   maxTokens: number
-  client?: OpenAI  // 可选的自定义 client，用于设置超时等
+  client?: OpenAI
+  skipStructured?: boolean  // 跳过 json_object 模式，直接走降级（用于大输出场景，避免 reasoning 耗时翻倍）
+  subscriptionTier?: string | null  // 订阅层级，决定走哪套 provider（免费/付费可指向不同厂商）
 }): Promise<string> {
-  const { systemPrompt, userContent, maxTokens, client } = params
-  const ai = client || getOpenAI()
+  const { systemPrompt, userContent, maxTokens, client, skipStructured, subscriptionTier } = params
+  const ai = client || getClientForTier(subscriptionTier, 2)
+  if (!ai) throw new Error("AI 未配置（缺少 API Key），无法调用")
+  const model = getModelForTier(subscriptionTier)
+  // 每次调用都打一行：client 初始化日志只在首次建连时出现，排查"这次到底用的哪个模型"看那行没用
+  console.log(
+    "[openai] 调用 tier=" + normalizeTier(subscriptionTier) +
+    " baseURL=" + getBaseUrlForTier(normalizeTier(subscriptionTier)) +
+    " model=" + (model || "(未设置)")
+  )
 
-  // 第一次：带 response_format（开箱即用 OpenAI、DeepSeek 官方等）
-  try {
-    const response = await ai.chat.completions.create({
-      model: getModel(),
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userContent },
-      ],
-      response_format: { type: "json_object" } as const,
-      temperature: 0.7,
-      max_tokens: maxTokens,
-    })
-    const content = response.choices[0]?.message?.content
-    if (content) return cleanJSONResponse(content)
-  } catch (err: unknown) {
-    // 400/403 错误（不支持 json_object）才降级重试
-    // SenseNova 返回 403，OpenAI 返回 400
-    if (err && typeof err === "object" && "status" in err && (err as { status: number }).status !== 400 && (err as { status: number }).status !== 403) throw err
+  // 第一次：带 response_format（可跳过，用于大输出场景）
+  if (!skipStructured) {
+    try {
+      const response = await ai.chat.completions.create({
+        model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent },
+        ],
+        response_format: { type: "json_object" } as const,
+        temperature: 0.7,
+        max_tokens: maxTokens,
+      } as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming)
+      const content = response.choices[0]?.message?.content
+      if (content) return cleanJSONResponse(content)
+    } catch (err: unknown) {
+      // 400/403 错误（不支持 json_object）才降级重试
+      if (err && typeof err === "object" && "status" in err && (err as { status: number }).status !== 400 && (err as { status: number }).status !== 403) throw err
+    }
   }
 
   // 降级：不带 response_format（商汤、部分代理中转等）
   const response = await ai.chat.completions.create({
-    model: getModel(),
+    model,
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userContent },
     ],
     temperature: 0.7,
     max_tokens: maxTokens,
-  })
+  } as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming)
   const content = response.choices[0]?.message?.content
   if (!content) throw new Error("AI 没有返回内容")
   return cleanJSONResponse(content)
 }
 
-/** 清理 AI 响应：去掉 markdown 代码块等非 JSON 杂音 */
+/** 清理 AI 响应：去掉 markdown 代码块、控制字符等非 JSON 杂音 */
 function cleanJSONResponse(content: string): string {
   return content
     .replace(/^\s*```(?:json)?\s*/i, "")
     .replace(/\s*```\s*$/i, "")
+    .replace(/[\x00-\x1F\x7F-\x9F]/g, "") // 去掉控制字符
     .trim()
 }
 
-/** 规范化食材：AI 可能返回字符串数组或对象数组，统一转成字符串数组 */
+/** 规范化食材 */
 export function normalizeIngredients(ingredients: unknown): string[] {
   if (!Array.isArray(ingredients)) return []
   return ingredients.map((ing: unknown) => {
     if (typeof ing === "string") return ing
-    // 对象格式：{name:"牛肉", quantity:"300g"} 或 {name:"牛肉", amount:"300g"}
     if (typeof ing === "object" && ing !== null) {
       const obj = ing as Record<string, string>
       const name = obj.name || obj.ingredient || ""
@@ -103,16 +164,65 @@ export interface RecipeResult {
   difficulty: "easy" | "medium" | "hard"
 }
 
-const SYSTEM_PROMPT = `你是 CookMate 的 AI 厨师助手。你的任务是：
-1. 根据用户提供的食材推荐菜谱，**必须只使用用户提供的食材**，不能添加用户没有的主食材（盐、油、酱油等基本调料除外）
+/** AI 返回数据兜底消毒：缺失字段填默认值，避免下游 .join() / Number() 崩溃
+ *  以及"显示成 0 + 刷新就丢"的问题（fallback 块会拿默认值合成伪记录） */
+export function sanitizeRecipe(r: Partial<RecipeResult> | undefined | null): RecipeResult {
+  return {
+    title: (r?.title && String(r.title).trim()) || "未命名菜谱",
+    description: r?.description || "",
+    ingredients: Array.isArray(r?.ingredients) ? r.ingredients.map(String) : [],
+    steps: Array.isArray(r?.steps) ? r.steps.map(String) : [],
+    cookingTime: typeof r?.cookingTime === "number" ? r.cookingTime : 0,
+    calories: typeof r?.calories === "number" ? r.calories : 0,
+    cuisineType: r?.cuisineType || "",
+    difficulty: r?.difficulty || "easy",
+  }
+}
+
+/** 整周计划消毒：把 AI 返回的 plan 中每个 meal 套上 sanitizeRecipe */
+export function sanitizeWeeklyPlan(
+  plan: Record<string, { breakfast?: Partial<RecipeResult>; lunch?: Partial<RecipeResult>; dinner?: Partial<RecipeResult> }> | undefined | null
+): Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }> {
+  const result: Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }> = {}
+  if (!plan || typeof plan !== "object") return result
+  for (const [day, meals] of Object.entries(plan)) {
+    if (!meals || typeof meals !== "object") continue
+    result[day] = {
+      breakfast: sanitizeRecipe(meals.breakfast),
+      lunch: sanitizeRecipe(meals.lunch),
+      dinner: sanitizeRecipe(meals.dinner),
+    }
+  }
+  return result
+}
+
+// ─── Locale → AI language name mapping ───
+// 告诉 AI 用什么语言回复，加新语言在这里加一行就行
+const LANGUAGE_MAP: Record<string, string> = {
+  'zh-CN': '中文',
+  'zh-TW': '中文繁体',
+  'ja': '日本語',
+  'en': 'English',
+}
+
+function getLangName(locale?: string): string {
+  return LANGUAGE_MAP[locale || 'zh-CN'] || '中文'
+}
+
+// ─── Dynamic base prompts (language is injected at call time) ───
+
+const SYSTEM_PROMPT_TEMPLATE = `你是 CookMate 的 AI 厨师助手。你的任务是：
+1. 根据用户提供的内容推荐菜谱：
+   - 如果用户输入的是菜名（如"宫保鸡丁"、"麻婆豆腐"、"西红柿炒鸡蛋"等），直接生成这道菜的正宗菜谱，包含完整食材清单和步骤
+   - 如果用户输入的是食材（如"鸡肉、花生、黄瓜"等），根据这些食材推荐菜谱，**必须只使用用户提供的食材**，不能添加用户没有的主食材（盐、油、酱油等基本调料除外）
 2. 用户还会提供冰箱里的存货清单（"你的冰箱里还有这些食材"），每种存货大约只有1-2份，偶尔用一下就行，不要大量使用。主要还是要用用户提供的新鲜食材。
-3. 每个菜谱需包含：菜名、简介、**食材清单（每项食材必须标注数量，如"鸡胸肉 200g"、"鸡蛋 2个"、"大蒜 3瓣"）**、步骤、烹饪时间、热量、菜系、难度
+3. 每个菜谱需包含：菜名、简介、**食材清单（每项食材必须标注数量）**、步骤、烹饪时间、热量、菜系、难度
 4. 回答要实用、可操作，食材要容易买到
-5. **食材必须全部是普通家庭日常常备的——能用"水"代替就不用"高汤"，能用"生抽"就不用"味醂"，能用"普通面粉"就不用"低筋粉"。禁止使用"高汤"（可用水+鸡精代替）、"奶油芝士"、"淡奶油"、"味醂"、"味噌"、"鱼露"、"虾酱"、"椰浆"、"咖喱叶"、"柠檬草"等不常备的食材。蛋炒饭就是蛋炒饭，不要在里面加青豆玉米胡萝卜丁这种冰箱通常不会有的东西。**
-6. 始终用中文回复
-7. 如果用户提供的食材太少，推荐 2-3 道最简单的菜
-8. 如果用户提供的食材不是可食用的（如毒药、化学品、非食品、违禁品、保护动物等），返回空数组 []
-9. 如果是虚构/不存在食材，返回空数组 []
+5. **食材必须全部是普通家庭日常常备的——能用"水"代替就不用"高汤"，能用"生抽"就不用"味醂"。禁止使用"高汤"、"奶油芝士"、"淡奶油"、"味醂"、"味噌"、"鱼露"、"虾酱"、"椰浆"、"咖喱叶"、"柠檬草"等不常备的食材。**
+6. 始终用 LANGUAGE 回复
+7. 推荐 1-2 道菜，如果用户输入的是菜名则只生成 1 道
+8. 如果用户提供的内容不是可食用的，返回空数组 []
+9. 如果是虚构/不存在的内容，返回空数组 []
 10. 响应必须是 JSON 格式，不要包含任何 markdown 标记
 
 JSON 格式:
@@ -131,78 +241,14 @@ JSON 格式:
   ]
 }`
 
-export async function generateRecipes(
-  ingredients: string[],
-  preferences?: {
-    dietType?: string
-    cuisinePref?: string
-    maxTime?: number
-    mealType?: "breakfast" | "lunch" | "dinner" | "snack"
-    servingSize?: number
-  },
-  pantryContext?: string[]
-): Promise<RecipeResult[]> {
-// 演示模式：没有配置 AI Key 时返回示例数据
-  if (!hasAIKey()) {
-    return getMockRecipes(ingredients, preferences)
-  }
-
-const pantryInfo = pantryContext?.length
-    ? `\n你的冰箱里还有这些食材（每种只有1-2份存货，偶尔用一点就行，不要全用完）：${pantryContext.join("、")}`
-    : ""
-
-  const userContent = [
-    `我有这些食材: ${ingredients.join("、")}`,
-    pantryInfo,
-    preferences?.mealType ? `想做: ${preferences.mealType}` : "",
-    preferences?.cuisinePref ? `菜系偏好: ${preferences.cuisinePref}` : "",
-    preferences?.dietType ? `饮食类型: ${preferences.dietType}` : "",
-    preferences?.maxTime ? `最多烹饪时间: ${preferences.maxTime}分钟` : "",
-    preferences?.servingSize ? `份量: ${preferences.servingSize}人份，请按此人数调整食材用量` : "",
-  ]
-    .filter(Boolean)
-    .join("\n")
-
-  const content = await callAI({
-    systemPrompt: SYSTEM_PROMPT,
-    userContent,
-    maxTokens: 2000,
-  })
-
-  const parsed = JSON.parse(content)
-  return parsed.recipes || []
-}
-
-export async function generateWeeklyPlan(
-  preferences: {
-    dietType?: string
-    cuisinePref?: string
-    calorieGoal?: number
-    servingSize?: number
-  },
-  pantryItems?: string[]
-): Promise<Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }>> {
-  // 演示模式：没有配置 AI Key 时返回示例数据
-  if (!hasAIKey()) {
-    return getMockWeeklyPlan(preferences)
-  }
-
-  // 为周计划生成单独创建带超时的 client，避免长时间挂起
-  const planClient = new OpenAI({
-    apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
-    baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
-    timeout: 120000,
-    maxRetries: 0,
-  })
-
-  const days = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
-  const weeklyPrompt = `你是 CookMate 的 AI 厨师助手。你的任务是为一周七天生成早、午、晚餐菜谱。
+const WEEKLY_PROMPT_TEMPLATE = `你是 CookMate 的 AI 厨师助手。你的任务是为一周七天生成早、午、晚餐菜谱。
 1. 自由推荐多样化的菜谱，涵盖不同菜系（中餐、西餐、川菜、日料等混搭），确保一周饮食丰富不重复
-2. 每个菜谱需包含：菜名、简介、**食材清单（每项食材必须标注数量，如"鸡胸肉 200g"、"鸡蛋 2个"、"大蒜 3瓣"）**、步骤、烹饪时间、热量、菜系、难度
-3. **食材必须全部是普通家庭日常常备的——能用"水"代替就不用"高汤"，能用"生抽"就不用"味醂"，能用"普通面粉"就不用"低筋粉"。禁止使用"高汤"（可用水+鸡精代替）、"奶油芝士"、"淡奶油"、"味醂"、"味噌"、"鱼露"、"虾酱"、"椰浆"、"咖喱叶"、"柠檬草"、"罗勒"、"迷迭香"、"百里香"等不常备的食材。蛋炒饭就是蛋炒饭，不要在里面加青豆玉米胡萝卜丁这种冰箱通常不会有的东西。**
-4. 始终用中文回复
-5. **必须生成完整7天（周一至周日），每天早、午、晚餐共3餐，总共21餐。每一段都不能少，不能有空缺。**
-6. 响应必须是 JSON 格式，不要包含任何 markdown 标记
+2. **每次生成的菜谱必须与之前不同** — 不要推荐你已经推荐过的菜，尝试新的组合和创意
+3. 每个菜谱需包含：菜名、简介、**食材清单（每项食材必须标注数量）**、步骤、烹饪时间、热量、菜系、难度
+4. **食材必须全部是普通家庭日常常备的。禁止使用"高汤"、"奶油芝士"、"淡奶油"、"味醂"、"味噌"、"鱼露"等不常备的食材。**
+5. 始终用 LANGUAGE 回复
+6. **必须生成完整7天（周一至周日），每天早、午、晚餐共3餐，总共21餐。**
+7. 响应必须是 JSON 格式，不要包含任何 markdown 标记
 
 JSON 格式:
 {
@@ -212,192 +258,328 @@ JSON 格式:
     "dinner": { ... }
   },
   "周二": { ... },
-  "周三": { ... },
-  "周四": { ... },
-  "周五": { ... },
-  "周六": { ... },
-  "周日": { ... }
+  ...
 }`
 
-  const userContent = [
-      `请为以下一周每一天生成早、午、晚餐的菜谱。`,
-      preferences.dietType ? `饮食类型: ${preferences.dietType}` : "",
-      preferences.cuisinePref ? `菜系偏好: ${preferences.cuisinePref}` : "",
-      preferences.calorieGoal ? `每日热量目标: ${preferences.calorieGoal}卡` : "",
-      preferences.servingSize ? `份量: ${preferences.servingSize}人份` : "",
-      pantryItems?.length ? `你冰箱里还有少量存货：${pantryItems.join("、")}。注意：每种存货只有1-2份，偶尔能用上就很不错了。请不要大量使用存货来设计菜谱，一周下来每种存货最多出现1-2次。主要还是设计需要用新鲜食材做的菜，购物清单里会列出需要购买的新鲜食材。` : "",
-      `返回 JSON 格式: { "周一": { "breakfast": {...}, "lunch": {...}, "dinner": {...} }, ... }`,
-    ]
-      .filter(Boolean)
-      .join("\n")
-
-  const content = await callAI({
-    systemPrompt: weeklyPrompt,
-    userContent,
-    maxTokens: 12000,
-    client: planClient,
-  })
-
-  return JSON.parse(content)
+function buildSystemPrompt(locale?: string): string {
+  return SYSTEM_PROMPT_TEMPLATE.replace('LANGUAGE', getLangName(locale))
 }
 
-// ====== 演示数据（本地测试，无需 OpenAI Key） ======
+function buildWeeklyPrompt(locale?: string, days?: number[]): string {
+  const lang = getLangName(locale)
+  const dayNames = locale === "en"
+    ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    : ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+  const targetDays = days ?? [0, 1, 2, 3, 4, 5, 6]
+  const dayList = targetDays.map(i => dayNames[i]).join("、")
+  const count = targetDays.length * 3
+
+  // 关键：示例必须用**英文**字段名 + ingredients 为 string[]（不是 object），
+  // 否则 AI 跟着中文 prompt 返回中文 key，sanitize 也救不回来。
+  const mealExample = `{
+      "title": "菜名",
+      "description": "简介",
+      "ingredients": ["食材1 数量", "食材2 数量"],
+      "steps": ["步骤1", "步骤2"],
+      "cookingTime": 30,
+      "calories": 450,
+      "cuisineType": "中餐",
+      "difficulty": "easy"
+    }`
+  const dayJson = targetDays.map(i => `  "${dayNames[i]}": {
+    "breakfast": ${mealExample},
+    "lunch": ${mealExample},
+    "dinner": ${mealExample}
+  }`).join(",\n")
+
+  return `你是 CookMate 的 AI 厨师助手。你的任务是生成以下日期的早、午、晚餐菜谱：${dayList}
+1. 自由推荐多样化的菜谱，涵盖不同菜系（中餐、西餐、川菜、日料等混搭），确保饮食丰富不重复
+2. 每个菜谱需包含：菜名、简介、**食材清单（每项食材必须标注数量）**、步骤、烹饪时间、热量、菜系、难度
+3. **食材必须全部是普通家庭日常常备的。禁止使用"高汤"、"奶油芝士"、"淡奶油"、"味醂"、"味噌"、"鱼露"等不常备的食材。**
+4. 始终用 ${lang} 回复
+5. **必须生成以上指定的 ${targetDays.length} 天，每天早、午、晚餐共 ${count} 餐。只生成指定的这些天，不要生成其他天。**
+6. **所有 JSON 字段名必须用英文**（title / description / ingredients / steps / cookingTime / calories / cuisineType / difficulty），不要用"菜名"等中文 key。
+7. **ingredients 必须是字符串数组**，例如 ["鸡蛋 3个", "牛奶 30ml"]，**不要**返回 {"鸡蛋": "3个"} 这种 object 形式。
+8. 响应必须是 JSON 格式，不要包含任何 markdown 标记
+
+JSON 格式:
+{
+${dayJson}
+}`
+}
+
+export async function generateRecipes(
+  ingredients: string[],
+  preferences?: {
+    dietType?: string
+    cuisinePref?: string
+    maxTime?: number
+    mealType?: "breakfast" | "lunch" | "dinner" | "snack"
+    servingSize?: number
+  },
+  pantryContext?: string[],
+  locale?: string,
+  subscriptionTier?: string | null
+): Promise<{ recipes: RecipeResult[]; fallback: boolean }> {
+  const isEnglish = locale === "en"
+
+  if (!hasAIKeyForTier(subscriptionTier)) {
+    return { recipes: isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences), fallback: true }
+  }
+
+  const systemPrompt = buildSystemPrompt(locale)
+
+  const pantryInfo = pantryContext?.length
+    ? (isEnglish
+        ? `\nYour fridge also has these ingredients (only 1-2 portions each, use sparingly): ${pantryContext.join(", ")}`
+        : `\n你的冰箱里还有这些食材（每种只有1-2份存货，偶尔用一点就行，不要全用完）：${pantryContext.join("、")}`)
+    : ""
+
+  const userContent = [
+    isEnglish
+      ? `I have these ingredients: ${ingredients.join(", ")}`
+      : `我有这些食材: ${ingredients.join("、")}`,
+    pantryInfo,
+    preferences?.mealType
+      ? (isEnglish ? `Meal type: ${preferences.mealType}` : `想做: ${preferences.mealType}`)
+      : "",
+    preferences?.cuisinePref
+      ? (isEnglish ? `Cuisine preference: ${preferences.cuisinePref}` : `菜系偏好: ${preferences.cuisinePref}`)
+      : "",
+    preferences?.dietType
+      ? (isEnglish ? `Diet type: ${preferences.dietType}` : `饮食类型: ${preferences.dietType}`)
+      : "",
+    preferences?.maxTime
+      ? (isEnglish ? `Max cooking time: ${preferences.maxTime} minutes` : `最多烹饪时间: ${preferences.maxTime}分钟`)
+      : "",
+    preferences?.servingSize
+      ? (isEnglish
+          ? `Servings: ${preferences.servingSize} people, adjust ingredient quantities accordingly`
+          : `份量: ${preferences.servingSize}人份，请按此人数调整食材用量`)
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n")
+
+  try {
+    const content = await callAI({
+      systemPrompt,
+      userContent,
+      maxTokens: 2000,
+      subscriptionTier,
+    })
+    const parsed = JSON.parse(content)
+    const aiRecipes = parsed.recipes || []
+    if (aiRecipes.length > 0) return { recipes: aiRecipes, fallback: false }
+    // AI 返回空结果，降级用 mock 数据
+    console.warn("AI returned empty, falling back to mock data")
+    return { recipes: isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences), fallback: true }
+  } catch (err) {
+    console.error("AI recipe generation failed, falling back to mock data:", err)
+    // AI 失败时降级到 mock 数据，确保用户至少能获得一些推荐
+    return { recipes: isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences), fallback: true }
+  }
+}
+
+/** 周计划降级原因：no_key=未配置 AI；ai_error=调用失败/超时；invalid_data=AI 返回空或结构错乱 */
+export type WeeklyPlanFallbackReason = "no_key" | "ai_error" | "invalid_data"
+
+interface WeeklyPlan {
+  breakfast: RecipeResult
+  lunch: RecipeResult
+  dinner: RecipeResult
+}
+
+export interface WeeklyPlanResult {
+  plan: Record<string, WeeklyPlan>
+  fallback: boolean
+  /** 仅 fallback=true 时有值，供前端/日志区分降级原因 */
+  reason?: WeeklyPlanFallbackReason
+}
+
+/** 把 AI 错误信息压缩成一行，便于日志定位（含 HTTP status / 错误码 / 是否超时） */
+function describeAIError(err: unknown): string {
+  if (err instanceof Error) {
+    const anyErr = err as Error & { status?: number; code?: string; type?: string }
+    const parts = [err.name, err.message]
+    if (anyErr.status !== undefined) parts.push(`status=${anyErr.status}`)
+    if (anyErr.code) parts.push(`code=${anyErr.code}`)
+    if (anyErr.type) parts.push(`type=${anyErr.type}`)
+    return parts.filter(Boolean).join(" ")
+  }
+  return String(err)
+}
+
+export async function generateWeeklyPlan(
+  preferences: {
+    dietType?: string
+    cuisinePref?: string
+    calorieGoal?: number
+    servingSize?: number
+  },
+  pantryItems?: string[],
+  locale?: string,
+  days?: number[],
+  subscriptionTier?: string | null
+): Promise<WeeklyPlanResult> {
+  const isEnglish = locale === "en"
+  const targetDays = days ?? [0, 1, 2, 3, 4, 5, 6]
+  const dayNames = isEnglish
+    ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    : ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+
+  if (!hasAIKeyForTier(subscriptionTier)) {
+    console.warn("[weekly-plan] 该 tier 未配置 AI Key，使用 mock 周计划")
+    return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true, reason: "no_key" }
+  }
+
+  // 周计划输出量大、最容易超时，重试会让耗时翻倍 → maxRetries=0（与默认 2 区分，缓存 key 不同）
+  const planClient = getClientForTier(subscriptionTier, 0) ?? undefined
+
+  const systemPrompt = buildWeeklyPrompt(locale, targetDays)
+  const dayList = targetDays.map(i => dayNames[i]).join(", ")
+
+  const userContent = [
+    isEnglish
+      ? `Please generate breakfast, lunch, and dinner recipes for these days: ${dayList}`
+      : `请为以下日期生成早、午、晚餐的菜谱：${dayList}`,
+    preferences.dietType
+      ? (isEnglish ? `Diet type: ${preferences.dietType}` : `饮食类型: ${preferences.dietType}`)
+      : "",
+    preferences.cuisinePref
+      ? (isEnglish ? `Cuisine preference: ${preferences.cuisinePref}` : `菜系偏好: ${preferences.cuisinePref}`)
+      : "",
+    preferences.calorieGoal
+      ? (isEnglish ? `Daily calorie target: ${preferences.calorieGoal} cal` : `每日热量目标: ${preferences.calorieGoal}卡`)
+      : "",
+    preferences.servingSize
+      ? (isEnglish ? `Servings: ${preferences.servingSize} people` : `份量: ${preferences.servingSize}人份`)
+      : "",
+    pantryItems?.length
+      ? (isEnglish
+          ? `You have some pantry items: ${pantryItems.join(", ")}. Each has only 1-2 portions — use at most 1-2 times across the week. Focus on fresh ingredients that need to be bought.`
+          : `你冰箱里还有少量存货：${pantryItems.join("、")}。注意：每种存货只有1-2份，一周下来每种存货最多出现1-2次。主要还是设计需要用新鲜食材做的菜。`)
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n")
+
+  try {
+    const content = await callAI({
+      systemPrompt,
+      userContent,
+      maxTokens: 12000,
+      client: planClient,
+      skipStructured: false, // 让 callAI 先试 json_object，400/403 自动降级 text；不写死适配任意提供商
+      subscriptionTier,
+    })
+    const rawPlan = JSON.parse(content)
+
+    // 健全性检查：AI 偶尔返回"带 key 但空 value"的对象（不同提供商行为差异）。
+    // 统计"未命名菜谱"（=空对象经 sanitize 后的产物）占比，超过 50% 或总数为 0 都视为垃圾响应，
+    // 自动降级 mock —— 保证用户至少能看到内容。
+    const sanitized = sanitizeWeeklyPlan(rawPlan)
+    let totalMeals = 0
+    let emptyMeals = 0
+    for (const day of Object.values(sanitized)) {
+      for (const meal of Object.values(day)) {
+        totalMeals++
+        if (meal.title === "未命名菜谱") emptyMeals++
+      }
+    }
+    if (totalMeals === 0) {
+      console.warn(`[weekly-plan] AI 返回 0 餐（可能结构错乱），降级 mock. Raw:`, content.substring(0, 500))
+      return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true, reason: "invalid_data" }
+    }
+    if (emptyMeals / totalMeals > 0.5) {
+      console.warn(`[weekly-plan] AI 返回大量空数据 (${emptyMeals}/${totalMeals} 未命名)，降级 mock. Raw:`, content.substring(0, 500))
+      return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true, reason: "invalid_data" }
+    }
+
+    return { plan: rawPlan, fallback: false }
+  } catch (err) {
+    // 关键：错误信息要落到日志，否则线上只能看到"网络错误"四个字，无法定位
+    console.error("[weekly-plan] AI 调用失败，降级 mock:", describeAIError(err))
+    return { plan: filterPlanByDays(isEnglish ? getMockWeeklyPlanEn(preferences) : getMockWeeklyPlan(preferences), targetDays, dayNames), fallback: true, reason: "ai_error" }
+  }
+}
+
+/** 按天数过滤周计划(只保留选中天) */
+function filterPlanByDays(
+  plan: Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }>,
+  days: number[],
+  dayNames: string[]
+): Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }> {
+  const result: Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }> = {}
+  for (const i of days) {
+    const name = dayNames[i]
+    if (plan[name]) result[name] = plan[name]
+  }
+  return result
+}
+
+// ══════════════════════════════════════════
+//  Mock / Demo Data
+// ══════════════════════════════════════════
 
 function getMockRecipes(
   ingredients: string[],
   _prefs?: Record<string, unknown>
 ): RecipeResult[] {
   const all: RecipeResult[] = [
-    {
-      title: "西红柿炒鸡蛋",
-      description: "经典家常菜，酸甜可口，5分钟搞定",
-      ingredients: ["西红柿 300g", "鸡蛋 2个", "葱 1根", "盐 适量", "糖 5g", "油 15ml"],
-      steps: [
-        "鸡蛋打散，加少许盐搅匀",
-        "西红柿切块，葱切末",
-        "热锅凉油，倒入蛋液炒熟盛出",
-        "锅中加油，爆香葱末，倒入西红柿翻炒出汁",
-        "倒回鸡蛋，加盐和糖调味，翻炒均匀出锅",
-      ],
-      cookingTime: 10,
-      calories: 280,
-      cuisineType: "中餐",
-      difficulty: "easy",
-    },
-    {
-      title: "蒜蓉西兰花",
-      description: "清淡健康，保留蔬菜原味",
-      ingredients: ["西兰花 200g", "大蒜 3瓣", "盐 适量", "油 10ml"],
-      steps: [
-        "西兰花掰小朵，洗净焯水1分钟",
-        "大蒜切末",
-        "热锅加油，爆香蒜末",
-        "倒入西兰花翻炒，加盐调味即可",
-      ],
-      cookingTime: 8,
-      calories: 120,
-      cuisineType: "中餐",
-      difficulty: "easy",
-    },
-    {
-      title: "酱油炒饭",
-      description: "剩饭完美变身，粒粒分明",
-      ingredients: ["米饭 200g", "鸡蛋 1个", "葱 1根", "酱油 15ml", "油 10ml"],
-      steps: [
-        "鸡蛋打散，葱花切好",
-        "热锅加油，炒熟鸡蛋盛出",
-        "锅中加油，倒入米饭翻炒散开",
-        "淋入酱油翻炒均匀",
-        "加入鸡蛋和葱花，翻炒出锅",
-      ],
-      cookingTime: 10,
-      calories: 350,
-      cuisineType: "中餐",
-      difficulty: "easy",
-    },
-    {
-      title: "葱油拌面",
-      description: "上海经典，简单又美味",
-      ingredients: ["面条 150g", "葱 2根", "酱油 20ml", "油 15ml", "糖 5g"],
-      steps: [
-        "面条煮熟过凉水",
-        "葱切段，小火炸至焦黄",
-        "碗中加酱油和糖，浇上热葱油",
-        "拌入面条即可",
-      ],
-      cookingTime: 15,
-      calories: 400,
-      cuisineType: "中餐",
-      difficulty: "easy",
-    },
-    {
-      title: "鸡蛋羹",
-      description: "嫩滑如布丁，老少皆宜",
-      ingredients: ["鸡蛋 2个", "温水 150ml", "盐 适量", "酱油 10ml", "香油 5ml"],
-      steps: [
-        "鸡蛋打散，加温水搅匀",
-        "过筛倒入碗中，撇去浮沫",
-        "盖保鲜膜，上锅蒸10分钟",
-        "淋上酱油和香油即可",
-      ],
-      cookingTime: 15,
-      calories: 180,
-      cuisineType: "中餐",
-      difficulty: "easy",
-    },
-    {
-      title: "蒜蓉炒菜心",
-      description: "翠绿爽口，蒜香扑鼻",
-      ingredients: ["菜心 200g", "大蒜 3瓣", "盐 适量", "油 10ml"],
-      steps: [
-        "菜心洗净沥干",
-        "大蒜切末",
-        "热锅加油，爆香蒜末",
-        "倒入菜心大火快速翻炒",
-        "加盐调味出锅",
-      ],
-      cookingTime: 5,
-      calories: 80,
-      cuisineType: "中餐",
-      difficulty: "easy",
-    },
-    {
-      title: "番茄牛肉面",
-      description: "暖心暖胃，番茄酸甜配牛肉鲜香",
-      ingredients: ["面条 150g", "牛肉 100g", "番茄 1个", "葱 1根", "姜 2片", "盐 适量", "油 10ml"],
-      steps: [
-        "牛肉切块焯水去血沫",
-        "番茄切块，葱姜切末",
-        "热锅加油，爆香葱姜，倒入番茄炒出汁",
-        "加水和牛肉，煮15分钟",
-        "放入面条煮熟，加盐调味",
-      ],
-      cookingTime: 25,
-      calories: 550,
-      cuisineType: "中餐",
-      difficulty: "medium",
-    },
-    {
-      title: "土豆炖牛肉",
-      description: "经典下饭菜，牛肉软烂土豆绵密",
-      ingredients: ["牛肉 150g", "土豆 1个", "胡萝卜 半根", "八角 2个", "酱油 20ml", "盐 适量", "油 10ml"],
-      steps: [
-        "牛肉切块焯水，土豆胡萝卜切滚刀块",
-        "热锅加油，炒香八角，放入牛肉翻炒",
-        "加酱油上色，加水没过牛肉，小火炖40分钟",
-        "加入土豆和胡萝卜，继续炖15分钟",
-        "大火收汁，加盐调味即可",
-      ],
-      cookingTime: 60,
-      calories: 580,
-      cuisineType: "中餐",
-      difficulty: "medium",
-    },
-    {
-      title: "青椒牛柳",
-      description: "嫩滑多汁的快手小炒",
-      ingredients: ["牛肉 100g", "青椒 1个", "洋葱 半颗", "蚝油 10ml", "酱油 10ml", "油 10ml", "盐 适量"],
-      steps: [
-        "牛肉切条，加酱油和油腌制10分钟",
-        "青椒切丝，洋葱切丝",
-        "热锅加油，大火快速炒牛肉变色盛出",
-        "锅中加油，炒青椒和洋葱至断生",
-        "倒回牛肉，加蚝油翻炒均匀出锅",
-      ],
-      cookingTime: 15,
-      calories: 380,
-      cuisineType: "中餐",
-      difficulty: "easy",
-    },
+    { title: "西红柿炒鸡蛋", description: "经典家常菜，酸甜可口，5分钟搞定", ingredients: ["西红柿 300g", "鸡蛋 2个", "葱 1根", "盐 适量", "糖 5g", "油 15ml"], steps: ["鸡蛋打散，加少许盐搅匀", "西红柿切块，葱切末", "热锅凉油，倒入蛋液炒熟盛出", "锅中加油，爆香葱末，倒入西红柿翻炒出汁", "倒回鸡蛋，加盐和糖调味，翻炒均匀出锅"], cookingTime: 10, calories: 280, cuisineType: "中餐", difficulty: "easy" },
+    { title: "蒜蓉西兰花", description: "清淡健康，保留蔬菜原味", ingredients: ["西兰花 200g", "大蒜 3瓣", "盐 适量", "油 10ml"], steps: ["西兰花掰小朵，洗净焯水1分钟", "大蒜切末", "热锅加油，爆香蒜末", "倒入西兰花翻炒，加盐调味即可"], cookingTime: 8, calories: 120, cuisineType: "中餐", difficulty: "easy" },
+    { title: "酱油炒饭", description: "剩饭完美变身，粒粒分明", ingredients: ["米饭 200g", "鸡蛋 1个", "葱 1根", "酱油 15ml", "油 10ml"], steps: ["鸡蛋打散，葱花切好", "热锅加油，炒熟鸡蛋盛出", "锅中加油，倒入米饭翻炒散开", "淋入酱油翻炒均匀", "加入鸡蛋和葱花，翻炒出锅"], cookingTime: 10, calories: 350, cuisineType: "中餐", difficulty: "easy" },
+    { title: "葱油拌面", description: "上海经典，简单又美味", ingredients: ["面条 150g", "葱 2根", "酱油 20ml", "油 15ml", "糖 5g"], steps: ["面条煮熟过凉水", "葱切段，小火炸至焦黄", "碗中加酱油和糖，浇上热葱油", "拌入面条即可"], cookingTime: 15, calories: 400, cuisineType: "中餐", difficulty: "easy" },
+    { title: "鸡蛋羹", description: "嫩滑如布丁，老少皆宜", ingredients: ["鸡蛋 2个", "温水 150ml", "盐 适量", "酱油 10ml", "香油 5ml"], steps: ["鸡蛋打散，加温水搅匀", "过筛倒入碗中，撇去浮沫", "盖保鲜膜，上锅蒸10分钟", "淋上酱油和香油即可"], cookingTime: 15, calories: 180, cuisineType: "中餐", difficulty: "easy" },
+    { title: "蒜蓉炒菜心", description: "翠绿爽口，蒜香扑鼻", ingredients: ["菜心 200g", "大蒜 3瓣", "盐 适量", "油 10ml"], steps: ["菜心洗净沥干", "大蒜切末", "热锅加油，爆香蒜末", "倒入菜心大火快速翻炒", "加盐调味出锅"], cookingTime: 5, calories: 80, cuisineType: "中餐", difficulty: "easy" },
+    { title: "番茄牛肉面", description: "暖心暖胃，番茄酸甜配牛肉鲜香", ingredients: ["面条 150g", "牛肉 100g", "番茄 1个", "葱 1根", "姜 2片", "盐 适量", "油 10ml"], steps: ["牛肉切块焯水去血沫", "番茄切块，葱姜切末", "热锅加油，爆香葱姜，倒入番茄炒出汁", "加水和牛肉，煮15分钟", "放入面条煮熟，加盐调味"], cookingTime: 25, calories: 550, cuisineType: "中餐", difficulty: "medium" },
+    { title: "土豆炖牛肉", description: "经典下饭菜，牛肉软烂土豆绵密", ingredients: ["牛肉 150g", "土豆 1个", "胡萝卜 半根", "八角 2个", "酱油 20ml", "盐 适量", "油 10ml"], steps: ["牛肉切块焯水，土豆胡萝卜切滚刀块", "热锅加油，炒香八角，放入牛肉翻炒", "加酱油上色，加水没过牛肉，小火炖40分钟", "加入土豆和胡萝卜，继续炖15分钟", "大火收汁，加盐调味即可"], cookingTime: 60, calories: 580, cuisineType: "中餐", difficulty: "medium" },
+    { title: "青椒牛柳", description: "嫩滑多汁的快手小炒", ingredients: ["牛肉 100g", "青椒 1个", "洋葱 半颗", "蚝油 10ml", "酱油 10ml", "油 10ml", "盐 适量"], steps: ["牛肉切条，加酱油和油腌制10分钟", "青椒切丝，洋葱切丝", "热锅加油，大火快速炒牛肉变色盛出", "锅中加油，炒青椒和洋葱至断生", "倒回牛肉，加蚝油翻炒均匀出锅"], cookingTime: 15, calories: 380, cuisineType: "中餐", difficulty: "easy" },
+    { title: "辣椒炒肉", description: "经典湘菜，香辣下饭", ingredients: ["五花肉 150g", "辣椒 3个", "大蒜 3瓣", "酱油 15ml", "油 10ml", "盐 适量"], steps: ["五花肉切薄片", "辣椒切圈，大蒜切片", "热锅不放油，煸炒五花肉出油至微焦", "加入蒜片和辣椒翻炒", "加酱油和盐调味出锅"], cookingTime: 12, calories: 420, cuisineType: "湘菜", difficulty: "easy" },
+    { title: "麻婆豆腐", description: "麻辣鲜香，经典川菜", ingredients: ["豆腐 200g", "猪肉末 80g", "豆瓣酱 15g", "花椒 2g", "葱 1根", "油 10ml"], steps: ["豆腐切块焯水", "热锅加油炒肉末", "加豆瓣酱炒出红油", "加水和豆腐炖煮5分钟", "撒花椒粉和葱花出锅"], cookingTime: 15, calories: 320, cuisineType: "川菜", difficulty: "medium" },
+    { title: "鱼香茄子", description: "酸甜微辣，米饭杀手", ingredients: ["茄子 2根", "猪肉末 80g", "大蒜 3瓣", "姜 2片", "葱 1根", "豆瓣酱 10g", "醋 10ml", "糖 5g", "酱油 10ml", "油 15ml"], steps: ["茄子切条，用盐腌制10分钟后挤干水分", "热锅加油，煎茄子至软盛出", "锅中加油，炒肉末和豆瓣酱", "加入蒜姜末炒香，倒回茄子", "加醋、糖、酱油调味，撒葱花出锅"], cookingTime: 20, calories: 280, cuisineType: "川菜", difficulty: "medium" },
+    { title: "可乐鸡翅", description: "甜香入味，简单快手", ingredients: ["鸡翅 8个", "可乐 200ml", "姜 3片", "酱油 15ml", "料酒 10ml"], steps: ["鸡翅洗净划刀", "冷水下锅焯去血沫", "热锅加油，煎鸡翅两面金黄", "倒入可乐、酱油、姜片，小火煮15分钟", "大火收汁即可"], cookingTime: 25, calories: 450, cuisineType: "中餐", difficulty: "easy" },
+    { title: "蒜蓉炒空心菜", description: "翠绿爽口，简单美味", ingredients: ["空心菜 300g", "大蒜 4瓣", "油 10ml", "盐 适量"], steps: ["空心菜洗净切段", "大蒜切末", "热锅加油，爆香蒜末", "倒入空心菜大火翻炒", "加盐调味出锅"], cookingTime: 5, calories: 80, cuisineType: "中餐", difficulty: "easy" },
   ]
 
-  // 根据用户输入的食材过滤
   if (ingredients.length === 0) return all
-
   const inputLower = ingredients.map((i) => i.trim().toLowerCase())
-  return all.filter((recipe) =>
+  const matched = all.filter((recipe) =>
     recipe.ingredients.some((ri) => inputLower.some((ii) => ri.toLowerCase().includes(ii) || ii.includes(ri.toLowerCase())))
   )
+  // 匹配不到时返回 4 条推荐（降级场景多给几个选择）
+  return matched.length > 0 ? matched.slice(0, 4) : all.slice(0, 4)
+}
+
+function getMockRecipesEn(
+  ingredients: string[],
+  _prefs?: Record<string, unknown>
+): RecipeResult[] {
+  const all: RecipeResult[] = [
+    { title: "Scrambled Eggs with Tomatoes", description: "Classic Chinese comfort food, tangy and delicious, ready in 5 minutes", ingredients: ["tomatoes 300g", "eggs 2", "spring onion 1", "salt to taste", "sugar 5g", "oil 15ml"], steps: ["Beat eggs with a pinch of salt", "Chop tomatoes and slice spring onion", "Heat oil, scramble eggs, set aside", "Stir-fry tomatoes until saucy", "Return eggs, season with salt and sugar, toss together"], cookingTime: 10, calories: 280, cuisineType: "Chinese", difficulty: "easy" },
+    { title: "Garlic Broccoli", description: "Light, healthy, and full of flavor", ingredients: ["broccoli 200g", "garlic 3 cloves", "salt to taste", "oil 10ml"], steps: ["Cut broccoli into florets, blanch for 1 minute", "Mince garlic", "Heat oil, sizzle garlic", "Add broccoli, stir-fry, season with salt"], cookingTime: 8, calories: 120, cuisineType: "Chinese", difficulty: "easy" },
+    { title: "Soy Sauce Fried Rice", description: "Perfect way to use leftover rice", ingredients: ["cooked rice 200g", "eggs 1", "spring onion 1", "soy sauce 15ml", "oil 10ml"], steps: ["Beat eggs, chop spring onion", "Heat oil, scramble eggs, set aside", "Add oil, stir-fry rice until separated", "Pour in soy sauce, toss well", "Add eggs and spring onion, mix and serve"], cookingTime: 10, calories: 350, cuisineType: "Chinese", difficulty: "easy" },
+    { title: "Scallion Oil Noodles", description: "Simple Shanghai classic, amazingly flavorful", ingredients: ["noodles 150g", "spring onions 2", "soy sauce 20ml", "oil 15ml", "sugar 5g"], steps: ["Cook noodles, drain and rinse under cold water", "Slice spring onions, fry slowly in oil until browned", "Mix soy sauce and sugar in a bowl, pour hot scallion oil over", "Toss with noodles and serve"], cookingTime: 15, calories: 400, cuisineType: "Chinese", difficulty: "easy" },
+    { title: "Steamed Egg Custard", description: "Silky smooth like pudding, loved by all ages", ingredients: ["eggs 2", "warm water 150ml", "salt to taste", "soy sauce 10ml", "sesame oil 5ml"], steps: ["Beat eggs, add warm water and whisk", "Strain into a bowl, skim off foam", "Cover with cling film, steam for 10 minutes", "Drizzle with soy sauce and sesame oil"], cookingTime: 15, calories: 180, cuisineType: "Chinese", difficulty: "easy" },
+    { title: "Stir-fried Bok Choy with Garlic", description: "Crisp green veg with aromatic garlic", ingredients: ["bok choy 200g", "garlic 3 cloves", "salt to taste", "oil 10ml"], steps: ["Wash and drain bok choy", "Mince garlic", "Heat oil, sizzle garlic", "Add bok choy, stir-fry on high heat", "Season with salt and serve"], cookingTime: 5, calories: 80, cuisineType: "Chinese", difficulty: "easy" },
+    { title: "Tomato Beef Noodle Soup", description: "Hearty and warming, tangy tomato with savory beef", ingredients: ["noodles 150g", "beef 100g", "tomato 1", "spring onion 1", "ginger 2 slices", "salt to taste", "oil 10ml"], steps: ["Cut beef into chunks, blanch to remove scum", "Chop tomato, mince ginger and onion", "Stir-fry tomato until saucy, add water and beef", "Simmer for 15 minutes, add noodles and cook until tender", "Season with salt and serve"], cookingTime: 25, calories: 550, cuisineType: "Chinese", difficulty: "medium" },
+    { title: "Beef and Potato Stew", description: "Classic hearty stew, tender beef and creamy potatoes", ingredients: ["beef 150g", "potato 1", "carrot half", "star anise 2", "soy sauce 20ml", "salt to taste", "oil 10ml"], steps: ["Cut beef and blanch, cut potato and carrot into chunks", "Stir-fry star anise and beef in oil", "Add soy sauce and water, simmer 40 minutes", "Add potato and carrot, simmer 15 more minutes", "Reduce sauce, season and serve"], cookingTime: 60, calories: 580, cuisineType: "Chinese", difficulty: "medium" },
+    { title: "Beef and Pepper Stir-fry", description: "Tender and juicy quick stir-fry", ingredients: ["beef 100g", "green bell pepper 1", "onion half", "soy sauce 10ml", "oyster sauce 10ml", "oil 10ml", "salt to taste"], steps: ["Slice beef, marinate with soy sauce and oil for 10 min", "Slice pepper and onion", "Stir-fry beef on high heat until browned, set aside", "Stir-fry pepper and onion until tender", "Return beef, add oyster sauce, toss and serve"], cookingTime: 15, calories: 380, cuisineType: "Chinese", difficulty: "easy" },
+    { title: "Pepper Pork Stir-fry", description: "Classic Hunan-style, spicy and savory", ingredients: ["pork belly 150g", "green chili 2", "red chili 1", "garlic 3 cloves", "soy sauce 15ml", "oil 10ml", "salt to taste"], steps: ["Slice pork belly thinly", "Slice chilies, mince garlic", "Dry-fry pork in hot pan until slightly crispy", "Add garlic and chilies, stir-fry", "Season with soy sauce and salt, serve"], cookingTime: 12, calories: 420, cuisineType: "Chinese", difficulty: "easy" },
+    { title: "Mapo Tofu", description: "Spicy and numbing, classic Sichuan dish", ingredients: ["tofu 200g", "ground pork 80g", "doubanjiang 15g", "sichuan peppercorn 2g", "spring onion 1", "oil 10ml"], steps: ["Cut tofu into cubes, blanch in boiling water", "Heat oil, stir-fry ground pork", "Add doubanjiang, stir-fry until oil turns red", "Add water and tofu, simmer for 5 minutes", "Sprinkle Sichuan pepper and chopped spring onion"], cookingTime: 15, calories: 320, cuisineType: "Chinese", difficulty: "medium" },
+    { title: "Eggplant with Garlic Sauce", description: "Sweet, sour and slightly spicy, goes great with rice", ingredients: ["eggplant 2", "ground pork 80g", "garlic 3 cloves", "ginger 2 slices", "spring onion 1", "doubanjiang 10g", "vinegar 10ml", "sugar 5g", "soy sauce 10ml", "oil 15ml"], steps: ["Cut eggplant into strips, salt for 10 min then squeeze dry", "Heat oil, fry eggplant until soft, set aside", "Add oil, stir-fry pork and doubanjiang", "Add garlic and ginger, return eggplant", "Add vinegar, sugar, soy sauce, toss and serve"], cookingTime: 20, calories: 280, cuisineType: "Chinese", difficulty: "medium" },
+    { title: "Cola Chicken Wings", description: "Sweet, savory and incredibly easy", ingredients: ["chicken wings 8", "cola 200ml", "ginger 3 slices", "soy sauce 15ml", "cooking wine 10ml"], steps: ["Wash and score chicken wings", "Blanch in cold water to remove scum", "Heat oil, fry wings until golden on both sides", "Add cola, soy sauce, ginger, simmer 15 minutes", "Reduce sauce until glazed and serve"], cookingTime: 25, calories: 450, cuisineType: "Chinese", difficulty: "easy" },
+    { title: "Stir-fried Water Spinach with Garlic", description: "Crisp, green and flavorful", ingredients: ["water spinach 300g", "garlic 4 cloves", "oil 10ml", "salt to taste"], steps: ["Wash and cut water spinach into segments", "Mince garlic", "Heat oil, sizzle garlic", "Add water spinach, stir-fry on high heat", "Season with salt and serve"], cookingTime: 5, calories: 80, cuisineType: "Chinese", difficulty: "easy" },
+  ]
+
+  if (ingredients.length === 0) return all
+  const inputLower = ingredients.map((i) => i.trim().toLowerCase())
+  const matched = all.filter((recipe) =>
+    recipe.ingredients.some((ri) => inputLower.some((ii) => ri.toLowerCase().includes(ii) || ii.includes(ri.toLowerCase())))
+  )
+  // 匹配不到时返回全部推荐，避免空数组让用户误以为"生成失败"
+  return matched.length > 0 ? matched.slice(0, 4) : all.slice(0, 4)
 }
 
 function getMockWeeklyPlan(
@@ -438,6 +620,48 @@ function getMockWeeklyPlan(
       breakfast: { title: "红豆粥配油条", description: "经典周末早餐", ingredients: ["红豆 30g", "大米 30g", "油条 1根"], steps: ["红豆大米提前泡", "加水煮至软烂", "配油条食用"], cookingTime: 30, calories: 420, cuisineType: "中餐", difficulty: "easy" },
       lunch: { title: "咖喱鸡肉饭", description: "浓郁好吃", ingredients: ["鸡腿肉 150g", "土豆 半颗", "胡萝卜 半根", "咖喱块 2块", "洋葱 半颗"], steps: ["鸡腿肉切块炒变色", "加入土豆胡萝卜翻炒", "加水煮软加咖喱块", "配米饭食用"], cookingTime: 30, calories: 580, cuisineType: "西餐", difficulty: "medium" },
       dinner: { title: "凉拌黄瓜", description: "清爽收尾", ingredients: ["黄瓜 1根", "大蒜 2瓣", "醋 15ml", "香油 5ml"], steps: ["黄瓜拍碎切段", "蒜末加醋香油调汁", "浇在黄瓜上拌匀"], cookingTime: 8, calories: 90, cuisineType: "中餐", difficulty: "easy" },
+    },
+  }
+}
+
+function getMockWeeklyPlanEn(
+  _prefs?: Record<string, unknown>
+): Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }> {
+  return {
+    "Monday": {
+      breakfast: { title: "Egg Sandwich", description: "Energizing start to the day", ingredients: ["bread slices 2", "egg 1", "lettuce 2 leaves", "mayonnaise 10ml"], steps: ["Toast the bread", "Fry the egg", "Layer with lettuce and mayo"], cookingTime: 10, calories: 320, cuisineType: "Western", difficulty: "easy" },
+      lunch: { title: "Tomato Beef Noodle Soup", description: "Hearty and warming lunch", ingredients: ["noodles 150g", "beef 100g", "tomato 1", "spring onion 1", "ginger 2 slices"], steps: ["Blanch beef chunks", "Stir-fry tomatoes until saucy", "Add water, cook noodles with beef"], cookingTime: 25, calories: 550, cuisineType: "Chinese", difficulty: "medium" },
+      dinner: { title: "Steamed Fish", description: "Light and fresh, perfect for dinner", ingredients: ["sea bass 300g", "ginger 3 slices", "spring onion 1", "fish soy sauce 15ml"], steps: ["Score the fish", "Steam with ginger for 8 minutes", "Drizzle with soy sauce and top with spring onion"], cookingTime: 15, calories: 280, cuisineType: "Chinese", difficulty: "medium" },
+    },
+    "Tuesday": {
+      breakfast: { title: "Oatmeal with Berries", description: "Healthy fiber-rich breakfast", ingredients: ["oats 40g", "milk 200ml", "banana half", "blueberries 30g"], steps: ["Cook oats with milk until soft", "Slice banana", "Top with blueberries and serve"], cookingTime: 10, calories: 310, cuisineType: "Western", difficulty: "easy" },
+      lunch: { title: "Kung Pao Chicken", description: "Classic Sichuan, sweet and spicy", ingredients: ["chicken breast 150g", "peanuts 30g", "dried chili 5g", "cucumber half", "spring onion 1"], steps: ["Dice and marinate chicken", "Roast peanuts", "Stir-fry chili and chicken", "Add cucumber and peanuts, toss"], cookingTime: 20, calories: 420, cuisineType: "Sichuan", difficulty: "medium" },
+      dinner: { title: "Chicken and Vegetable Salad", description: "Light and healthy dinner", ingredients: ["chicken breast 100g", "mixed greens 150g", "cherry tomatoes 5", "olive oil 15ml", "lemon half"], steps: ["Poach chicken and slice", "Toss greens with tomatoes", "Drizzle with olive oil and lemon juice, top with chicken"], cookingTime: 15, calories: 300, cuisineType: "Western", difficulty: "easy" },
+    },
+    "Wednesday": {
+      breakfast: { title: "Scrambled Eggs on Toast", description: "Quick protein-packed breakfast", ingredients: ["eggs 2", "bread 2 slices", "butter 10g", "salt to taste"], steps: ["Toast the bread", "Scramble eggs with butter", "Serve eggs on toast"], cookingTime: 8, calories: 350, cuisineType: "Western", difficulty: "easy" },
+      lunch: { title: "Mapo Tofu", description: "Spicy and fragrant Sichuan classic", ingredients: ["tofu 200g", "ground pork 80g", "chili bean paste 15g", "Sichuan pepper 2g", "spring onion 1"], steps: ["Cut tofu into cubes, blanch", "Stir-fry pork with chili bean paste", "Add water and tofu, simmer", "Sprinkle Sichuan pepper and green onion"], cookingTime: 15, calories: 380, cuisineType: "Sichuan", difficulty: "medium" },
+      dinner: { title: "Garlic Butter Salmon", description: "Simple yet elegant dinner", ingredients: ["salmon fillet 150g", "garlic 2 cloves", "butter 10g", "lemon half", "salt to taste"], steps: ["Season salmon with salt", "Pan-sear with butter and garlic", "Squeeze lemon juice over and serve"], cookingTime: 12, calories: 350, cuisineType: "Western", difficulty: "easy" },
+    },
+    "Thursday": {
+      breakfast: { title: "Yogurt Parfait", description: "Light and refreshing breakfast", ingredients: ["yogurt 200ml", "granola 30g", "mixed berries 50g", "honey 10ml"], steps: ["Layer yogurt in a bowl", "Top with granola and berries", "Drizzle with honey"], cookingTime: 5, calories: 280, cuisineType: "Western", difficulty: "easy" },
+      lunch: { title: "Chicken Stir-fry with Vegetables", description: "Quick and healthy lunch", ingredients: ["chicken thigh 150g", "bell pepper 1", "broccoli 100g", "soy sauce 15ml", "garlic 2 cloves"], steps: ["Slice chicken and vegetables", "Stir-fry garlic and chicken until done", "Add vegetables, toss with soy sauce"], cookingTime: 15, calories: 400, cuisineType: "Chinese", difficulty: "easy" },
+      dinner: { title: "Minestrone Soup", description: "Hearty Italian vegetable soup", ingredients: ["canned tomatoes 200g", "carrot 1", "celery 2 stalks", "beans 100g", "pasta 50g"], steps: ["Dice vegetables", "Sauté vegetables, add tomatoes and water", "Simmer until tender, add pasta and beans"], cookingTime: 30, calories: 280, cuisineType: "Italian", difficulty: "easy" },
+    },
+    "Friday": {
+      breakfast: { title: "Pancakes with Maple Syrup", description: "Weekend-worthy breakfast", ingredients: ["flour 100g", "egg 1", "milk 150ml", "maple syrup 20ml", "butter 10g"], steps: ["Mix flour, egg, and milk into batter", "Cook pancakes in butter until golden", "Serve with maple syrup"], cookingTime: 15, calories: 420, cuisineType: "Western", difficulty: "easy" },
+      lunch: { title: "Chicken Caesar Wrap", description: "Classic lunch wrap", ingredients: ["chicken breast 100g", "tortilla wrap 1", "lettuce 2 leaves", "parmesan 10g", "Caesar dressing 20ml"], steps: ["Grill chicken and slice", "Warm the tortilla", "Layer lettuce, chicken, dressing, and cheese, wrap tightly"], cookingTime: 15, calories: 420, cuisineType: "Western", difficulty: "easy" },
+      dinner: { title: "Tomato Basil Pasta", description: "Simple Italian classic", ingredients: ["pasta 150g", "canned tomatoes 200g", "garlic 2 cloves", "basil 5 leaves", "olive oil 15ml"], steps: ["Cook pasta al dente", "Sauté garlic in olive oil, add tomatoes", "Simmer sauce, toss with pasta and basil"], cookingTime: 20, calories: 450, cuisineType: "Italian", difficulty: "easy" },
+    },
+    "Saturday": {
+      breakfast: { title: "French Toast", description: "Golden and fluffy weekend breakfast", ingredients: ["bread 2 slices", "egg 1", "milk 50ml", "cinnamon powder 2g", "maple syrup 15ml"], steps: ["Whisk egg with milk and cinnamon", "Dip bread slices in egg mixture", "Pan-fry until golden on both sides, serve with syrup"], cookingTime: 12, calories: 380, cuisineType: "Western", difficulty: "easy" },
+      lunch: { title: "Beef Tacos", description: "Fun and flavorful lunch", ingredients: ["ground beef 150g", "taco shells 3", "lettuce 2 leaves", "tomato 1", "sour cream 20ml"], steps: ["Brown ground beef with seasoning", "Chop lettuce and tomato", "Fill taco shells with beef, lettuce, tomato, and sour cream"], cookingTime: 15, calories: 480, cuisineType: "Mexican", difficulty: "easy" },
+      dinner: { title: "Grilled Chicken with Roasted Vegetables", description: "Healthy and satisfying dinner", ingredients: ["chicken breast 150g", "zucchini 1", "bell pepper 1", "olive oil 15ml", "herbs to taste"], steps: ["Season chicken and vegetables with oil and herbs", "Grill chicken until cooked through", "Roast vegetables until tender, serve together"], cookingTime: 25, calories: 380, cuisineType: "Western", difficulty: "easy" },
+    },
+    "Sunday": {
+      breakfast: { title: "Avocado Toast with Eggs", description: "Trendy and nutritious breakfast", ingredients: ["bread 2 slices", "avocado half", "eggs 2", "salt to taste", "lemon juice 5ml"], steps: ["Toast the bread", "Mash avocado with lemon juice and salt", "Fry eggs, serve on avocado toast"], cookingTime: 10, calories: 360, cuisineType: "Western", difficulty: "easy" },
+      lunch: { title: "BBQ Pulled Chicken Sandwich", description: "Hearty weekend lunch", ingredients: ["chicken thigh 150g", "burger bun 1", "BBQ sauce 30ml", "coleslaw 50g"], steps: ["Shred cooked chicken, mix with BBQ sauce", "Toast the bun", "Pile chicken on bun, top with coleslaw"], cookingTime: 20, calories: 520, cuisineType: "American", difficulty: "easy" },
+      dinner: { title: "Vegetable Stir-fry with Rice", description: "Light end to the weekend", ingredients: ["mixed vegetables 200g", "rice 150g", "garlic 2 cloves", "soy sauce 15ml", "oil 10ml"], steps: ["Cook rice", "Stir-fry garlic and vegetables", "Add soy sauce, serve over rice"], cookingTime: 20, calories: 320, cuisineType: "Chinese", difficulty: "easy" },
     },
   }
 }

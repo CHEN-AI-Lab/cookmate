@@ -37,11 +37,31 @@ export async function GET(req: Request) {
       grant_type: "authorization_code", code: authCode,
     }
     p.sign = signParams(p, privateKey)
-    const res = await fetch("https://openapi.alipay.com/gateway.do", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
-      body: new URLSearchParams(p).toString(),
-    })
+    let res: Response | null = null
+    const maxRetries = 2
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        res = await fetch("https://openapi.alipay.com/gateway.do", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
+          body: new URLSearchParams(p).toString(),
+          signal: AbortSignal.timeout(30000),
+        })
+        break
+      } catch (fetchErr) {
+        if (attempt < maxRetries) {
+          console.error(`[Alipay Callback] Fetch attempt ${attempt + 1} failed, retrying...`)
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
+          continue
+        }
+        const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr)
+        console.error("[Alipay Callback] Fetch failed after retries:", msg)
+        return NextResponse.redirect(new URL("/login?error=alipay_network&detail=" + encodeURIComponent(msg), req.url))
+      }
+    }
+    if (!res) {
+      return NextResponse.redirect(new URL("/login?error=alipay_network", req.url))
+    }
     const tokenData: AlipayTokenResponse = JSON.parse(await res.text())
     const accessToken = tokenData.alipay_system_oauth_token_response?.access_token
     if (!accessToken) {
@@ -63,6 +83,7 @@ export async function GET(req: Request) {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
       body: new URLSearchParams(up).toString(),
+      signal: AbortSignal.timeout(30000),
     })
     const userData: AlipayUserInfoResponse = JSON.parse(await uRes.text())
     const profile = userData.alipay_user_info_share_response
@@ -82,16 +103,25 @@ export async function GET(req: Request) {
     if (existingAccount) {
       userId = existingAccount.userId
     } else {
-      const newUser = await prisma.user.create({ data: { name: alipayNick } })
+      const newUser = await prisma.user.create({ data: { name: alipayNick, termsAgreedAt: new Date() } })
       await prisma.account.create({
         data: { userId: newUser.id, type: "oauth", provider: "alipay", providerAccountId: alipayUserId },
       })
       userId = newUser.id
     }
 
-    // Step 4: 重定向到登录页，参数传递给前端自动登录
+    // Step 4: 签发一次性登录令牌（5 分钟有效、用完即删），替代原先的裸 userId 直传
+    // 安全要求：authorize() 只认这里签发的 token，绝不接受裸 userId，防止伪造 URL 登录任意账号
+    const oneTimeToken = crypto.randomBytes(32).toString("hex")
+    await prisma.verificationToken.create({
+      data: {
+        identifier: `alipay-auth:${userId}`,
+        token: oneTimeToken,
+        expires: new Date(Date.now() + 5 * 60 * 1000),
+      },
+    })
     const loginUrl = new URL("/login", req.url)
-    loginUrl.searchParams.set("alipay_auth", userId)
+    loginUrl.searchParams.set("alipay_auth", oneTimeToken)
     return NextResponse.redirect(loginUrl)
   } catch (err: unknown) {
     console.error("[Alipay Callback] Error:", err)

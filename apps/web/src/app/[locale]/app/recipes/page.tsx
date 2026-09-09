@@ -1,0 +1,587 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import type { ReactNode } from "react"
+import { useSearchParams } from "next/navigation"
+import { useLocale, useTranslations } from "next-intl"
+import { INGREDIENT_LABELS } from "@cookmate/shared/constants/ingredients"
+import { isValidIngredient } from "@cookmate/shared/validators"
+import { RecipeCard } from "@/components/features/RecipeCard"
+import { UpgradeDialog, UpgradeInline } from "@/components/features/UpgradeLink"
+
+interface Recipe {
+  id: string
+  title: string
+  description: string
+  ingredients: string[]
+  steps: string[]
+  cookingTime: number
+  calories: number
+  cuisineType: string
+  difficulty: string
+}
+
+interface PantryItem {
+  id: string
+  name: string
+}
+
+const DAY_VALUES = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"] as const
+const MEAL_VALUES = ["早餐", "午餐", "晚餐"] as const
+
+export default function RecipesPage() {
+  const t = useTranslations("recipes")
+  const tmeal = useTranslations("mealPlan")
+  // 收藏上限等 billing 命名空间的提示（后端返回裸 key，这里负责翻译）
+  const tb = useTranslations("billing")
+  const locale = useLocale()
+  const ingLabels = INGREDIENT_LABELS
+  const displayName = (name: string) => locale === "zh-CN" || locale === "zh-TW" ? name : (ingLabels[name] || name)
+  const searchParams = useSearchParams()
+  const [ingredients, setIngredients] = useState<string[]>(() => {
+    const fromUrl = searchParams.get("ingredients")
+    return fromUrl ? fromUrl.split(",").filter(Boolean) : []
+  })
+  const [input, setInput] = useState("")
+  const [recipes, setRecipes] = useState<Recipe[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<ReactNode>("")
+  // 提示分类：limit=限额升级引导（品牌色）；info=降级/输入指引（黄色）；error=真错误（红色）
+  const [errorKind, setErrorKind] = useState<"limit" | "info" | "error">("error")
+  const [expanded, setExpanded] = useState<string | null>(null)
+  const [generated, setGenerated] = useState(false)
+  const [addDialog, setAddDialog] = useState<{ recipe: Recipe; day: string; meal: string } | null>(null)
+  const [addMsg, setAddMsg] = useState("")
+  const [conflictData, setConflictData] = useState<{ existingTitle: string; recipe: Recipe; day: string; meal: string } | null>(null)
+  const [starredIds, setStarredIds] = useState<Set<string>>(new Set())
+  const [starToast, setStarToast] = useState("")
+  // 收藏上限横幅（持久显示，带升级链接）；toast 太快消失，用户来不及看原因
+  const [starBanner, setStarBanner] = useState(false)
+  const [dupDialog, setDupDialog] = useState<string | null>(null)
+  const [deleteDialog, setDeleteDialog] = useState<Recipe | null>(null)
+  const [deleteError, setDeleteError] = useState("")
+  const [pantryItems, setPantryItems] = useState<PantryItem[]>([])
+  const [pantryLoaded, setPantryLoaded] = useState(false)
+  const [isDemoUser, setIsDemoUser] = useState(false)
+  const [demoToast, setDemoToast] = useState("")
+
+  const dayLabel: Record<string, string> = {
+    "周一": tmeal("monday"),
+    "周二": tmeal("tuesday"),
+    "周三": tmeal("wednesday"),
+    "周四": tmeal("thursday"),
+    "周五": tmeal("friday"),
+    "周六": tmeal("saturday"),
+    "周日": tmeal("sunday"),
+  }
+
+  const mealLabel: Record<string, string> = {
+    "早餐": tmeal("breakfast"),
+    "午餐": tmeal("lunch"),
+    "晚餐": tmeal("dinner"),
+  }
+
+  useEffect(() => {
+    fetch("/api/recipes/star")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.recipes) setStarredIds(new Set(data.recipes.map((r: { id: string }) => r.id)))
+      })
+      .catch((err) => console.error("load starred recipes error:", err))
+  }, [])
+
+  const toggleStar = async (recipe: Recipe) => {
+    const res = await fetch("/api/recipes/star", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ recipeId: recipe.id }),
+    })
+    const data = await res.json()
+    if (data.success) {
+      setStarredIds((prev) => {
+        const next = new Set(prev)
+        if (data.starred) {
+          next.add(String(recipe.id))
+        } else {
+          next.delete(String(recipe.id))
+        }
+        return next
+      })
+      setStarToast(data.starred ? t("starToast") : t("unstarToast"))
+      setTimeout(() => setStarToast(""), 2500)
+    } else if (data.error === "starLimitReached") {
+      // 后端返回裸 key：用持久横幅展示（带内嵌升级链接），替代一闪而过的 toast
+      setStarBanner(true)
+    }
+  }
+
+  const deleteRecipe = async (recipe: Recipe) => {
+    const res = await fetch(`/api/recipes/${recipe.id}`, {
+      method: "DELETE",
+    })
+    if (res.ok) {
+      setRecipes(recipes.filter((r) => String(r.id) !== String(recipe.id)))
+      setDeleteDialog(null)
+    } else {
+      const data = await res.json()
+      setDeleteError(data.error || t("errorUnknown"))
+      setTimeout(() => setDeleteError(""), 2500)
+    }
+  }
+
+  useEffect(() => {
+    fetch("/api/pantry")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.items && data.items.length > 0) {
+          setPantryItems(data.items)
+        }
+      })
+      .catch((err) => console.error("load pantry error:", err))
+      .finally(() => setPantryLoaded(true))
+  }, [])
+
+  useEffect(() => {
+    fetch("/api/user/profile")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.isDemoUser) setIsDemoUser(true)
+      })
+      .catch((err) => console.error("load profile error:", err))
+  }, [])
+
+  const addToPlan = async (recipe: Recipe) => {
+    const dialogSnapshot = addDialog
+    const day = dialogSnapshot?.day || DAY_VALUES[0]
+    const meal = dialogSnapshot?.meal || MEAL_VALUES[0]
+    setAddDialog(null)
+    const res = await fetch("/api/meal-plan/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: recipe.title,
+        description: recipe.description,
+        ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients.join("、") : String(recipe.ingredients || ""),
+        steps: Array.isArray(recipe.steps) ? recipe.steps.join("\n") : String(recipe.steps || ""),
+        cookingTime: recipe.cookingTime || 0,
+        calories: recipe.calories || 0,
+        cuisineType: recipe.cuisineType || "",
+        dayOfWeek: day,
+        mealTime: meal,
+      }),
+    })
+    const data = await res.json()
+    if (data.conflict) {
+      setConflictData({ existingTitle: data.existingTitle, recipe, day, meal })
+    } else if (data.success) {
+      setAddMsg(t("addedToPlanWithTitle", { title: recipe.title, day: dayLabel[day] || day, meal: mealLabel[meal] || meal }))
+    } else if (data.error === "mealPlanDaysLimit") {
+      // 免费版周计划天数上限：后端返回裸 key，前端翻译展示（mealPlanDaysLimit 在 mealPlan 命名空间）
+      setAddMsg(`❌ ${tmeal("mealPlanDaysLimit")}`)
+    } else {
+      setAddMsg(`❌ ${data.error || t("errorAddFailed")}`)
+    }
+    setTimeout(() => setAddMsg(""), 3000)
+  }
+
+  const confirmOverwrite = async () => {
+    if (!conflictData) return
+    const r = await fetch("/api/meal-plan/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: conflictData.recipe.title,
+        description: conflictData.recipe.description,
+        ingredients: Array.isArray(conflictData.recipe.ingredients) ? conflictData.recipe.ingredients.join("、") : String(conflictData.recipe.ingredients || ""),
+        steps: Array.isArray(conflictData.recipe.steps) ? conflictData.recipe.steps.join("\n") : String(conflictData.recipe.steps || ""),
+        cookingTime: conflictData.recipe.cookingTime || 0,
+        calories: conflictData.recipe.calories || 0,
+        cuisineType: conflictData.recipe.cuisineType || "",
+        dayOfWeek: conflictData.day,
+        mealTime: conflictData.meal,
+        overwrite: true,
+      }),
+    })
+    const d = await r.json()
+    if (d.success) {
+      setAddMsg(t("replacedSlot", { day: dayLabel[conflictData.day] || conflictData.day, meal: mealLabel[conflictData.meal] || conflictData.meal }))
+    } else {
+      setAddMsg(`❌ ${d.error || t("errorReplaceFailed")}`)
+    }
+    setTimeout(() => setAddMsg(""), 3000)
+    setConflictData(null)
+  }
+
+  const addIngredient = () => {
+    const trimmed = input.trim()
+    if (!trimmed) return
+    if (!isValidIngredient(trimmed)) {
+      setErrorKind("info")
+      setError(t("invalidIngredients"))
+      return
+    }
+    if (ingredients.some((i) => i.toLowerCase() === trimmed.toLowerCase())) {
+      setDupDialog(trimmed)
+      setTimeout(() => setDupDialog(null), 2500)
+      setInput("")
+      return
+    }
+    setIngredients([...ingredients, trimmed])
+    setInput("")
+  }
+
+  const removeIngredient = (item: string) => {
+    setIngredients(ingredients.filter((i) => i !== item))
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      addIngredient()
+    }
+  }
+
+  const importPantryItem = (name: string) => {
+    const exists = ingredients.some((i) => i.toLowerCase() === name.toLowerCase())
+    if (exists) {
+      setIngredients(ingredients.filter((i) => i.toLowerCase() !== name.toLowerCase()))
+    } else {
+      setIngredients([...ingredients, name])
+    }
+  }
+
+  const importAllPantry = () => {
+    const merged = [...ingredients]
+    for (const item of pantryItems) {
+      const exists = merged.some((i) => i.toLowerCase() === item.name.toLowerCase())
+      if (!exists) {
+        merged.push(item.name)
+      }
+    }
+    setIngredients(merged)
+  }
+
+  const isFromPantry = (name: string) => pantryItems.some((i) => i.name.toLowerCase() === name.toLowerCase())
+
+  const generateRecipes = async () => {
+    if (isDemoUser) {
+      setDemoToast(t("demoCannotGenerate"))
+      setTimeout(() => setDemoToast(""), 3000)
+      return
+    }
+    if (ingredients.length === 0) {
+      setErrorKind("info")
+      setError(t("errorAtLeastOneIngredient"))
+      return
+    }
+    // 兜底过滤：跳过混在里面的纯数字/单字符，全部无效则直接提示，不发请求
+    const validIngredients = ingredients.filter(isValidIngredient)
+    if (validIngredients.length === 0) {
+      setErrorKind("info")
+      setError(t("invalidIngredients"))
+      return
+    }
+    setLoading(true)
+    setError("")
+    setErrorKind("error")
+    // 不清空上次结果，生成失败时保留旧菜谱
+    setGenerated(false)
+
+    try {
+      const res = await fetch("/api/recipes/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ingredients: validIngredients,
+          pantryContext: pantryItems.map((i) => i.name),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        // 每日免费次数用完：后端返回裸 key，文案内嵌「升级 Pro」超链接
+        if (data.error === "aiDailyLimitReached") {
+          setErrorKind("limit")
+          setError(t.rich("aiDailyLimitReached", { upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline> }))
+        } else {
+          setErrorKind("error")
+          setError(data.error || t("errorGenerateFailed"))
+        }
+      } else {
+        setRecipes(data.recipes || [])
+        setGenerated(true)
+        if (data.fallback) {
+          setErrorKind("info")
+          setError(t("aiFallback"))
+        }
+      }
+    } catch (err) {
+      console.error("generate recipes error:", err)
+      setErrorKind("error")
+      setError(t("networkError"))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fromPantryCount = ingredients.filter((i) => isFromPantry(i)).length
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-text-primary mb-6">{t("aiRecipesTitle")}</h1>
+
+      {/* 收藏上限：居中弹框，升级入口嵌在文案中间 */}
+      {starBanner && (
+        <UpgradeDialog
+          text={tb.rich("starLimitReached", {
+            upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline>,
+          })}
+          onClose={() => setStarBanner(false)}
+        />
+      )}
+
+      <div className="bg-card rounded-2xl shadow-sm border border-green-50 p-6 mb-6">
+        {pantryLoaded && pantryItems.length > 0 && (
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-green-600 flex items-center gap-1">
+                <span>📦</span> {t("yourPantry")}
+                <span className="text-text-secondary font-normal">{t("clickToAdd")}</span>
+              </p>
+              {ingredients.length > 0 && fromPantryCount > 0 && (
+                <button
+                  onClick={importAllPantry}
+                  className="text-xs text-accent hover:text-orange-600 font-medium"
+                >
+                  {t("importAll")}
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {pantryItems.map((item) => {
+                const active = ingredients.includes(item.name)
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => importPantryItem(item.name)}
+                    className={`px-2.5 py-1 rounded-full text-xs border transition-all ${
+                      active
+                        ? "bg-green-50 text-green-600 border-green-200 shadow-sm"
+                        : "bg-surface text-text-secondary border-border hover:border-green-400 hover:text-green-600 hover:bg-green-50"
+                    }`}
+                  >
+                    {displayName(item.name)}
+                    {active && (
+                      <span className="ml-0.5 text-green-600">✓</span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className="border-t border-border pt-4">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={pantryItems.length > 0 ? t("ingredientsPlaceholderPantry") : t("ingredientsPlaceholder")}
+              className="flex-1 border border-gray-100 rounded-xl px-4 py-2.5 focus:outline-none focus:border-accent text-sm"
+            />
+            <button
+              onClick={addIngredient}
+              className="bg-surface text-text-primary px-4 py-2.5 rounded-xl hover:bg-border transition-colors text-sm"
+            >
+              {t("addIngredientBtn")}
+            </button>
+          </div>
+
+          {ingredients.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {ingredients.map((item) => (
+                <span
+                  key={item}
+                  className={`px-3 py-1 rounded-full text-sm border flex items-center gap-1 ${
+                    isFromPantry(item)
+                      ? "bg-green-50 text-green-600 border-green-200"
+                      : "bg-orange-50 text-accent border-orange-200"
+                  }`}
+                >
+                  {displayName(item)}
+                  {isFromPantry(item) && <span className="text-[10px] opacity-60">📦</span>}
+                  <button onClick={() => removeIngredient(item)} className="ml-1 hover:text-red-600">×</button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button
+              onClick={generateRecipes}
+              disabled={loading}
+              className="bg-accent text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-orange-600 transition-colors disabled:opacity-50"
+            >
+              {loading ? t("aiThinking") : t("aiRecommend")}
+            </button>
+            {ingredients.length > 0 && (
+              <button
+                onClick={() => setIngredients([])}
+                className="text-text-secondary px-4 py-2.5 rounded-full text-sm hover:text-text-secondary transition-colors"
+              >
+                {t("clearAll")}
+              </button>
+            )}
+          </div>
+
+          {/* 提示放在触发按钮正下方（贴近操作点），与按钮左对齐，宽度随内容 */}
+          {error && (() => {
+            const boxCls = "mt-3 w-fit max-w-full rounded-xl px-4 py-2.5 text-sm " + (errorKind === "limit" ? "bg-bg-brand border border-accent/60 text-text-primary" : errorKind === "info" ? "bg-amber-50 border border-amber-200 text-amber-700" : "bg-red-50 border border-red-200 text-red-700")
+            return <div className={boxCls}>{error}</div>
+          })()}
+        </div>
+      </div>
+
+      {loading && (
+        <div className="text-center py-12">
+          <p className="text-4xl animate-bounce">🤔</p>
+          <p className="mt-4 text-text-secondary">{t("aiAnalyzing")}</p>
+        </div>
+      )}
+
+      {recipes.length > 0 && (
+        <div className="space-y-4">
+          {recipes.map((recipe, idx) => (
+            <RecipeCard
+              key={idx}
+              recipe={recipe}
+              index={idx}
+              isStarred={starredIds.has(recipe.id?.toString() || "")}
+              onToggleStar={toggleStar}
+              onAddToPlan={(r) => setAddDialog({ recipe: r, day: DAY_VALUES[0], meal: MEAL_VALUES[0] })}
+              onDelete={(r) => setDeleteDialog(r)}
+              isFromPantry={isFromPantry}
+              expanded={expanded === `${idx}`}
+              onToggleExpand={() => setExpanded(expanded === `${idx}` ? null : `${idx}`)}
+            />
+          ))}
+        </div>
+      )}
+
+      {!loading && recipes.length === 0 && !error && (
+        <div className="text-center py-12 text-text-secondary">
+          <span className="text-5xl">{generated ? "🤷" : "🥗"}</span>
+          <p className="mt-4">
+            {generated
+              ? t("emptyGenerated")
+              : pantryItems.length > 0
+                ? t("emptyHasPantry")
+                : t("emptyDefault")}
+          </p>
+        </div>
+      )}
+
+      {addDialog && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setAddDialog(null)}>
+          <div className="bg-card rounded-2xl p-6 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-text-primary mb-4">{t("addToPlan")}</h3>
+            <p className="text-sm text-text-secondary mb-4">{t("addToPlanDesc", { title: addDialog.recipe.title })}</p>
+            <div className="flex gap-2 mb-3">
+              <select value={addDialog.day} onChange={(e) => setAddDialog({ ...addDialog, day: e.target.value })}
+                className="flex-1 border border-border rounded-xl px-3 py-2 text-sm">
+                {DAY_VALUES.map((d) => (
+                  <option key={d} value={d}>{dayLabel[d]}</option>
+                ))}
+              </select>
+              <select value={addDialog.meal} onChange={(e) => setAddDialog({ ...addDialog, meal: e.target.value })}
+                className="flex-1 border border-border rounded-xl px-3 py-2 text-sm">
+                {MEAL_VALUES.map((m) => (
+                  <option key={m} value={m}>{mealLabel[m]}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setAddDialog(null)} className="flex-1 bg-surface text-text-secondary py-2 rounded-xl text-sm">{t("cancel")}</button>
+              <button onClick={() => addToPlan(addDialog.recipe)} className="flex-1 bg-accent text-white py-2 rounded-xl text-sm">{t("confirmAdd")}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {dupDialog && (
+        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
+          <div className="bg-card border border-gray-100 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+            <span className="text-amber-500 text-base shrink-0">⚠️</span>
+            <span className="text-text-primary">{t("duplicateIngredient", { name: dupDialog })}</span>
+          </div>
+        </div>
+      )}
+
+      {conflictData && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setConflictData(null)}>
+          <div className="bg-card rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
+            <p className="text-lg mb-2">⚠️</p>
+            <p className="text-sm text-text-primary font-medium mb-1">{t("slotConflict")}</p>
+            <p className="text-sm text-text-secondary">{t("slotConflictDesc", { day: dayLabel[conflictData.day] || conflictData.day, meal: mealLabel[conflictData.meal] || conflictData.meal, title: conflictData.existingTitle })}</p>
+            <p className="text-xs text-text-secondary mt-2">{t("slotConflictReplace", { title: conflictData.recipe.title })}</p>
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setConflictData(null)} className="flex-1 bg-surface text-text-secondary py-2 rounded-xl text-sm">{t("cancel")}</button>
+              <button onClick={confirmOverwrite} className="flex-1 bg-accent text-white py-2 rounded-xl text-sm">{t("replace")}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteDialog && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setDeleteDialog(null)}>
+          <div className="bg-card rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mx-auto mb-2 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
+            </svg>
+            <p className="text-sm text-text-primary font-medium mb-1">{t("confirmDelete")}</p>
+            <p className="text-sm text-text-secondary">{t("confirmDeleteDesc", { title: deleteDialog.title })}</p>
+            <p className="text-xs text-text-secondary mt-2">{t("irreversible")}</p>
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setDeleteDialog(null)} className="flex-1 bg-surface text-text-secondary py-2 rounded-xl text-sm">{t("cancel")}</button>
+              <button onClick={() => deleteRecipe(deleteDialog)} className="flex-1 bg-red-500 text-white py-2 rounded-xl text-sm">{t("confirmDeleteAction")}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {addMsg && (
+        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
+          <div className="bg-card border border-gray-100 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+            <span className="text-text-primary">{addMsg}</span>
+          </div>
+        </div>
+      )}
+
+      {starToast && (
+        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
+          <div className="bg-card border border-gray-100 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+            <span className="text-text-primary">{starToast}</span>
+          </div>
+        </div>
+      )}
+
+      {demoToast && (
+        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
+          <div className="bg-card border border-gray-100 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+            <span className="text-text-primary">{demoToast}</span>
+          </div>
+        </div>
+      )}
+
+      {deleteError && (
+        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
+          <div className="bg-card border border-gray-100 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+            <span className="text-red-600 text-base shrink-0">❌</span>
+            <span className="text-text-primary">{deleteError}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

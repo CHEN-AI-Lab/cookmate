@@ -1,0 +1,32 @@
+import { getTranslations } from 'next-intl/server'
+
+// TODO: Phase 2 - 营养追踪功能
+// 功能：每日热量+蛋白质统计
+// 状态：后期实现
+// ⚠️ 实现约定见 docs/decisions.md ADR-009：页面必须可见标注「营养数据为 AI 估算，仅供参考」（i18n 四语言）
+// 计划：
+//   - 前端页面：app/app/nutrition/page.tsx
+//   - API: /api/nutrition/daily (获取当日营养数据)
+//   - API: /api/nutrition/log (记录营养数据)
+//   - API: /api/nutrition/stats (周/月统计图表数据)
+//   - 数据库：nutrition_logs 表 (user_id, date, calories, protein, fat, carbs)
+
+export const metadata = {
+  title: "Nutrition - CookMate",
+  description: "Track daily nutrition intake, calories and protein",
+}
+
+export default async function NutritionPage() {
+  const t = await getTranslations('nutrition')
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8">
+      <div className="text-6xl mb-4">🥗</div>
+      <h1 className="text-2xl font-bold text-text-primary mb-2">{t('title')}</h1>
+      <p className="text-text-secondary mb-6">{t('placeholder_desc')}</p>
+      <div className="px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+        {t('placeholder_badge')}
+      </div>
+    </div>
+  )
+}

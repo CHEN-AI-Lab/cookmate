@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { isFreeUser, checkMealPlanDaysLimitForDays } from "@/lib/auth-helpers"
 
 // 中文星期 → 数字（0=周一…6=周日，与 AI 生成一致）
 const dayMap: Record<string, number> = {
@@ -35,6 +36,17 @@ export async function POST(req: Request) {
     mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1))
     mon.setHours(0, 0, 0, 0)
 
+    // 检查免费版周计划天数上限
+    // 用 ForDays 版本而非 checkMealPlanDaysLimit：只看「已占天数」会把「覆盖已有那天」也拦掉，
+    // 而覆盖并不新增天数。取「本周已占用 ∪ 本次这天」的并集才是正确口径。
+    const isFree = await isFreeUser(session.user.id)
+    if (isFree) {
+      const limited = await checkMealPlanDaysLimitForDays(session.user.id, [dayNum])
+      if (limited) {
+        return NextResponse.json({ error: "mealPlanDaysLimit" }, { status: 403 })
+      }
+    }
+
     // 查找或创建本周计划
     let plan = await prisma.mealPlan.findUnique({
       where: { userId_weekStart: { userId: session.user.id, weekStart: mon } },
@@ -64,25 +76,23 @@ export async function POST(req: Request) {
     }
 
     if (existing) {
-      // 更新现有 MealSlot 的 Recipe
-      if (existing.recipeId) {
-        await prisma.recipe.update({
-          where: { id: existing.recipeId },
-          data: { title: title.trim(), description: description || "", ingredients: ingredients || "", steps: steps || "", cookingTime, calories, cuisineType, starred: starred ?? false },
-        })
-      } else {
-        // Slot exists but has no recipe - find or create
-        const existingRecipe = await prisma.recipe.findFirst({
-          where: { userId: session.user.id, title: title.trim() },
-        })
-        const r = existingRecipe || await prisma.recipe.create({
-          data: { userId: session.user.id, title: title.trim(), description: description || "", ingredients: ingredients || "", steps: steps || "", cookingTime, calories, cuisineType, isGenerated: false, starred: starred ?? false },
-        })
-        await prisma.mealSlot.update({
-          where: { id: existing.id },
-          data: { recipeId: r.id, note: `${title}${description ? ` - ${description}` : ""}` },
+      // 查找或创建同名菜谱（避免 @@unique([userId, title]) 冲突）
+      let recipe = await prisma.recipe.findFirst({
+        where: { userId: session.user.id, title: title.trim() },
+      })
+      if (!recipe) {
+        recipe = await prisma.recipe.create({
+          data: {
+            userId: session.user.id, title: title.trim(),
+            description: description || "", ingredients: ingredients || "", steps: steps || "",
+            cookingTime, calories, cuisineType, isGenerated: false, starred: starred ?? false,
+          },
         })
       }
+      await prisma.mealSlot.update({
+        where: { id: existing.id },
+        data: { recipeId: recipe.id, note: `${title}${description ? ` - ${description}` : ""}` },
+      })
     } else {
       // 先查找是否已存在同名菜谱（避免 @@unique([userId, title]) 冲突）
       let recipe = await prisma.recipe.findFirst({

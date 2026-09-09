@@ -1,4 +1,6 @@
 "use client"
+import { useTranslations, useLocale } from "next-intl"
+import { CUISINE_LABELS } from "@cookmate/shared/constants"
 
 interface Recipe {
   id: string
@@ -33,20 +35,12 @@ function diffColor(d: string) {
     case "hard":
       return "text-red-600 bg-red-50"
     default:
-      return "text-gray-600 bg-gray-50"
+      return "text-text-secondary bg-surface"
   }
-}
-
-function difficultyLabel(d: string) {
-  const lower = d?.toLowerCase() ?? ""
-  if (["easy", "简单"].includes(lower)) return "简单"
-  if (["medium", "中等"].includes(lower)) return "中等"
-  return d || "中等"
 }
 
 export function RecipeCard({
   recipe,
-  index,
   isStarred,
   onToggleStar,
   onAddToPlan,
@@ -55,8 +49,20 @@ export function RecipeCard({
   expanded,
   onToggleExpand,
 }: RecipeCardProps) {
+  const t = useTranslations("recipes")
+  const tc = useTranslations("common")
+  const locale = useLocale()
+
+  function difficultyLabel(d: string) {
+    const lower = d?.toLowerCase() ?? ""
+    if (["easy"].includes(lower)) return t("easy")
+    if (["medium"].includes(lower)) return t("medium")
+    if (["hard"].includes(lower)) return t("hard")
+    return d || t("medium")
+  }
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-orange-50 overflow-hidden transition-all">
+    <div className="bg-card rounded-2xl shadow-sm border border-orange-50 overflow-hidden transition-all">
       <div
         onClick={onToggleExpand}
         className="w-full text-left p-6 flex items-start justify-between hover:bg-orange-50/30 transition-colors cursor-pointer"
@@ -65,16 +71,16 @@ export function RecipeCard({
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <span className="text-xl">🍽️</span>
-              <h3 className="text-lg font-bold text-[#2D3436]">{recipe.title}</h3>
+              <h3 className="text-lg font-bold text-text-primary">{recipe.title}</h3>
               <button
                 onClick={(e) => {
                   e.stopPropagation()
                   onToggleStar(recipe)
                 }}
                 className={`transition-colors ${
-                  isStarred ? "text-amber-400" : "text-gray-300 hover:text-amber-400"
+                  isStarred ? "text-amber-400" : "text-text-secondary hover:text-amber-400"
                 }`}
-                title={isStarred ? "取消收藏" : "收藏菜谱"}
+                title={isStarred ? t("unstar") : t("star")}
               >
                 {isStarred ? "⭐" : "☆"}
               </button>
@@ -83,38 +89,40 @@ export function RecipeCard({
                   e.stopPropagation()
                   onDelete(recipe)
                 }}
-                className="ml-1 text-gray-400 hover:text-red-500 transition-colors"
-                title="删除菜谱"
+                className="ml-1 text-text-secondary hover:text-red-600 transition-colors"
+                title={tc("delete")}
               >
-                🗑️
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                </svg>
               </button>
             </div>
-            <p className="text-sm text-gray-500 mt-1">{recipe.description}</p>
+            <p className="text-sm text-text-secondary mt-1">{recipe.description}</p>
             <div className="flex flex-wrap gap-3 mt-2 text-xs">
-              <span>⏱ {recipe.cookingTime}分钟</span>
-              <span>🔥 {recipe.calories}卡</span>
-              <span>{recipe.cuisineType}</span>
+              <span>⏱ {recipe.cookingTime}{t("minutes")}</span>
+              <span>🔥 {recipe.calories}{t("caloriesShort")}</span>
+              <span>{locale === "en" || locale.startsWith("en") ? (CUISINE_LABELS[recipe.cuisineType] || recipe.cuisineType) : recipe.cuisineType}</span>
               <span className={`px-2 py-0.5 rounded-full ${diffColor(recipe.difficulty)}`}>
                 {difficultyLabel(recipe.difficulty)}
               </span>
             </div>
           </div>
         </div>
-        <span className="text-gray-400 ml-4">{expanded ? "▲" : "▼"}</span>
+        <span className="text-text-secondary ml-4">{expanded ? "▲" : "▼"}</span>
       </div>
 
       {expanded && (
-        <div className="px-6 pb-6 border-t border-gray-100">
+        <div className="px-6 pb-6 border-t border-border">
           <div className="mt-4">
-            <p className="text-sm font-medium text-[#2D3436] mb-2">🥄 食材</p>
+            <p className="text-sm font-medium text-text-primary mb-2">{t("ingredients")}</p>
             <ul className="space-y-1">
               {recipe.ingredients.map((ing, i) => (
-                <li key={i} className="text-sm text-gray-600 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B35]" />
+                <li key={i} className="text-sm text-text-secondary flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                   {ing}
                   {isFromPantry(ing.split(" ")[0]) && (
-                    <span className="text-[10px] text-green-500 bg-green-50 px-1 rounded">
-                      食材库有
+                    <span className="text-[10px] text-green-600 bg-green-50 px-1 rounded">
+                      {t("inPantry")}
                     </span>
                   )}
                 </li>
@@ -122,11 +130,11 @@ export function RecipeCard({
             </ul>
           </div>
           <div className="mt-4">
-            <p className="text-sm font-medium text-[#2D3436] mb-2">👨‍🍳 步骤</p>
+            <p className="text-sm font-medium text-text-primary mb-2">{t("instructions")}</p>
             <ol className="space-y-2">
               {recipe.steps.map((step, i) => (
-                <li key={i} className="text-sm text-gray-600 flex gap-2">
-                  <span className="text-[#FF6B35] font-bold shrink-0">{i + 1}.</span>
+                <li key={i} className="text-sm text-text-secondary flex gap-2">
+                  <span className="text-accent font-bold shrink-0">{i + 1}.</span>
                   <span>{step}</span>
                 </li>
               ))}
@@ -134,9 +142,9 @@ export function RecipeCard({
           </div>
           <button
             onClick={() => onAddToPlan(recipe)}
-            className="mt-4 bg-orange-50 text-[#FF6B35] px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-100 transition-colors"
+            className="mt-4 bg-surface text-accent px-4 py-2 rounded-xl text-sm font-medium hover:bg-surface transition-colors"
           >
-            📅 加入周计划
+            {t("addToPlan")}
           </button>
         </div>
       )}

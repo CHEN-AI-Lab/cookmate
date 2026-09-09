@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import crypto from "node:crypto"
 import { isDemoUser } from "@/lib/auth-helpers"
+import { err } from "@cookmate/shared/utils/locale"
+import { checkOtpRateLimit, recordOtpAttempt } from "@cookmate/shared/utils/otp-rate-limit"
+
+function emailT(locale: string, zh: string, en: string): string {
+  return locale === "zh-CN" ? zh : en
+}
 
 export async function POST(req: Request) {
   try {
@@ -9,20 +16,30 @@ export async function POST(req: Request) {
     if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
     if (isDemoUser(session)) return NextResponse.json({ error: "体验用户不支持绑定邮箱，请注册后使用" }, { status: 403 })
 
-    const { email } = await req.json()
+    const { email, locale } = await req.json()
+    const l = locale || "zh-CN"
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json({ error: "请输入正确的邮箱地址" }, { status: 400 })
+      return NextResponse.json({ error: err(l, "invalidEmail") }, { status: 400 })
+    }
+
+    // 60 秒内已发过未使用的验证码则拒绝（防邮件/验证码轰炸；与 delete/send-code 同一策略）
+    const recentCode = await prisma.verificationCode.findFirst({
+      where: { email, used: false, createdAt: { gte: new Date(Date.now() - 60000) } },
+      orderBy: { createdAt: "desc" },
+    })
+    if (recentCode) {
+      return NextResponse.json({ error: err(l, "codeRecentlySent") }, { status: 429 })
     }
 
     // 检查邮箱是否已被其他账号绑定
     const existing = await prisma.user.findUnique({ where: { email } })
     if (existing && existing.id !== session.user.id) {
-      return NextResponse.json({ error: "该邮箱已被其他账号绑定" }, { status: 409 })
+      return NextResponse.json({ error: err(l, "emailBound") }, { status: 409 })
     }
 
     // 生成验证码
-    const code = String(Math.floor(100000 + Math.random() * 900000))
+    const code = String(crypto.randomInt(100000, 999999))
 
     await prisma.verificationCode.create({
       data: {
@@ -43,12 +60,12 @@ export async function POST(req: Request) {
           body: JSON.stringify({
             from: "CookMate <noreply@aaigc.online>",
             to: email,
-            subject: "CookMate 邮箱绑定验证码",
+            subject: emailT(l, "CookMate 邮箱绑定验证码", "CookMate email verification code"),
             html: `<div style="font-family:sans-serif;padding:24px;max-width:400px">
               <h2 style="color:#FF6B35">🍳 CookMate</h2>
-              <p style="color:#333">绑定邮箱的验证码是：</p>
+              <p style="color:#333">${emailT(l, "绑定邮箱的验证码是：", "Enter the code below to verify your email:")}</p>
               <div style="font-size:32px;font-weight:bold;color:#FF6B35;letter-spacing:8px;text-align:center;padding:16px;background:#FFF8F0;border-radius:12px;margin:16px 0">${code}</div>
-              <p style="color:#999;font-size:12px">验证码 5 分钟内有效。</p>
+              <p style="color:#999;font-size:12px">${emailT(l, "验证码 5 分钟内有效。", "This code expires in 5 minutes.")}</p>
             </div>`,
           }),
         })
@@ -75,20 +92,32 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
+  let l = "zh-CN"
   try {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
     if (isDemoUser(session)) return NextResponse.json({ error: "体验用户不支持绑定邮箱，请注册后使用" }, { status: 403 })
 
-    const { email, code } = await req.json()
-    if (!email || !code) return NextResponse.json({ error: "参数不完整" }, { status: 400 })
+    const { email, code, locale } = await req.json()
+    l = locale || "zh-CN"
+    if (!email || !code) return NextResponse.json({ error: err(l, "missingParams") }, { status: 400 })
+
+    // 防爆破：同一邮箱失败次数过多则锁定（与 forgot-password 同一限流器）
+    const rateKey = `otp:${email}`
+    if (!checkOtpRateLimit(rateKey).allowed) {
+      return NextResponse.json({ error: l === "en" ? "Too many attempts, please try again in 15 minutes" : "尝试次数过多，请 15 分钟后再试" }, { status: 429 })
+    }
 
     // 验证码校验
     const record = await prisma.verificationCode.findFirst({
       where: { email, code, used: false, expiresAt: { gte: new Date() } },
       orderBy: { createdAt: "desc" },
     })
-    if (!record) return NextResponse.json({ error: "验证码错误或已过期" }, { status: 400 })
+    if (!record) {
+      recordOtpAttempt(rateKey, false)
+      return NextResponse.json({ error: err(l, "codeExpired") }, { status: 400 })
+    }
+    recordOtpAttempt(rateKey, true)
 
     // 标记验证码已使用
     await prisma.verificationCode.update({ where: { id: record.id }, data: { used: true } })
@@ -96,7 +125,7 @@ export async function PUT(req: Request) {
     // 检查邮箱是否被其他账号占用
     const existing = await prisma.user.findUnique({ where: { email } })
     if (existing && existing.id !== session.user.id) {
-      return NextResponse.json({ error: "该邮箱已被其他账号绑定" }, { status: 409 })
+      return NextResponse.json({ error: err(l, "emailBound") }, { status: 409 })
     }
 
     // 绑定邮箱
@@ -105,6 +134,6 @@ export async function PUT(req: Request) {
     return NextResponse.json({ success: true, email })
   } catch (error) {
     console.error("Bind email error:", error)
-    return NextResponse.json({ error: "绑定失败" }, { status: 500 })
+    return NextResponse.json({ error: err(l || "zh-CN", "bindFailed") }, { status: 500 })
   }
 }

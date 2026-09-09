@@ -1,23 +1,83 @@
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
+import { useTranslations } from "next-intl"
 
 export default function PublicFooter() {
+  const tcommon = useTranslations("common")
+  const tfooter = useTranslations("footer")
+
+  const links = [
+    { href: "/app/recipes", labelKey: "features" },
+    { href: "/pricing", labelKey: "pricing" },
+    { href: "/about", labelKey: "about" },
+    { href: "/faq", labelKey: "faq" },
+  ] as const
+
+  const legalLinks = [
+    { href: "/privacy", labelKey: "privacy" },
+    { href: "/terms", labelKey: "terms" },
+  ] as const
+
   return (
-    <footer className="py-10 bg-[#2D3436] text-gray-400 text-sm">
-      <div className="max-w-[1400px] mx-auto px-8 text-center">
-        <p className="text-white font-bold text-lg">🍳 CookMate</p>
-        <p className="mt-2">AI 智能食谱 &amp; 餐食规划平台</p>
-        <div className="mt-4 flex justify-center gap-6 text-sm">
-          <Link href="/#how" className="hover:text-white transition-colors">
-            使用流程
-          </Link>
-          <Link href="/about" className="hover:text-white transition-colors">
-            关于
-          </Link>
-          <Link href="/pricing" className="hover:text-white transition-colors">
-            定价
-          </Link>
+    <footer className="bg-bg-inverse text-text-secondary">
+      <div className="max-w-[1400px] mx-auto px-8 py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+          {/* Brand */}
+          <div>
+            <span className="text-2xl">🍳</span>
+            <p className="text-sm mt-2">{tcommon("appTagline")}</p>
+          </div>
+
+          {/* Quick links */}
+          <div>
+            <p className="text-text-secondary font-semibold mb-3 text-xs uppercase tracking-wider">
+              {tfooter("links")}
+            </p>
+            <ul className="space-y-2">
+              {links.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="hover:text-accent transition-colors">
+                    {tfooter(link.labelKey)}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <p className="text-text-secondary font-semibold mb-3 text-xs uppercase tracking-wider">
+              {tfooter("legal")}
+            </p>
+            <ul className="space-y-2">
+              {legalLinks.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="hover:text-accent transition-colors">
+                    {tfooter(link.labelKey)}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <p className="text-text-secondary font-semibold mb-3 text-xs uppercase tracking-wider">
+              {tfooter("contact")}
+            </p>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <a href={`mailto:${tfooter("email")}`} className="hover:text-accent transition-colors">
+                  {tfooter("email")}
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
-        <p className="mt-6">&copy; 2026 CookMate. All rights reserved.</p>
+
+        {/* Copyright */}
+        <div className="mt-8 pt-8 border-t border-gray-700 text-center">
+          <p className="text-xs text-text-secondary">{tfooter("copyright", { year: String(new Date().getFullYear()) })}</p>
+        </div>
       </div>
     </footer>
   )

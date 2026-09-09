@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { createPagePay, generateOrderId, isAlipayConfigured } from "@cookmate/shared/api/alipay-pay"
+import { createPagePay, isAlipayConfigured } from "@cookmate/shared/api/alipay-pay"
+import { generateOrderId } from "@cookmate/shared/utils/order-id"
 import { isDemoUser } from "@/lib/auth-helpers"
+import { PRICING } from "@cookmate/shared/constants/pricing"
 
 export async function POST(req: Request) {
   const session = await auth()
@@ -16,13 +18,21 @@ export async function POST(req: Request) {
   }
 
   try {
-    const orderId = generateOrderId()
+    let period: "monthly" | "annual" = "monthly"
+    try {
+      const body = await req.json()
+      if (body.period === "annual" || body.period === "monthly") period = body.period
+    } catch { /* 默认 monthly */ }
+
+    const orderId = generateOrderId("alipay")
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+    const price = PRICING.get(period, "CNY")
+    const subject = period === "annual" ? "CookMate Pro 年度订阅" : "CookMate Pro 月度订阅"
 
     const payUrl = await createPagePay(
       orderId,
-      "CookMate Pro 月度订阅",
-      15,
+      subject,
+      price.amount / 100,
       `${baseUrl}/api/alipay/notify`,
       `${baseUrl}/app/billing?success=true`,
     )
@@ -33,7 +43,9 @@ export async function POST(req: Request) {
         userId: session.user.id,
         orderId,
         channel: "alipay",
-        amount: 1500,
+        amount: price.amount,
+        currency: "CNY",     // 支付宝收人民币
+        period, // 创建时即写入周期，后台订单记录正确显示
         status: "PENDING",
       },
     })
@@ -41,6 +53,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ orderId, payUrl })
   } catch (error: unknown) {
     console.error("Alipay create error:", error)
-    return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) || "创建支付失败" }, { status: 500 })
+    // 对外只返回固定文案，内部错误细节仅服务端日志记录（防信息泄露）
+    return NextResponse.json({ error: "创建支付失败" }, { status: 500 })
   }
 }

@@ -1,28 +1,37 @@
 "use client"
 
-import Link from "next/link"
+import { Link } from "@/i18n/navigation"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
 
 const navItems = [
-  { href: "/app/dashboard", icon: "📊", label: "仪表盘" },
-  { href: "/app/recipes", icon: "🍳", label: "AI菜谱" },
-  { href: "/app/my-recipes", icon: "📚", label: "我的菜谱" },
-  { href: "/app/meal-plan", icon: "📅", label: "周计划" },
-  { href: "/app/grocery-list", icon: "🛒", label: "购物清单" },
-  { href: "/app/pantry", icon: "🥦", label: "食材库" },
-  { href: "/app/settings", icon: "⚙️", label: "设置" },
-  { href: "/app/billing", icon: "💳", label: "账单" },
+  { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
+  { href: "/app/recipes", icon: "🍳", labelKey: "aiRecipes" },
+  { href: "/app/my-recipes", icon: "📚", labelKey: "myRecipes" },
+  { href: "/app/meal-plan", icon: "📅", labelKey: "mealPlan" },
+  { href: "/app/grocery-list", icon: "🛒", labelKey: "groceryList" },
+  { href: "/app/pantry", icon: "🥦", labelKey: "pantry" },
+  { href: "/app/settings", icon: "⚙️", labelKey: "settings" },
+  { href: "/app/billing", icon: "💳", labelKey: "billing" },
 ]
 
-export function MobileNav() {
+export function MobileNav({
+  isDemoUser,
+  isAdmin,
+}: {
+  isDemoUser?: boolean
+  isAdmin?: boolean
+}) {
   const pathname = usePathname()
+  const t = useTranslations("nav")
 
   return (
-    <header className="fixed top-0 left-0 right-0 md:hidden bg-white border-b border-orange-100 h-16 z-50 flex items-center justify-between px-4">
+    <header className="fixed top-0 left-0 right-0 md:hidden bg-card border-b border-border h-16 z-50 flex items-center justify-between px-4">
       {/* Left: Logo */}
       <Link href="/app/dashboard" className="flex items-center gap-2">
         <span className="text-xl">🍳</span>
-        <span className="text-base font-bold text-[#2D3436]">CookMate</span>
+        <span className="text-base font-bold text-text-primary">CookMate</span>
       </Link>
 
       {/* Right: Icon-only nav links */}
@@ -33,15 +42,31 @@ export function MobileNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`text-lg transition-colors ${
-                isActive ? "text-[#FF6B35]" : "text-gray-500 hover:text-[#FF6B35]"
+              className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg transition-colors ${
+                isActive
+                  ? "text-accent"
+                  : "text-text-secondary hover:text-accent"
               }`}
-              title={item.label}
             >
-              {item.icon}
+              <span className="text-lg">{item.icon}</span>
+              <span className="text-[10px] font-medium leading-tight">{t(item.labelKey)}</span>
             </Link>
           )
         })}
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg transition-colors ${
+              pathname === "/admin" || pathname.endsWith("/admin")
+                ? "text-accent"
+                : "text-text-secondary hover:text-accent"
+            }`}
+          >
+            <span className="text-lg">🛡️</span>
+            <span className="text-[10px] font-medium leading-tight">管理员</span>
+          </Link>
+        )}
+        <LanguageSwitcher isDemoUser={isDemoUser} />
       </nav>
     </header>
   )

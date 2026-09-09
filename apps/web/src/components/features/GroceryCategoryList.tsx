@@ -1,4 +1,6 @@
 "use client"
+import { useTranslations, useLocale } from "next-intl"
+import { INGREDIENT_LABELS } from "@cookmate/shared/constants/ingredients"
 
 interface GroceryItem {
   name: string
@@ -31,7 +33,7 @@ function getCategoryHeaderColor(name: string): string {
     lower.includes("veg") ||
     lower.includes("veggie")
   )
-    return "bg-green-50 text-green-700"
+    return "bg-green-50 text-green-600"
   if (
     lower.includes("水果") ||
     lower.includes("fruit") ||
@@ -45,7 +47,7 @@ function getCategoryHeaderColor(name: string): string {
     lower.includes("meat") ||
     lower.includes("egg")
   )
-    return "bg-red-50 text-red-700"
+    return "bg-red-50 text-red-600"
   if (
     lower.includes("主食") ||
     lower.includes("粮油") ||
@@ -59,7 +61,7 @@ function getCategoryHeaderColor(name: string): string {
     lower.includes("spice")
   )
     return "bg-purple-50 text-purple-700"
-  return "bg-gray-50 text-gray-700"
+  return "bg-surface text-text-primary"
 }
 
 export function GroceryCategoryList({
@@ -70,15 +72,19 @@ export function GroceryCategoryList({
   inPantryCount,
   total,
 }: GroceryCategoryListProps) {
+  const t = useTranslations("grocery")
+  const locale = useLocale()
+  const catLabels = t.raw("catLabels") as Record<string, string>
+  const displayName = (name: string) => locale === "zh-CN" || locale === "zh-TW" ? name : (INGREDIENT_LABELS[name] || name)
   return (
     <div>
       {/* Summary */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3 text-sm">
-          <span className="text-gray-400">共 {total} 种食材</span>
+          <span className="text-text-secondary">{t("totalItems", { count: total })}</span>
           {inPantryCount > 0 && (
             <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded-full text-xs">
-              食材库已有 {inPantryCount} 种 ✅
+              {t("inPantryCount", { count: inPantryCount })}
             </span>
           )}
         </div>
@@ -87,42 +93,42 @@ export function GroceryCategoryList({
       {categories.length === 0 ? (
         <div className="text-center py-16">
           <span className="text-5xl">📋</span>
-          <p className="mt-4 text-gray-500">暂无购物清单</p>
+          <p className="mt-4 text-text-secondary">{t("empty")}</p>
         </div>
       ) : (
         <div className="space-y-0">
           {categories.map((cat) => (
             <div
               key={cat.name}
-              className="border-b border-gray-100 py-2 last:border-b-0"
+              className="border-b border-border py-2 last:border-b-0"
             >
               <h3
                 className={`text-xs font-semibold uppercase tracking-wider mb-1 px-1.5 py-0.5 rounded-md inline-block ${getCategoryHeaderColor(cat.name)}`}
               >
-                {cat.name}
+                {catLabels[cat.name] || cat.name}
               </h3>
               <div className="flex flex-wrap gap-x-6 gap-y-1 mt-2">
                 {cat.items.map((item, i) => (
                   <label
                     key={i}
-                    className="text-sm flex items-center gap-1.5 cursor-pointer hover:text-[#FF6B35] transition-colors group"
+                    className="text-sm flex items-center gap-1.5 cursor-pointer hover:text-accent transition-colors group"
                   >
                     <input
                       type="checkbox"
                       checked={checked.has(item.name)}
                       onChange={() => onToggleCheck(item.name)}
-                      className="rounded accent-[#FF6B35] w-3.5 h-3.5 shrink-0"
+                      className="rounded accent-accent w-3.5 h-3.5 shrink-0"
                     />
                     <span
                       className={`${
                         item.inPantry
                           ? "text-green-600"
                           : checked.has(item.name)
-                            ? "text-gray-300 line-through"
-                            : "text-gray-600"
+                            ? "text-text-secondary line-through"
+                            : "text-text-secondary"
                       } cursor-pointer ${
                         item.sources && item.sources.length > 0
-                          ? "border-b border-dashed border-gray-300 hover:border-[#FF6B35]"
+                          ? "border-b border-dashed border-gray-300 hover:border-accent"
                           : ""
                       }`}
                       onClick={(e) => {
@@ -132,21 +138,21 @@ export function GroceryCategoryList({
                         }
                       }}
                     >
-                      {item.name}
+                      {displayName(item.name)}
                       {item.quantity && (
-                        <span className="text-gray-400 font-normal">
+                        <span className="text-text-secondary font-normal">
                           {" "}
                           ({item.quantity})
                         </span>
                       )}
                     </span>
                     {item.inPantry && (
-                      <span className="text-[10px] text-green-500 bg-green-50 px-1 rounded shrink-0">
-                        已有
+                      <span className="text-[10px] text-green-600 bg-green-50 px-1 rounded shrink-0">
+                        {t("inPantry")}
                       </span>
                     )}
                     {item.sources && item.sources.length > 0 && (
-                      <span className="text-[10px] text-[#FF6B35] opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      <span className="text-[10px] text-accent opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                         🔍
                       </span>
                     )}
@@ -159,7 +165,7 @@ export function GroceryCategoryList({
       )}
 
       {/* Summary footer */}
-      <div className="mt-4 text-xs text-gray-400 text-center border-t border-gray-100 pt-3">
+      <div className="mt-4 text-xs text-text-secondary text-center border-t border-border pt-3">
         {total > 0
           ? `${total} items · ${inPantryCount} already in pantry`
           : "No items"}

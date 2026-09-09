@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 interface MealPlanRecipe {
   id?: string
   title: string
@@ -40,6 +42,9 @@ export function MealPlanDetailModal({
   onDeleteSlot,
   onNavigateTo,
 }: MealPlanDetailModalProps) {
+  const t = useTranslations("mealPlan")
+
+
   if (!open) return null
 
   const hasRecipe =
@@ -51,21 +56,21 @@ export function MealPlanDetailModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl p-6 w-96 shadow-xl max-h-[85vh] overflow-y-auto"
+        className="bg-card rounded-2xl p-6 w-96 shadow-xl max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-text-secondary">
             {dayLabels[day]} · {mealLabels[meal]}
           </p>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+            className="text-text-secondary hover:text-text-secondary text-xl leading-none"
           >
             &times;
           </button>
@@ -75,7 +80,7 @@ export function MealPlanDetailModal({
           <div className="space-y-3">
             {/* Title + Star */}
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-[#2D3436] text-lg">
+              <h3 className="font-bold text-text-primary text-lg">
                 {slot?.recipe?.title}
               </h3>
               {slot?.recipe?.id && (
@@ -84,9 +89,13 @@ export function MealPlanDetailModal({
                   className={`transition-colors text-lg ${
                     slot?.recipe?.starred
                       ? "text-amber-400"
-                      : "text-gray-300 hover:text-amber-400"
+                      : "text-text-secondary hover:text-amber-400"
                   }`}
-                  title={slot?.recipe?.starred ? "取消收藏" : "收藏菜谱"}
+                  title={
+                    slot?.recipe?.starred
+                      ? t("starTooltipStarred")
+                      : t("starTooltipUnstarred")
+                  }
                 >
                   {slot?.recipe?.starred ? "⭐" : "☆"}
                 </button>
@@ -95,25 +104,25 @@ export function MealPlanDetailModal({
 
             {/* Cooking time */}
             {slot?.recipe?.cookingTime && (
-              <p className="text-sm text-gray-600">
-                ⏱ 烹饪时间：{slot.recipe.cookingTime} 分钟
+              <p className="text-sm text-text-secondary">
+                {t("cookingTime", { time: slot.recipe.cookingTime })}
               </p>
             )}
 
             {/* Calories */}
             {slot?.recipe?.calories && (
-              <p className="text-sm text-gray-600">
-                🔥 热量：{slot.recipe.calories} 千卡
+              <p className="text-sm text-text-secondary">
+                {t("calories", { calories: slot.recipe.calories })}
               </p>
             )}
 
             {/* Ingredients */}
             {slot?.recipe?.ingredients && (
               <div>
-                <p className="text-sm font-semibold text-[#2D3436] mb-1">
-                  🥦 食材清单
+                <p className="text-sm font-semibold text-text-primary mb-1">
+                  {t("ingredients")}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-text-secondary">
                   {slot.recipe.ingredients.split(", ").join("、")}
                 </p>
               </div>
@@ -122,10 +131,10 @@ export function MealPlanDetailModal({
             {/* Steps */}
             {slot?.recipe?.steps && (
               <div>
-                <p className="text-sm font-semibold text-[#2D3436] mb-1">
-                  📝 做法步骤
+                <p className="text-sm font-semibold text-text-primary mb-1">
+                  {t("steps")}
                 </p>
-                <div className="text-sm text-gray-600 space-y-1">
+                <div className="text-sm text-text-secondary space-y-1">
                   {slot.recipe.steps.split("\n").map((step, idx) => (
                     <p key={idx}>
                       {idx + 1}. {step}
@@ -135,35 +144,35 @@ export function MealPlanDetailModal({
               </div>
             )}
 
-            <hr className="border-gray-100" />
+            <hr className="border-border" />
 
             {/* Delete button */}
             <button
               onClick={onDeleteSlot}
-              className="w-full py-2 rounded-xl text-sm border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
+              className="w-full py-2 rounded-xl text-sm border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
             >
-              ✕ 删掉这个菜
+              {t("deleteSlotBtn")}
             </button>
           </div>
         ) : (
           /* Empty state */
           <div className="py-6 text-center space-y-4">
-            <p className="text-gray-500 text-sm">未安排菜品</p>
-            <p className="text-sm text-gray-400 leading-relaxed">
-              💡 去 🤖 AI 菜谱 或 📚 我的菜谱 生成菜谱后，再添加到周计划
+            <p className="text-text-secondary text-sm">{t("emptySlot")}</p>
+            <p className="text-sm text-text-secondary leading-relaxed">
+              {t("emptySlotHint")}
             </p>
             <div className="flex gap-3 justify-center pt-2">
               <button
                 onClick={() => onNavigateTo("/app/recipes")}
                 className="flex-1 py-2.5 rounded-xl text-sm bg-gradient-to-r from-purple-400 to-pink-400 text-white hover:opacity-90 transition-opacity"
               >
-                🤖 去 AI 菜谱
+                {t("goToAiRecipes")}
               </button>
               <button
                 onClick={() => onNavigateTo("/app/my-recipes")}
                 className="flex-1 py-2.5 rounded-xl text-sm bg-gradient-to-r from-orange-400 to-amber-400 text-white hover:opacity-90 transition-opacity"
               >
-                📚 去我的菜谱
+                {t("goToMyRecipes")}
               </button>
             </div>
           </div>

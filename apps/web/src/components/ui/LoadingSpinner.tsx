@@ -17,13 +17,13 @@ export default function LoadingSpinner({
       <div
         className={cn(
           "fixed inset-0 z-50 flex flex-col items-center justify-center",
-          "bg-[#FFF8F0]",
+          "bg-bg-brand",
           className,
         )}
       >
         <span className="animate-bounce text-5xl">🍳</span>
         {text && (
-          <p className="mt-4 text-sm text-gray-500 font-medium">{text}</p>
+          <p className="mt-4 text-sm text-text-secondary font-medium">{text}</p>
         )}
       </div>
     )
@@ -33,7 +33,7 @@ export default function LoadingSpinner({
   return (
     <div className={cn("flex flex-col items-center justify-center gap-2", className)}>
       <svg
-        className="h-6 w-6 animate-spin text-[#FF6B35]"
+        className="h-6 w-6 animate-spin text-accent"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
@@ -52,7 +52,7 @@ export default function LoadingSpinner({
           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
         />
       </svg>
-      {text && <p className="text-sm text-gray-500">{text}</p>}
+      {text && <p className="text-sm text-text-secondary">{text}</p>}
     </div>
   )
 }

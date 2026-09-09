@@ -1,7 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/navigation"
+import { useTranslations } from "next-intl"
+import Link from "next/link"
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from "@cookmate/shared/constants"
 
 const STEPS = ["欢迎", "偏好", "食材", "上手", "完成"]
@@ -13,7 +15,48 @@ const QUICK_INGREDIENTS = [
 ]
 
 export default function OnboardingWizard({ onComplete }: { onComplete: () => void }) {
-  const router = useRouter()
+  const t = useTranslations("onboarding")
+  const ts = useTranslations("settings")
+
+  const [isDemoUser, setIsDemoUser] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    fetch("/api/user/profile")
+      .then((r) => r.json())
+      .then((data) => {
+        setIsDemoUser(!!data.isDemoUser)
+      })
+      .catch(() => setIsDemoUser(false))
+  }, [])
+
+  const dietLabel: Record<string, string> = {
+    "不限": ts("dietUnlimited"), "减脂": ts("dietLoseFat"),
+    "增肌": ts("dietBuildMuscle"), "素食": ts("dietVegetarian"),
+    "低碳水": ts("dietLowCarb"), "无麸质": ts("dietGlutenFree"),
+  }
+  const cuisineLabel: Record<string, string> = {
+    "中餐": ts("cuisineChinese"), "西餐": ts("cuisineWestern"),
+    "日料": ts("cuisineJapanese"), "韩餐": ts("cuisineKorean"),
+    "东南亚": ts("cuisineSoutheastAsian"), "印度菜": ts("cuisineIndian"),
+    "中东菜": ts("cuisineMiddleEastern"), "墨西哥菜": ts("cuisineMexican"),
+  }
+  const ingredientCats: Record<string, string> = {
+    "🥬 蔬菜": t("catVegetables"),
+    "🥩 肉禽蛋": t("catMeat"),
+    "🍚 主食粮油": t("catStaples"),
+  }
+  const ingredientLabel: Record<string, string> = {
+    "西红柿": t("ingredient_tomato"), "青菜": t("ingredient_greens"),
+    "白菜": t("ingredient_cabbage"), "土豆": t("ingredient_potato"),
+    "胡萝卜": t("ingredient_carrot"), "洋葱": t("ingredient_onion"),
+    "大蒜": t("ingredient_garlic"), "姜": t("ingredient_ginger"),
+    "葱": t("ingredient_scallion"), "鸡蛋": t("ingredient_egg"),
+    "鸡胸肉": t("ingredient_chicken_breast"), "鸡腿": t("ingredient_chicken_leg"),
+    "五花肉": t("ingredient_pork_belly"), "牛肉": t("ingredient_beef"),
+    "培根": t("ingredient_bacon"), "大米": t("ingredient_rice"),
+    "面条": t("ingredient_noodles"), "面粉": t("ingredient_flour"),
+    "挂面": t("ingredient_dried_noodles"), "食用油": t("ingredient_oil"),
+  }
   const [step, setStep] = useState(0)
   const [dietType, setDietType] = useState("不限")
   const [cuisinePref, setCuisinePref] = useState<string[]>([])
@@ -21,6 +64,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
   const [selectedIngredients, setSelectedIngredients] = useState<Set<string>>(new Set())
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
+  const router = useRouter()
 
   const canNext = () => {
     if (step === 0) return true
@@ -28,13 +72,15 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
       return false
     }
     if (step === 2) return true
+    // Step 4 (last): wait for demo check before enabling
+    if (step === STEPS.length - 1 && isDemoUser === null) return false
     return true
   }
 
   const handleNext = async () => {
     // 检查菜系选择
     if (step === 1 && cuisinePref.length === 0) {
-      setError("请至少选择一个菜系")
+      setError(t("selectCuisineError"))
       return
     }
     if (step < STEPS.length - 1) {
@@ -42,7 +88,11 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
       setStep(step + 1)
       return
     }
-    // Complete
+    // Complete — demo users cannot save
+    if (isDemoUser === true) {
+      router?.push("/register")
+      return
+    }
     setSaving(true)
     try {
       const res = await fetch("/api/user/onboarding", {
@@ -51,8 +101,8 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
         body: JSON.stringify({ dietType, cuisinePref: cuisinePref.join(","), servingSize }),
       })
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "保存失败" }))
-        setError(err.error || "保存失败")
+        const err = await res.json().catch(() => ({ error: t("saveFailed") }))
+        setError(err.error || t("saveFailed"))
         setSaving(false)
         return
       }
@@ -80,12 +130,12 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+      <div className="bg-card rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden relative">
         {/* Progress bar */}
-        <div className="h-1 bg-gray-100">
+        <div className="h-1 bg-surface">
           <div
-            className="h-full bg-[#FF6B35] transition-all duration-500 ease-out"
+            className="h-full bg-accent transition-all duration-500 ease-out"
             style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
           />
         </div>
@@ -93,6 +143,10 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
         {/* Close/skip button */}
         <button
           onClick={async () => {
+            if (isDemoUser === true) {
+              router?.push("/app/dashboard")
+              return
+            }
             const res = await fetch("/api/user/onboarding", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -100,11 +154,14 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
             })
             if (res.ok) {
               onComplete()
+            } else {
+              // If save fails, still redirect to dashboard
+              router?.push("/app/dashboard")
             }
           }}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-sm"
+          className="absolute top-4 right-4 text-text-secondary hover:text-text-secondary text-sm"
         >
-          跳过 →
+          {t("skip")}
         </button>
 
         {/* Step indicator */}
@@ -113,11 +170,11 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
             <div key={s} className="flex items-center gap-1">
               <div
                 className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  i <= step ? "bg-[#FF6B35]" : "bg-gray-200"
+                  i <= step ? "bg-accent" : "bg-gray-200"
                 }`}
               />
               {i < STEPS.length - 1 && (
-                <div className={`w-6 h-0.5 ${i < step ? "bg-[#FF6B35]" : "bg-gray-200"}`} />
+                <div className={`w-6 h-0.5 ${i < step ? "bg-accent" : "bg-gray-200"}`} />
               )}
             </div>
           ))}
@@ -128,21 +185,18 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
           {step === 0 && (
             <div className="text-center py-4">
               <div className="text-5xl mb-4">🍳</div>
-              <h2 className="text-2xl font-bold text-gray-900">欢迎来到 CookMate</h2>
-              <p className="text-gray-500 mt-3 leading-relaxed">
-                三步搞定本周饭菜 — 告诉我们你的口味偏好，
-                <br />添加冰箱食材，让 AI 为你推荐菜谱。
-              </p>
+              <h2 className="text-2xl font-bold text-text-primary">{t("welcomeTitle")}</h2>
+              <p className="text-text-secondary mt-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.raw("welcomeDesc") }} />
               <div className="grid grid-cols-3 gap-3 mt-8">
                 {[
-                  { emoji: "🎯", title: "设置偏好", desc: "口味、份量" },
-                  { emoji: "🥦", title: "添加食材", desc: "冰箱有什么" },
-                  { emoji: "🤖", title: "AI推荐", desc: "秒出菜谱" },
+                  { emoji: "🎯", title: t("step1Card1Title"), desc: t("step1Card1Desc") },
+                  { emoji: "🥦", title: t("step1Card2Title"), desc: t("step1Card2Desc") },
+                  { emoji: "🤖", title: t("step1Card3Title"), desc: t("step1Card3Desc") },
                 ].map((item) => (
-                  <div key={item.title} className="text-center p-3 rounded-xl bg-gray-50">
+                  <div key={item.title} className="text-center p-3 rounded-xl bg-surface">
                     <div className="text-2xl">{item.emoji}</div>
-                    <div className="text-sm font-semibold text-gray-900 mt-1">{item.title}</div>
-                    <div className="text-xs text-gray-400">{item.desc}</div>
+                    <div className="text-sm font-semibold text-text-primary mt-1">{item.title}</div>
+                    <div className="text-xs text-text-secondary">{item.desc}</div>
                   </div>
                 ))}
               </div>
@@ -151,30 +205,30 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
 
           {step === 1 && (
             <div className="py-4">
-              <h2 className="text-xl font-bold text-gray-900 text-center">你吃什么？</h2>
-              <p className="text-gray-500 text-sm text-center mt-1">设置你的饮食偏好，AI 按需推荐</p>
+              <h2 className="text-xl font-bold text-text-primary text-center">{t("preferenceTitle")}</h2>
+              <p className="text-text-secondary text-sm text-center mt-1" dangerouslySetInnerHTML={{ __html: t.raw("preferenceDesc") }} />
 
               <div className="mt-6">
-                <label className="text-sm font-semibold text-gray-700">饮食习惯</label>
+                <label className="text-sm font-semibold text-text-primary">{t("dietType")}</label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {DIET_OPTIONS.map((opt) => (
                     <button
-                      key={opt}
+                      key={dietLabel[opt]}
                       onClick={() => setDietType(opt)}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                         dietType === opt
-                          ? "bg-[#FF6B35] text-white"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          ? "bg-accent text-white"
+                          : "bg-surface text-text-secondary hover:bg-border"
                       }`}
                     >
-                      {opt}
+                      {dietLabel[opt]}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="mt-5">
-                <label className="text-sm font-semibold text-gray-700">偏好菜系（可多选）</label>
+                <label className="text-sm font-semibold text-text-primary">{t("cuisinePref")}</label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {CUISINE_OPTIONS.map((opt) => {
                     const selected = cuisinePref.includes(opt)
@@ -189,25 +243,25 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                         }}
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
                           selected
-                            ? "bg-[#FF6B35] text-white"
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            ? "bg-accent text-white"
+                            : "bg-surface text-text-secondary hover:bg-border"
                         }`}
                       >
-                        {selected ? "✓" : ""} {opt}
+                        {selected ? "✓" : ""} {cuisineLabel[opt]}
                       </button>
                     )
                   })}
                 </div>
                 {cuisinePref.length > 0 && (
-                  <p className="text-xs text-gray-400 mt-1.5">已选 {cuisinePref.length} 种菜系</p>
+                  <p className="text-xs text-text-secondary mt-1.5">{t("selectedCuisines", { count: cuisinePref.length })}</p>
                 )}
                 {error && (
-                  <p className="text-xs text-red-500 mt-1.5">{error}</p>
+                  <p className="text-xs text-red-600 mt-1.5">{error}</p>
                 )}
               </div>
 
               <div className="mt-5">
-                <label className="text-sm font-semibold text-gray-700">几人份</label>
+                <label className="text-sm font-semibold text-text-primary">{t("servingSize")}</label>
                 <div className="flex items-center gap-3 mt-2">
                   {SERVING_SIZE_OPTIONS.map((n) => (
                     <button
@@ -215,8 +269,8 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                       onClick={() => setServingSize(n)}
                       className={`w-10 h-10 rounded-full text-sm font-semibold transition-all ${
                         servingSize === n
-                          ? "bg-[#FF6B35] text-white"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          ? "bg-accent text-white"
+                          : "bg-surface text-text-secondary hover:bg-border"
                       }`}
                     >
                       {n}
@@ -229,13 +283,13 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
 
           {step === 2 && (
             <div className="py-4">
-              <h2 className="text-xl font-bold text-gray-900 text-center">冰箱里有什么？</h2>
-              <p className="text-gray-500 text-sm text-center mt-1">点选你常备的食材，方便 AI 推荐</p>
+              <h2 className="text-xl font-bold text-text-primary text-center">{t("ingredientTitle")}</h2>
+              <p className="text-text-secondary text-sm text-center mt-1" dangerouslySetInnerHTML={{ __html: t.raw("ingredientDesc") }} />
 
               <div className="mt-5 space-y-3 max-h-64 overflow-y-auto">
                 {QUICK_INGREDIENTS.map((group) => (
                   <div key={group.cat}>
-                    <p className="text-xs font-semibold text-gray-400 mb-1.5">{group.cat}</p>
+                    <p className="text-xs font-semibold text-text-secondary mb-1.5">{ingredientCats[group.cat]}</p>
                     <div className="flex flex-wrap gap-2">
                       {group.items.map((item) => (
                         <button
@@ -243,19 +297,19 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                           onClick={() => toggleIngredient(item)}
                           className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
                             selectedIngredients.has(item)
-                              ? "bg-[#FF6B35]/10 text-[#FF6B35] border border-[#FF6B35]/30"
-                              : "bg-gray-50 text-gray-600 border border-gray-100 hover:bg-gray-100"
+                              ? "bg-orange-50 text-accent border border-orange-200"
+                              : "bg-surface text-text-secondary border border-border hover:bg-surface"
                           }`}
                         >
-                          {selectedIngredients.has(item) ? "✓ " : ""}{item}
+                          {selectedIngredients.has(item) ? "✓ " : ""}{ingredientLabel[item]}
                         </button>
                       ))}
                     </div>
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-400 mt-3 text-center">
-                已选 {selectedIngredients.size} 种食材（选或不选都可以，随时去食材库添加）
+              <p className="text-xs text-text-secondary mt-3 text-center">
+                {t("selectedIngredients", { count: selectedIngredients.size })}
               </p>
             </div>
           )}
@@ -263,37 +317,50 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
           {step === 3 && (
             <div className="text-center py-4">
               <div className="text-5xl mb-4">🤖</div>
-              <h2 className="text-xl font-bold text-gray-900">试试 AI 推荐</h2>
-              <p className="text-gray-500 mt-3 leading-relaxed">
-                去菜谱页面，输入你冰箱里的食材，
-                <br />AI 秒出菜谱推荐。不满意随时重新生成。
-              </p>
-              <div className="mt-6 inline-flex items-center gap-2 bg-orange-50 text-[#FF6B35] px-4 py-2 rounded-full text-sm font-medium">
-                🍳 马上试试 →
+              <h2 className="text-xl font-bold text-text-primary">{t("tryAiTitle")}</h2>
+              <p className="text-text-secondary mt-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.raw("tryAiDesc") }} />
+              <div className="mt-6 inline-flex items-center gap-2 bg-orange-50 text-accent px-4 py-2 rounded-full text-sm font-medium">
+                {t("tryAiButton")}
               </div>
             </div>
           )}
 
           {step === 4 && (
             <div className="text-center py-6">
-              <div className="text-5xl mb-4">🎉</div>
-              <h2 className="text-2xl font-bold text-gray-900">一切就绪！</h2>
-              <p className="text-gray-500 mt-3 leading-relaxed">
-                偏好和食材已保存。<br />
-                现在去仪表盘开始你的 CookMate 之旅吧！
-              </p>
+              {isDemoUser === true ? (
+                <>
+                  <div className="text-5xl mb-4">💡</div>
+                  <h2 className="text-2xl font-bold text-text-primary">{t("readyTitle")}</h2>
+                  <p className="text-text-secondary mt-3 leading-relaxed">{t("demoCannotSave")}</p>
+                  <div className="mt-6">
+                    <Link
+                      href="/register"
+                      className="inline-block bg-accent text-white px-6 py-3 rounded-full text-sm font-semibold hover:bg-orange-600 transition-colors"
+                    >
+                      {t("freeRegister")}
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-5xl mb-4">🎉</div>
+                  <h2 className="text-2xl font-bold text-text-primary">{t("readyTitle")}</h2>
+                  <p className="text-text-secondary mt-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.raw("readyDesc") }} />
+                </>
+              )}
             </div>
           )}
 
-          {/* Actions */}
+          {/* Actions — hidden for demo users on the last step (register button is in the content) */}
+          {isDemoUser === true && step === STEPS.length - 1 ? null : (
           <div className="flex items-center justify-between mt-6">
             <button
               onClick={() => step > 0 && setStep(step - 1)}
-              className={`text-sm font-medium transition-colors ${
-                step > 0 ? "text-gray-500 hover:text-gray-900" : "text-transparent pointer-events-none"
+              className={`text-sm font-medium py-2.5 transition-colors ${
+                step > 0 ? "text-text-secondary hover:text-text-primary" : "text-transparent pointer-events-none"
               }`}
             >
-              ← 上一步
+              {t("previous")}
             </button>
 
             <button
@@ -301,13 +368,14 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
               disabled={!canNext() || saving}
               className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
                 !canNext() || saving
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-[#FF6B35] text-white hover:bg-orange-600"
+                  ? "bg-gray-200 text-text-secondary cursor-not-allowed"
+                  : "bg-accent text-white hover:bg-orange-600"
               }`}
             >
-              {saving ? "保存中..." : step === STEPS.length - 1 ? "✨ 开始使用" : "下一步 →"}
+              {saving ? t("saving") : step === STEPS.length - 1 ? t("startUsing") : t("next")}
             </button>
           </div>
+        )}
         </div>
       </div>
     </div>

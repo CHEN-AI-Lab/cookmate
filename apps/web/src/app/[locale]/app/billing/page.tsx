@@ -1,0 +1,506 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useTranslations, useLocale } from "next-intl"
+import { PricingCard } from "@/components/features/PricingCard"
+import { PRICING, getPerMonthDisplay, getSaveAmount, getSavePercent } from "@cookmate/shared/constants/pricing"
+import { cn } from "@cookmate/shared/utils"
+import { CHANNEL_ICONS } from "@cookmate/shared/constants/payment-channels"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
+
+interface BillingInfo {
+  subscriptionTier: string
+  subscriptionExpiryDate?: string | null
+  isDemoUser: boolean
+  creemConfigured: boolean
+  canceled: boolean
+  paymentChannel: string | null
+  subscriptionPeriod: string | null
+  todayUsage: number
+  orders?: Array<{
+    id: string
+    orderId: string
+    channel: string
+    amount: number
+    status: string
+    createdAt: string
+  }>
+}
+
+function daysRemaining(expiryStr: string): number {
+  const now = new Date()
+  now.setUTCHours(0, 0, 0, 0)
+  const expiry = new Date(expiryStr)
+  expiry.setUTCHours(0, 0, 0, 0)
+  return Math.max(0, Math.ceil((expiry.getTime() - now.getTime()) / 86400000))
+}
+
+export default function BillingPage() {
+  const t = useTranslations("billing")
+  const locale = useLocale()
+  const [info, setInfo] = useState<BillingInfo | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [error, setError] = useState("")
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [paying, setPaying] = useState(false)
+  const [topBanner, setTopBanner] = useState("")
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false)
+  const [selectedPeriod, setSelectedPeriod] = useState<"monthly" | "annual">("annual")
+
+  useEffect(() => {
+    fetch("/api/dashboard")
+      .then((r) => r.json())
+      .then((data) => {
+        setInfo({
+          subscriptionTier: data.subscriptionTier || SUBSCRIPTION_TIER.FREE,
+          subscriptionExpiryDate: data.subscriptionExpiryDate,
+          isDemoUser: !!data.isDemoUser,
+          creemConfigured: !!data.creemConfigured,
+          canceled: !!data.canceled,
+          paymentChannel: data.paymentChannel ?? null,
+          subscriptionPeriod: data.subscriptionPeriod ?? null,
+          todayUsage: data.todayUsage ?? 0,
+          orders: data.orders || [],
+        })
+      })
+      .catch((err) => { console.error("load billing info error:", err); setError(t("loadingError")); })
+      .finally(() => setLoading(false))
+
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("success") === "true") {
+      fetch("/api/creem/create-checkout")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.checkoutId) {
+            return fetch(`/api/creem/create-checkout?checkoutId=${data.checkoutId}`).then((r) => r.json())
+          }
+          return null
+        })
+        .then(() => {
+          // 无论轮询结果如何，都刷新 dashboard（GET 接口内部已处理升级兜底）
+          setRefreshKey((k) => k + 1)
+        })
+        .catch(() => { /* silent */ })
+      window.history.replaceState({}, "", window.location.pathname)
+    } else if (params.get("canceled") === "true") {
+      fetch("/api/creem/create-checkout?cancel=true", { method: "POST" }).catch(() => {})
+      window.history.replaceState({}, "", window.location.pathname)
+    }
+  }, [refreshKey, t])
+
+  const handleCreemUpgrade = async (period: "monthly" | "annual") => {
+    setActionLoading("creem")
+    setError("")
+    try {
+      const res = await fetch("/api/creem/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ period }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || t("createPaymentFailed"))
+        return
+      }
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch (err) {
+      console.error("creem upgrade error:", err)
+      setError(t("networkError"))
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  if (loading) return <div className="text-center py-16 text-text-secondary">{t("loading")}</div>
+
+  const isFree = info?.subscriptionTier === SUBSCRIPTION_TIER.FREE
+  const isDemo = info?.isDemoUser
+  const isCreemActive = !isFree && !info?.canceled && info?.paymentChannel === "creem"
+  const currentPeriod = info?.subscriptionPeriod // "monthly" | "annual" | null
+
+  // 判断某张 Pro 卡是否是当前订阅的周期
+  const isCurrentProPlan = (period: "monthly" | "annual") => {
+    return !isFree && !info?.canceled && currentPeriod === period
+  }
+
+  // Pro 卡按钮文案：
+  // FREE → 订阅（不区分周期，周期在卡片价格旁已显示）
+  // 已取消 → 重新开通
+  // Creem 活跃 + 当前周期卡 → 当前计划（禁用）
+  // Creem 活跃 + 非当前周期卡 → 已订阅（禁用）
+  // 支付宝续费 → 续费延长
+  const getProCtaLabel = (period: "monthly" | "annual") => {
+    if (isFree) return t("subscribePro")
+    if (info?.canceled) return t("reactivateAction")
+    if (isCreemActive) {
+      return isCurrentProPlan(period) ? t("currentPlan") : t("currentSubscribed")
+    }
+    return t("extendAction")
+  }
+  const currency = locale === "zh-CN" ? "CNY" : "USD"
+  const monthlyPrice = PRICING.get("monthly", currency)
+  const annualPrice = PRICING.get("annual", currency)
+  const checkoutPeriodLabel = selectedPeriod === "annual"
+    ? (locale === "zh-CN" ? "/年" : "/yr")
+    : (locale === "zh-CN" ? "/月" : "/mo")
+
+  // 自动计算年付宣传文案 — 价格改了不用手改翻译文件
+  const annualPerMonth = getPerMonthDisplay("annual", currency)
+  const annualSavePercent = getSavePercent("annual", currency)
+  const annualSaveAmount = getSaveAmount("annual", currency)
+  const saveAmountDisplay = currency === "CNY"
+    ? `¥${(annualSaveAmount / 100).toFixed(0)}`
+    : `$${(annualSaveAmount / 100).toFixed(0)}`
+  const yearlyPeriodText = t("yearlyPeriodTpl", { perMonth: annualPerMonth, percent: annualSavePercent })
+  const yearlySavingText = t("yearlySavingTpl", { amount: saveAmountDisplay })
+
+  const daysLeft = info?.subscriptionExpiryDate ? daysRemaining(info.subscriptionExpiryDate) : 0
+
+  return (
+    <>
+      {topBanner && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-green-600 text-white text-center text-sm font-medium py-3 px-4 shadow-lg">
+          {topBanner}
+        </div>
+      )}
+      <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-text-primary">{t("title")}</h1>
+        <p className="text-text-secondary mt-1 text-sm">{t("subtitle")}</p>
+      </div>
+
+      {/* ── Current Plan Card ── */}
+      <div className="bg-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        {!isFree && !info?.canceled && (
+          <div className="h-1 bg-gradient-to-r from-amber-400 to-amber-200" />
+        )}
+        <div className="p-6">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <p className="text-sm text-text-secondary">{t("currentPlan")}</p>
+              <h2 className="text-xl font-bold text-text-primary">
+                {isFree ? t("currentPlanFree") : t("currentPlanPro")}
+              </h2>
+              {!isFree && (
+                <p className="text-sm text-text-secondary">{t("proPlanDesc")}</p>
+              )}
+              {isFree && (
+                <p className="text-sm text-text-secondary">{t("freePlanDesc")}</p>
+              )}
+            </div>
+            <span className={cn(
+              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold",
+              isFree
+                ? "bg-surface text-text-secondary"
+                : info?.canceled
+                  ? "bg-orange-50 text-orange-600"
+                  : "bg-amber-50 text-amber-600"
+            )}>
+              {isFree ? t("freeBadge") : info?.canceled ? t("canceled") : t("proBadge")}
+            </span>
+          </div>
+
+        {!isFree && info?.subscriptionExpiryDate && !info?.canceled && (
+          <div className="mt-4 flex items-center gap-3">
+            <div className={cn(
+              "text-sm font-medium px-3 py-1 rounded-full",
+              daysLeft <= 7 ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"
+            )}>
+              {t("daysLeft", { days: daysLeft })}
+            </div>
+            <span className="text-xs text-text-secondary">
+              {t("expiryDate", { date: new Date(info.subscriptionExpiryDate).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" }) })}
+            </span>
+          </div>
+        )}
+        {!isFree && info?.subscriptionExpiryDate && info?.canceled && (
+          <p className="text-xs text-text-secondary mt-2">
+            {t("expiryDate", { date: new Date(info.subscriptionExpiryDate).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" }) })}
+          </p>
+        )}
+
+        {/* Pro features quick list */}
+        {!isFree && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="flex flex-wrap gap-x-6 gap-y-1.5 text-sm text-text-secondary">
+              {(t.raw("proPlanFeatures") as string[]).map((f) => (
+                <span key={f} className="flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  {f}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      </div>
+
+      {/* ── Pricing Section ── */}
+      {/* 定价区永远显示，不隐藏
+          Creem 活跃订阅时按钮禁用（防止重复订阅），其他情况正常 */}
+      {!isDemo && (
+        <div className="bg-card rounded-2xl border border-gray-100 shadow-sm p-6">
+          {/* Creem 活跃订阅提示 */}
+          {isCreemActive && (
+            <div className="mb-4 rounded-xl bg-orange-50 border border-orange-200 px-4 py-3 text-sm text-orange-700 text-center">
+              {t("creemActiveHint")}
+            </div>
+          )}
+          <h3 className="font-bold text-text-primary mb-4 text-center">
+            {isFree || info?.canceled ? t("selectPlan") : t("extendTitle")}
+          </h3>
+
+          {/* 2 cards: Pro Monthly, Pro Annual（Free 不显示，登录后 Free 是默认状态无需选择） */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto items-stretch">
+            {/* Pro Monthly */}
+            <PricingCard
+              name={t("monthlyPro")}
+              price={monthlyPrice.display}
+              periodLabel={locale === "zh-CN" ? "/月" : "/mo"}
+              period={t("monthlyPeriod")}
+              features={t.raw("proPlanFeatures") as string[]}
+              highlighted={false}
+              isCurrent={isCurrentProPlan("monthly")}
+              ctaLabel={getProCtaLabel("monthly")}
+              onCta={() => { setSelectedPeriod("monthly"); setShowCheckoutModal(true) }}
+              disabled={isCreemActive || isCurrentProPlan("monthly")}
+              loading={false}
+              ctaHint={isCreemActive && !isCurrentProPlan("monthly") ? t("creemActiveCtaHint") : undefined}
+            />
+
+            {/* Pro Annual */}
+            <PricingCard
+              name={t("yearlyPro")}
+              price={annualPrice.display}
+              periodLabel={locale === "zh-CN" ? "/年" : "/yr"}
+              period={yearlyPeriodText}
+              saving={yearlySavingText}
+              features={t.raw("proPlanFeatures") as string[]}
+              highlighted={true}
+              isCurrent={isCurrentProPlan("annual")}
+              ctaLabel={getProCtaLabel("annual")}
+              onCta={() => { setSelectedPeriod("annual"); setShowCheckoutModal(true) }}
+              disabled={isCreemActive || isCurrentProPlan("annual")}
+              loading={false}
+              ctaHint={isCreemActive && !isCurrentProPlan("annual") ? t("creemActiveCtaHint") : undefined}
+            />
+          </div>
+
+          {/* 退款声明（套餐区底部，小字融入卡片，与结算弹窗文案一致） */}
+          <p className="mt-4 text-center text-[11px] leading-relaxed text-text-secondary">{t("checkoutRefundNotice")}</p>
+        </div>
+      )}
+
+      {/* ── Demo User Section ── */}
+      {isFree && isDemo && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center">
+          <p className="text-lg mb-2">{t("demoBillingTitle")}</p>
+          <p className="text-sm text-amber-700 mb-4">
+            {t("demoBillingDesc")}
+          </p>
+          <Link
+            href="/register"
+            className="inline-block bg-accent text-white px-6 py-2.5 rounded-full text-sm font-medium hover:bg-orange-600 transition-all"
+          >
+            {t("demoBillingRegister")}
+          </Link>
+        </div>
+      )}
+
+      {/* ── PRO: Manage Subscription (cancel) ── */}
+      {!isFree && !info?.canceled && (
+        <div className="bg-card rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-text-primary">{t("subscriptionManage")}</h3>
+            <p className="text-sm text-text-secondary mt-0.5">{t("subscriptionManageDesc")}</p>
+          </div>
+          <button
+            onClick={() => setShowCancelModal(true)}
+            disabled={actionLoading !== null}
+            className="shrink-0 inline-flex items-center justify-center gap-1.5 text-xs text-red-600 border border-red-200 rounded-full px-3 py-1.5 hover:bg-red-50 transition-colors disabled:opacity-40"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            {actionLoading === "cancel" ? t("cancelling") : t("cancelSubscription")}
+          </button>
+        </div>
+      )}
+
+      {/* ── PRO Cancelled ── */}
+      {!isFree && info?.canceled && (
+        <div className="bg-card rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-text-primary">{t("subscriptionManage")}</h3>
+              <p className="text-sm text-text-secondary mt-0.5">{t("subscriptionManageDesc")}</p>
+            </div>
+            <span className="inline-flex items-center gap-1.5 text-xs text-text-secondary bg-surface rounded-full px-3 py-1.5">
+              {t("subscriptionCancelled")}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Order History Link ── */}
+      {(info?.orders?.length ?? 0) > 0 && (
+        <div className="text-center">
+          <Link
+            href="/app/orders"
+            className="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-accent transition-colors"
+          >
+            {t("orderHistory")}
+          </Link>
+        </div>
+      )}
+
+      {/* ── Checkout Modal ── */}
+      {showCheckoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => { setShowCheckoutModal(false); setError("") }}>
+          <div className="bg-card rounded-2xl shadow-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-bold text-lg text-text-primary mb-4 text-center">
+              {isFree ? t("checkoutTitle") : t("extendTitle")}
+            </h3>
+
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border border-amber-200/50 rounded-xl p-4 mb-4 text-center">
+              <p className="text-sm text-amber-700 dark:text-amber-300">{t("proPlan")}</p>
+              <p className="text-2xl font-bold mt-1 text-text-primary">
+                {currency === "CNY" ? "¥" : "$"}{PRICING.get(selectedPeriod, currency).display}{checkoutPeriodLabel}
+              </p>
+              <p className="text-xs text-text-secondary mt-1">
+                {selectedPeriod === "annual" ? yearlyPeriodText : t("monthlyPeriod")}
+              </p>
+            </div>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">{error}</div>
+            )}
+
+            <p className="text-sm font-medium text-text-primary mb-1">{t("paymentMethods")}</p>
+            <p className="text-[11px] text-text-secondary/70 mb-3 px-1">{t("paymentRetryHint")}</p>
+            <div className="space-y-2">
+              <button
+                onClick={async () => {
+                  setPaying(true)
+                  setError("")
+                  try {
+                    const res = await fetch("/api/alipay/create", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ period: selectedPeriod }),
+                    })
+                    const data = await res.json()
+                    if (data.payUrl) {
+                      window.location.href = data.payUrl
+                    } else {
+                      setError(data.error || t("createPaymentFailed"))
+                      setPaying(false)
+                    }
+                  } catch {
+                    setError(t("networkError"))
+                    setPaying(false)
+                  }
+                }}
+                disabled={actionLoading !== null || paying}
+                className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-gray-100 hover:border-accent hover:bg-orange-50/30 transition-all disabled:opacity-40 group"
+              >
+                <span className="w-7 h-7 shrink-0" dangerouslySetInnerHTML={{ __html: CHANNEL_ICONS["alipay"] || "" }} />
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-text-primary text-sm">{t("alipay")}</p>
+                  <p className="text-xs text-text-secondary">{t("payDesc")}</p>
+                </div>
+                {paying && <span className="text-xs text-text-secondary shrink-0">{t("redirecting")}</span>}
+              </button>
+
+              {info?.creemConfigured && (
+                <button
+                  onClick={() => handleCreemUpgrade(selectedPeriod)}
+                  disabled={actionLoading !== null}
+                  className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-gray-100 hover:border-accent hover:bg-orange-50/30 transition-all disabled:opacity-40 group"
+                >
+                  <span className="w-7 h-7 shrink-0" dangerouslySetInnerHTML={{ __html: CHANNEL_ICONS["creem"] || "" }} />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-text-primary text-sm">{t("creem")}</p>
+                    <p className="text-xs text-text-secondary">{t("creemDesc")}</p>
+                  </div>
+                  {actionLoading === "creem" && <span className="text-xs text-text-secondary shrink-0">{t("redirecting")}</span>}
+                </button>
+              )}
+            </div>
+
+            {/* 退款声明：虚拟商品一经开通不支持退款（正式法律措辞见定价页） */}
+            <p className="mt-4 text-[11px] leading-relaxed text-text-secondary/80">
+              {t("checkoutRefundNotice")}
+            </p>
+
+            <button
+              onClick={() => { setShowCheckoutModal(false); setError("") }}
+              className="w-full mt-4 py-2.5 text-sm text-text-secondary border border-gray-100 rounded-xl hover:bg-surface transition-colors"
+            >
+              {t("checkoutCancel")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Cancel Confirmation Modal ── */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => setShowCancelModal(false)}>
+          <div className="bg-card rounded-2xl shadow-xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center mb-4">
+              <div className="mx-auto w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="font-bold text-lg text-text-primary">{t("cancelSubscription")}</h3>
+            </div>
+            <p className="text-sm text-text-secondary mb-4">{t("cancelConfirm")}</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-gray-100 rounded-xl hover:bg-surface transition-colors"
+              >
+                {t("keepPro")}
+              </button>
+              <button
+                onClick={async () => {
+                  setShowCancelModal(false)
+                  setActionLoading("cancel")
+                  try {
+                    const res = await fetch("/api/subscription/cancel", { method: "POST" })
+                    const data = await res.json()
+                    if (data.success) {
+                      setTopBanner(data.message)
+                      setTimeout(() => setTopBanner(""), 5000)
+                      setRefreshKey((k) => k + 1)
+                    } else {
+                      setError(data.error || t("cancelFailed"))
+                    }
+                  } catch {
+                    setError(t("networkError"))
+                  } finally {
+                    setActionLoading(null)
+                  }
+                }}
+                disabled={actionLoading === "cancel"}
+                className="flex-1 px-4 py-2.5 text-sm text-white bg-red-500 rounded-xl hover:bg-red-500 disabled:bg-surface transition-colors font-medium"
+              >
+                {actionLoading === "cancel" ? t("cancelling") : t("cancelSubscription")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+    </>
+  )
+}

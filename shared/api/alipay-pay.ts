@@ -26,13 +26,6 @@ export function verifyNotify(params: Record<string, string>, publicKey: string):
   return verifier.verify(publicKey, signStr, "base64")
 }
 
-// 生成订单号
-export function generateOrderId(): string {
-  const ts = Date.now().toString(36)
-  const rand = Math.random().toString(36).substring(2, 6).toUpperCase()
-  return `CM${ts}${rand}`
-}
-
 // 创建电脑网站支付订单
 export async function createPagePay(
   orderId: string,
@@ -44,7 +37,7 @@ export async function createPagePay(
   const appId = process.env.AUTH_ALIPAY_ID
   const privateKey = process.env.AUTH_ALIPAY_PRIVATE_KEY || ""
 
-  if (!appId) throw new Error("AUTH_ALIPAY_ID 未配置")
+  if (!appId) throw Object.assign(new Error("AUTH_ALIPAY_ID 未配置"), { code: "ALIPAY_NOT_CONFIGURED" })
 
   const bizContent = JSON.stringify({
     out_trade_no: orderId,
@@ -78,7 +71,7 @@ export async function queryOrder(outTradeNo: string): Promise<{ paid: boolean; t
   const appId = process.env.AUTH_ALIPAY_ID
   const privateKey = process.env.AUTH_ALIPAY_PRIVATE_KEY || ""
 
-  if (!appId) throw new Error("AUTH_ALIPAY_ID 未配置")
+  if (!appId) throw Object.assign(new Error("AUTH_ALIPAY_ID 未配置"), { code: "ALIPAY_NOT_CONFIGURED" })
 
   const bizContent = JSON.stringify({
     out_trade_no: outTradeNo,
@@ -104,7 +97,7 @@ export async function queryOrder(outTradeNo: string): Promise<{ paid: boolean; t
   try {
     // 支付宝返回 JSONP 格式，需要解析
     const jsonMatch = text.match(/\{.*\}/)
-    if (!jsonMatch) throw new Error("无法解析支付宝响应")
+    if (!jsonMatch) throw Object.assign(new Error("无法解析支付宝响应"), { code: "ALIPAY_PARSE_FAILED" })
     const data = JSON.parse(jsonMatch[0])
     const response = data.alipay_trade_query_response
     if (response?.trade_status === "TRADE_SUCCESS" || response?.trade_status === "TRADE_FINISHED") {
@@ -112,7 +105,7 @@ export async function queryOrder(outTradeNo: string): Promise<{ paid: boolean; t
     }
     return { paid: false }
   } catch {
-    throw new Error("查询订单失败: " + text.substring(0, 200))
+    throw Object.assign(new Error("查询订单失败"), { code: "ALIPAY_QUERY_FAILED" })
   }
 }
 

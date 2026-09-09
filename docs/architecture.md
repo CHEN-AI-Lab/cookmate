@@ -6,7 +6,7 @@
 - **Database**: PostgreSQL (Neon) + Prisma ORM
 - **Auth**: NextAuth.js v5 (Google + Email/magic link)
 - **AI**: OpenAI GPT-4o (via `lib/openai.ts`)
-- **Payment**: Stripe + PayJS (China)
+- **Payment**: Creem (subscription) + Alipay (one-time) 
 - **Deploy**: Vercel
 - **Domain**: cookmate.ai
 
@@ -52,7 +52,7 @@ cookmate/
 │   ├── auth.ts             # NextAuth config
 │   ├── openai.ts           # AI provider wrapper
 │   ├── prisma.ts           # Prisma client
-│   ├── stripe.ts           # Stripe wrapper
+
 │   └── utils.ts            # Helpers
 ├── prisma/                 # Database schema & migrations
 ├── shared/                 # Cross-platform code
@@ -77,7 +77,7 @@ AI calls are wrapped in `lib/openai.ts` with provider-agnostic interface. API ro
 Free users get 1 AI recommendation/day. This drives word-of-mouth growth while providing clear upgrade motivation.
 
 ### 4. Payment Flexibility
-Stripe handles international payments; PayJS handles domestic (China) Alipay/WeChat payments. Both are abstracted behind a unified billing interface.
+Creem handles subscription payments; Alipay handles one-time payments. Both are abstracted behind a unified billing interface.
 
 ### 5. Database Safety
 All schema changes must go through Prisma migrations. No raw SQL. Environment variables determine database URL (SQLite for local dev, PostgreSQL for production).

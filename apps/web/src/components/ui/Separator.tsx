@@ -31,11 +31,11 @@ export default function Separator({
         role="separator"
         aria-orientation="horizontal"
       >
-        <div className="flex-1 border-t border-gray-200" />
-        <span className="text-xs font-medium text-gray-400 whitespace-nowrap">
+        <div className="flex-1 border-t border-border" />
+        <span className="text-xs font-medium text-text-secondary whitespace-nowrap">
           {label}
         </span>
-        <div className="flex-1 border-t border-gray-200" />
+        <div className="flex-1 border-t border-border" />
       </div>
     )
   }

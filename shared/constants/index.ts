@@ -22,9 +22,36 @@ export const DIETARY_PREFERENCES = [
 
 export const DIFFICULTY_LEVELS = ['easy', 'medium', 'hard'] as const;
 
-export const SUBSCRIPTION_TIERS = ['free', 'pro', 'family'] as const;
+// 订阅层级枚举。**统一用大写**：
+// ① 与数据库 User.subscriptionTier 的默认值 "FREE" 一致（Prisma schema）；
+// ② 与业务判断 user.subscriptionTier !== "FREE" 一致（auth-helpers.ts）；
+// ③ 符合 Prisma 官方枚举规范（enum Role { USER ADMIN }）与 API 枚举 UPPER_SNAKE_CASE 惯例。
+// 切勿改回小写 —— 会让常量与数据库实际值对不上，比对时静默失效。
+export const SUBSCRIPTION_TIER = {
+  FREE: 'FREE',
+  PRO: 'PRO',
+  FAMILY: 'FAMILY',
+} as const;
+
+/** 订阅层级联合类型，用于给字段/入参标注类型 */
+export type SubscriptionTier = typeof SUBSCRIPTION_TIER[keyof typeof SUBSCRIPTION_TIER]
+
+/** 数组形式（由上面的对象派生，避免两处维护），供遍历场景使用，如后台筛选下拉 */
+export const SUBSCRIPTION_TIERS = Object.values(SUBSCRIPTION_TIER);
 
 export const MAX_DAILY_FREE_RECOMMENDATIONS = 1;
+
+export const WORKER_URL =
+  (typeof process !== 'undefined' &&
+    (process as any).env?.NEXT_PUBLIC_WORKER_URL) || ''
+// Must be set via NEXT_PUBLIC_WORKER_URL env var — no hardcoded default.
+
+// Fallback tracking endpoint for users who cannot reach the Worker (e.g. China)
+// Sends tracking data directly to the stats-dashboard API.
+// Must be set via NEXT_PUBLIC_FALLBACK_URL env var — no hardcoded default.
+export const FALLBACK_URL =
+  (typeof process !== 'undefined' &&
+    (process as any).env?.NEXT_PUBLIC_FALLBACK_URL) || ''
 
 export const API_ROUTES = {
   recipes: '/api/recipes',
@@ -37,3 +64,5 @@ export const API_ROUTES = {
 } as const;
 
 export * from './preferences';
+export * from './locales';
+export * from './meal-plan';

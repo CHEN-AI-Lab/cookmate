@@ -1,3 +1,13 @@
 packages:
   - "apps/*"
   - "shared"
+
+onlyBuiltDependencies:
+  - '@prisma/client'
+  - '@prisma/engines'
+  - prisma
+  - sharp
+  - unrs-resolver
+
+overrides:
+  deepmerge-ts: 8.0.1

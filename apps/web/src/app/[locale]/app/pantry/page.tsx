@@ -1,0 +1,297 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
+import { getDemoPantryItems } from "@cookmate/shared/demo-data"
+import { UpgradeDialog, UpgradeInline } from "@/components/features/UpgradeLink"
+import { isValidIngredient } from "@cookmate/shared/validators"
+
+interface PantryItem {
+  id: string
+  name: string
+  category: string | null
+}
+
+export default function PantryPage() {
+  const router = useRouter()
+  const t = useTranslations("pantry")
+  const tc = useTranslations("common")
+  // 食材库上限等 billing 命名空间的提示（后端返回裸 key，这里负责翻译）
+  const tb = useTranslations("billing")
+  const [items, setItems] = useState<PantryItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState("")
+  const [inputName, setInputName] = useState("")
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [showAddDialog, setShowAddDialog] = useState(false)
+  const [, setError] = useState<string | null>(null)
+  // 免费版食材库上限横幅：持久显示（可手动关闭），直到用户删食材腾出空间或升级。
+  // 原先报错走 setError，但这个值压根没被渲染，用户点了添加没反应也不知道原因。
+  const [limitBanner, setLimitBanner] = useState(false)
+  const [dupDialog, setDupDialog] = useState<string | null>(null)
+  // 无效输入提示（纯数字/符号等）：居中浮层自动消失
+  const [invalidToast, setInvalidToast] = useState(false)
+  const [isDemoUser, setIsDemoUser] = useState(false)
+  const [demoToast, setDemoToast] = useState("")
+  const [toast, setToast] = useState("")
+
+  const toggleSelect = (id: string) => {
+    const next = new Set(selected)
+    if (next.has(id)) next.delete(id); else next.add(id)
+    setSelected(next)
+  }
+
+  useEffect(() => {
+    fetch("/api/pantry")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.items) setItems(data.items)
+      })
+      .catch((err) => console.error("load items error:", err))
+      .finally(() => setLoading(false))
+  }, [])
+
+  // Check demo user status and pre-fill demo data if needed
+  useEffect(() => {
+    fetch("/api/user/profile")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.isDemoUser) {
+          setIsDemoUser(true)
+          setItems((prev) => prev.length > 0 ? prev : getDemoPantryItems())
+        }
+      })
+      .catch((err) => console.error("load profile error:", err))
+  }, [])
+
+  const addItem = async (name: string, category?: string) => {
+    const trimmed = name.trim()
+    if (!trimmed) return
+
+    // 输入校验：挡住纯数字、纯符号、单字符（如"123"）这类无意义名称，不发请求
+    if (!isValidIngredient(trimmed)) {
+      setInvalidToast(true)
+      setTimeout(() => setInvalidToast(false), 2500)
+      return
+    }
+
+    // 重复检测
+    if (items.some((i) => i.name.toLowerCase() === trimmed.toLowerCase())) {
+      setDupDialog(trimmed)
+      setTimeout(() => setDupDialog(null), 2500)
+      setInputName("")
+      return
+    }
+    try {
+      const res = await fetch("/api/pantry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmed, category: category }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setItems((prev) => [data.item, ...prev])
+        setToast(`${t("added")}${data.item.name}`)
+        setTimeout(() => setToast(""), 2000)
+      } else {
+        const data = await res.json().catch((err) => { console.error("parse pantry response error:", err); return {} })
+        if (data.error?.includes("已存在")) {
+          setDupDialog(trimmed)
+          setTimeout(() => setDupDialog(null), 2500)
+        } else if (data.error === "pantryLimitReached") {
+          // 后端返回裸 key，翻译后用持久横幅展示并给升级入口
+          setLimitBanner(true)
+        } else {
+          setError(data.error || t("addFailed"))
+          setTimeout(() => setError(null), 2500)
+        }
+      }
+    } catch (err) {
+      console.error("add item error:", err)
+      setError(tc("networkError"))
+      setTimeout(() => setError(null), 2500)
+    }
+    setInputName("")
+  }
+
+  const removeItem = async (id: string) => {
+    try {
+      await fetch(`/api/pantry/${id}`, { method: "DELETE" })
+      setItems((prev) => prev.filter((i) => i.id !== id))
+      // 同时从选中集合中移除已删除的食材
+      setSelected((prev) => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
+    } catch (err) { console.error("remove item error:", err) }
+  }
+
+  const filtered = items.filter((i) => !search || i.name.includes(search))
+
+  if (loading) return <div className="text-center py-16 text-text-secondary">{t("loading")}</div>
+
+  return (
+    <div>
+      {/* 1. Title */}
+      <h1 className="text-2xl font-bold text-text-primary mb-4">{t("title")}</h1>
+
+      {/* 免费版食材库上限：居中弹框，升级入口嵌在文案中间 */}
+      {limitBanner && (
+        <UpgradeDialog
+          text={tb.rich("pantryLimitReached", {
+            upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline>,
+          })}
+          onClose={() => setLimitBanner(false)}
+        />
+      )}
+
+{/* 2. Search row */}
+      <div className="mb-2">
+        <div className="flex gap-2 items-center">
+          <div className="relative flex-1">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-sm">🔍</span>
+            <input
+              type="text" value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("searchPlaceholder")}
+              className="w-full bg-card border border-gray-100 rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent"
+            />
+          </div>
+          <button
+            onClick={() => setShowAddDialog(true)}
+            disabled={isDemoUser}
+            className="shrink-0 bg-gradient-to-r from-orange-400 to-amber-400 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity shadow-sm flex items-center gap-1"
+          >
+            {isDemoUser ? t("demoLockedAdd") : t("addButton")}
+          </button>
+        </div>
+      </div>
+
+      {/* 3. My ingredients */}
+      <div className="mb-2">
+        <h2 className="font-bold text-text-primary mb-3">{t("myItems", { count: filtered.length })}</h2>
+        {filtered.length === 0 ? (
+          <p className="text-text-secondary text-sm">{t("empty")}</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {filtered.map((item) => (
+              <span
+                key={item.id}
+                onClick={() => toggleSelect(item.id)}
+                className={`px-3 py-1 rounded-full text-sm border flex items-center gap-1 cursor-pointer transition-colors ${
+                  selected.has(item.id)
+                    ? "bg-gradient-to-r from-orange-400 to-amber-400 text-white border-transparent"
+                    : "bg-orange-50 text-accent border-orange-200 hover:bg-orange-100"
+                }`}
+              >
+                {item.name}
+                <button onClick={(e) => { e.stopPropagation(); removeItem(item.id) }} className="ml-1 hover:text-red-600">{isDemoUser ? "" : "×"}</button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 4. Action bar (always visible) */}
+      {selected.size > 0 ? (
+        <div className="mb-4 flex items-center justify-between bg-gradient-to-r from-orange-400 to-amber-400 text-white px-4 py-2.5 rounded-xl">
+          <button
+            onClick={() => {
+              if (isDemoUser) {
+                setDemoToast(t("demoLockedAction"))
+                setTimeout(() => setDemoToast(""), 3000)
+                return
+              }
+              const names = [...selected].map((id) => items.find((i) => i.id === id)?.name).filter(Boolean).join(",")
+              router.push(`/app/recipes?ingredients=${encodeURIComponent(names)}`)
+            }}
+            className="text-sm font-medium hover:underline"
+          >
+            {t("selectedCount", { count: selected.size })}
+          </button>
+          <button
+            onClick={() => setSelected(new Set())}
+            className="text-sm opacity-80 hover:opacity-100"
+          >
+            {t("cancelSelection")}
+          </button>
+        </div>
+      ) : (
+        <div className="mb-4 flex items-center bg-surface text-text-secondary px-4 py-2.5 rounded-xl">
+          <span className="text-sm">{t("clickToSelect")}</span>
+        </div>
+      )}
+
+      {/* Add dialog modal */}
+      {showAddDialog && (
+        <div
+          className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+          onClick={() => { setShowAddDialog(false); setInputName("") }}
+        >
+          <div
+            className="bg-card rounded-2xl p-6 w-80 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-text-primary mb-4">{t("addDialogTitle")}</h3>
+            <input
+              type="text"
+              value={inputName}
+              onChange={(e) => setInputName(e.target.value)}
+              onKeyDown={async (e) => { if (e.key === "Enter") { await addItem(inputName); setShowAddDialog(false) } }}
+              placeholder={t("addItemPlaceholder")}
+              className="w-full border border-gray-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent mb-4"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setShowAddDialog(false); setInputName("") }}
+                className="flex-1 bg-surface text-text-secondary py-2.5 rounded-xl text-sm hover:bg-border"
+              >
+                {t("cancel")}
+              </button>
+              <button
+                onClick={async () => { await addItem(inputName); setShowAddDialog(false) }}
+                className="flex-1 bg-gradient-to-r from-orange-400 to-amber-400 text-white py-2.5 rounded-xl text-sm font-medium hover:opacity-90"
+              >
+                              {t("add")}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 重复添加提示 */}
+                    {dupDialog && (
+                      <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setDupDialog(null)}>
+                        <div className="bg-amber-50 border border-amber-200 text-amber-700 px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center" onClick={(e) => e.stopPropagation()}>
+                          <span>{t("alreadyInPantry", { name: dupDialog })}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 无效输入提示（纯数字/符号等） */}
+                    {invalidToast && (
+                      <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
+                        <div className="bg-amber-50 border border-amber-200 text-amber-700 px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center animate-in fade-in zoom-in-95 duration-200">
+                          <span>{t("invalidIngredients")}</span>
+                        </div>
+                      </div>
+                    )}
+
+      {/* Demo user toast */}
+      {demoToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-bg-inverse text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+          {demoToast}
+        </div>
+      )}
+      {/* Success toast */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50 flex items-center gap-2">
+          <span>✅</span> {toast}
+        </div>
+      )}
+    </div>
+  )
+}

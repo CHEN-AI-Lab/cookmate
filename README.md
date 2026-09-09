@@ -11,7 +11,7 @@ CookMate 是一款 AI 驱动的智能食谱推荐和餐食规划平台。用户�
 - **数据库**: PostgreSQL (Neon) + Prisma ORM
 - **认证**: NextAuth.js v5 (邮箱/手机验证码 + 密码 + Google/GitHub/支付宝/微信 OAuth)
 - **AI**: OpenAI 兼容接口 (DeepSeek, SenseNova, OpenAI 等)
-- **支付**: Stripe (国际) + PayJS (国内支付宝/微信)
+- **支付**: Creem（订阅，信用卡/多种支付）+ 支付宝（一次性付款）
 - **部署**: Vercel
 - **包管理**: pnpm monorepo
 
@@ -27,7 +27,7 @@ cookmate/
 │   ├── prisma/            # 数据库 schema
 │   └── tests/             # 单元测试 + E2E 测试
 ├── shared/                # 跨平台共享代码
-│   ├── api/               # API 客户端 (openai, alipay, stripe, payment)
+│   ├── api/               # API 客户端 (openai, alipay, creem, payment)
 │   ├── constants/         # 常量定义
 │   ├── hooks/             # React hooks
 │   ├── messages/          # 国际化翻译文件
@@ -64,7 +64,7 @@ pnpm dev
 - `DATABASE_URL` — PostgreSQL 连接串（推荐 Neon）
 - `AUTH_SECRET` — NextAuth 密钥
 - `AI_API_KEY` — AI 接口密钥（不配则使用演示数据）
-- `STRIPE_SECRET_KEY` / `PAYJS_MCHID` — 支付配置
+- `CREEM_API_KEY` / `CREEM_WEBHOOK_SECRET` — Creem 订阅支付配置；支付宝密钥 — 支付宝支付与登录
 
 ## 可用命令
 

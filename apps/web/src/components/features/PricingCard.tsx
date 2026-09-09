@@ -1,11 +1,15 @@
 "use client"
 
+import { useLocale } from "next-intl"
+import { useTranslations } from "next-intl"
 import { cn } from "@cookmate/shared/utils"
 
 interface PricingCardProps {
   name: string
   price: string
   period: string
+  periodLabel: string
+  saving?: string
   features: string[]
   highlighted: boolean
   isCurrent: boolean
@@ -13,12 +17,20 @@ interface PricingCardProps {
   onCta: () => void
   disabled?: boolean
   loading?: boolean
+  ctaHint?: string
+  hideButton?: boolean
+}
+
+function CurrencySymbol({ locale }: { locale: string }) {
+  return <>{locale === "zh-CN" ? "¥" : "$"}</>
 }
 
 export function PricingCard({
   name,
   price,
   period,
+  periodLabel,
+  saving,
   features,
   highlighted,
   isCurrent,
@@ -26,69 +38,107 @@ export function PricingCard({
   onCta,
   disabled,
   loading,
+  ctaHint,
+  hideButton,
 }: PricingCardProps) {
+  const locale = useLocale()
+  const t = useTranslations("billing")
+
   return (
-    <div
-      className={cn(
-        "rounded-xl p-5 text-center",
-        highlighted
-          ? "bg-[#FF6B35] text-white scale-105 shadow-xl"
-          : "bg-white border border-gray-200"
+    <div className="relative">
+      {/* Recommended badge */}
+      {saving && highlighted && (
+        <div className="absolute -top-3 inset-x-0 flex justify-center z-10">
+          <span className="bg-accent text-white text-[11px] font-semibold px-3 py-1 rounded-full shadow-md tracking-wide">
+            {saving}
+          </span>
+        </div>
       )}
-    >
-      <h3
-        className={cn(
-          "text-lg font-bold",
-          highlighted ? "text-white" : "text-gray-900"
-        )}
-      >
-        {name}
-      </h3>
-      <p
-        className={cn(
-          "text-3xl font-bold mt-2",
-          highlighted ? "text-white" : "text-gray-900"
-        )}
-      >
-        ¥{price}
-        <span
-          className={cn(
-            "text-lg font-normal",
-            highlighted ? "opacity-80" : "text-gray-400"
-          )}
-        >
-          {period}
-        </span>
-      </p>
-      <ul className="mt-4 space-y-2 text-sm text-left">
-        {features.map((f) => (
-          <li
-            key={f}
-            className={cn(
-              "flex items-center gap-2",
-              highlighted ? "opacity-90" : "text-gray-600"
-            )}
-          >
-            <span>✅</span> {f}
-          </li>
-        ))}
-      </ul>
-      <button
-        onClick={onCta}
-        disabled={disabled || loading}
-        className={cn(
-          "mt-6 w-full py-2.5 rounded-full text-sm font-semibold transition-colors",
-          highlighted
-            ? "bg-white text-[#FF6B35] hover:bg-gray-100"
-            : "bg-gray-100 text-gray-900 hover:bg-gray-200",
-          (disabled || loading) && "opacity-50 cursor-not-allowed"
-        )}
-      >
-        {loading ? "处理中..." : ctaLabel}
-      </button>
-      {isCurrent && (
-        <div className="mt-3 text-sm text-gray-400">当前计划</div>
-      )}
+
+      <div
+              className={cn(
+                "rounded-2xl px-5 py-6 text-center flex flex-col h-full bg-card border",
+                highlighted ? "bg-bg-brand border-amber-200 ring-1 ring-amber-200" : "border-border"
+              )}
+            >
+              {/* Plan name */}
+              <h3
+                className={cn(
+                  "text-sm font-semibold tracking-wide uppercase",
+                  highlighted ? "text-amber-600" : "text-text-secondary"
+                )}
+              >
+                {name}
+              </h3>
+
+              {/* Price */}
+              <div className="mt-3">
+                <span
+                  className={cn(
+                    "text-4xl font-bold tracking-tight",
+                    "text-text-primary"
+                  )}
+                >
+                  <CurrencySymbol locale={locale} />
+                  {price}
+                </span>
+                <span
+                  className={cn(
+                    "text-base font-normal ml-1",
+                    "text-text-secondary"
+                  )}
+                >
+                  {periodLabel}
+                </span>
+              </div>
+
+              {/* Period description — monthly: "随时取消", annual: "≈ ¥9.92/月 · 省50%" */}
+              {period && (
+                <p
+                  className={cn(
+                    "text-xs mt-1.5",
+                    "text-text-secondary"
+                  )}
+                >
+                  {period}
+                </p>
+              )}
+
+              {/* Divider */}
+              <div className="w-full h-px my-4 bg-surface" />
+
+              {/* Features */}
+              <ul className="space-y-2.5 text-sm text-left flex-1">
+                {features.map((f) => (
+                  <li
+                    key={f}
+                    className="flex items-start gap-2.5 leading-tight text-text-secondary"
+                  >
+                    <span className="shrink-0 mt-0.5 text-amber-500">✓</span>
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {/* CTA Button */}
+              {!hideButton && (
+                <button
+                  onClick={onCta}
+                  disabled={disabled || loading}
+                  title={ctaHint}
+                  className={cn(
+                    "mt-6 w-full py-2.5 rounded-xl text-sm font-semibold transition-all",
+                    highlighted
+                      ? "bg-amber-500 text-white hover:bg-amber-600 active:scale-[0.98]"
+                      : "bg-surface text-text-primary border border-border hover:bg-surface active:scale-[0.98]",
+                    (disabled || loading) && "opacity-50 cursor-not-allowed active:scale-100"
+                  )}
+                >
+                  {loading ? t("processing") : ctaLabel}
+                </button>
+              )}
+              {hideButton && <div className="mt-6" />}
+            </div>
     </div>
   )
 }

@@ -7,7 +7,7 @@
 - **数据库**: PostgreSQL (Neon) + Prisma ORM
 - **认证**: NextAuth.js v5
 - **AI**: OpenAI 兼容接口
-- **支付**: Stripe + PayJS
+- **支付**: Creem（订阅）+ 支付宝（一次性付款）
 - **部署**: Vercel
 - **包管理**: pnpm monorepo
 
@@ -27,7 +27,7 @@ cookmate/
 │   ├── prisma/            # Prisma schema
 │   └── tests/             # 测试
 ├── shared/                # 跨平台共享代码
-│   ├── api/               # API 客户端（openai, alipay, stripe, payment）
+│   ├── api/               # API 客户端（openai, alipay, creem, payment）
 │   ├── constants/         # 常量
 │   ├── hooks/             # React hooks
 │   ├── messages/          # 国际化
@@ -48,6 +48,7 @@ cookmate/
 6. **所有外部 API key 通过环境变量注入，不上传**
 7. **通用代码必须放 shared/，不放在 apps/web/src/lib/ 下**
 8. **修改前先诊断，诊断完必须修复**
+9. **Prisma 必须使用最新稳定版** — 所有项目铁律（2026-08 起），`prisma` 和 `@prisma/client` 必须同版本。Vercel 完全兼容 Prisma 7（官方有专用部署指南）。升级走官方 upgrade guide，逐步验证（`prisma validate` → `tsc --noEmit` → `pnpm test` → `pnpm build` → `bash scripts/check.sh`），禁止参考旧项目版本
 
 ## 日常命令
 
@@ -62,5 +63,4 @@ bash scripts/check.sh  # 全量质量检查
 
 - 依赖方向: UI → Components → API → Lib/Prisma (单向)
 - AI 调用封装在 shared/api/openai.ts，API route 不直接调用 OpenAI SDK
-- 所有 Stripe 操作走 webhook，不从前端直接处理支付逻辑
 - 用户数据只通过 session 获取 userId，禁止从前端传 userId

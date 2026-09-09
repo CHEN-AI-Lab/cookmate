@@ -1,18 +1,18 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import type { ReactNode } from "react"
 import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"] })
-
+// Global metadata — title.default is used when no page-level metadata exists,
+// title.template appends "— CookMate" to page-level titles.
 export const metadata: Metadata = {
-  title: "CookMate — AI 智能食谱 & 餐食规划",
-  description: "告诉我你有什么食材，3秒生成菜谱。每周计划+购物清单，从此不再纠结今天吃什么。",
+  title: "CookMate — AI Recipe & Meal Planning",
+  description: "Tell me what ingredients you have, get a recipe in 3 seconds. Weekly meal plans + shopping lists, never wonder what to cook again.",
+  icons: { icon: "/favicon.svg" },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="zh-CN">
-      <body className={inter.className}>{children}</body>
-    </html>
-  )
+// Since we have app/not-found.tsx and app/page.tsx on the root, a layout file
+// is required. The actual <html> and <body> tags are rendered by
+// [locale]/layout.tsx, which has access to the locale param.
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return children
 }

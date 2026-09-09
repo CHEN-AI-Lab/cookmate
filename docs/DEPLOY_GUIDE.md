@@ -20,7 +20,6 @@
 | 4 | DeepSeek AI | AI 生成菜谱功能 | ✅ 必须 | 按量计费，先充 10 元够用很久 |
 | 5 | QQ 邮箱 SMTP | 发送邮箱验证码 | ✅ 必须 | 免费 |
 | 6 | 阿里云短信服务 | 发送手机验证码 | 二选一 | 0.045 元/条，预充 10 元够测试 |
-| 7 | Stripe | 国际信用卡支付（国外用户） | 可选 | 按交易抽成 2.9%+$0.30 |
 | 8 | PayJS | 国内微信/支付宝支付 | 可选 | 按交易抽成，约 1%~2% |
 
 **最小的可以跑起来的组合**（只要 1~5 项）：
@@ -337,61 +336,10 @@ CookMate 需要通过邮箱发送登录验证码。推荐使用 **QQ 邮箱 SMTP
 
 > **这一整章都是可选的。** 如果你暂时不需要付费订阅功能，可以直接跳过，CookMate 的核心功能（AI 生成菜谱、食材管理、膳食计划）都不需要支付。
 
-CookMate 支持两种支付方式：
-- **Stripe**：面向国外用户的国际信用卡支付（Visa、Mastercard 等）
+CookMate 支持的支付方式：
 - **PayJS**：面向国内用户的微信支付 / 支付宝
 
 你只需要配置其中一个即可，也可以两个都不配。
-
-### 7.1 Stripe（国际信用卡支付，可选）
-
-#### 注册
-
-1. 访问 https://dashboard.stripe.com/register 注册账号。
-2. 填写邮箱、姓名、国家（选 China）、密码。
-3. 激活账号：Stripe 会要求填写一些商家信息（可以用个人身份注册）。
-
-#### 获取 API Keys
-
-1. 登录 Stripe Dashboard，左侧菜单点击「Developers」→「API keys」。
-2. 你会看到两个 Key：
-   - **Publishable key**：以 `pk_live_` 开头
-   - **Secret key**：以 `sk_live_` 开头（点击「Reveal」显示）
-3. 复制这两个 Key 保存。
-
-#### 创建产品和价格
-
-1. 左侧菜单点击「Products」→「Add product」。
-2. 创建月度订阅产品：
-   - Name: `CookMate Pro - Monthly`
-   - Price: 填写你的定价（如 29 元/月）
-   - Billing period: Monthly
-   - 点击「Save product」
-3. 创建后，在产品详情页找到 **Price ID**（格式如 `price_xxxxxxxxxxxx`），复制保存。
-4. 同样操作再创建一个年度订阅产品（Name: `CookMate Pro - Yearly`，Billing period: Yearly），获取其 Price ID。
-
-#### 配置 Webhook
-
-Webhook 是 Stripe 在支付成功后通知你服务器的机制。
-
-1. 左侧菜单点击「Developers」→「Webhooks」→「Add endpoint」。
-2. Endpoint URL 填写：`https://你的域名.com/api/stripe/webhook`
-   - （例如域名是 `mycookmate.com`，就填 `https://mycookmate.com/api/stripe/webhook`）
-3. Events to send：选择 `checkout.session.completed`。
-4. 点击「Add endpoint」。
-5. 创建后，点击「Reveal」查看 **Signing secret**（以 `whsec_` 开头），复制保存。
-
-#### 记录以下信息
-
-| 项目 | 值 |
-|------|----|
-| Secret Key | `sk_live_xxxxxxxxxxxx` |
-| Publishable Key | `pk_live_xxxxxxxxxxxx` |
-| Pro 月度 Price ID | `price_xxxxxxxxxxxx` |
-| Pro 年度 Price ID | `price_yyyyyyyyyyyy` |
-| Webhook Signing Secret | `whsec_xxxxxxxxxxxx` |
-
----
 
 ### 7.2 PayJS（国内微信支付，可选）
 
@@ -518,18 +466,6 @@ AI_BASE_URL="https://api.deepseek.com"
 AI_MODEL="deepseek-chat"
 ```
 
-#### Stripe 支付（可选）
-
-| 变量名 | 填什么 | 是否必须 |
-|--------|--------|----------|
-| `STRIPE_SECRET_KEY` | `"sk_live_xxxxxxxxxxxx"` | 可选 |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `"pk_live_xxxxxxxxxxxx"` | 可选 |
-| `STRIPE_PRO_PRICE_ID` | `"price_xxxxxxxxxxxx"` | 可选 |
-| `STRIPE_WEBHOOK_SECRET` | `"whsec_xxxxxxxxxxxx"` | 可选 |
-
-> 不配 Stripe 就留空，不影响核心功能。
-
-#### PayJS 支付（可选）
 
 | 变量名 | 填什么 | 是否必须 |
 |--------|--------|----------|
@@ -1011,3 +947,55 @@ Neon 自动备份，无需手动操作。如果担心，可以在 Neon 控制台
 # 定期备份这个目录即可
 tar -czf cookmate-data-backup-$(date +%Y%m%d).tar.gz /opt/cookmate/data/
 ```
+
+---
+
+## 附录E：Webhook 事件 → 行为参考表
+
+本文档说明 CookMate 各支付渠道 Webhook 事件与系统行为的映射关系，供部署后排查问题时参考。
+
+### E.1 Creem 事件矩阵
+
+| 事件类型 | 触发时机 | CookMate 行为 | 是否授权/降级 |
+|----------|----------|---------------|---------------|
+| checkout.completed | 用户完成结账 | 记录订单 PENDING→PAID，同步订阅ID | 否（升级交给 subscription.paid） |
+| subscription.active | 订阅创建/激活 | 仅同步订阅ID | 否 |
+| subscription.paid | 订阅付款成功 | **唯一升级点**：授予 PRO，写入官方 current_period_end_date | ✅ 升级 |
+| subscription.canceled | 用户主动取消 | 清空 creemSubscriptionId，保留 PRO 到到期日 | 否（到期自然失效） |
+| subscription.expired | 周期结束未续费 | 降级 FREE，清空到期日 | ❌ 降级 |
+| subscription.paused | 订阅暂停 | 降级 FREE，保留订阅ID（恢复时可重新授权） | ❌ 降级 |
+| subscription.past_due | 扣款失败待重试 | 降级 FREE，保留订阅ID | ❌ 降级 |
+| subscription.scheduled_cancel | 计划到期取消 | 不操作（等 subscription.expired 处理） | 否 |
+| subscription.update | 订阅信息变更 | active+有到期日 → 同步并授权；其他 → 仅同步ID | 条件授权 |
+| subscription.trialing | 试用中（CookMate 无试用） | 仅记录 | 否 |
+| refund.created | 退款成功 | 立即降级 FREE | ❌ 降级 |
+
+### E.3 支付宝事件矩阵
+
+| 通知状态 | 触发时机 | CookMate 行为 |
+|----------|----------|---------------|
+| TRADE_SUCCESS / TRADE_FINISHED | 支付成功 | 验证金额匹配 → 幂等升级 PRO，到期日累加 |
+| 其他状态（如 WAIT_BUYER_PAY） | 支付未完成 | 不处理，返回 failure |
+
+### E.4 安全加固要点
+
+1. **验签优先**：所有 Webhook 在验签通过前不写库、不处理业务
+2. **幂等去重**：使用 eventId 唯一约束防止重复处理
+3. **fail-closed**：验签失败、配置缺失、解析失败时拒绝处理而非静默放行
+4. **金额校验**：支付宝回调强制校验 total_amount 与本地订单金额一致
+5. **迟到降级防护**：Creem 的 expired/paused/past_due 事件会检查用户是否已有更新的到期日，避免旧事件覆盖新状态
+6. **审计日志**：所有事件写入 WebhookLog 表，支持对账和排查
+
+### E.5 Vercel Cron 配置（推荐）
+
+在 apps/web/vercel.json 中配置每日过期订阅扫描：
+
+```json
+{
+  "crons": [
+    { "path": "/api/cron/expire-sweep", "schedule": "0 3 * * *" }
+  ]
+}
+```
+
+对应路由 apps/web/src/app/api/cron/expire-sweep/route.ts 会调用 scripts/expire-sweep.mjs 逻辑，将所有过期的 PRO 用户降级为 FREE。

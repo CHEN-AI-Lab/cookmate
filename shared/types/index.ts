@@ -1,7 +1,5 @@
 // ─── CookMate Core Types ───
 
-export type Locale = 'zh-CN' | 'en';
-
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'dessert';
 
 export type DietaryPreference = 'none' | 'vegetarian' | 'vegan' | 'keto' | 'paleo' | 'gluten-free' | 'low-carb';

@@ -1,14 +1,65 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { generateWeeklyPlan, normalizeIngredients } from "@cookmate/shared/api/openai"
-import { checkUsageLimit, incrementUsage } from "@/lib/auth-helpers"
-import type { User } from "@prisma/client"
+import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
+import {
+  generateWeeklyPlan,
+  normalizeIngredients,
+  sanitizeWeeklyPlan,
+  hasAIKeyForTier,
+  getModelForTier,
+  type RecipeResult,
+} from "@cookmate/shared/api/openai"
+import { canUseAiToday, incrementAiUsage, isFreeUser, checkMealPlanDaysLimitForDays, checkRecipeCountLimitForCount } from "@/lib/auth-helpers"
+import { errMsg, getDayMap } from "@cookmate/shared/utils/meal-plan"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
-export async function GET() {
+/** sanitizeWeeklyPlan 的输出类型 */
+type WeekPlan = Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }>
+
+/**
+ * 合成「未落库」的周计划视图，结构与 DB 查询结果一致，保证前端能正常渲染。
+ * 用于两处：
+ *   ① AI 降级（fallback）—— mock 数据不写入 DB，避免覆盖用户已有的真实计划；
+ *   ② 保存 DB 失败——仍然把生成结果返回给用户，不让这次生成白费。
+ * 修复背景：以前 fallback 时直接返回 plan: null，前端判定为失败，界面永远是空的。
+ */
+function buildUnsavedPlan(weekPlan: WeekPlan, dayMap: Record<string, number>, weekStart: Date) {
+  const mealTypeKeys = ["breakfast", "lunch", "dinner"] as const
+  const slots = Object.entries(weekPlan).flatMap(([dayName, meals]) =>
+    mealTypeKeys.map((mealType) => {
+      const recipe = meals?.[mealType]
+      return {
+        id: `${dayName}-${mealType}`,
+        dayOfWeek: dayMap[dayName] ?? 0,
+        mealType,
+        note: (recipe?.description || "").substring(0, 100),
+        recipe: recipe
+          ? {
+              id: `${dayName}-${mealType}-recipe`,
+              title: recipe.title,
+              description: recipe.description,
+              ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients.join(", ") : "",
+              steps: Array.isArray(recipe.steps) ? recipe.steps.join("\n") : "",
+              cookingTime: recipe.cookingTime || 0,
+              calories: recipe.calories || 0,
+              cuisineType: recipe.cuisineType || "",
+            }
+          : null,
+      }
+    })
+  )
+  return { id: "unsaved-plan", weekStart: weekStart.toISOString(), slots }
+}
+
+// Vercel 免费版（Hobby）函数默认上限 10s，AI 周计划生成易超时 → 显式放宽到 60s（Hobby 最高值）
+export const maxDuration = 60
+
+export async function GET(req: Request) {
+  const loc = getLocaleFromCookie(req)
   try {
     const session = await auth()
-    if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+    if (!session?.user?.id) return NextResponse.json({ error: err(loc, "loginRequired") }, { status: 401 })
 
     const now = new Date()
     const dayOfWeek = now.getDay()
@@ -27,18 +78,27 @@ export async function GET() {
     return NextResponse.json({ plans, weekStart: monday.toISOString() })
   } catch (error) {
     console.error("Meal plan GET:", error)
-    return NextResponse.json({ error: "请求失败，请稍后重试" }, { status: 500 })
+    return NextResponse.json({ error: err(loc, "requestFailed") }, { status: 500 })
   }
 }
 
-export async function POST() {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+export async function POST(req: Request) {
+  const loc = getLocaleFromCookie(req)
+
+  // 读取语言偏好
+  const cookieHeader = req.headers.get("cookie") || ""
+  const locale = cookieHeader.match(/NEXT_LOCALE=([^;]+)/)?.[1] || "zh-CN"
+  const e = (zh: string, en: string) => errMsg(locale, zh, en)
 
   try {
+    // auth() 必须在 try 内：NextAuth 报错（如 AUTH_SECRET 缺失、DB 抖动）时会抛异常，
+    // 放在 try 外的话会由 Next.js 返回 HTML 500，前端 res.json() 直接崩，只能显示"网络错误"。
+    const session = await auth()
+    if (!session?.user?.id) return NextResponse.json({ error: err(loc, "loginRequired") }, { status: 401 })
     const userId = session.user.id
+    const body = await req.json().catch(() => ({}))
+    const targetDays: number[] = body?.days ?? [0, 1, 2, 3, 4, 5, 6]
 
-    // 用户数据 - 无数据库时使用默认值
     interface MealPlanUser {
       subscriptionTier: string
       subscriptionExpiryDate: Date | null
@@ -54,27 +114,77 @@ export async function POST() {
       pantryNames = pantryItems.map((i) => i.name)
     } catch (err) {
       console.error("fetch user/pantry data error:", err)
-      // 无数据库 - 使用默认值
     }
 
-    // 使用限额检查（仅在开发模式跳过）
     const isDev = process.env.NODE_ENV !== "production"
+
+    // 免费版周计划天数限制：本次新增天数与本周已占用天数取并集，超过 3 天直接拒绝。
+    // 放在 AI 调用之前，避免白烧一次生成（一次生成 = 最多 21 个菜谱，还会占满 25 个菜谱上限）。
     if (!isDev) {
-      const isMock = !(process.env.AI_API_KEY || process.env.OPENAI_API_KEY)
-      if (!isMock) {
-        const canGenerate = await checkUsageLimit(userId).catch((err: unknown) => { console.error("check usage limit error:", err); return true })
-        if (!canGenerate) {
-          return NextResponse.json({ error: "今日次数已用完，明天再来吧" }, { status: 429 })
+      const free = await isFreeUser(userId)
+      if (free) {
+        const limited = await checkMealPlanDaysLimitForDays(userId, targetDays)
+        if (limited) {
+          // 返回裸 key，前端用 t() 翻译——与 add/route.ts 的返回约定保持一致。
+          // 不用 err()：mealPlanDaysLimit 在 billing 命名空间，errors 下没有这个 key。
+          return NextResponse.json(
+            { error: "mealPlanDaysLimit", detail: "meal_plan_days_limit" },
+            { status: 403 },
+          )
+        }
+
+        // 菜谱总数上限：周计划一次写入「天数 × 3」个菜谱（每天早中晚），
+        // 只看「当前是否已满 25」会放行「已有 20 个再写 9 个 = 29」的越限写入，
+        // 所以要连带本次预计新增一起算。
+        const recipeFull = await checkRecipeCountLimitForCount(userId, targetDays.length * 3)
+        if (recipeFull) {
+          return NextResponse.json(
+            { error: "recipeLimit", detail: "recipe_count_limit" },
+            { status: 403 },
+          )
         }
       }
     }
 
+    if (!isDev) {
+      const isMock = !hasAIKeyForTier(user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE)
+      if (!isMock) {
+        // fail-closed：用量检查出错（如 DB 抖动）时拒绝生成，原实现 catch 返回 true 会让免费用户无限调用付费 AI
+        const canGenerate = await canUseAiToday(userId).catch((err: unknown) => { console.error("check usage limit error:", err); return false })
+        if (!canGenerate) {
+          return NextResponse.json(
+            { error: e("今日次数已用完，明天再来吧", "Daily limit reached, come back tomorrow"), detail: "usage_limit_exceeded" },
+            { status: 429 },
+          )
+        }
+      }
+    }
+
+    // 耗时日志
+    const t0 = Date.now()
+    const T = (label: string) => console.log(`[TIMING mealplan] ${label}: ${Date.now() - t0}ms`)
+    T("start")
+
     // 生成周计划
-    const weekPlan = await generateWeeklyPlan({
+    const { plan: rawPlan, fallback, reason } = await generateWeeklyPlan({
       dietType: user?.dietType || undefined,
       cuisinePref: user?.cuisinePref || undefined,
       servingSize: user?.servingSize || 2,
-    }, pantryNames)
+    }, pantryNames, locale, targetDays, user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE)
+
+    T("ai_done")
+
+    // 记录本次实际生效的模型与层级（AI 降级 mock 时不记模型，理由同 recipes/generate）
+    const aiTierUsed = user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE
+    const aiModelUsed = fallback ? null : (getModelForTier(aiTierUsed) || null)
+
+    if (fallback) {
+      // 降级原因写日志：线上排查时不用再猜是没配 KEY、AI 报错还是返回了垃圾数据
+      console.warn(`[meal-plan] AI 降级，reason=${reason ?? "unknown"}，返回 mock 计划（不落库）`)
+    }
+
+    // AI 返回数据兜底消毒：缺失字段填默认值，避免 .join() 崩溃 + 防止"刷新就丢"
+    const weekPlan = sanitizeWeeklyPlan(rawPlan)
 
     // 获取本周一日期
     const now = new Date()
@@ -83,25 +193,28 @@ export async function POST() {
     monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7))
     monday.setHours(0, 0, 0, 0)
 
-    // 保存到数据库（失败不影响返回结果）
-    let mealPlan: Record<string, unknown> | null = null
-    try {
-      await prisma.mealSlot.deleteMany({ where: { mealPlan: { userId: userId, weekStart: monday } } })
+    // 空数据保护：AI 与 mock 都没产出任何一天时，明确报错，
+    // 而不是返回 plan: null 让前端自己撞上空指针。
+    if (Object.keys(weekPlan).length === 0) {
+      console.error("[meal-plan] 生成结果为空（0 天），无法返回周计划")
+      return NextResponse.json(
+        { error: e("生成结果为空，请重试", "Generation returned no data, please try again"), detail: "empty weekly plan" },
+        { status: 500 },
+      )
+    }
 
-      // 清理孤立的旧 Recipe
+    // 保存到数据库(降级时不保存,返回 weekPlan 直接显示,不覆盖旧数据)
+    const dayMap = getDayMap(locale)
+    let mealPlan: Record<string, unknown> = buildUnsavedPlan(weekPlan, dayMap, monday)
+    let saved = false
+    if (!fallback) {
       try {
-        await prisma.recipe.deleteMany({
-          where: { mealSlots: { none: {} }, userId, isGenerated: true, starred: false },
-        })
-      } catch (err) {
-        console.error("Cleanup orphan recipes error:", err)
-      }
+        // 只删除选中天的旧 slots，保留未选中天的旧计划
+      await prisma.mealSlot.deleteMany({
+        where: { mealPlan: { userId: userId, weekStart: monday }, dayOfWeek: { in: targetDays } }
+      })
 
-      await prisma.mealPlan.deleteMany({ where: { userId: userId, weekStart: monday } })
-
-      // 创建菜谱并处理重复
       const slotEntries = Object.entries(weekPlan).flatMap(([dayName, meals], dayIdx) => {
-        const dayMap: Record<string, number> = { "周一": 0, "周二": 1, "周三": 2, "周四": 3, "周五": 4, "周六": 5, "周日": 6 }
         const dow = dayMap[dayName] ?? dayIdx
         return Object.entries(meals).map(([mealType, recipe]) => ({ dayOfWeek: dow, mealType, recipe }))
       })
@@ -117,6 +230,7 @@ export async function POST() {
               steps: recipe.steps.join("\n"), cookingTime: recipe.cookingTime || 0,
               calories: recipe.calories || 0, cuisineType: recipe.cuisineType || "",
               difficulty: recipe.difficulty || "easy", isGenerated: true,
+              aiModel: aiModelUsed, aiTier: aiTierUsed,
             },
           })
           recipeId = created.id
@@ -124,48 +238,78 @@ export async function POST() {
           const prismaErr = err as { code?: string }
           if (prismaErr.code === "P2002") {
             const existing = await prisma.recipe.findFirst({ where: { userId, title: recipe.title } })
-            if (existing) { recipeId = existing.id } else { throw err }
+            if (existing) {
+              // Update existing recipe with new AI content (keep starred status)
+              await prisma.recipe.update({
+                where: { id: existing.id },
+                data: {
+                  description: recipe.description || existing.description,
+                  ingredients: normalizeIngredients(recipe.ingredients).join(", "),
+                  steps: recipe.steps.join("\n"),
+                  cookingTime: recipe.cookingTime || existing.cookingTime,
+                  calories: recipe.calories || existing.calories,
+                  cuisineType: recipe.cuisineType || existing.cuisineType,
+                  difficulty: recipe.difficulty || existing.difficulty,
+                  // 内容被新模型覆盖，溯源信息同步更新
+                  aiModel: aiModelUsed,
+                  aiTier: aiTierUsed,
+                },
+              })
+              recipeId = existing.id
+            } else { throw err }
           } else { throw err }
         }
         slotData.push({ dayOfWeek, mealType, recipeId, note: (recipe.description || "").substring(0, 100) })
       }
 
-      mealPlan = await prisma.mealPlan.create({
-        data: { userId, weekStart: monday, slots: { create: slotData.map(({ dayOfWeek, mealType, recipeId, note }) => ({ dayOfWeek, mealType, note, recipeId })) } },
-        include: { slots: { include: { recipe: true } } },
-      })
+      // 查找或创建本周 MealPlan
+      const existingPlan = await prisma.mealPlan.findFirst({ where: { userId, weekStart: monday } })
+      if (existingPlan) {
+        // 已有计划，添加新 slots
+        if (slotData.length > 0) {
+          await prisma.mealSlot.createMany({
+            data: slotData.map(({ dayOfWeek, mealType, recipeId, note }) => ({ mealPlanId: existingPlan.id, dayOfWeek, mealType, recipeId, note })),
+          })
+        }
+        const refreshed = await prisma.mealPlan.findUnique({
+          where: { id: existingPlan.id },
+          include: { slots: { include: { recipe: true } } },
+        })
+        // findUnique 理论上不应为 null（刚查到过），兜底保留未落库视图，避免前端拿到 null
+        if (refreshed) mealPlan = refreshed as unknown as Record<string, unknown>
+      } else {
+        // 新建计划
+        const created = await prisma.mealPlan.create({
+          data: { userId, weekStart: monday, slots: { create: slotData.map(({ dayOfWeek, mealType, recipeId, note }) => ({ dayOfWeek, mealType, note, recipeId })) } },
+          include: { slots: { include: { recipe: true } } },
+        })
+        if (created) mealPlan = created as unknown as Record<string, unknown>
+      }
 
-      // 消耗一次使用次数
-      if (!isDev) { await incrementUsage(userId).catch((err: unknown) => { console.error("increment usage error:", err) }) }
-    } catch (err) {
-      console.error("Failed to save meal plan to DB (returning generated data only):", err)
-      // 把 weekPlan 转成前端可展示的格式
-      const dayMap: Record<string, number> = { "周一": 0, "周二": 1, "周三": 2, "周四": 3, "周五": 4, "周六": 5, "周日": 6 }
-      const mealTypeKeys = ["breakfast", "lunch", "dinner"] as const
-      const slots = Object.entries(weekPlan).flatMap(([dayName, meals]) =>
-        mealTypeKeys.map((mealType, idx) => ({
-          id: `${dayName}-${mealType}`,
-          dayOfWeek: dayMap[dayName] ?? 0,
-          mealType,
-          note: meals[mealType]?.description?.substring(0, 100) || "",
-          recipe: meals[mealType] ? {
-            id: `${dayName}-${mealType}-recipe`,
-            title: meals[mealType].title,
-            description: meals[mealType].description,
-            ingredients: Array.isArray(meals[mealType].ingredients) ? meals[mealType].ingredients.join(", ") : "",
-            steps: Array.isArray(meals[mealType].steps) ? meals[mealType].steps.join("\n") : "",
-            cookingTime: meals[mealType].cookingTime || 0,
-            calories: meals[mealType].calories || 0,
-            cuisineType: meals[mealType].cuisineType || "",
-          } : null,
-        }))
-      )
-      mealPlan = { id: "demo-plan", weekStart: monday.toISOString(), slots }
+        saved = true
+        if (!isDev) { await incrementAiUsage(userId).catch((err: unknown) => { console.error("increment usage error:", err) }) }
+      } catch (err) {
+        // 保存失败不阻断：已经生成好的菜谱仍要返回给用户，只是不落库（刷新会丢）
+        console.error("Failed to save meal plan to DB (returning generated data only):", err)
+      }
     }
 
-    return NextResponse.json({ plan: mealPlan, generated: weekPlan })
+    return NextResponse.json({
+      plan: mealPlan,
+      generated: weekPlan,
+      fallback,
+      // saved=false 表示这份计划没有落库（AI 降级或写库失败），刷新后不会保留，
+      // 前端据此提示用户，而不是默默展示一堆假数据。
+      saved,
+      // 降级原因：no_key（未配置 AI）/ ai_error（调用失败或超时）/ invalid_data（返回结构异常）
+      reason: reason ?? null,
+    })
   } catch (error) {
-    console.error("Meal plan generation error:", error)
-    return NextResponse.json({ error: "生成失败，AI 暂时无法响应，请稍后重试" }, { status: 500 })
+    const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error)
+    console.error("Meal plan generation error:", detail)
+    return NextResponse.json({
+      error: err(loc, "requestFailed"),
+      detail,
+    }, { status: 500 })
   }
 }

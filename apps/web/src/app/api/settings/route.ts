@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import { isDemoUser } from "@/lib/auth-helpers"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
-export async function GET() {
+export async function GET(req: Request) {
+  const loc = getLocaleFromCookie(req)
   try {
     const session = await auth()
-    if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+    if (!session?.user?.id) return NextResponse.json({ error: err(loc, "loginRequired") }, { status: 401 })
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
@@ -19,19 +22,20 @@ export async function GET() {
         dietType: user?.dietType ?? "不限",
         cuisinePref: user?.cuisinePref && user.cuisinePref !== "不限" ? user.cuisinePref : "",
         servingSize: user?.servingSize ?? 2,
-        subscriptionTier: user?.subscriptionTier ?? "FREE",
+        subscriptionTier: user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE,
       },
     })
   } catch (error) {
     console.error("Settings GET:", error)
-    return NextResponse.json({ error: "请求失败，请稍后重试" }, { status: 500 })
+    return NextResponse.json({ error: err(loc, "requestFailed") }, { status: 500 })
   }
 }
 
 export async function PUT(req: Request) {
+  const loc = getLocaleFromCookie(req)
   try {
     const session = await auth()
-    if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+    if (!session?.user?.id) return NextResponse.json({ error: err(loc, "loginRequired") }, { status: 401 })
     if (isDemoUser(session)) return NextResponse.json({ error: "体验用户不支持修改设置，请注册后使用" }, { status: 403 })
 
     const { dietType, cuisinePref, servingSize } = await req.json()
@@ -53,6 +57,6 @@ export async function PUT(req: Request) {
     })
   } catch (error) {
     console.error("Settings PUT:", error)
-    return NextResponse.json({ error: "请求失败，请稍后重试" }, { status: 500 })
+    return NextResponse.json({ error: err(loc, "requestFailed") }, { status: 500 })
   }
 }

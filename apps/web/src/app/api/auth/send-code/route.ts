@@ -1,117 +1,93 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
+import { sendEmail } from "@cookmate/shared/utils/email"
+import crypto from "node:crypto"
 
-function isPhone(val: string) {
-  return /^1\d{10}$/.test(val)
+function emailT(locale: string, zh: string, en: string): string {
+  return locale === "zh-CN" ? zh : en
 }
 
 function isEmail(val: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
 }
 
-async function sendEmailViaResend(to: string, code: string) {
-  const apiKey = process.env.RESEND_API_KEY
-  if (!apiKey) return false
-
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: "CookMate <noreply@aaigc.online>",
-        to,
-        subject: "CookMate 登录验证码",
-        html: `<div style="font-family:sans-serif;padding:24px;max-width:400px">
-          <h2 style="color:#FF6B35">🍳 CookMate</h2>
-          <p style="color:#333">您的验证码是：</p>
-          <div style="font-size:32px;font-weight:bold;color:#FF6B35;letter-spacing:8px;text-align:center;padding:16px;background:#FFF8F0;border-radius:12px;margin:16px 0">
-            ${code}
-          </div>
-          <p style="color:#999;font-size:12px">验证码 5 分钟内有效，请勿泄露给他人。</p>
-        </div>`,
-      }),
-    })
-    return res.ok
-  } catch (err) {
-    console.error("send email error:", err)
-    return false
-  }
-}
-
 export async function POST(req: Request) {
+  const loc = getLocaleFromCookie(req)
   try {
-    const { phone, email } = await req.json()
-    const identifier = phone || email
+    const { email, purpose } = await req.json()
 
-    if (!identifier) {
-      return NextResponse.json({ error: "请输入手机号或邮箱" }, { status: 400 })
+    if (!email || !isEmail(email)) {
+      return NextResponse.json({ error: err(loc, "invalidEmail") }, { status: 400 })
     }
 
-    if (phone && !isPhone(phone)) {
-      return NextResponse.json({ error: "请输入正确的手机号" }, { status: 400 })
+    // 根据 purpose 检查用户状态
+    if (purpose === "login") {
+      const user = await prisma.user.findUnique({ where: { email } })
+      if (!user) {
+        return NextResponse.json({ error: err(loc, "emailNotRegistered") }, { status: 404 })
+      }
+    } else if (purpose === "register") {
+      const user = await prisma.user.findUnique({ where: { email } })
+      if (user) {
+        return NextResponse.json({ error: err(loc, "emailAlreadyRegistered") }, { status: 409 })
+      }
     }
-    if (email && !isEmail(email)) {
-      return NextResponse.json({ error: "请输入正确的邮箱地址" }, { status: 400 })
-    }
+    // purpose 未指定 = 兼容旧行为（不检查）
 
-    // 检查是否 60 秒内已发过
-    const recent = phone
-      ? await prisma.verificationCode.findFirst({
-          where: { phone, used: false, createdAt: { gte: new Date(Date.now() - 60000) } },
-          orderBy: { createdAt: "desc" },
-        })
-      : await prisma.verificationCode.findFirst({
-          where: { email: email!, used: false, createdAt: { gte: new Date(Date.now() - 60000) } },
-          orderBy: { createdAt: "desc" },
-        })
+    // 检查是否 2 分钟内已发过
+    const recent = await prisma.verificationCode.findFirst({
+      where: { email, used: false, createdAt: { gte: new Date(Date.now() - 120000) } },
+      orderBy: { createdAt: "desc" },
+    })
     if (recent) {
-      return NextResponse.json({ error: "验证码已发送，请稍后再试" }, { status: 429 })
+      const elapsed = Math.floor((Date.now() - recent.createdAt.getTime()) / 1000)
+      const remaining = Math.max(1, 120 - elapsed)
+      return NextResponse.json({
+        error: err(loc, "codeRecentlySent"),
+        remainingSeconds: remaining,
+        devCode: process.env.NODE_ENV === "development" ? recent.code : undefined,
+      }, { status: 429 })
     }
 
     // 生成 6 位验证码
-    const code = String(Math.floor(100000 + Math.random() * 900000))
+    const code = String(crypto.randomInt(100000, 999999))
 
     // 存入数据库
-    if (phone) {
-      await prisma.verificationCode.create({
-        data: {
-          phone,
-          code,
-          expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-        },
-      })
-    } else {
-      await prisma.verificationCode.create({
-        data: {
-          email: email!,
-          code,
-          expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-        },
-      })
-    }
+    await prisma.verificationCode.create({
+      data: {
+        email,
+        code,
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      },
+    })
 
-    // 环境判断：开发环境直接返验证码，生产环境尝试发邮件
+    // 开发环境直接返验证码，生产环境发邮件
     const isDev = process.env.NODE_ENV === "development"
 
-    if (email && !isDev) {
-      // 生产环境发真实邮件
-      const sent = await sendEmailViaResend(email, code)
-      if (!sent) {
-        return NextResponse.json({ error: "邮件发送失败，请检查 RESEND_API_KEY 配置" }, { status: 500 })
+    if (!isDev) {
+      const subject = emailT(loc, "CookMate 登录验证码", "CookMate login code")
+      const desc = emailT(loc, "请输入以下验证码完成登录：", "Enter the code below to log in:")
+      const expireWarning = emailT(loc, "验证码 5 分钟内有效，请勿泄露给他人。", "This code expires in 5 minutes. Do not share it with anyone.")
+      const result = await sendEmail(email, subject, `<div style="font-family:sans-serif;padding:24px;max-width:400px">
+        <h2 style="color:#FF6B35">🍳 CookMate</h2>
+        <p style="color:#333">${desc}</p>
+        <div style="font-size:32px;font-weight:bold;color:#FF6B35;letter-spacing:8px;text-align:center;padding:16px;background:#FFF8F0;border-radius:12px;margin:16px 0">
+          ${code}
+        </div>
+        <p style="color:#999;font-size:12px">${expireWarning}</p>
+      </div>`)
+      if (result.quotaExceeded) {
+        return NextResponse.json({ error: err(loc, "emailQuotaExceeded") }, { status: 429 })
+      }
+      if (!result.ok) {
+        return NextResponse.json({ error: err(loc, "emailSendFailed") }, { status: 500 })
       }
     }
 
-    if (phone && !isDev) {
-      // 生产环境不支持短信验证码（未配置短信服务）
-      return NextResponse.json({ error: "手机号登录暂未开放，请使用邮箱或密码登录" }, { status: 400 })
-    }
-
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, devCode: isDev ? code : undefined })
   } catch (error) {
     console.error("Send code error:", error)
-    return NextResponse.json({ error: "发送失败" }, { status: 500 })
+    return NextResponse.json({ error: err(loc, "sendFailed") }, { status: 500 })
   }
 }

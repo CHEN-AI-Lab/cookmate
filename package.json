@@ -3,15 +3,27 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@10.28.0",
-  "pnpm": {
-    "onlyBuiltDependencies": ["@prisma/client", "@prisma/engines", "prisma", "sharp", "unrs-resolver"]
-  },
   "scripts": {
     "dev": "pnpm --filter cookmate-web dev",
     "build": "pnpm --filter cookmate-web build",
     "test": "pnpm --filter cookmate-web test",
     "test:watch": "pnpm --filter cookmate-web test:watch",
+    "test:shared": "cd apps/web && npx vitest run ../../tests/unit",
+    "test:light": "cd apps/web && npx vitest run ../../tests/unit --pool=forks --maxWorkers=1",
     "lint": "pnpm --filter cookmate-web lint",
-    "postinstall": "pnpm --filter cookmate-web postinstall"
+    "lint:shared": "pnpm --filter @cookmate/shared lint",
+    "check:json": "python3 scripts/check-json.py",
+    "check:light": "pnpm check:json && pnpm test:light",
+    "check": "bash scripts/check.sh",
+    "reconcile:cancellations": "node scripts/reconcile-cancellations.mjs",
+    "expire:sweep": "node scripts/expire-sweep.mjs",
+    "postinstall": "pnpm --filter cookmate-web postinstall",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@prisma/client": "^6.19.3",
+    "husky": "^9.1.7",
+    "prisma": "^6.19.3",
+    "vitest": "^4.1.10"
   }
 }

@@ -1,0 +1,74 @@
+import Link from "next/link"
+import { getTranslations } from "next-intl/server"
+import PublicNavbar from "@/components/layout/PublicNavbar"
+import PublicFooter from "@/components/layout/PublicFooter"
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: "terms" })
+  return { title: t("title"), description: t("title") }
+}
+
+export default async function TermsPage() {
+  const t = await getTranslations("terms")
+
+  return (
+    <div className="min-h-screen bg-bg-brand">
+      <PublicNavbar />
+
+      <section className="max-w-3xl mx-auto px-8 pt-20 pb-16">
+        <h1 className="text-4xl sm:text-5xl font-bold text-text-primary">{t("title")}</h1>
+        <p className="mt-2 text-sm text-text-secondary">{t("lastUpdated")}</p>
+
+        <div className="mt-10 space-y-8 text-text-secondary leading-relaxed">
+          <section>
+            <h2 className="text-xl font-bold text-text-primary mb-3">{t("acceptTitle")}</h2>
+            <p>{t("acceptDesc")}</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-text-primary mb-3">{t("accountTitle")}</h2>
+            <p>{t("accountDesc")}</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-text-primary mb-3">{t("subscriptionTitle")}</h2>
+            <p>{t("subscriptionDesc")}</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-text-primary mb-3">{t("aiTitle")}</h2>
+            <p>{t("aiDesc")}</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-text-primary mb-3">{t("disclaimerTitle")}</h2>
+            <p>{t("disclaimerDesc")}</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-text-primary mb-3">{t("liabilityTitle")}</h2>
+            <p>{t("liabilityDesc")}</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-text-primary mb-3">{t("contactTitle")}</h2>
+            <p>
+              {t("contactDesc")}{" "}
+              <a href="mailto:CookMate@aaigc.online" className="text-accent hover:underline">
+                CookMate@aaigc.online
+              </a>
+            </p>
+          </section>
+        </div>
+
+        <div className="mt-12 pt-8 border-t border-border text-center text-sm text-text-secondary">
+          <Link href="/privacy" className="hover:text-accent transition-colors">
+            {t("viewPrivacy")}
+          </Link>
+        </div>
+      </section>
+
+      <PublicFooter />
+    </div>
+  )
+}

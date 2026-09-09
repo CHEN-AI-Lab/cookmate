@@ -53,3 +53,30 @@
 - Mobile: 单列，底部导航
 - Desktop: 侧边栏 + 内容区
 - Tablet: 自适应
+## 提示/横幅（Alert）样式规范
+
+> 2026-09 免费额度提示统一整改时确立。**改任何提示样式前必读本节，禁止随手选颜色。**
+
+### 1. 三类提示，颜色按语义定（不按页面定）
+
+| kind | 语义 | 配色（Tailwind 类名） | 文案示例 |
+|------|------|----------------------|----------|
+| limit | 免费额度用完 / 达上限，引导升级（**不是错误**） | `bg-bg-brand border border-accent/60 text-text-primary`，内嵌橙色下划线升级链接 | 「今日免费次数已用完，升级 Pro 可无限使用」 |
+| info | 输入指引 / 降级提示（用户操作方式不对，非故障） | `bg-amber-50 border border-amber-200 text-amber-700` | 「请输入真实的食材名称，如：鸡肉、西兰花」 |
+| error | 真故障（网络 / 服务器 / 未知异常） | `bg-red-50 border border-red-200 text-red-700` | 「生成失败，请稍后重试」 |
+
+红色只留给真故障：把「次数用完」标红会让用户以为网站坏了；升级引导本质是卖点文案，用品牌米橙主题色。
+
+### 2. 位置规范
+
+- 提示必须出现在**触发元素的正下方**，与其左对齐（按钮触发的提示放按钮行下面，不放按钮同一行旁边）
+- 宽度随内容自适应：`w-fit max-w-full`，禁止撑满整行
+- 升级引导弹框统一用 `UpgradeDialog`（品牌色居中弹框，点遮罩关闭；不加确认按钮、不自动消失）
+- **禁止**用黑色反色底（`bg-bg-inverse`）做新增提示——那是历史旧样式，新代码一律按上表配色
+
+### 3. 相关代码位置
+
+- 升级链接 / 弹框组件：`apps/web/src/components/features/UpgradeLink.tsx`
+- 参考实现：AI菜谱页 `recipes/page.tsx`（errorKind 三分类）、周计划 `meal-plan/page.tsx`
+- 食材名等输入校验规则：`shared/validators/index.ts` 的 `isValidIngredient`（AI菜谱页、食材库页、后端 `/api/pantry` 三处共用，**禁止在页面里再复制一份**）
+- 后端返回裸 key（如 `"pantryLimitReached"`），前端用对应命名空间 `t()` / `t.rich()` 翻译；带升级链接的文案必须用 `t.rich` + `UpgradeInline`，否则 `<upgrade>` 标签会原样显示

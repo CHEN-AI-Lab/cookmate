@@ -1,0 +1,1372 @@
+"use client"
+
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
+
+// ── 类型 ──
+
+interface CancelLog {
+  id: string
+  createdAt: string
+  channel: string | null
+  status: string
+  userId: string | null
+  userEmail: string | null
+  userName: string | null
+  subscriptionId: string | null
+  error: string
+}
+
+interface CancelLogsResponse {
+  total?: number
+  failed?: number
+  completed?: number
+  lastFailedAt?: string | null
+  logs?: CancelLog[]
+  error?: string
+}
+
+interface AdminOrder {
+  id: string
+  orderId: string
+  channel: string
+  period: string | null
+  amount: number
+  currency: string
+  status: string
+  createdAt: string
+  userEmail: string | null
+}
+
+interface OrdersResponse {
+  total?: number
+  paidCount?: number
+  creemRevenue?: number
+  alipayRevenue?: number
+  orders?: AdminOrder[]
+  error?: string
+}
+
+interface WebhookLogItem {
+  id: string
+  source: string
+  eventType: string | null
+  status: string
+  eventId: string | null
+  userId: string | null
+  userEmail: string | null
+  userName: string | null
+  subscriptionId: string | null
+  orderId: string | null
+  createdAt: string
+  rawPreview: string
+}
+
+interface WebhookLogsResponse {
+  total?: number
+  failed?: number
+  logs?: WebhookLogItem[]
+  error?: string
+}
+
+interface AdminUser {
+  id: string
+  email: string | null
+  name: string | null
+  phone: string | null
+  subscriptionTier: string
+  subscriptionExpiryDate: string | null
+  onboardingCompleted: boolean
+  createdAt: string
+  orderCount: number
+}
+
+interface UsersResponse {
+  total?: number
+  proCount?: number
+  freeCount?: number
+  users?: AdminUser[]
+  error?: string
+}
+
+interface CronLogItem {
+  id: string
+  eventType: string | null
+  status: string
+  detail: Record<string, unknown>
+  createdAt: string
+}
+
+interface CronLogsResponse {
+  total?: number
+  logs?: CronLogItem[]
+  error?: string
+}
+
+type AiTone = "ok" | "warn" | "error" | "plain"
+
+/** 带状态色的值（来源、专用 Key） */
+interface AiValue {
+  text: string
+  tone: AiTone
+}
+
+/** 纯文本值，fromDefault 标明该值是回退默认来的还是这一端自己配的 */
+interface AiPlain {
+  text: string
+  fromDefault: boolean
+}
+
+interface AiSide {
+  source: AiValue
+  key: AiValue
+  model: AiPlain
+  baseUrl: AiPlain
+}
+
+interface ConfigResponse {
+  ok?: boolean
+  config?: {
+    app: { url: string }
+    creem: { apiKey: string; monthlyProductId: string; annualProductId: string; webhookSecret: string }
+    alipay: { appId: string; privateKey: string; publicKey: string }
+    auth: { authSecret: string; adminEmails: string }
+    oauth: { googleId: string; googleSecret: string; githubId: string; githubSecret: string }
+    cron: { cronSecret: string }
+    database: { directUrl: string }
+    ai: {
+      free: AiSide
+      pro: AiSide
+      fallback: { key: AiValue; model: AiPlain; baseUrl: AiPlain }
+    }
+    vercelEnvUrl: string | null
+    vercelSlugMissing: boolean
+  }
+  error?: string
+}
+
+type Tab = "orders" | "webhooks" | "cancels" | "users" | "crons" | "config"
+
+// ── 工具 ──
+
+function fmtTime(iso: string) {
+  try {
+    return new Date(iso).toLocaleString("zh-CN", { hour12: false })
+  } catch {
+    return iso
+  }
+}
+
+// 金额格式化：按订单的 currency 字段区分币种（新增渠道只需加一行配置）
+const CURRENCY_SYMBOLS: Record<string, string> = { USD: "$", CNY: "¥" }
+
+function fmtAmount(amount: number, currency?: string) {
+  const symbol = currency ? (CURRENCY_SYMBOLS[currency] || "?") : "?"
+  return `${symbol}${(amount / 100).toFixed(2)}`
+}
+
+function fmtPeriod(period: string | null) {
+  if (period === "annual") return "年付"
+  if (period === "monthly") return "月付"
+  return "-"
+}
+
+// 并发拉取订单 / 回调流水 / 取消审计 / 用户列表 / Cron 日志 / 支付配置六组数据
+function fetchAdminData() {
+  return Promise.all([
+    fetch("/api/admin/orders").then(async (r) => ({ ok: r.ok, data: await r.json() })),
+    fetch("/api/admin/webhook-logs").then(async (r) => ({ ok: r.ok, data: await r.json() })),
+    fetch("/api/admin/cancel-logs").then(async (r) => ({ ok: r.ok, data: await r.json() })),
+    fetch("/api/admin/users").then(async (r) => ({ ok: r.ok, data: await r.json() })),
+    fetch("/api/admin/cron-logs").then(async (r) => ({ ok: r.ok, data: await r.json() })),
+    fetch("/api/admin/config").then(async (r) => ({ ok: r.ok, data: await r.json() })),
+  ])
+}
+
+// ── 页面 ──
+
+export default function AdminPage() {
+  const [tab, setTab] = useState<Tab>("orders")
+
+  // 订单
+  const [ordersData, setOrdersData] = useState<OrdersResponse | null>(null)
+  // 回调流水
+  const [webhookData, setWebhookData] = useState<WebhookLogsResponse | null>(null)
+  // 取消审计
+  const [cancelData, setCancelData] = useState<CancelLogsResponse | null>(null)
+  // 用户列表
+  const [usersData, setUsersData] = useState<UsersResponse | null>(null)
+  // Cron 日志
+  const [cronData, setCronData] = useState<CronLogsResponse | null>(null)
+  // 支付配置
+  const [configData, setConfigData] = useState<ConfigResponse | null>(null)
+
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // 统一处理五个接口的返回结果
+  const applyResult = useCallback((results: { ok: boolean; data: { error?: string } }[]) => {
+    const [orders, webhooks, cancels, users, crons, config] = results
+    const firstErr = results.find((x) => !x.ok)
+    if (firstErr) {
+      setError(firstErr.data.error || `请求失败`)
+      return
+    }
+    setOrdersData(orders.data as OrdersResponse)
+    setWebhookData(webhooks.data as WebhookLogsResponse)
+    setCancelData(cancels.data as CancelLogsResponse)
+    setUsersData(users.data as UsersResponse)
+    setCronData(crons.data as CronLogsResponse)
+    setConfigData(config.data as ConfigResponse)
+  }, [])
+
+  // 首次加载：loading/error 已由 useState 默认值（true/null）提供，
+  // effect 内不同步 setState，避免级联渲染（react-hooks 规则）
+  useEffect(() => {
+    let cancelled = false
+    fetchAdminData()
+      .then((res) => {
+        if (!cancelled) applyResult(res)
+      })
+      .catch((e) => {
+        if (!cancelled) setError(String(e))
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [applyResult])
+
+  // 手动刷新（事件处理器内允许同步 setState）
+  const refresh = useCallback(() => {
+    setLoading(true)
+    setError(null)
+    fetchAdminData()
+      .then((res) => applyResult(res))
+      .catch((e) => setError(String(e)))
+      .finally(() => setLoading(false))
+  }, [applyResult])
+
+  if (loading) {
+    return <div className="text-center py-16 text-text-secondary">加载中…</div>
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-3xl mx-auto py-16 px-4">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+          <p className="text-red-600 font-semibold">{error}</p>
+          <p className="text-text-secondary text-sm mt-2">
+            无权限访问此页面，仅限管理员使用。
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  const tabs: Array<{ key: Tab; label: string; badge?: number; badgeTone?: "red" | "gray" }> = [
+    { key: "orders", label: "订单列表", badge: ordersData?.total ?? 0, badgeTone: "gray" },
+    { key: "webhooks", label: "回调流水", badge: webhookData?.total ?? 0, badgeTone: "gray" },
+    {
+      key: "cancels",
+      label: "取消审计",
+      badge: (cancelData?.failed ?? 0) > 0 ? cancelData?.failed : undefined,
+      badgeTone: "red",
+    },
+    { key: "users", label: "用户列表", badge: usersData?.total ?? 0, badgeTone: "gray" },
+    {
+      key: "crons",
+      label: "Cron 日志",
+      badge: (cronData?.logs ?? []).some((l) => l.status === "failed") ? 1 : undefined,
+      badgeTone: "red",
+    },
+    { key: "config", label: "系统配置" },
+  ]
+
+  return (
+    <div className="max-w-6xl mx-auto py-10 px-4 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary tracking-tight">支付后台</h1>
+          <p className="text-text-secondary text-sm mt-1">
+            订单 / 回调 / 取消审计 一站式查看。各列表最多展示最近 200 条（最新在前）。
+          </p>
+        </div>
+        <button
+          onClick={refresh}
+          disabled={loading}
+          className="px-4 py-2 rounded-xl border border-gray-200 text-text-secondary text-sm hover:bg-gray-50 disabled:opacity-50 shrink-0"
+        >
+          {loading ? "刷新中…" : "刷新"}
+        </button>
+      </div>
+
+      {/* Tab 栏 */}
+      <div className="flex gap-2 border-b border-gray-200">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`px-4 py-2.5 text-sm font-medium rounded-t-xl transition-colors flex items-center gap-2 ${
+              tab === t.key
+                ? "bg-card text-text-primary border border-b-0 border-gray-200"
+                : "text-text-secondary hover:text-text-primary"
+            }`}
+          >
+            {t.label}
+            {t.badge !== undefined && t.badge > 0 && (
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                  t.badgeTone === "red" ? "bg-red-100 text-red-600" : "bg-surface text-text-secondary"
+                }`}
+              >
+                {t.badge}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {tab === "orders" && <OrdersTab data={ordersData} />}
+      {tab === "webhooks" && <WebhooksTab data={webhookData} />}
+      {tab === "cancels" && <CancelsTab data={cancelData} />}
+      {tab === "users" && <UsersTab data={usersData} />}
+      {tab === "crons" && <CronsTab data={cronData} />}
+      {tab === "config" && <ConfigTab data={configData} />}
+    </div>
+  )
+}
+
+// ── Tab 1：订单列表 ──
+
+function OrdersTab({ data }: { data: OrdersResponse | null }) {
+  const orders = data?.orders ?? []
+  const [filterChannel, setFilterChannel] = useState<string>("")
+  const [filterStatus, setFilterStatus] = useState<string>("")
+
+  const channels = useMemo(() => [...new Set(orders.map((o) => o.channel).filter(Boolean))] as string[], [orders])
+  const statuses = useMemo(() => [...new Set(orders.map((o) => o.status).filter(Boolean))] as string[], [orders])
+
+  const filtered = useMemo(() => {
+    return orders.filter((o) => (!filterChannel || o.channel === filterChannel) && (!filterStatus || o.status === filterStatus))
+  }, [orders, filterChannel, filterStatus])
+
+  const hasFilter = filterChannel || filterStatus
+  const clearFilter = () => { setFilterChannel(""); setFilterStatus("") }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <StatCard label="总订单" value={hasFilter ? filtered.length : data?.total ?? 0} tone="gray" />
+        <StatCard label="已支付" value={hasFilter ? filtered.filter((o) => o.status === "PAID").length : data?.paidCount ?? 0} tone="green" />
+        <StatCard label="Creem 收入" value={fmtAmount(hasFilter ? filtered.filter((o) => o.status === "PAID" && o.channel === "creem").reduce((s, o) => s + o.amount, 0) : (data?.creemRevenue ?? 0), "USD")} tone="amber" />
+        <StatCard label="支付宝收入" value={fmtAmount(hasFilter ? filtered.filter((o) => o.status === "PAID" && o.channel === "alipay").reduce((s, o) => s + o.amount, 0) : (data?.alipayRevenue ?? 0), "CNY")} tone="amber" />
+      </div>
+
+      {/* 筛选栏 */}
+      <div className="flex flex-wrap items-center gap-2">
+        <select value={filterChannel} onChange={(e) => setFilterChannel(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
+          <option value="">全部渠道</option>
+          {channels.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
+          <option value="">全部状态</option>
+          {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        {hasFilter && (
+          <button onClick={clearFilter} className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">清除</button>
+        )}
+        {hasFilter && <span className="text-xs text-text-secondary">筛选结果：{filtered.length} 条</span>}
+      </div>
+
+      {orders.length === 0 ? (
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-text-secondary">
+          暂无订单
+        </div>
+      ) : (
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-text-secondary">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap" title="订单创建时间">时间</th>
+                  <th className="text-left px-4 py-3 font-medium" title="Creem/支付宝生成的订单号">订单号</th>
+                  <th className="text-left px-4 py-3 font-medium" title="支付渠道：creem 或 alipay">渠道</th>
+                  <th className="text-left px-4 py-3 font-medium" title="订阅周期：monthly 月付 / annual 年付">周期</th>
+                  <th className="text-left px-4 py-3 font-medium" title="订单金额（CNY）">金额</th>
+                  <th className="text-left px-4 py-3 font-medium" title="订单状态：待支付/已支付/已取消/已退款/已过期">状态</th>
+                  <th className="text-left px-4 py-3 font-medium" title="下单用户的邮箱">用户邮箱</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filtered.map((o) => (
+                  <tr key={o.id} className={o.status === "PAID" ? "" : "opacity-60"}>
+                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(o.createdAt)}</td>
+                    <td className="px-4 py-3 text-gray-700 font-mono text-xs">{o.orderId}</td>
+                    <td className="px-4 py-3 text-gray-700">{o.channel}</td>
+                    <td className="px-4 py-3 text-gray-700">{fmtPeriod(o.period)}</td>
+                    <td className="px-4 py-3 text-gray-700 font-medium">{fmtAmount(o.amount, o.currency)}</td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={o.status} />
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 text-xs">{o.userEmail ?? "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Tab 2：回调流水 ──
+
+function WebhooksTab({ data }: { data: WebhookLogsResponse | null }) {
+  const logs = data?.logs ?? []
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [filterSource, setFilterSource] = useState<string>("")
+  const [filterStatus, setFilterStatus] = useState<string>("")
+
+  const sources = useMemo(() => [...new Set(logs.map((l) => l.source).filter(Boolean))] as string[], [logs])
+  const statuses = useMemo(() => [...new Set(logs.map((l) => l.status).filter(Boolean))] as string[], [logs])
+
+  const filtered = useMemo(() => {
+    return logs.filter((l) => (!filterSource || l.source === filterSource) && (!filterStatus || l.status === filterStatus))
+  }, [logs, filterSource, filterStatus])
+
+  const hasFilter = filterSource || filterStatus
+  const clearFilter = () => { setFilterSource(""); setFilterStatus("") }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <StatCard label="回调总数" value={hasFilter ? filtered.length : data?.total ?? 0} tone="gray" />
+        <StatCard label="失败回调" value={hasFilter ? filtered.filter((l) => l.status.startsWith("failed")).length : (data?.failed ?? 0)} tone={(data?.failed ?? 0) > 0 ? "red" : "gray"} />
+      </div>
+
+      {/* 筛选栏 */}
+      <div className="flex flex-wrap items-center gap-2">
+        <select value={filterSource} onChange={(e) => setFilterSource(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
+          <option value="">全部来源</option>
+          {sources.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
+          <option value="">全部状态</option>
+          {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        {hasFilter && (
+          <button onClick={clearFilter} className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">清除</button>
+        )}
+        {hasFilter && <span className="text-xs text-text-secondary">筛选结果：{filtered.length} 条</span>}
+      </div>
+
+      {logs.length === 0 ? (
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-text-secondary">
+          暂无回调记录
+        </div>
+      ) : (
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-text-secondary">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap" title="回调到达时间">时间</th>
+                  <th className="text-left px-4 py-3 font-medium" title="回调来源渠道（creem/alipay）">来源</th>
+                  <th className="text-left px-4 py-3 font-medium" title="Creem/支付宝的事件类型，如 checkout.completed、subscription.paid">事件</th>
+                  <th className="text-left px-4 py-3 font-medium" title="本条回调的处理结果：已收到/已处理/失败/重复跳过">状态</th>
+                  <th className="text-left px-4 py-3 font-medium" title="Creem 分配的事件唯一标识（evt_xxx），用于去重，同一事件只保留一条">事件ID</th>
+                  <th className="text-left px-4 py-3 font-medium" title="触发此回调的用户邮箱">用户</th>
+                  <th className="text-left px-4 py-3 font-medium" title="Creem 订阅ID（sub_xxx），关联用户的订阅记录">订阅ID</th>
+                  <th className="text-left px-4 py-3 font-medium" title="Creem 原始请求体 JSON，点击可展开查看">原文</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filtered.map((l) => (
+                  <tr key={l.id} className={l.status.startsWith("failed") ? "bg-red-50/50" : ""}>
+                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
+                    <td className="px-4 py-3 text-gray-700">{l.source}</td>
+                    <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.eventType ?? "-"}</td>
+                    <td className="px-4 py-3">
+                      <WebhookStatusBadge status={l.status} />
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 font-mono text-xs max-w-[160px] truncate" title={l.eventId ?? ""}>
+                      {l.eventId ?? "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
+                      {l.userEmail ?? (l.userId ? l.userId.slice(0, 8) + "…" : "-")}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 font-mono text-xs max-w-[120px] truncate" title={l.subscriptionId ?? ""}>
+                      {l.subscriptionId ?? "-"}
+                    </td>
+                    <td className="px-4 py-3 text-xs">
+                      {l.rawPreview ? (
+                        <button
+                          onClick={() => setExpandedId(expandedId === l.id ? null : l.id)}
+                          className="text-accent hover:underline"
+                        >
+                          {expandedId === l.id ? "收起" : "查看"}
+                        </button>
+                      ) : (
+                        "-"
+                      )}
+                      {expandedId === l.id && (
+                        <pre className="mt-2 p-2 bg-gray-50 rounded-lg text-xs max-w-md max-h-48 overflow-auto whitespace-pre-wrap break-all">
+                          {l.rawPreview}
+                        </pre>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Tab 3：取消审计 ──
+
+function CancelsTab({ data }: { data: CancelLogsResponse | null }) {
+  const logs = data?.logs ?? []
+  const [filterChannel, setFilterChannel] = useState<string>("")
+
+  const channels = useMemo(() => [...new Set(logs.map((l) => l.channel).filter(Boolean))] as string[], [logs])
+  const filtered = useMemo(() => {
+    return logs.filter((l) => (!filterChannel || l.channel === filterChannel))
+  }, [logs, filterChannel])
+
+  const hasFilter = filterChannel
+  const clearFilter = () => { setFilterChannel("") }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-text-secondary text-sm">
+          记录每一次「取消订阅」尝试。状态为「失败」= 上游（Creem）没取消成功，
+          需去 Creem 后台补刀，或让用户重新点一次「取消」。
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard label="失败取消" value={hasFilter ? filtered.filter((l) => l.status === "failed").length : (data?.failed ?? 0)} tone="red" />
+        <StatCard label="成功取消" value={hasFilter ? filtered.filter((l) => l.status !== "failed").length : (data?.completed ?? 0)} tone="green" />
+        <StatCard label="总记录" value={hasFilter ? filtered.length : (data?.total ?? 0)} tone="gray" />
+      </div>
+
+      {/* 筛选栏 */}
+      <div className="flex flex-wrap items-center gap-2">
+        <select value={filterChannel} onChange={(e) => setFilterChannel(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
+          <option value="">全部渠道</option>
+          {channels.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+        {hasFilter && (
+          <button onClick={clearFilter} className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">清除</button>
+        )}
+        {hasFilter && <span className="text-xs text-text-secondary">筛选结果：{filtered.length} 条</span>}
+      </div>
+
+      {logs.length === 0 ? (
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-text-secondary">
+          ✅ 暂无取消记录
+        </div>
+      ) : (
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-text-secondary">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap" title="取消操作时间">时间</th>
+                  <th className="text-left px-4 py-3 font-medium" title="支付渠道：creem 或 alipay">渠道</th>
+                  <th className="text-left px-4 py-3 font-medium" title="取消结果：成功=Creem确认取消/失败=上游拒绝">状态</th>
+                  <th className="text-left px-4 py-3 font-medium" title="发起取消的用户ID（内部标识）">用户ID</th>
+                  <th className="text-left px-4 py-3 font-medium" title="发起取消的用户邮箱">用户</th>
+                  <th className="text-left px-4 py-3 font-medium" title="Creem 订阅ID（sub_xxx）">订阅ID</th>
+                  <th className="text-left px-4 py-3 font-medium" title="失败时的错误信息">错误</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filtered.map((l) => (
+                  <tr key={l.id} className={l.status === "failed" ? "bg-red-50/50" : ""}>
+                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
+                    <td className="px-4 py-3 text-gray-700">{l.channel ?? "-"}</td>
+                    <td className="px-4 py-3">
+                      {l.status === "failed" ? (
+                        <span className="inline-flex px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold">失败</span>
+                      ) : (
+                        <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">成功</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 font-mono text-xs" title={l.userId ?? ""}>
+                      {l.userId ?? "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
+                      {l.userEmail ?? "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.subscriptionId ?? "-"}</td>
+                    <td className="px-4 py-3 text-red-600 text-xs max-w-xs break-words">{l.error || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Tab 4：用户列表 ──
+
+function UsersTab({ data }: { data: UsersResponse | null }) {
+  const users = data?.users ?? []
+  const [filterTier, setFilterTier] = useState<string>("")
+
+  const tiers = useMemo(() => [...new Set(users.map((u) => u.subscriptionTier).filter(Boolean))] as string[], [users])
+
+  const filtered = useMemo(() => {
+    return users.filter((u) => (!filterTier || u.subscriptionTier === filterTier))
+  }, [users, filterTier])
+
+  const hasFilter = filterTier
+  const clearFilter = () => { setFilterTier("") }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard label="用户总数" value={hasFilter ? filtered.length : (data?.total ?? 0)} tone="gray" />
+        <StatCard label="Pro 用户" value={hasFilter ? filtered.filter((u) => u.subscriptionTier === SUBSCRIPTION_TIER.PRO).length : (data?.proCount ?? 0)} tone="green" />
+        <StatCard label="免费用户" value={hasFilter ? filtered.filter((u) => u.subscriptionTier !== SUBSCRIPTION_TIER.PRO).length : (data?.freeCount ?? 0)} tone="gray" />
+      </div>
+
+      {/* 筛选栏 */}
+      <div className="flex flex-wrap items-center gap-2">
+        <select value={filterTier} onChange={(e) => setFilterTier(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
+          <option value="">全部套餐</option>
+          {tiers.map((t) => <option key={t} value={t}>{t === SUBSCRIPTION_TIER.PRO ? "Pro" : "Free"}</option>)}
+        </select>
+        {hasFilter && (
+          <button onClick={clearFilter} className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">清除</button>
+        )}
+        {hasFilter && <span className="text-xs text-text-secondary">筛选结果：{filtered.length} 条</span>}
+      </div>
+
+      {users.length === 0 ? (
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-text-secondary">
+          暂无用户
+        </div>
+      ) : (
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-text-secondary">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap" title="用户注册时间">注册时间</th>
+                  <th className="text-left px-4 py-3 font-medium" title="注册邮箱">邮箱</th>
+                  <th className="text-left px-4 py-3 font-medium" title="用户昵称">用户名</th>
+                  <th className="text-left px-4 py-3 font-medium" title="当前套餐：FREE 免费版 / PRO 付费版">套餐</th>
+                  <th className="text-left px-4 py-3 font-medium" title="付费到期时间（FREE 用户为空）">到期时间</th>
+                  <th className="text-left px-4 py-3 font-medium" title="该用户创建的订单总数">订单数</th>
+                  <th className="text-left px-4 py-3 font-medium" title="新用户引导是否完成">引导完成</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filtered.map((u) => (
+                  <tr key={u.id}>
+                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(u.createdAt)}</td>
+                    <td className="px-4 py-3 text-gray-700 text-xs">{u.email ?? u.phone ?? "-"}</td>
+                    <td className="px-4 py-3 text-gray-700">{u.name ?? "-"}</td>
+                    <td className="px-4 py-3">
+                      {u.subscriptionTier === SUBSCRIPTION_TIER.PRO ? (
+                        <span className="inline-flex px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-xs font-semibold">Pro</span>
+                      ) : (
+                        <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">Free</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
+                      {u.subscriptionExpiryDate ? fmtTime(u.subscriptionExpiryDate) : "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700">{u.orderCount}</td>
+                    <td className="px-4 py-3 text-gray-700">{u.onboardingCompleted ? "✅" : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Tab 5：Cron 日志 ──
+
+function CronsTab({ data }: { data: CronLogsResponse | null }) {
+  const logs = data?.logs ?? []
+  const [filterStatus, setFilterStatus] = useState<string>("")
+
+  const statuses = useMemo(() => [...new Set(logs.map((l) => l.status).filter(Boolean))] as string[], [logs])
+
+  const filtered = useMemo(() => {
+    return logs.filter((l) => (!filterStatus || l.status === filterStatus))
+  }, [logs, filterStatus])
+
+  const hasFilter = filterStatus
+  const clearFilter = () => { setFilterStatus("") }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-text-secondary text-sm">
+          Vercel Cron 定时任务执行记录（每日 03:00 过期降级 / 04:00 取消对账）。
+          状态为「失败」= 定时任务执行出错，需检查服务端日志。
+        </p>
+      </div>
+
+      {/* 筛选栏 */}
+      <div className="flex flex-wrap items-center gap-2">
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
+          <option value="">全部状态</option>
+          {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        {hasFilter && (
+          <button onClick={clearFilter} className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">清除</button>
+        )}
+        {hasFilter && <span className="text-xs text-text-secondary">筛选结果：{filtered.length} 条</span>}
+      </div>
+
+      {logs.length === 0 ? (
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-text-secondary">
+          暂无 Cron 执行记录（部署后每日自动执行，执行时写入）
+        </div>
+      ) : (
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-text-secondary">
+                <tr>
+                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap" title="Cron 任务执行时间">执行时间</th>
+                  <th className="text-left px-4 py-3 font-medium" title="定时任务名称：expire-sweep 过期降级 / reconcile-cancellations 取消对账">任务</th>
+                  <th className="text-left px-4 py-3 font-medium" title="执行结果：success 成功 / error 失败">状态</th>
+                  <th className="text-left px-4 py-3 font-medium" title="处理详情：受影响的用户数、失败数等">详情</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filtered.map((l) => (
+                  <tr key={l.id} className={l.status === "failed" ? "bg-red-50/50" : ""}>
+                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
+                    <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.eventType ?? "-"}</td>
+                    <td className="px-4 py-3">
+                      {l.status === "failed" ? (
+                        <span className="inline-flex px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold">失败</span>
+                      ) : (
+                        <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">成功</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 text-xs max-w-md break-words">
+                      <pre className="whitespace-pre-wrap break-all font-mono text-xs">{JSON.stringify(l.detail)}</pre>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── 通用组件 ──
+
+function StatCard({ label, value, tone }: { label: string; value: number | string; tone: "red" | "green" | "gray" | "amber" }) {
+  const toneClass =
+    tone === "red"
+      ? "text-red-600"
+      : tone === "green"
+        ? "text-green-600"
+        : tone === "amber"
+          ? "text-amber-600"
+          : "text-text-primary"
+  return (
+    <div className="bg-white border border-gray-200 rounded-2xl p-5">
+      <p className="text-text-secondary text-sm">{label}</p>
+      <p className={`text-3xl font-bold mt-1 ${toneClass}`}>{value}</p>
+    </div>
+  )
+}
+
+function StatusBadge({ status }: { status: string }) {
+  if (status === "PAID") {
+    return <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">已支付</span>
+  }
+  if (status === "PENDING") {
+    return <span className="inline-flex px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-xs font-semibold">待支付</span>
+  }
+  return <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">{status}</span>
+}
+
+function WebhookStatusBadge({ status }: { status: string }) {
+  const cnLabel: Record<string, string> = {
+    received: "已收到",
+    processed: "已处理",
+    duplicate: "重复跳过",
+    ignored: "已忽略",
+    "failed:signature": "签名失败",
+    "failed:unresolved": "无法解析",
+    "failed:user-not-found": "用户不存在",
+    "failed:error": "处理异常",
+    "ignored:late-downgrade": "迟到降级跳过",
+  }
+  const tone: Record<string, string> = {
+    received: "bg-amber-100 text-amber-600",
+    processed: "bg-green-100 text-green-600",
+    duplicate: "bg-amber-100 text-amber-700",
+    ignored: "bg-gray-100 text-gray-500",
+  }
+  const failed = status.startsWith("failed")
+  const ignored = status.startsWith("ignored")
+  const cls = failed
+    ? "bg-red-100 text-red-600"
+    : ignored
+      ? "bg-gray-100 text-gray-500"
+      : tone[status] || "bg-gray-100 text-gray-500"
+  // 显示中文，悬浮显示英文原文
+  const cnText = cnLabel[status] || status
+  return (
+    <span
+      className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${cls}`}
+      title={status}
+    >
+      {cnText}
+    </span>
+  )
+}
+
+// ── Tab 6：系统配置 ──
+
+const TONE_STYLE: Record<AiTone, string> = {
+  ok: "bg-green-100 text-green-700",
+  warn: "bg-amber-100 text-amber-800",
+  error: "bg-red-100 text-red-700",
+  plain: "bg-gray-100 text-gray-700",
+}
+
+const TONE_ICON: Record<AiTone, string> = {
+  ok: "✓",
+  warn: "⚠",
+  error: "✗",
+  plain: "",
+}
+
+interface ConfigRowSpec {
+  label: string
+  value: string
+  required?: boolean
+  tone?: AiTone
+  tag?: string
+  /** 环境变量原名，点击即复制，方便直接去 Vercel 粘贴 */
+  env?: string
+  /** 字段说明：默认隐藏，由顶部「显示说明」开关控制；ⓘ 图标可随时单独查看 */
+  desc?: string
+}
+
+/** 环境变量名，点击复制。「已复制」悬浮在按钮外侧，避免把按钮撑宽导致换行 */
+function EnvName({ env, href }: { env: string; href?: string | null }) {
+  const [copied, setCopied] = useState(false)
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(env)
+    } catch {
+      // 剪贴板不可用时静默降级，不打断页面
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
+  return (
+    <span className="relative inline-block">
+      <button
+        type="button"
+        onClick={copy}
+        className="px-1 rounded font-mono text-[11px] text-gray-400 whitespace-nowrap hover:bg-gray-200 hover:text-gray-600"
+      >
+        {env}
+      </button>
+      {href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          title={`在 Vercel 查看 ${env}`}
+          className="ml-1 text-[11px] text-accent hover:underline"
+        >
+          ↗
+        </a>
+      ) : null}
+      {copied ? (
+        <span className="absolute left-full top-1/2 ml-1.5 -translate-y-1/2 whitespace-nowrap text-[11px] text-green-600">
+          已复制
+        </span>
+      ) : null}
+    </span>
+  )
+}
+
+/**
+ * 配置行。
+ * - 显式传 tone 时按 tone 渲染状态色（AI 区块用，支持「回退默认」这类中间态）
+ * - 不传 tone 时沿用原有的「已配置 / 未配置」字符串判断，支付等既有行不受影响
+ * - tag：值后面挂的灰色小标签，用于标注「默认」等来源信息
+ * - env：环境变量名（可复制）；desc：字段说明（受顶部开关控制，ⓘ 可单独查看）
+ */
+function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc, envBaseUrl }: ConfigRowSpec & {
+  showDesc: boolean
+  envBaseUrl?: string | null
+}) {
+  const inferred: AiTone | null = tone ?? (value === "已配置" ? "ok" : value === "未配置" ? "error" : null)
+  const isMissing = inferred === "error"
+  const muted = tag ? "text-text-secondary" : ""
+  // 说明气泡：鼠标停在标题上 0.5 秒才显示（避免鼠标扫过就闪），移开立即消失。
+  // 点按同样支持（触屏）。用 fixed 定位，避免被卡片 overflow-hidden 裁切。
+  const [tip, setTip] = useState<{ top: number; left: number } | null>(null)
+  const tipTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cancelTip = () => {
+    if (tipTimer.current) {
+      clearTimeout(tipTimer.current)
+      tipTimer.current = null
+    }
+  }
+  const showTip = (r: DOMRect) => {
+    cancelTip()
+    tipTimer.current = setTimeout(() => {
+      setTip({ top: r.bottom + 8, left: Math.max(12, Math.min(r.left, window.innerWidth - 280)) })
+    }, 500)
+  }
+  const hideTip = () => {
+    cancelTip()
+    setTip(null)
+  }
+  const toggleTip = (r: DOMRect) => (tip ? hideTip() : showTip(r))
+  return (
+    <div className={`flex items-center px-4 py-2.5 border-t border-gray-100 ${isMissing && required ? "bg-red-50/50" : ""}`}>
+      <div className="w-[210px] shrink-0 pr-3">
+        <div
+          className="text-gray-700 font-medium text-sm whitespace-nowrap"
+          onMouseEnter={(e) => (desc ? showTip(e.currentTarget.getBoundingClientRect()) : undefined)}
+          onMouseLeave={hideTip}
+          onClick={(e) => (desc ? toggleTip(e.currentTarget.getBoundingClientRect()) : undefined)}
+        >
+          {label}{required ? <span className="text-red-500 ml-0.5">*</span> : ""}
+        </div>
+        {env ? (
+          <EnvName
+            env={env}
+            href={envBaseUrl ? `${envBaseUrl}?q=${encodeURIComponent(env)}` : null}
+          />
+        ) : null}
+        {desc && showDesc ? <div className="mt-1 text-[12px] leading-snug text-gray-500">{desc}</div> : null}
+      </div>
+      <div className="flex-1 min-w-0 text-sm">
+        {inferred ? (
+          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${TONE_STYLE[inferred]}`}>
+            {TONE_ICON[inferred] ? TONE_ICON[inferred] + " " : ""}{value}
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-2 flex-wrap">
+            <span className={`font-mono text-xs break-all ${muted}`}>{value}</span>
+            {tag ? <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-[11px] shrink-0">{tag}</span> : null}
+          </span>
+        )}
+      </div>
+      {tip && desc ? (
+        <span
+          className="fixed z-50 max-w-[260px] rounded-lg bg-gray-800 px-2.5 py-1.5 text-[11px] leading-snug text-white"
+          style={{ top: tip.top, left: tip.left }}
+        >
+          {desc}
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
+/** 字段说明抽屉：说明集中展示，支持按标签 / 变量名 / 说明全文搜索 */
+function ConfigHelpDrawer({ sections, open, onClose }: {
+  sections: { title: string; rows: ConfigRowSpec[] }[]
+  open: boolean
+  onClose: () => void
+}) {
+  const [q, setQ] = useState("")
+  const filtered = useMemo(() => {
+    const kw = q.trim().toLowerCase()
+    return sections
+      .map((s) => ({
+        title: s.title,
+        rows: kw
+          ? s.rows.filter((r) => `${r.label} ${r.env ?? ""} ${r.desc ?? ""}`.toLowerCase().includes(kw))
+          : s.rows,
+      }))
+      .filter((s) => s.rows.length > 0)
+  }, [sections, q])
+
+  if (!open) return null
+  const total = filtered.reduce((n, s) => n + s.rows.length, 0)
+
+  return (
+    <div className="fixed inset-0 z-50" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/30" />
+      <div
+        className="absolute right-0 top-0 bottom-0 flex w-[400px] max-w-[92vw] flex-col border-l border-gray-200 bg-white"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="border-b border-gray-100 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-text-primary">字段说明</span>
+            <button type="button" onClick={onClose} className="text-lg leading-none text-gray-400">×</button>
+          </div>
+          <p className="mt-1 text-[12px] text-gray-500">共 {total} 个字段，可按标签 / 变量名 / 说明搜索</p>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="搜索，例如：域名 / CREEM / 对账"
+            className="mt-2 w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm outline-none focus:border-accent"
+          />
+        </div>
+        <div className="flex-1 overflow-y-auto px-4 pb-6">
+          {filtered.map((s) => (
+            <div key={s.title}>
+              <p className="mt-4 mb-1 text-[12px] text-gray-400">{s.title}</p>
+              {s.rows.map((r) => (
+                <div key={r.label + (r.env ?? "")} className="border-t border-gray-100 py-2">
+                  <p className="text-[13px] font-medium text-text-primary">{r.label}</p>
+                  {r.env ? <p className="font-mono text-[11px] text-gray-500">{r.env}</p> : null}
+                  {r.desc ? <p className="mt-1 text-[12px] text-gray-500">{r.desc}</p> : null}
+                </div>
+              ))}
+            </div>
+          ))}
+          {total === 0 ? <p className="py-6 text-center text-[13px] text-gray-400">没有匹配的字段</p> : null}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ConfigTab({ data }: { data: ConfigResponse | null }) {
+  // 说明默认收起；上次的选择记在 localStorage（惰性初始化，避免在 effect 里 setState 触发级联渲染）
+  const [showDesc, setShowDesc] = useState(() => {
+    if (typeof window === "undefined") return false
+    try {
+      return localStorage.getItem("admin-config-show-desc") === "1"
+    } catch {
+      return false
+    }
+  })
+  const [helpOpen, setHelpOpen] = useState(false)
+
+  function toggleDesc() {
+    setShowDesc((v) => {
+      const next = !v
+      try {
+        localStorage.setItem("admin-config-show-desc", next ? "1" : "0")
+      } catch {
+        // 忽略写入失败
+      }
+      return next
+    })
+  }
+
+  const c = data?.config
+  if (!c) {
+    return <div className="text-center py-16 text-text-secondary">无法加载配置</div>
+  }
+
+  const sections: { title: string; note?: string; rows: ConfigRowSpec[] }[] = [
+    {
+      title: "应用",
+      rows: [
+        {
+          label: "应用地址",
+          env: "NEXT_PUBLIC_APP_URL",
+          desc: "网站正式域名，支付回调和邮件里的链接都用它拼接",
+          value: c.app.url,
+        },
+      ],
+    },
+    {
+      title: "数据库",
+      rows: [
+        {
+          label: "直连 URL",
+          env: "DIRECT_URL",
+          desc: "数据库直连地址，Vercel 构建时执行迁移用",
+          required: true,
+          value: c.database.directUrl,
+        },
+      ],
+    },
+    {
+      title: "Cron 定时任务",
+      rows: [
+        {
+          label: "定时任务令牌",
+          env: "CRON_SECRET",
+          desc: "订阅降级、取消对账这两个每日定时任务的访问令牌，防止被乱调用",
+          required: true,
+          value: c.cron.cronSecret,
+        },
+      ],
+    },
+    {
+      title: "账号与权限",
+      rows: [
+        {
+          label: "会话加密密钥",
+          env: "AUTH_SECRET",
+          desc: "登录会话的加密密钥，随机长字符串",
+          required: true,
+          value: c.auth.authSecret,
+        },
+        {
+          label: "管理员邮箱",
+          env: "ADMIN_EMAILS",
+          desc: "管理员邮箱白名单，命中的邮箱才能进后台",
+          value: c.auth.adminEmails,
+        },
+      ],
+    },
+    {
+      title: "登录方式（OAuth）",
+      rows: [
+        {
+          label: "Google Client ID",
+          env: "AUTH_GOOGLE_ID",
+          desc: "Google 登录用的应用 ID，Google Cloud 后台创建",
+          value: c.oauth.googleId,
+        },
+        {
+          label: "Google Client 密钥",
+          env: "AUTH_GOOGLE_SECRET",
+          desc: "Google 登录用的应用密钥，和上面那个 ID 配对",
+          value: c.oauth.googleSecret,
+        },
+        {
+          label: "GitHub Client ID",
+          env: "AUTH_GITHUB_ID",
+          desc: "GitHub 登录用的应用 ID，GitHub 后台创建",
+          value: c.oauth.githubId,
+        },
+        {
+          label: "GitHub Client 密钥",
+          env: "AUTH_GITHUB_SECRET",
+          desc: "GitHub 登录用的应用密钥，和上面那个 ID 配对",
+          value: c.oauth.githubSecret,
+        },
+      ],
+    },
+    {
+      title: "Creem 支付",
+      rows: [
+        {
+          label: "API Key",
+          env: "CREEM_API_KEY",
+          desc: "Creem 平台密钥，创建收银台会话用",
+          required: true,
+          value: c.creem.apiKey,
+        },
+        {
+          label: "Webhook 密钥",
+          env: "CREEM_WEBHOOK_SECRET",
+          desc: "校验 Creem 回调请求的签名，防伪造通知",
+          required: true,
+          value: c.creem.webhookSecret,
+        },
+        {
+          label: "月付产品 ID",
+          env: "CREEM_MONTHLY_PRODUCT_ID",
+          desc: "Creem 后台创建的月付订阅产品 ID",
+          required: true,
+          value: c.creem.monthlyProductId,
+        },
+        {
+          label: "年付产品 ID",
+          env: "CREEM_ANNUAL_PRODUCT_ID",
+          desc: "Creem 后台创建的年付订阅产品 ID",
+          required: true,
+          value: c.creem.annualProductId,
+        },
+      ],
+    },
+    {
+      title: "支付宝",
+      note: "登录和支付共用这组配置",
+      rows: [
+        {
+          label: "App ID",
+          env: "AUTH_ALIPAY_ID",
+          desc: "支付宝开放平台分配的应用 ID",
+          value: c.alipay.appId,
+        },
+        {
+          label: "私钥",
+          env: "AUTH_ALIPAY_PRIVATE_KEY",
+          desc: "应用私钥，向支付宝发请求时用来签名",
+          value: c.alipay.privateKey,
+        },
+        {
+          label: "公钥",
+          env: "AUTH_ALIPAY_PUBLIC_KEY",
+          desc: "支付宝公钥，用来验证回调通知是不是支付宝发的",
+          value: c.alipay.publicKey,
+        },
+      ],
+    },
+    {
+      title: "AI 服务（按订阅层级分流）",
+      rows: [
+        {
+          label: "免费版 来源",
+          desc: "根据专用 Key 是否配置自动判断，无对应变量",
+          value: c.ai.free.source.text,
+          tone: c.ai.free.source.tone,
+        },
+        {
+          label: "免费版 专用 Key",
+          env: "AI_API_KEY_FREE",
+          desc: "免费版专用的 AI 服务密钥",
+          value: c.ai.free.key.text,
+          tone: c.ai.free.key.tone,
+        },
+        {
+          label: "免费版 模型",
+          env: "AI_MODEL_FREE",
+          desc: "免费版 AI 请求使用的模型名",
+          value: c.ai.free.model.text,
+          tag: c.ai.free.model.fromDefault ? "默认" : undefined,
+        },
+        {
+          label: "免费版 接口地址",
+          env: "AI_BASE_URL_FREE",
+          desc: "免费版 AI 服务的接口地址",
+          value: c.ai.free.baseUrl.text,
+          tag: c.ai.free.baseUrl.fromDefault ? "默认" : undefined,
+        },
+        {
+          label: "付费版 来源",
+          desc: "根据专用 Key 是否配置自动判断，无对应变量",
+          value: c.ai.pro.source.text,
+          tone: c.ai.pro.source.tone,
+        },
+        {
+          label: "付费版 专用 Key",
+          env: "AI_API_KEY_PRO",
+          desc: "付费版专用的 AI 服务密钥",
+          value: c.ai.pro.key.text,
+          tone: c.ai.pro.key.tone,
+        },
+        {
+          label: "付费版 模型",
+          env: "AI_MODEL_PRO",
+          desc: "付费版 AI 请求使用的模型名",
+          value: c.ai.pro.model.text,
+          tag: c.ai.pro.model.fromDefault ? "默认" : undefined,
+        },
+        {
+          label: "付费版 接口地址",
+          env: "AI_BASE_URL_PRO",
+          desc: "付费版 AI 服务的接口地址",
+          value: c.ai.pro.baseUrl.text,
+          tag: c.ai.pro.baseUrl.fromDefault ? "默认" : undefined,
+        },
+        {
+          label: "默认兜底 Key",
+          env: "AI_API_KEY",
+          desc: "免费/付费版都没配专用 Key 时的兜底密钥",
+          value: c.ai.fallback.key.text,
+          tone: c.ai.fallback.key.tone,
+        },
+        {
+          label: "默认兜底 模型",
+          env: "AI_MODEL",
+          desc: "兜底请求使用的模型名",
+          value: c.ai.fallback.model.text,
+        },
+        {
+          label: "默认兜底 接口地址",
+          env: "AI_BASE_URL",
+          desc: "兜底请求使用的接口地址",
+          value: c.ai.fallback.baseUrl.text,
+        },
+      ],
+    },
+  ]
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-text-secondary text-sm">
+          生产环境配置核对（只显示是否已配置，不暴露密钥原文）。带 * 为必填项，标红「未配置」会导致对应功能不可用。
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleDesc}
+          className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${showDesc ? "border-accent/60 bg-orange-50 text-accent" : "border-gray-300 text-gray-600"}`}
+        >
+          <span className={`relative inline-flex h-[18px] w-[32px] items-center rounded-full ${showDesc ? "bg-accent" : "bg-gray-300"}`}>
+            <span className={`absolute h-[14px] w-[14px] rounded-full bg-white transition-transform ${showDesc ? "translate-x-[16px]" : "translate-x-[2px]"}`} />
+          </span>
+          {showDesc ? "隐藏说明" : "显示说明"}
+        </button>
+          <button
+            type="button"
+            onClick={() => setHelpOpen(true)}
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600"
+          >
+            字段说明（可搜索）
+          </button>
+        </div>
+      </div>
+      {c.vercelSlugMissing ? (
+        <p className="rounded-lg bg-amber-50 px-3 py-2 text-[12px] text-amber-800">
+          没取到项目 slug，跳转入口已隐藏：请在 Vercel 项目设置里开启 System Environment Variables，
+          或手动配置环境变量 VERCEL_PROJECT_SLUG（值为项目 slug，如 cookmate）。
+        </p>
+      ) : null}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {sections.map((s) => (
+          <div key={s.title} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between gap-2 bg-gray-50 px-4 py-3 border-b border-gray-100">
+              <h3 className="font-semibold text-text-primary">
+                {s.title}
+                {s.note ? <span className="ml-2 text-[12px] font-normal text-gray-400">{s.note}</span> : null}
+              </h3>
+            </div>
+            <div>
+              {s.rows.map((r) => (
+                <ConfigRow
+                  key={r.label}
+                  label={r.label}
+                  value={r.value}
+                  required={r.required}
+                  tone={r.tone}
+                  tag={r.tag}
+                  env={r.env}
+                  desc={r.desc}
+                  showDesc={showDesc}
+                  envBaseUrl={c.vercelEnvUrl}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <ConfigHelpDrawer sections={sections} open={helpOpen} onClose={() => setHelpOpen(false)} />
+    </div>
+  )
+}
