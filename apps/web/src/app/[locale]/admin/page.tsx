@@ -876,7 +876,7 @@ interface ConfigRowSpec {
 }
 
 /** 环境变量名，点击复制。「已复制」悬浮在按钮外侧，避免把按钮撑宽导致换行 */
-function EnvName({ env }: { env: string }) {
+function EnvName({ env, href }: { env: string; href?: string | null }) {
   const [copied, setCopied] = useState(false)
   async function copy() {
     try {
@@ -896,6 +896,17 @@ function EnvName({ env }: { env: string }) {
       >
         {env}
       </button>
+      {href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          title={`在 Vercel 查看 ${env}`}
+          className="ml-1 text-[11px] text-blue-500 hover:underline"
+        >
+          ↗
+        </a>
+      ) : null}
       {copied ? (
         <span className="absolute left-full top-1/2 ml-1.5 -translate-y-1/2 whitespace-nowrap text-[11px] text-green-600">
           已复制
@@ -912,7 +923,10 @@ function EnvName({ env }: { env: string }) {
  * - tag：值后面挂的灰色小标签，用于标注「默认」等来源信息
  * - env：环境变量名（可复制）；desc：字段说明（受顶部开关控制，ⓘ 可单独查看）
  */
-function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc }: ConfigRowSpec & { showDesc: boolean }) {
+function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc, envBaseUrl }: ConfigRowSpec & {
+  showDesc: boolean
+  envBaseUrl?: string | null
+}) {
   const inferred: AiTone | null = tone ?? (value === "已配置" ? "ok" : value === "未配置" ? "error" : null)
   const isMissing = inferred === "error"
   const muted = tag ? "text-text-secondary" : ""
@@ -923,16 +937,21 @@ function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc }: C
   const toggleTip = (r: DOMRect) => (tip ? setTip(null) : showTip(r))
   return (
     <div className={`flex items-center px-4 py-2.5 border-t border-gray-100 ${isMissing && required ? "bg-red-50/50" : ""}`}>
-      <div
-        className="w-[210px] shrink-0 pr-3"
-        onMouseEnter={(e) => (desc ? showTip(e.currentTarget.getBoundingClientRect()) : undefined)}
-        onMouseLeave={() => setTip(null)}
-        onClick={(e) => (desc ? toggleTip(e.currentTarget.getBoundingClientRect()) : undefined)}
-      >
-        <div className="text-gray-700 font-medium text-sm whitespace-nowrap">
+      <div className="w-[210px] shrink-0 pr-3">
+        <div
+          className="text-gray-700 font-medium text-sm whitespace-nowrap"
+          onMouseEnter={(e) => (desc ? showTip(e.currentTarget.getBoundingClientRect()) : undefined)}
+          onMouseLeave={() => setTip(null)}
+          onClick={(e) => (desc ? toggleTip(e.currentTarget.getBoundingClientRect()) : undefined)}
+        >
           {label}{required ? <span className="text-red-500 ml-0.5">*</span> : ""}
         </div>
-        {env ? <EnvName env={env} /> : null}
+        {env ? (
+          <EnvName
+            env={env}
+            href={envBaseUrl ? `${envBaseUrl}?q=${encodeURIComponent(env)}` : null}
+          />
+        ) : null}
         {desc && showDesc ? <div className="mt-1 text-[12px] leading-snug text-gray-500">{desc}</div> : null}
       </div>
       <div className="flex-1 min-w-0 text-sm">
@@ -1325,6 +1344,7 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
                   env={r.env}
                   desc={r.desc}
                   showDesc={showDesc}
+                  envBaseUrl={c.vercelEnvUrl}
                 />
               ))}
             </div>
