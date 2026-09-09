@@ -111,6 +111,11 @@ interface ConfigResponse {
     auth: { authSecret: string; adminEmails: string }
     cron: { cronSecret: string }
     database: { directUrl: string }
+    ai: {
+      free: { key: string; source: string; baseUrl: string; model: string }
+      pro: { key: string; source: string; baseUrl: string; model: string }
+      fallback: { key: string; baseUrl: string; model: string }
+    }
   }
   error?: string
 }
@@ -252,7 +257,7 @@ export default function AdminPage() {
       badge: (cronData?.logs ?? []).some((l) => l.status === "failed") ? 1 : undefined,
       badgeTone: "red",
     },
-    { key: "config", label: "支付配置" },
+    { key: "config", label: "系统配置" },
   ]
 
   return (
@@ -848,6 +853,22 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
   }
 
   const sections = [
+    {
+      title: "AI 服务（按订阅层级分流）",
+      rows: [
+        { label: "免费端 Key", value: c.ai.free.key },
+        { label: "免费端 来源", value: c.ai.free.source },
+        { label: "免费端 接口地址", value: c.ai.free.baseUrl },
+        { label: "免费端 模型", value: c.ai.free.model },
+        { label: "付费端 Key", value: c.ai.pro.key },
+        { label: "付费端 来源", value: c.ai.pro.source },
+        { label: "付费端 接口地址", value: c.ai.pro.baseUrl },
+        { label: "付费端 模型", value: c.ai.pro.model },
+        { label: "默认兜底 Key", value: c.ai.fallback.key },
+        { label: "默认兜底 地址", value: c.ai.fallback.baseUrl },
+        { label: "默认兜底 模型", value: c.ai.fallback.model },
+      ],
+    },
     { title: "应用", rows: [{ label: "应用地址", value: c.app.url }] },
     {
       title: "认证",
