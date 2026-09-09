@@ -103,7 +103,7 @@ interface CronLogsResponse {
   error?: string
 }
 
-type AiTone = "ok" | "warn" | "error"
+type AiTone = "ok" | "warn" | "error" | "plain"
 
 /** 带状态色的值（来源、专用 Key） */
 interface AiValue {
@@ -851,12 +851,14 @@ const TONE_STYLE: Record<AiTone, string> = {
   ok: "bg-green-100 text-green-700",
   warn: "bg-amber-100 text-amber-800",
   error: "bg-red-100 text-red-700",
+  plain: "bg-gray-100 text-gray-700",
 }
 
 const TONE_ICON: Record<AiTone, string> = {
   ok: "✓",
   warn: "⚠",
   error: "✗",
+  plain: "",
 }
 
 interface ConfigRowSpec {

@@ -72,12 +72,14 @@ function aiSide(ownKey?: string, ownUrl?: string, ownModel?: string) {
     }
   }
 
-  // 来源与专用 Key 描述的是同一件事的两个视角，颜色保持一致：
-  // 用了专属配置=绿，回退到默认=琥珀（功能正常但需注意），真没配=红
-  const tone = hasOwnKey ? ("ok" as const) : ("warn" as const)
+  // 来源=状态判断（这端实际在用哪套），Key=事实陈述（只回答配没配）：
+  // 来源：专用配置=绿，回退默认=琥珀（功能正常但需注意），兜底也没有=红
+  // Key：已配置=绿，未配置·用默认=灰（中性事实，与下方模型/接口地址的呈现一致），真不可用=红
+  const sourceTone = hasOwnKey ? ("ok" as const) : ("warn" as const)
+  const keyTone = hasOwnKey ? ("ok" as const) : (fallbackKey ? ("plain" as const) : ("error" as const))
   return {
-    source: { text: hasOwnKey ? "专用配置" : "回退默认", tone },
-    key: { text: hasOwnKey ? "已配置" : "未配置 · 用默认", tone },
+    source: { text: hasOwnKey ? "专用配置" : "回退默认", tone: sourceTone },
+    key: { text: hasOwnKey ? "已配置" : "未配置 · 用默认", tone: keyTone },
     model: {
       text: ownModel || process.env.AI_MODEL || "未设置",
       fromDefault: !ownModel,
