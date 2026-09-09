@@ -23,6 +23,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: err(l, "invalidEmail") }, { status: 400 })
     }
 
+    // 60 秒内已发过未使用的验证码则拒绝（防邮件/验证码轰炸；与 delete/send-code 同一策略）
+    const recentCode = await prisma.verificationCode.findFirst({
+      where: { email, used: false, createdAt: { gte: new Date(Date.now() - 60000) } },
+      orderBy: { createdAt: "desc" },
+    })
+    if (recentCode) {
+      return NextResponse.json({ error: err(l, "codeRecentlySent") }, { status: 429 })
+    }
+
     // 检查邮箱是否已被其他账号绑定
     const existing = await prisma.user.findUnique({ where: { email } })
     if (existing && existing.id !== session.user.id) {

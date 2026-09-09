@@ -55,6 +55,14 @@ export async function POST(req: Request) {
 
     // 只处理支付成功
     if (tradeStatus === "TRADE_SUCCESS" || tradeStatus === "TRADE_FINISHED") {
+      // 成功状态却缺 out_trade_no：无法定位订单。绝不能返回 success——
+      // 否则支付宝认为通知送达、不再重发，这笔真实付款会被静默丢弃且无重试入口。
+      // 返回 failure 让支付宝按重试机制重发，等带全字段的回调再处理。
+      if (!outTradeNo) {
+        console.error("Alipay notify: success status without out_trade_no", { tradeStatus })
+        await logWebhook(tradeStatus, "failed:no-out-trade-no", JSON.stringify(params))
+        return new NextResponse("failure", { status: 400 })
+      }
       if (outTradeNo) {
         // 先查订单：金额校验 + 幂等都依赖它
         const order = await prisma.paymentOrder.findUnique({

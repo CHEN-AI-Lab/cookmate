@@ -11,6 +11,8 @@ export const stores = {
   mealSlots: [] as any[],
   usage: new Map<string, any>(), // key = `${userId}_${date.getTime()}`
   pantries: new Map<string, any>(), // pantry items by id
+  codes: new Map<string, any>(), // verification codes by id
+  accounts: [] as any[], // oauth accounts
 }
 
 export function resetStores() {
@@ -22,6 +24,8 @@ export function resetStores() {
   stores.mealSlots.length = 0
   stores.usage.clear()
   stores.pantries.clear()
+  stores.codes.clear()
+  stores.accounts.length = 0
 }
 
 function usageKey(userId: string, date: any): string {
@@ -41,6 +45,10 @@ export function makePrisma() {
     user: {
       findUnique: vi.fn(async ({ where }: any) => {
         if (where.id) return stores.users.get(where.id) || null
+        if (where.email) {
+          for (const u of stores.users.values()) if (u.email === where.email) return u
+          return null
+        }
         return null
       }),
       findFirst: vi.fn(async ({ where }: any) => {
@@ -62,6 +70,49 @@ export function makePrisma() {
         return rec
       }),
       findMany: vi.fn(async () => []),
+      updateMany: vi.fn(async ({ where, data }: any) => {
+        let count = 0
+        for (const u of stores.users.values()) {
+          if (where.subscriptionTier !== undefined && u.subscriptionTier !== where.subscriptionTier) continue
+          const lt = where.subscriptionExpiryDate?.lt
+          if (lt && !(u.subscriptionExpiryDate && u.subscriptionExpiryDate < lt)) continue
+          Object.assign(u, data)
+          count++
+        }
+        return { count }
+      }),
+      delete: vi.fn(async ({ where }: any) => {
+        const u = stores.users.get(where.id)
+        if (!u) throw new Error('User not found: ' + where.id)
+        stores.users.delete(where.id)
+        return u
+      }),
+    },
+    verificationCode: {
+      findFirst: vi.fn(async ({ where }: any) => {
+        for (const c of stores.codes.values()) {
+          if (where.email && c.email !== where.email) continue
+          if (where.code && c.code !== where.code) continue
+          if (where.used === false && c.used) continue
+          if (where.used === true && !c.used) continue
+          if (where.expiresAt?.gte && !(c.expiresAt && c.expiresAt >= where.expiresAt.gte)) continue
+          if (where.createdAt?.gte && !(c.createdAt && c.createdAt >= where.createdAt.gte)) continue
+          return c
+        }
+        return null
+      }),
+      create: vi.fn(async ({ data }: any) => {
+        const id = `vc_${Date.now()}_${Math.random().toString(36).slice(2)}`
+        const rec = { id, used: false, createdAt: new Date(), ...data }
+        stores.codes.set(id, rec)
+        return rec
+      }),
+      update: vi.fn(async ({ where, data }: any) => {
+        const rec = stores.codes.get(where.id)
+        if (!rec) throw new Error('VerificationCode not found: ' + where.id)
+        Object.assign(rec, data)
+        return rec
+      }),
     },
     paymentOrder: {
       findFirst: vi.fn(async ({ where, orderBy }: any) => {
@@ -131,6 +182,7 @@ export function makePrisma() {
       findMany: vi.fn(async ({ where, orderBy, take }: any) => {
         let list = [...stores.logs.values()]
         if (where?.source) list = list.filter((l: any) => l.source === where.source)
+        if (where?.status) list = list.filter((l: any) => l.status === where.status)
         if (orderBy?.createdAt === 'desc') list.sort((a: any, b: any) => b.createdAt - a.createdAt)
         if (take) list = list.slice(0, take)
         return list
@@ -143,7 +195,7 @@ export function makePrisma() {
       }),
       create: vi.fn(async ({ data }: any) => {
         const id = `wl_${Date.now()}_${Math.random().toString(36).slice(2)}`
-        const rec = { id, ...data }
+        const rec = { id, createdAt: new Date(), ...data }
         stores.logs.set(id, rec)
         return rec
       }),
@@ -158,6 +210,15 @@ export function makePrisma() {
           }
         }
         return { count }
+      }),
+      count: vi.fn(async ({ where }: any) => {
+        let n = 0
+        for (const l of stores.logs.values()) {
+          if (where?.source && l.source !== where.source) continue
+          if (where?.status && l.status !== where.status) continue
+          n++
+        }
+        return n
       }),
     },
     recipe: {
@@ -292,6 +353,73 @@ export function makePrisma() {
         return [...stores.pantries.values()].filter((p: any) => (!where?.userId || p.userId === where.userId)).length
       }),
       findMany: vi.fn(async () => []),
+      findFirst: vi.fn(async ({ where }: any) => {
+        for (const p of stores.pantries.values()) {
+          if (where.userId && p.userId !== where.userId) continue
+          if (where.name && p.name !== where.name) continue
+          if (where.id) {
+            if (typeof where.id === 'object' && 'not' in where.id) {
+              if (p.id === where.id.not) continue
+            } else if (p.id !== where.id) continue
+          }
+          return p
+        }
+        return null
+      }),
+      update: vi.fn(async ({ where, data }: any) => {
+        for (const p of stores.pantries.values()) {
+          if (p.id === where.id && (!where.userId || p.userId === where.userId)) {
+            Object.assign(p, data)
+            return p
+          }
+        }
+        throw new Error('PantryItem not found: ' + where.id)
+      }),
+      updateMany: vi.fn(async ({ where, data }: any) => {
+        let count = 0
+        for (const p of stores.pantries.values()) {
+          if (p.id === where.id && (!where.userId || p.userId === where.userId)) {
+            // 对齐真实 Prisma：data 里 undefined 的字段不参与更新
+            const payload: any = {}
+            for (const [k, v] of Object.entries(data)) if (v !== undefined) payload[k] = v
+            Object.assign(p, { ...payload, updatedAt: new Date(Date.now() + 1) })
+            count++
+          }
+        }
+        return { count }
+      }),
+      deleteMany: vi.fn(async ({ where }: any) => {
+        let count = 0
+        for (const [k, p] of [...stores.pantries.entries()]) {
+          if ((!where?.userId || p.userId === where.userId) && (!where?.name || p.name === where.name)) {
+            stores.pantries.delete(k)
+            count++
+          }
+        }
+        return { count }
+      }),
+      upsert: vi.fn(async ({ where, create }: any) => {
+        const { userId, name } = where.userId_name
+        for (const p of stores.pantries.values()) {
+          if (p.userId === userId && p.name === name) {
+            // 对齐真实 Prisma：update 会刷新 updatedAt（purchase 路由用它区分新增/已存在）
+            p.updatedAt = new Date(Date.now() + 1)
+            return p
+          }
+        }
+        const now = new Date()
+        const rec = { id: `pi_${Date.now()}_${Math.random().toString(36).slice(2)}`, createdAt: now, updatedAt: now, ...create }
+        stores.pantries.set(rec.id, rec)
+        return rec
+      }),
+    },
+    account: {
+      findMany: vi.fn(async ({ where }: any) => stores.accounts.filter((a: any) => (!where?.userId || a.userId === where.userId))),
+      delete: vi.fn(async ({ where }: any) => {
+        const i = stores.accounts.findIndex((a: any) => a.id === where.id)
+        if (i < 0) throw new Error('Account not found: ' + where.id)
+        return stores.accounts.splice(i, 1)[0]
+      }),
     },
     groceryItem: {
       findMany: vi.fn(async () => []),

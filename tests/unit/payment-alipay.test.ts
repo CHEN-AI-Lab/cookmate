@@ -213,11 +213,11 @@ describe('支付宝异步通知', () => {
     expect(await res.text()).toBe('failure')
   })
 
-  // P0 边界：缺失 out_trade_no → 代码逻辑跳过金额校验，直接返回 success（支付宝侧会补发）
-  it('缺失 out_trade_no → 返回 success（代码设计：out_trade_no 为空时不处理订单）', async () => {
+  // P0 修复（2026-09-09）：成功状态缺 out_trade_no 无法定位订单，
+  // 必须返回 failure 让支付宝重发；旧行为返回 success 会让真实付款被静默吞掉
+  it('缺失 out_trade_no → 400 failure（触发支付宝重发，不再静默吞单）', async () => {
     const res = await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS' }))
-    // out_trade_no 为空 → 进入 if (outTradeNo) 分支外 → 直接返回 success
-    expect(res.status).toBe(200)
-    expect(await res.text()).toBe('success')
+    expect(res.status).toBe(400)
+    expect(await res.text()).toBe('failure')
   })
 })
