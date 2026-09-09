@@ -313,6 +313,8 @@
     "freeLimitReached": "免費版本週 3 天規劃額度已用完，<upgrade>升級 Pro</upgrade> 解鎖整週計畫",
     "genError_mealPlanDaysLimit": "免費版每週最多規劃 3 天，請減少生成天數或升級 Pro",
     "mealPlanDaysLimit": "免費版每週最多規劃 3 天，升級 Pro 解鎖整週計畫",
+    "freeLimitExceed": "本次選擇了 {picked} 天，超出本週剩餘額度（還剩 {remaining} 天）。<upgrade>升級 Pro</upgrade> 可規劃整週",
+    "genError_recipeLimit": "食譜總數已達免費版上限（25 個），週計畫會一次性寫入多個食譜，請清理食譜或升級 Pro",
     "generating": "🤖 生成中...",
     "deleteAll": "🗑️ 清除全部",
     "breakfast": "早餐",
@@ -323,9 +325,7 @@
     "starTooltipStarred": "取消收藏",
     "emptySlot": "未安排菜品",
     "confirmGenerate": "生成",
-    "pickerLegendExisting": "已有（保留）",
-    "freeLimitExceed": "本次選擇了 {picked} 天，超出本週剩餘額度（還剩 {remaining} 天）。<upgrade>升級 Pro</upgrade> 可規劃整週",
-    "genError_recipeLimit": "食譜總數已達免費版上限（25 個），週計畫會一次性寫入多個食譜，請清理食譜或升級 Pro"
+    "pickerLegendExisting": "已有（保留）"
   },
   "grocery": {
     "title": "🛒 購物清單",
@@ -635,7 +635,8 @@
     "refunded": "已退款",
     "cancelled": "已取消",
     "cancel": "取消",
-    "channelCreem": "Creem"
+    "channelCreem": "Creem",
+    "paidAmount": "實付金額"
   },
   "blog": {
     "subtitle": "餐食規劃技巧、AI 美食推薦，讓下廚更簡單",

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { isDemoUser } from "@/lib/auth-helpers"
-import { createCheckout, retrieveCheckout, isCreemConfigured } from "@cookmate/shared/api/creem"
+import { createCheckout, retrieveCheckout, retrieveProduct, isCreemConfigured } from "@cookmate/shared/api/creem"
 import { prisma } from "@/lib/prisma"
 import { generateOrderId } from "@cookmate/shared/utils/order-id"
 import { PRICING } from "@cookmate/shared/constants/pricing"
@@ -51,6 +51,26 @@ export async function POST(req: Request) {
     if (!productId) {
       const envKey = period === "annual" ? "CREEM_ANNUAL_PRODUCT_ID" : "CREEM_MONTHLY_PRODUCT_ID 或 CREEM_PRODUCT_ID"
       return NextResponse.json({ error: `${envKey} 未配置` }, { status: 503 })
+    }
+
+    // ── 下单前金额校验（防 Creem 后台产品价格与代码 PRICING 漂移）──
+    // 实扣金额由 Creem 后台产品价格决定（下单不传金额）。若两者不一致，会出现
+    // 「网站显示 $4.99、实扣 $100」。校验不通过 → 503 拦截，用户进不了结账页（不会扣错钱）。
+    // 产品接口暂时不可用时 fail-open（记录告警继续下单），由 webhook 事后金额比对兜底。
+    try {
+      const product = await retrieveProduct(productId)
+      const expected = PRICING.get(period, "USD")
+      const expectedBilling = period === "annual" ? "every-year" : "every-month"
+      const problems: string[] = []
+      if (product.currency !== "USD") problems.push(`产品币种 ${product.currency} ≠ USD`)
+      if (typeof product.price === "number" && product.price !== expected.amount) problems.push(`产品价格 ${product.price} 分 ≠ 网站定价 ${expected.amount} 分`)
+      if (product.billingPeriod && product.billingPeriod !== expectedBilling) problems.push(`产品计费周期 ${product.billingPeriod} ≠ ${expectedBilling}`)
+      if (problems.length > 0) {
+        console.error("[monitor:creem-precheck-mismatch]", { productId, period, problems })
+        return NextResponse.json({ error: "支付配置异常，已暂停下单，请联系管理员" }, { status: 503 })
+      }
+    } catch (err) {
+      console.error("[monitor:creem-precheck-unavailable] 产品校验接口不可用，放行并由 webhook 金额比对兜底:", err instanceof Error ? err.message : String(err))
     }
 
     const { checkoutUrl, sessionId } = await createCheckout({

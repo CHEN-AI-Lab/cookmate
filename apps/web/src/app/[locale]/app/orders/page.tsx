@@ -12,6 +12,8 @@ interface Order {
   channel: string
   amount: number
   currency?: string
+  paidAmount?: number | null
+  paidCurrency?: string | null
   status: string
   createdAt: string
 }
@@ -150,6 +152,14 @@ export default function OrdersPage() {
                       <span className="text-text-secondary">{t("amount")}</span>
                       <span className="text-text-secondary font-semibold">{fmtOrderAmount(order)}</span>
                     </div>
+                    {order.paidAmount != null && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-text-secondary">{t("paidAmount")}</span>
+                        <span className={`font-semibold ${order.paidAmount !== order.amount ? "text-red-600" : "text-text-secondary"}`}>
+                          {fmtOrderAmount({ amount: order.paidAmount, currency: order.paidCurrency ?? order.currency })}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between">
                       <span className="text-text-secondary">{t("status")}</span>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[order.status] || "text-text-secondary bg-surface"}`}>

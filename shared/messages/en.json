@@ -617,6 +617,7 @@
     "noOrdersHint": "Orders will appear here after payment",
     "orderId": "Order ID",
     "amount": "Amount",
+    "paidAmount": "Paid amount",
     "status": "Status",
     "date": "Date",
     "pending": "Pending",

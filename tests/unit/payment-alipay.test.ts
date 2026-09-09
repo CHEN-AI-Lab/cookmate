@@ -98,11 +98,16 @@ describe('支付宝异步通知', () => {
   })
   it('月付成功 → 幂等升级，到期 +1 月', async () => {
     stores.users.set('u1', { id: 'u1', subscriptionTier: 'FREE', subscriptionExpiryDate: null, creemSubscriptionId: null })
-    stores.orders.set('CKALmonth', { id: 'CKALmonth', orderId: 'CKALmonth', userId: 'u1', channel: 'alipay', amount: 2900, status: 'PENDING' })
+    stores.orders.set('CKALmonth', { id: 'CKALmonth', orderId: 'CKALmonth', userId: 'u1', channel: 'alipay', amount: 2900, status: 'PENDING', period: 'monthly' })
     const res = await notifyPOST(makeFormNotify({ app_id: 'appid123', trade_status: 'TRADE_SUCCESS', out_trade_no: 'CKALmonth', total_amount: '29.00' }))
     expect(await res.text()).toBe('success')
     const u = stores.users.get('u1')
     expect(u.subscriptionTier).toBe('PRO')
+    // 双金额：实付金额/币种由回调写入（total_amount 29.00 元 = 2900 分）
+    expect(stores.orders.get('CKALmonth').paidAmount).toBe(2900)
+    expect(stores.orders.get('CKALmonth').paidCurrency).toBe('CNY')
+    // 方案A：权威周期写入 User
+    expect(u.subscriptionPeriod).toBe('monthly')
     expect(stores.orders.get('CKALmonth').status).toBe('PAID')
     const expected = addMonths(new Date(), 1)
     expect(Math.abs(u.subscriptionExpiryDate.getTime() - expected.getTime())).toBeLessThan(2000)

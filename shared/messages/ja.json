@@ -635,7 +635,8 @@
     "deleteSuccess": "注文を削除しました",
     "plan": "プラン",
     "channelAlipay": "Alipay",
-    "channelCreem": "Creem"
+    "channelCreem": "Creem",
+    "paidAmount": "支払金額"
   },
   "blog": {
     "title": "ブログ",

@@ -10,12 +10,13 @@ vi.mock('@/lib/auth', () => ({ auth: vi.fn() }))
 vi.mock('@cookmate/shared/api/creem', () => ({
   createCheckout: vi.fn(),
   retrieveCheckout: vi.fn(),
+  retrieveProduct: vi.fn(),
   isCreemConfigured: vi.fn(() => true),
 }))
 vi.mock('@cookmate/shared/utils/order-id', () => ({ generateOrderId: vi.fn(() => 'CKCR20260825A1B2C3D4') }))
 
 import { auth } from '@/lib/auth'
-import { createCheckout, retrieveCheckout, isCreemConfigured } from '@cookmate/shared/api/creem'
+import { createCheckout, retrieveCheckout, retrieveProduct, isCreemConfigured } from '@cookmate/shared/api/creem'
 import { POST, GET } from '@/app/api/creem/create-checkout/route'
 
 function postReq(body: any) {
@@ -31,6 +32,12 @@ beforeEach(() => {
   ;(createCheckout as any).mockReset()
   ;(retrieveCheckout as any).mockReset()
   ;(isCreemConfigured as any).mockReturnValue(true)
+  ;(retrieveProduct as any).mockReset()
+  ;(retrieveProduct as any).mockImplementation(async (id: string) => ({
+    price: id === 'prod_annual' ? 3999 : 499,
+    currency: 'USD',
+    billingPeriod: id === 'prod_annual' ? 'every-year' : 'every-month',
+  }))
   process.env.NEXT_PUBLIC_APP_URL = 'https://app.cookmate.com'
   process.env.CREEM_PRODUCT_ID = 'prod_test'
   process.env.CREEM_MONTHLY_PRODUCT_ID = 'prod_monthly'
@@ -75,6 +82,18 @@ describe('creem create-checkout POST', () => {
     expect(order.period).toBe('annual')
     expect(order.amount).toBe(3999) // annual $39.99 = 3999 美分
     expect(order.currency).toBe('USD')
+  })
+  it('产品价格与网站定价不一致 → 503 拦截（下单前金额校验，用户进不了结账页）', async () => {
+    ;(retrieveProduct as any).mockResolvedValue({ price: 10000, currency: 'USD', billingPeriod: 'every-month' })
+    const res = await POST(postReq({ period: 'monthly' }))
+    expect(res.status).toBe(503)
+    expect(prismaMock.paymentOrder.create).not.toHaveBeenCalled()
+  })
+  it('产品校验接口不可用 → fail-open 继续下单（webhook 金额比对兜底）', async () => {
+    ;(retrieveProduct as any).mockRejectedValue(new Error('creem api down'))
+    ;(createCheckout as any).mockResolvedValue({ checkoutUrl: 'u', sessionId: 'ch_y' })
+    const res = await POST(postReq({ period: 'monthly' }))
+    expect(res.status).toBe(200)
   })
   it('annual 未配 CREEM_ANNUAL_PRODUCT_ID → 503', async () => {
     delete process.env.CREEM_ANNUAL_PRODUCT_ID

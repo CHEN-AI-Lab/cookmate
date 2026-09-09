@@ -33,6 +33,8 @@ interface AdminOrder {
   period: string | null
   amount: number
   currency: string
+  paidAmount: number | null
+  paidCurrency: string | null
   status: string
   createdAt: string
   userEmail: string | null
@@ -395,7 +397,8 @@ function OrdersTab({ data }: { data: OrdersResponse | null }) {
                   <th className="text-left px-4 py-3 font-medium" title="Creem/支付宝生成的订单号">订单号</th>
                   <th className="text-left px-4 py-3 font-medium" title="支付渠道：creem 或 alipay">渠道</th>
                   <th className="text-left px-4 py-3 font-medium" title="订阅周期：monthly 月付 / annual 年付">周期</th>
-                  <th className="text-left px-4 py-3 font-medium" title="订单金额（CNY）">金额</th>
+                  <th className="text-left px-4 py-3 font-medium" title="网站应收金额（下单时按定价常量写入）">应收金额</th>
+                  <th className="text-left px-4 py-3 font-medium" title="支付平台回调的实付金额（未支付/历史订单为 -）；与应收不一致时标红">实付金额</th>
                   <th className="text-left px-4 py-3 font-medium" title="订单状态：待支付/已支付/已取消/已退款/已过期">状态</th>
                   <th className="text-left px-4 py-3 font-medium" title="下单用户的邮箱">用户邮箱</th>
                 </tr>
@@ -408,6 +411,9 @@ function OrdersTab({ data }: { data: OrdersResponse | null }) {
                     <td className="px-4 py-3 text-gray-700">{o.channel}</td>
                     <td className="px-4 py-3 text-gray-700">{fmtPeriod(o.period)}</td>
                     <td className="px-4 py-3 text-gray-700 font-medium">{fmtAmount(o.amount, o.currency)}</td>
+                    <td className={`px-4 py-3 font-medium whitespace-nowrap ${o.paidAmount != null && (o.paidAmount !== o.amount || (o.paidCurrency && o.currency && o.paidCurrency !== o.currency)) ? "text-red-600" : "text-gray-700"}`}>
+                      {o.paidAmount != null ? fmtAmount(o.paidAmount, o.paidCurrency ?? o.currency) : "-"}
+                    </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={o.status} />
                     </td>
