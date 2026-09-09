@@ -109,7 +109,7 @@ export default function DashboardPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <QuickActionCard href="/app/pantry" title={td("managePantry")} desc={td("pantryDesc")} emoji="🥦" hoverBorder="hover:border-green-200" hoverShadow="hover:shadow-green-100/40" />
-            <QuickActionCard href="/app/meal-plan" title={td("mealPlanTitle")} desc={td("mealPlanDesc")} emoji="📅" hoverBorder="hover:border-blue-200" hoverShadow="hover:shadow-blue-100/40" />
+            <QuickActionCard href="/app/meal-plan" title={td("mealPlanTitle")} desc={td("mealPlanDesc")} emoji="📅" hoverBorder="hover:border-amber-200" hoverShadow="hover:shadow-amber-100/40" />
             <QuickActionCard href="/app/grocery-list" title={td("groceryTitle")} desc={td("groceryDesc")} emoji="🛒" hoverBorder="hover:border-orange-200" hoverShadow="hover:shadow-orange-100/40" />
           </div>
         </div>

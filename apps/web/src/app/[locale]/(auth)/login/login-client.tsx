@@ -371,13 +371,13 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
         </div>
 
         {isLoggedIn && (
-          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-            <p className="text-sm text-blue-600 font-medium">
+          <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+            <p className="text-sm text-amber-700 font-medium">
               {userName ? `👋 ${userName}` : t('alreadyLoggedIn')}
             </p>
-            <p className="text-xs text-blue-600/70 mt-1">{t('switchAccount')}</p>
+            <p className="text-xs text-amber-700/70 mt-1">{t('switchAccount')}</p>
             <div className="mt-3 flex gap-2">
-              <Link href="/app/dashboard" className="flex-1 bg-blue-600 text-white text-center text-sm py-2 rounded-lg hover:bg-blue-700">{t('enterDashboard')}</Link>
+              <Link href="/app/dashboard" className="flex-1 bg-accent text-white text-center text-sm py-2 rounded-lg hover:bg-orange-600">{t('enterDashboard')}</Link>
               <button onClick={() => signOut({ callbackUrl: "/" })} className="flex-1 bg-card text-text-secondary text-center text-sm py-2 rounded-lg border border-gray-100 hover:bg-surface">{tc('logout')}</button>
             </div>
           </div>
@@ -482,7 +482,7 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
                 {error && tab === "email" && (
                   <div className={`text-xs rounded-xl px-3 py-2 ${
                     error.includes("dev") ? "bg-green-50 border border-green-200 text-green-600"
-                    : error.includes("sent") ? "bg-blue-50 border border-blue-200 text-blue-600"
+                    : error.includes("sent") ? "bg-amber-50 border border-amber-200 text-amber-700"
                     : "bg-red-50 border border-red-200 text-red-600"
                   }`}>
                     {error}
