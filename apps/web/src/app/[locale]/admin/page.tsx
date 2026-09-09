@@ -103,6 +103,27 @@ interface CronLogsResponse {
   error?: string
 }
 
+type AiTone = "ok" | "warn" | "error"
+
+/** 带状态色的值（来源、专用 Key） */
+interface AiValue {
+  text: string
+  tone: AiTone
+}
+
+/** 纯文本值，fromDefault 标明该值是回退默认来的还是这一端自己配的 */
+interface AiPlain {
+  text: string
+  fromDefault: boolean
+}
+
+interface AiSide {
+  source: AiValue
+  key: AiValue
+  model: AiPlain
+  baseUrl: AiPlain
+}
+
 interface ConfigResponse {
   ok?: boolean
   config?: {
@@ -113,9 +134,9 @@ interface ConfigResponse {
     cron: { cronSecret: string }
     database: { directUrl: string }
     ai: {
-      free: { key: string; source: string; baseUrl: string; model: string }
-      pro: { key: string; source: string; baseUrl: string; model: string }
-      fallback: { key: string; baseUrl: string; model: string }
+      free: AiSide
+      pro: AiSide
+      fallback: { key: AiValue; model: AiPlain; baseUrl: AiPlain }
     }
   }
   error?: string
@@ -826,21 +847,57 @@ function WebhookStatusBadge({ status }: { status: string }) {
 
 // ── Tab 6：支付配置 ──
 
-function ConfigRow({ label, value, required }: { label: string; value: string; required?: boolean }) {
-  const isMasked = value === "已配置" || value === "未配置"
-  const isMissing = value === "未配置"
+const TONE_STYLE: Record<AiTone, string> = {
+  ok: "bg-green-100 text-green-700",
+  warn: "bg-amber-100 text-amber-800",
+  error: "bg-red-100 text-red-700",
+}
+
+const TONE_ICON: Record<AiTone, string> = {
+  ok: "✓",
+  warn: "⚠",
+  error: "✗",
+}
+
+interface ConfigRowSpec {
+  label: string
+  value: string
+  required?: boolean
+  tone?: AiTone
+  tag?: string
+}
+
+/**
+ * 配置行。
+ * - 显式传 tone 时按 tone 渲染状态色（AI 区块用，支持「回退默认」这类中间态）
+ * - 不传 tone 时沿用原有的「已配置 / 未配置」字符串判断，支付等既有行不受影响
+ * - tag：值后面挂的灰色小标签，用于标注「默认」等来源信息
+ */
+function ConfigRow({ label, value, required, tone, tag }: {
+  label: string
+  value: string
+  required?: boolean
+  tone?: AiTone
+  tag?: string
+}) {
+  const inferred: AiTone | null = tone ?? (value === "已配置" ? "ok" : value === "未配置" ? "error" : null)
+  const isMissing = inferred === "error"
+  const muted = tag ? "text-text-secondary" : ""
   return (
     <div className={`flex items-center px-4 py-2.5 border-t border-gray-100 ${isMissing && required ? "bg-red-50/50" : ""}`}>
       <div className="w-[130px] shrink-0 text-gray-700 font-medium text-sm whitespace-nowrap">
         {label}{required ? <span className="text-red-500 ml-0.5">*</span> : ""}
       </div>
       <div className="flex-1 min-w-0 text-sm">
-        {isMasked ? (
-          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${isMissing ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
-            {isMissing ? "✗" : "✓"} {value}
+        {inferred ? (
+          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${TONE_STYLE[inferred]}`}>
+            {TONE_ICON[inferred] ? TONE_ICON[inferred] + " " : ""}{value}
           </span>
         ) : (
-          <span className="font-mono text-xs break-all">{value}</span>
+          <span className="inline-flex items-center gap-2 flex-wrap">
+            <span className={`font-mono text-xs break-all ${muted}`}>{value}</span>
+            {tag ? <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-[11px] shrink-0">{tag}</span> : null}
+          </span>
         )}
       </div>
     </div>
@@ -853,8 +910,8 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
     return <div className="text-center py-16 text-text-secondary">无法加载配置</div>
   }
 
-  const sections = [
-    { title: "应用", rows: [{ label: "应用地址", value: c.app.url }] },
+  const sections: { title: string; rows: ConfigRowSpec[] }[] = [
+    { title: "应用", rows: [{ label: "应用地址", value: c.app.url }], },
     {
       title: "认证",
       rows: [
@@ -890,17 +947,17 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
     {
       title: "AI 服务（按订阅层级分流）",
       rows: [
-        { label: "免费版 来源", value: c.ai.free.source },
-        { label: "免费版 专用 Key", value: c.ai.free.key },
-        { label: "免费版 接口地址", value: c.ai.free.baseUrl },
-        { label: "免费版 模型", value: c.ai.free.model },
-        { label: "付费版 来源", value: c.ai.pro.source },
-        { label: "付费版 专用 Key", value: c.ai.pro.key },
-        { label: "付费版 接口地址", value: c.ai.pro.baseUrl },
-        { label: "付费版 模型", value: c.ai.pro.model },
-        { label: "默认兜底 Key", value: c.ai.fallback.key },
-        { label: "默认兜底 接口地址", value: c.ai.fallback.baseUrl },
-        { label: "默认兜底 模型", value: c.ai.fallback.model },
+        { label: "免费版 来源", value: c.ai.free.source.text, tone: c.ai.free.source.tone },
+        { label: "免费版 专用 Key", value: c.ai.free.key.text, tone: c.ai.free.key.tone },
+        { label: "免费版 模型", value: c.ai.free.model.text, tag: c.ai.free.model.fromDefault ? "默认" : undefined },
+        { label: "免费版 接口地址", value: c.ai.free.baseUrl.text, tag: c.ai.free.baseUrl.fromDefault ? "默认" : undefined },
+        { label: "付费版 来源", value: c.ai.pro.source.text, tone: c.ai.pro.source.tone },
+        { label: "付费版 专用 Key", value: c.ai.pro.key.text, tone: c.ai.pro.key.tone },
+        { label: "付费版 模型", value: c.ai.pro.model.text, tag: c.ai.pro.model.fromDefault ? "默认" : undefined },
+        { label: "付费版 接口地址", value: c.ai.pro.baseUrl.text, tag: c.ai.pro.baseUrl.fromDefault ? "默认" : undefined },
+        { label: "默认兜底 Key", value: c.ai.fallback.key.text, tone: c.ai.fallback.key.tone },
+        { label: "默认兜底 模型", value: c.ai.fallback.model.text },
+        { label: "默认兜底 接口地址", value: c.ai.fallback.baseUrl.text },
       ],
     },
   ]
@@ -916,7 +973,14 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
             <h3 className="px-4 py-3 font-semibold text-text-primary bg-gray-50 border-b border-gray-100">{s.title}</h3>
             <div>
               {s.rows.map((r) => (
-                <ConfigRow key={r.label} label={r.label} value={r.value} required={r.required} />
+                <ConfigRow
+                  key={r.label}
+                  label={r.label}
+                  value={r.value}
+                  required={r.required}
+                  tone={r.tone}
+                  tag={r.tag}
+                />
               ))}
             </div>
           </div>

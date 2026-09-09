@@ -11,6 +11,9 @@ export async function GET() {
 
   const mask = (v?: string) => (v ? "已配置" : "未配置")
 
+  // 默认兜底 Key：与其他 Key 行保持同一套语义（有=绿，无=红）
+  const fallbackAiKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY
+
   const config = {
     app: {
       url: process.env.NEXT_PUBLIC_APP_URL || "未配置",
@@ -40,9 +43,9 @@ export async function GET() {
       free: aiSide(process.env.AI_API_KEY_FREE, process.env.AI_BASE_URL_FREE, process.env.AI_MODEL_FREE),
       pro: aiSide(process.env.AI_API_KEY_PRO, process.env.AI_BASE_URL_PRO, process.env.AI_MODEL_PRO),
       fallback: {
-        key: mask(process.env.AI_API_KEY || process.env.OPENAI_API_KEY),
-        baseUrl: process.env.AI_BASE_URL || "https://api.openai.com/v1",
-        model: process.env.AI_MODEL || "未设置",
+        key: { text: mask(fallbackAiKey), tone: fallbackAiKey ? ("ok" as const) : ("error" as const) },
+        baseUrl: { text: process.env.AI_BASE_URL || "https://api.openai.com/v1", fromDefault: false },
+        model: { text: process.env.AI_MODEL || "未设置", fromDefault: false },
       },
     },
   }
@@ -58,18 +61,30 @@ export async function GET() {
 function aiSide(ownKey?: string, ownUrl?: string, ownModel?: string) {
   const fallbackKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY
   const hasOwnKey = !!ownKey
+
+  // 完全没得用：连默认兜底都没有
   if (!hasOwnKey && !fallbackKey) {
-    return { source: "未配置", key: "未配置", baseUrl: "—", model: "—" }
+    return {
+      source: { text: "未配置", tone: "error" as const },
+      key: { text: "未配置", tone: "error" as const },
+      model: { text: "—", fromDefault: false },
+      baseUrl: { text: "—", fromDefault: false },
+    }
   }
+
+  // 来源与专用 Key 描述的是同一件事的两个视角，颜色保持一致：
+  // 用了专属配置=绿，回退到默认=琥珀（功能正常但需注意），真没配=红
+  const tone = hasOwnKey ? ("ok" as const) : ("warn" as const)
   return {
-    // source 是这一端的结论（结论先行，前端放在该块第一行）
-    source: hasOwnKey ? "专用配置" : "回退默认",
-    // Key 只回这两个字面值，才能命中前端 ConfigRow 的绿/红 badge；
-    // 「未配置」在这里的含义是「没配这一端专属的 Key」，不代表不可用（可能正回退默认）
-    key: hasOwnKey ? "已配置" : "未配置",
-    // 地址与模型各自独立回落。没单独配时加「（回退默认）」标注，
-    // 否则页面只显示一个值，看不出是自己填的还是从默认兜底来的。
-    baseUrl: ownUrl ? ownUrl : (process.env.AI_BASE_URL || "https://api.openai.com/v1") + "（回退默认）",
-    model: ownModel ? ownModel : (process.env.AI_MODEL || "未设置") + "（回退默认）",
+    source: { text: hasOwnKey ? "专用配置" : "回退默认", tone },
+    key: { text: hasOwnKey ? "已配置" : "未配置 · 用默认", tone },
+    model: {
+      text: ownModel || process.env.AI_MODEL || "未设置",
+      fromDefault: !ownModel,
+    },
+    baseUrl: {
+      text: ownUrl || process.env.AI_BASE_URL || "https://api.openai.com/v1",
+      fromDefault: !ownUrl,
+    },
   }
 }
