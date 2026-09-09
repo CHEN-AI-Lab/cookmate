@@ -94,7 +94,7 @@
 
 **Decision**: Use `next-intl` for i18n. Translation files live in `shared/messages/` (zh-CN.json, en.json). Locale routing via middleware. Language switcher in the UI header.
 
-**Consequences**: All UI text must be extracted from components into translation files. API error messages use locale-aware responses. Middleware detects browser language preference. Default locale is zh-CN.
+**Consequences**: All UI text must be extracted from components into translation files. API error messages use locale-aware responses. Middleware detects browser language preference. Default locale is `en`（本 ADR 撰写时规划为 zh-CN，实现时调整为 en，以 `shared/constants/locales.ts` 的 `defaultLocale` 为准；当前支持 en / zh-CN / zh-TW / ja 四种语言）。
 
 
 ---
