@@ -140,7 +140,7 @@ interface ConfigResponse {
       fallback: { key: AiValue; model: AiPlain; baseUrl: AiPlain }
     }
     vercelEnvUrl: string | null
-    sharedEnvKeys: string[]
+    vercelSlugMissing: boolean
   }
   error?: string
 }
@@ -924,10 +924,9 @@ function EnvName({ env, href }: { env: string; href?: string | null }) {
  * - tag：值后面挂的灰色小标签，用于标注「默认」等来源信息
  * - env：环境变量名（可复制）；desc：字段说明（受顶部开关控制，ⓘ 可单独查看）
  */
-function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc, envBaseUrl, sharedEnvKeys }: ConfigRowSpec & {
+function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc, envBaseUrl }: ConfigRowSpec & {
   showDesc: boolean
   envBaseUrl?: string | null
-  sharedEnvKeys?: string[]
 }) {
   const inferred: AiTone | null = tone ?? (value === "已配置" ? "ok" : value === "未配置" ? "error" : null)
   const isMissing = inferred === "error"
@@ -967,11 +966,7 @@ function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc, env
         {env ? (
           <EnvName
             env={env}
-            href={
-              envBaseUrl
-                ? `${envBaseUrl}?tab=${sharedEnvKeys?.includes(env) ? "shared" : "project"}&q=${encodeURIComponent(env)}`
-                : null
-            }
+            href={envBaseUrl ? `${envBaseUrl}?q=${encodeURIComponent(env)}` : null}
           />
         ) : null}
         {desc && showDesc ? <div className="mt-1 text-[12px] leading-snug text-gray-500">{desc}</div> : null}
@@ -1313,13 +1308,14 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-text-secondary text-sm">
-        生产环境配置核对（只显示是否已配置，不暴露密钥原文）。带 * 为必填项，标红「未配置」会导致对应功能不可用。
-      </p>
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={toggleDesc}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-text-secondary text-sm">
+          生产环境配置核对（只显示是否已配置，不暴露密钥原文）。带 * 为必填项，标红「未配置」会导致对应功能不可用。
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleDesc}
           className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${showDesc ? "border-blue-300 bg-blue-50 text-blue-700" : "border-gray-300 text-gray-600"}`}
         >
           <span className={`relative inline-flex h-[18px] w-[32px] items-center rounded-full ${showDesc ? "bg-blue-500" : "bg-gray-300"}`}>
@@ -1327,14 +1323,21 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
           </span>
           {showDesc ? "隐藏说明" : "显示说明"}
         </button>
-        <button
-          type="button"
-          onClick={() => setHelpOpen(true)}
-          className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600"
-        >
-          字段说明（可搜索）
-        </button>
+          <button
+            type="button"
+            onClick={() => setHelpOpen(true)}
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600"
+          >
+            字段说明（可搜索）
+          </button>
+        </div>
       </div>
+      {c.vercelSlugMissing ? (
+        <p className="rounded-lg bg-amber-50 px-3 py-2 text-[12px] text-amber-800">
+          没取到项目 slug，跳转入口已隐藏：请在 Vercel 项目设置里开启 System Environment Variables，
+          或手动配置环境变量 VERCEL_PROJECT_SLUG（值为项目 slug，如 cookmate）。
+        </p>
+      ) : null}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {sections.map((s) => (
           <div key={s.title} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
@@ -1344,14 +1347,14 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
                 {s.note ? <span className="ml-2 text-[12px] font-normal text-gray-400">{s.note}</span> : null}
               </h3>
               {c.vercelEnvUrl ? (
-                <a
-                  href={c.vercelEnvUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="whitespace-nowrap text-[12px] text-blue-600 hover:underline"
-                >
-                  在 Vercel 中管理 ↗
-                </a>
+                <span className="flex shrink-0 items-center gap-2 whitespace-nowrap text-[12px]">
+                  <a href={`${c.vercelEnvUrl}?tab=project`} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                    项目变量 ↗
+                  </a>
+                  <a href={`${c.vercelEnvUrl}?tab=shared`} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                    共享变量 ↗
+                  </a>
+                </span>
               ) : null}
             </div>
             <div>
@@ -1367,7 +1370,6 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
                   desc={r.desc}
                   showDesc={showDesc}
                   envBaseUrl={c.vercelEnvUrl}
-                  sharedEnvKeys={c.sharedEnvKeys}
                 />
               ))}
             </div>

@@ -14,20 +14,17 @@ export async function GET() {
   // 默认兜底 Key：与其他 Key 行保持同一套语义（有=绿，无=红）
   const fallbackAiKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY
 
-  // 后台「在 Vercel 中管理」的基址，支持用 ~ 占位符代表项目 slug：
-  // https://vercel.com/<团队>/~/settings/environment-variables （可配成团队级共享变量）
-  // ~ 会替换为 VERCEL_PROJECT_SLUG（手动配），取不到时退回系统变量 VERCEL_GIT_REPO_SLUG
+  // 后台 Vercel 跳转基址，支持用 ~ 占位符代表项目 slug：
+  // https://vercel.com/<团队>/~/settings/environment-variables （可配成团队级共享变量，各项目复用一份）
+  // ~ 的替换值优先取 Vercel 系统变量 VERCEL_GIT_REPO_SLUG（从 Git 导入时通常等于项目 slug，全自动）；
+  // 取不到时用可选的 VERCEL_PROJECT_SLUG 兜底；都没有则不显示跳转入口
   const vercelBase = process.env.VERCEL_ENV_CONSOLE_URL || ""
-  const vercelSlug = process.env.VERCEL_PROJECT_SLUG || process.env.VERCEL_GIT_REPO_SLUG || ""
+  const vercelSlug = process.env.VERCEL_GIT_REPO_SLUG || process.env.VERCEL_PROJECT_SLUG || ""
   const vercelEnvUrl = vercelBase.includes("~")
     ? (vercelSlug ? vercelBase.replace("~", vercelSlug) : null)
     : (vercelBase || null)
-
-  // 哪些变量是团队级共享变量（逗号分隔）——决定跳转时 tab=shared 还是 tab=project
-  const sharedEnvKeys = (process.env.VERCEL_SHARED_ENV_KEYS || "")
-    .split(",")
-    .map((k) => k.trim())
-    .filter(Boolean)
+  // 基址带 ~ 但没解析出 slug：前端据此提示，避免用户以为功能坏了
+  const vercelSlugMissing = !!vercelBase && vercelBase.includes("~") && !vercelSlug
 
   const config = {
     app: {
@@ -71,7 +68,7 @@ export async function GET() {
     },
     // 后台「在 Vercel 中管理」基址（已替换 ~ 为项目 slug），未配置则为 null
     vercelEnvUrl,
-    sharedEnvKeys,
+    vercelSlugMissing,
   }
 
   return NextResponse.json({ ok: true, config })
