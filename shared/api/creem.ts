@@ -99,6 +99,33 @@ export async function retrieveCheckout(checkoutId: string): Promise<{ status: st
   return res.json()
 }
 
+// 查询产品信息（下单前金额校验用：实扣金额由 Creem 后台产品价格决定，下单接口不传金额）
+// 官方字段：price 单位为美分（1000 = $10.00），currency 三字母币种，billing_period 计费周期
+export async function retrieveProduct(productId: string): Promise<{
+  price: number
+  currency: string
+  billingPeriod?: string
+  status?: string
+}> {
+  const res = await fetch(`${getBaseUrl()}/products/${encodeURIComponent(productId)}`, {
+    method: "GET",
+    headers: getHeaders(),
+  })
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw Object.assign(new Error("Creem retrieve product failed"), { code: "CREEM_RETRIEVE_FAILED", statusCode: res.status, details: text.substring(0, 200) })
+  }
+
+  const data = await res.json()
+  return {
+    price: data.price,
+    currency: data.currency,
+    billingPeriod: data.billing_period,
+    status: data.status,
+  }
+}
+
 // 取消订阅（立即取消，不计入下个周期）
 export async function cancelSubscription(subscriptionId: string): Promise<void> {
   const res = await fetch(`${getBaseUrl()}/subscriptions/${subscriptionId}/cancel`, {

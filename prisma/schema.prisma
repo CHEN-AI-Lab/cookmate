@@ -18,6 +18,7 @@ model User {
   passwordHash   String?
   subscriptionTier String @default("FREE")
   subscriptionExpiryDate DateTime?
+  subscriptionPeriod String?                        // 权威订阅周期: monthly / annual（webhook 支付成功时写入，方案A 兜底「周期取自订单」）
   creemSubscriptionId String?
   dietType       String?  @default("不限")
   cuisinePref    String?  @default("不限")
@@ -184,6 +185,8 @@ model PaymentOrder {
   period             String?                         // 订阅周期: monthly / annual（webhook 回调时写入，后台展示用）
   amount             Int                             // 金额（按 currency 对应单位：USD=美分，CNY=分）
   currency           String?                         // 币种: USD / CNY，创建时即写入，前端据此显示符号
+  paidAmount         Int?                            // 实付金额（支付平台回调时写入，单位同 amount）；未支付为空
+  paidCurrency       String?                         // 实付币种: USD / CNY
   status             String   @default("PENDING")    // PENDING / PAID / EXPIRED
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt

@@ -43,7 +43,7 @@ export async function GET(req: Request) {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { subscriptionTier: true, subscriptionExpiryDate: true, creemSubscriptionId: true },
+      select: { subscriptionTier: true, subscriptionExpiryDate: true, subscriptionPeriod: true, creemSubscriptionId: true },
     }).catch((err: unknown) => { console.error("findUnique user error:", err); return null })
 
     const tier = await checkSubscription(userId, user)
@@ -57,7 +57,9 @@ export async function GET(req: Request) {
       select: { channel: true, period: true },
     }).catch(() => null)
     const paymentChannel = lastPaidOrder?.channel ?? null
-    const subscriptionPeriod = lastPaidOrder?.period ?? null
+    // 周期读取（方案A）：优先 User.subscriptionPeriod（webhook 支付成功时写入的权威字段），
+    // 历史用户无该字段时兜底反查最近一笔 PAID 订单的 period
+    const subscriptionPeriod = user?.subscriptionPeriod ?? lastPaidOrder?.period ?? null
 
     // 最近订单
     const orders = await prisma.paymentOrder.findMany({
@@ -84,6 +86,8 @@ export async function GET(req: Request) {
         channel: o.channel,
         amount: o.amount,
         currency: o.currency,
+        paidAmount: o.paidAmount,
+        paidCurrency: o.paidCurrency,
         status: o.status,
         createdAt: o.createdAt.toISOString(),
       })),

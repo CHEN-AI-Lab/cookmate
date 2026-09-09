@@ -23,6 +23,8 @@ export async function GET() {
     period: o.period, // "monthly" | "annual" | null（历史订单可能为空）
     amount: o.amount, // 分（creem=美分，alipay=人民币分）
     currency: o.currency, // "USD" | "CNY"，前端据此显示币种符号
+    paidAmount: o.paidAmount, // 实付金额（回调写入，未支付/历史订单为 null）
+    paidCurrency: o.paidCurrency, // 实付币种
     status: o.status, // PENDING / PAID / EXPIRED
     createdAt: o.createdAt,
     userEmail: o.user?.email ?? null,

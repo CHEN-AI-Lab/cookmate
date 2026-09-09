@@ -126,6 +126,20 @@ function extractPeriod(event: Record<string, unknown>): string | undefined {
   return undefined
 }
 
+// 从事件中提取实付金额信息（checkout.completed 的 object.order 内，官方单位：美分）
+// order 在不同事件里可能是完整对象也可能是字符串 ID，只有对象且带 amount/currency 时才返回
+function extractOrderPayment(event: Record<string, unknown>): { amount?: number; currency?: string } | null {
+  const obj = event.object as Record<string, unknown> | undefined
+  if (!obj) return null
+  const order = obj.order
+  if (!order || typeof order !== "object") return null
+  const o = order as Record<string, unknown>
+  const result: { amount?: number; currency?: string } = {}
+  if (typeof o.amount === "number") result.amount = o.amount
+  if (typeof o.currency === "string") result.currency = o.currency
+  return Object.keys(result).length > 0 ? result : null
+}
+
 // 续费累加：从 max(now, 现有到期日) 起算，再 + 周期
 // 首次购买（FREE→PRO）：base=now，行为不变
 // 续费（PRO→PRO）：base=现有到期日，正确累加
@@ -184,22 +198,45 @@ async function resolveUserId(event: Record<string, unknown>): Promise<string | n
 // （避免历史存在多个 abandoned checkout 时匹配错订单）
 // D2 幂等兜底：updateMany 带status="PENDING" 条件原子更新 —— 同一事件重复/并发触发时，
 // 第二次 count=0（订单已是 PAID），不会重复写入；period 也不会被重复覆盖。
-async function recordOrder(userId: string, externalCheckoutId: string, period?: string) {
+async function recordOrder(
+  userId: string,
+  externalCheckoutId: string,
+  period?: string,
+  paid?: { amount?: number; currency?: string } | null,
+): Promise<boolean> {
   const existing = await prisma.paymentOrder.findFirst({
     where: { userId, channel: "creem", status: "PENDING", externalCheckoutId },
   })
 
   if (existing) {
+    // 金额比对（事后对账）：事件携带的实付金额（object.order.amount，美分）vs 本地订单应收金额
+    // （下单时按 PRICING 写入）。不一致 = Creem 后台产品价格与代码 PRICING 漂移。
+    // 仅告警不拦截升级（用户已在 Creem 结账页按真实价格付了款），实付金额照常写入 paidAmount 供后台双金额展示。
+    const amountMismatch = paid?.amount !== undefined && existing.amount !== paid.amount
+    if (amountMismatch) {
+      console.error("[monitor:creem-amount-mismatch]", {
+        orderId: existing.orderId,
+        expected: existing.amount,
+        actual: paid?.amount,
+        actualCurrency: paid?.currency,
+      })
+    }
+
     const result = await prisma.paymentOrder.updateMany({
       where: { id: existing.id, status: "PENDING" },
-      data: { status: "PAID", ...(period ? { period } : {}) },
+      data: {
+        status: "PAID",
+        ...(period ? { period } : {}),
+        ...(paid?.amount !== undefined ? { paidAmount: paid.amount } : {}),
+        ...(paid?.currency ? { paidCurrency: paid.currency } : {}),
+      },
     })
     if (result.count === 0) {
       console.warn(
         `[creem-webhook] recordOrder: order ${existing.id} already marked PAID (duplicate/concurrent event); skip`,
       )
     }
-    return
+    return amountMismatch
   }
 
   // 防「一次付款产生两条订单」：若本地找不到对应 externalCheckoutId 的 PENDING 订单，
@@ -208,6 +245,7 @@ async function recordOrder(userId: string, externalCheckoutId: string, period?: 
   console.warn(
     `[creem-webhook] recordOrder: no PENDING order found for userId=${userId} externalCheckoutId=${externalCheckoutId}; skip (PRO upgrade handled by subscription.paid)`,
   )
+  return false
 }
 
 // 授予访问权限（subscription.paid 用）
@@ -236,6 +274,7 @@ async function grantAccess(
     data: {
       subscriptionTier: SUBSCRIPTION_TIER.PRO,
       subscriptionExpiryDate: expiryDate,
+      ...(period ? { subscriptionPeriod: period } : {}),
       creemSubscriptionId: subscriptionId,
     },
   })
@@ -262,6 +301,7 @@ async function revokeAccess(userId: string, clearSubscriptionId: boolean = true)
     data: {
       subscriptionTier: SUBSCRIPTION_TIER.FREE,
       subscriptionExpiryDate: null,
+      subscriptionPeriod: null,
       ...(clearSubscriptionId ? { creemSubscriptionId: null } : {}),
     },
   }).catch(() => {
@@ -386,9 +426,11 @@ export async function POST(req: Request) {
       const externalCheckoutId = extractOrderId(event)
       const subscriptionId = extractSubscriptionId(event)
       const period = extractPeriod(event)
+      const paid = extractOrderPayment(event)
 
+      let amountMismatch = false
       if (userId && externalCheckoutId) {
-        await recordOrder(userId, externalCheckoutId, period)
+        amountMismatch = await recordOrder(userId, externalCheckoutId, period, paid)
       }
       // 同步订阅ID（为后续事件的 userId 反查做准备）
       if (userId && subscriptionId) {
@@ -419,6 +461,7 @@ export async function POST(req: Request) {
               data: {
                 subscriptionTier: SUBSCRIPTION_TIER.PRO,
                 subscriptionExpiryDate: expiryDate,
+                ...(period ? { subscriptionPeriod: period } : {}),
                 ...(subscriptionId ? { creemSubscriptionId: subscriptionId } : {}),
               },
             })
@@ -426,7 +469,7 @@ export async function POST(req: Request) {
         }
       }
 
-      await logWebhook("creem", "checkout.completed", "processed", undefined, eventId ?? undefined, { userId: userId ?? undefined, subscriptionId: subscriptionId ?? undefined, orderId: externalCheckoutId ?? undefined })
+      await logWebhook("creem", "checkout.completed", amountMismatch ? "processed:amount-mismatch" : "processed", undefined, eventId ?? undefined, { userId: userId ?? undefined, subscriptionId: subscriptionId ?? undefined, orderId: externalCheckoutId ?? undefined })
       return NextResponse.json({ success: true })
     }
 

@@ -91,6 +91,21 @@ describe('Creem webhook — 授权事件', () => {
     expect(stores.users.get('u1').subscriptionTier).toBe('PRO')
     expect(stores.users.get('u1').creemSubscriptionId).toBe('creem_sub_1')
     expect(stores.orders.get('CKCRlocal').status).toBe('PAID')
+    // 方案A：webhook 支付成功时把权威周期写入 User.subscriptionPeriod
+    expect(stores.users.get('u1').subscriptionPeriod).toBe('annual')
+  })
+  it('checkout.completed 金额不一致 → 写入实付金额 + 告警状态，升级照常（事后对账）', async () => {
+    stores.orders.set('CKCRm', { id: 'CKCRm', orderId: 'CKCRm', externalCheckoutId: 'ord_1', userId: 'u1', channel: 'creem', amount: 499, status: 'PENDING' })
+    const obj = nestedObj({ order: { id: 'ord_1', status: 'paid', amount: 10000, currency: 'USD' } })
+    await POST(creemReq(mkCreem('checkout.completed', obj, 'e_mm')))
+    const o = stores.orders.get('CKCRm')
+    expect(o.status).toBe('PAID')
+    expect(o.paidAmount).toBe(10000)
+    expect(o.paidCurrency).toBe('USD')
+    // 仅告警不拦截升级：用户已在 Creem 结账页按真实价格付了款
+    expect(stores.users.get('u1').subscriptionTier).toBe('PRO')
+    // webhookLog 留下 mismatch 状态供后台对账
+    expect([...stores.logs.values()].some((l) => l.status === 'processed:amount-mismatch')).toBe(true)
   })
   it('checkout.completed 用户已是 PRO → 续费累加到期日', async () => {
     // 已 PRO（到期日 2099-01-01），再来一次 checkout.completed（周期 annual）

@@ -89,7 +89,12 @@ if (Number(actualAmount) !== Number(expectedAmount)) {
         // 只有订单状态真正从 PENDING → PAID 变更成功时才升级用户，重复回调不再延长订阅
         const updated = await prisma.paymentOrder.updateMany({
           where: { orderId: outTradeNo, status: "PENDING" },
-          data: { status: "PAID" },
+          data: {
+            status: "PAID",
+            // 实付金额（分）：上方金额校验已保证 total_amount 与应收一致，此处写入供付款记录双金额展示
+            paidAmount: Math.round(Number(params.total_amount) * 100),
+            paidCurrency: "CNY",
+          },
         })
 
         if (updated.count > 0) {
@@ -118,6 +123,7 @@ if (Number(actualAmount) !== Number(expectedAmount)) {
             data: {
               subscriptionTier: SUBSCRIPTION_TIER.PRO,
               subscriptionExpiryDate: expiry,
+              ...(order.period ? { subscriptionPeriod: order.period } : {}),
             },
           })
         }
