@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { verifyNotify } from "@cookmate/shared/api/alipay-pay"
 import { PRICING } from "@cookmate/shared/constants/pricing"
 import { addMonths } from "@cookmate/shared/utils/subscription"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 // 支付宝异步通知写入 WebhookLog（与 Creem 一致，便于对账 + 审计追溯）
 // 失败时 console.error（Vercel Logs 自动聚合），不再完全静默
@@ -107,7 +108,7 @@ if (Number(actualAmount) !== Number(expectedAmount)) {
           await prisma.user.update({
             where: { id: order.userId },
             data: {
-              subscriptionTier: "PRO",
+              subscriptionTier: SUBSCRIPTION_TIER.PRO,
               subscriptionExpiryDate: expiry,
             },
           })

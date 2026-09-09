@@ -1,5 +1,6 @@
 import NextAuth from "next-auth"
 import { DefaultSession } from "next-auth"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 declare module "next-auth" {
   interface Session {
@@ -484,7 +485,7 @@ const { handlers: nextAuthHandlers, auth: nextAuthAuth, signIn, signOut } = Next
             token.onboardingCompleted = user.onboardingCompleted
           }
         } catch {
-          token.subscriptionTier = "FREE"
+          token.subscriptionTier = SUBSCRIPTION_TIER.FREE
           token.phone = ""
           token.onboardingCompleted = false
         }

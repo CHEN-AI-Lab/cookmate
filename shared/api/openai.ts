@@ -4,6 +4,7 @@
 
 import OpenAI from "openai"
 import { AI_TIMEOUT_MS } from "../constants/api-errors"
+import { SUBSCRIPTION_TIER } from "../constants"
 
 // ─── 按订阅层级（tier）分流的 AI 客户端 ───
 // 免费版与付费版可指向完全不同的 provider：key / baseURL / model 三者各自独立。
@@ -11,27 +12,32 @@ import { AI_TIMEOUT_MS } from "../constants/api-errors"
 const clients = new Map<string, OpenAI>()
 
 /** 归一化 tier：PRO / FAMILY 走付费端，其余（FREE、未传、未知值）走免费端 */
-function normalizeTier(subscriptionTier?: string | null): "PRO" | "FREE" {
+/** 归一化后的层级只有 PRO / FREE（FAMILY 已归入 PRO），与 SubscriptionTier 的子集关系 */
+type NormalizedTier = typeof SUBSCRIPTION_TIER.PRO | typeof SUBSCRIPTION_TIER.FREE
+
+function normalizeTier(subscriptionTier?: string | null): NormalizedTier {
   const upper = (subscriptionTier || "").toUpperCase()
-  return upper === "PRO" || upper === "FAMILY" ? "PRO" : "FREE"
+  return upper === SUBSCRIPTION_TIER.PRO || upper === SUBSCRIPTION_TIER.FAMILY
+    ? SUBSCRIPTION_TIER.PRO
+    : SUBSCRIPTION_TIER.FREE
 }
 
 /** 某 tier 的 API Key：优先 *_PRO / *_FREE，都没有则回落到 AI_API_KEY / OPENAI_API_KEY */
-function getApiKeyForTier(tier: "PRO" | "FREE"): string {
-  const own = tier === "PRO" ? process.env.AI_API_KEY_PRO : process.env.AI_API_KEY_FREE
+function getApiKeyForTier(tier: NormalizedTier): string {
+  const own = tier === SUBSCRIPTION_TIER.PRO ? process.env.AI_API_KEY_PRO : process.env.AI_API_KEY_FREE
   return own || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || ""
 }
 
 /** 某 tier 的 baseURL：同上，逐级回落 */
-function getBaseUrlForTier(tier: "PRO" | "FREE"): string {
-  const own = tier === "PRO" ? process.env.AI_BASE_URL_PRO : process.env.AI_BASE_URL_FREE
+function getBaseUrlForTier(tier: NormalizedTier): string {
+  const own = tier === SUBSCRIPTION_TIER.PRO ? process.env.AI_BASE_URL_PRO : process.env.AI_BASE_URL_FREE
   return own || process.env.AI_BASE_URL || "https://api.openai.com/v1"
 }
 
 /** 某 tier 的模型名：同上，逐级回落 */
 export function getModelForTier(subscriptionTier?: string | null): string {
   const tier = normalizeTier(subscriptionTier)
-  const own = tier === "PRO" ? process.env.AI_MODEL_PRO : process.env.AI_MODEL_FREE
+  const own = tier === SUBSCRIPTION_TIER.PRO ? process.env.AI_MODEL_PRO : process.env.AI_MODEL_FREE
   return own || process.env.AI_MODEL || ""
 }
 

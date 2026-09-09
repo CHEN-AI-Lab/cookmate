@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { isDemoUser } from "@/lib/auth-helpers"
 import { cancelSubscription } from "@cookmate/shared/api/creem"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 // 取消审计日志：记录每次取消尝试（成功 completed / 失败 failed）。
 // userId / subscriptionId 现在作为独立列写入，方便后台按用户筛选。
@@ -48,7 +49,7 @@ export async function POST() {
     select: { subscriptionTier: true, creemSubscriptionId: true },
   })
 
-  if (user?.subscriptionTier === "FREE") {
+  if (user?.subscriptionTier === SUBSCRIPTION_TIER.FREE) {
     return NextResponse.json({ error: "当前已是免费版，无需取消" }, { status: 400 })
   }
 

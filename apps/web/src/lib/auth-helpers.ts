@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { isExpired } from "@cookmate/shared/utils/subscription"
 import { STARRED_RECIPE_LIMIT, RECIPE_COUNT_LIMIT, PANTRY_ITEM_LIMIT, MEAL_PLAN_DAYS_LIMIT, AI_DAILY_LIMIT } from "@cookmate/shared/constants/usage-limits"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 /**
  * Demo 用户识别常量（避免散落硬编码）
@@ -36,7 +37,7 @@ export async function isFreeUser(userId: string): Promise<boolean> {
   // 降级统一由 /api/cron/expire-sweep 负责（Vercel Cron 每天 UTC 03:00 触发，仅生产环境生效），
   // 它会把 tier 改成 FREE 并清空 subscriptionExpiryDate，届时前端显示与后端限制同步生效。
   // 若在此处提前限制，会出现「用户资料页还显示 PRO、功能却已被限」的割裂，等同于线上事故。
-  if (user.subscriptionTier !== "FREE") return false
+  if (user.subscriptionTier !== SUBSCRIPTION_TIER.FREE) return false
   if (user.subscriptionExpiryDate && !isExpired(user.subscriptionExpiryDate)) return false
   return true
 }
@@ -148,7 +149,7 @@ export async function canUseAiToday(userId: string): Promise<boolean> {
 
   // 是否免费版统一以 subscriptionTier 为准，与 isFreeUser() 口径保持一致：
   // 降级交给 /api/cron/expire-sweep，不能在请求时提前把 PRO 用户当免费版扣额度。
-  if (user.subscriptionTier !== "FREE") return true
+  if (user.subscriptionTier !== SUBSCRIPTION_TIER.FREE) return true
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)

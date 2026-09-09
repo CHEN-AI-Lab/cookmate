@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 // ── 类型 ──
 
@@ -615,15 +616,15 @@ function UsersTab({ data }: { data: UsersResponse | null }) {
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard label="用户总数" value={hasFilter ? filtered.length : (data?.total ?? 0)} tone="gray" />
-        <StatCard label="Pro 用户" value={hasFilter ? filtered.filter((u) => u.subscriptionTier === "PRO").length : (data?.proCount ?? 0)} tone="green" />
-        <StatCard label="免费用户" value={hasFilter ? filtered.filter((u) => u.subscriptionTier !== "PRO").length : (data?.freeCount ?? 0)} tone="gray" />
+        <StatCard label="Pro 用户" value={hasFilter ? filtered.filter((u) => u.subscriptionTier === SUBSCRIPTION_TIER.PRO).length : (data?.proCount ?? 0)} tone="green" />
+        <StatCard label="免费用户" value={hasFilter ? filtered.filter((u) => u.subscriptionTier !== SUBSCRIPTION_TIER.PRO).length : (data?.freeCount ?? 0)} tone="gray" />
       </div>
 
       {/* 筛选栏 */}
       <div className="flex flex-wrap items-center gap-2">
         <select value={filterTier} onChange={(e) => setFilterTier(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
           <option value="">全部套餐</option>
-          {tiers.map((t) => <option key={t} value={t}>{t === "PRO" ? "Pro" : "Free"}</option>)}
+          {tiers.map((t) => <option key={t} value={t}>{t === SUBSCRIPTION_TIER.PRO ? "Pro" : "Free"}</option>)}
         </select>
         {hasFilter && (
           <button onClick={clearFilter} className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">清除</button>
@@ -657,7 +658,7 @@ function UsersTab({ data }: { data: UsersResponse | null }) {
                     <td className="px-4 py-3 text-gray-700 text-xs">{u.email ?? u.phone ?? "-"}</td>
                     <td className="px-4 py-3 text-gray-700">{u.name ?? "-"}</td>
                     <td className="px-4 py-3">
-                      {u.subscriptionTier === "PRO" ? (
+                      {u.subscriptionTier === SUBSCRIPTION_TIER.PRO ? (
                         <span className="inline-flex px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-xs font-semibold">Pro</span>
                       ) : (
                         <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">Free</span>

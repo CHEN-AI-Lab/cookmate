@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import { isDemoUser } from "@/lib/auth-helpers"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 export async function GET(req: Request) {
   const loc = getLocaleFromCookie(req)
@@ -21,7 +22,7 @@ export async function GET(req: Request) {
         dietType: user?.dietType ?? "不限",
         cuisinePref: user?.cuisinePref && user.cuisinePref !== "不限" ? user.cuisinePref : "",
         servingSize: user?.servingSize ?? 2,
-        subscriptionTier: user?.subscriptionTier ?? "FREE",
+        subscriptionTier: user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE,
       },
     })
   } catch (error) {

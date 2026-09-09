@@ -6,16 +6,17 @@ import { isAlipayConfigured } from "@cookmate/shared/api/alipay-pay"
 import { isCreemConfigured } from "@cookmate/shared/api/creem"
 import { isDemoUser } from "@/lib/auth-helpers"
 import { isExpired } from "@cookmate/shared/utils/subscription"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 async function checkSubscription(userId: string, user: { subscriptionTier: string; subscriptionExpiryDate: Date | null } | null): Promise<string> {
-  if (!user || user.subscriptionTier?.toUpperCase() !== "PRO") return "FREE"
-  if (!user.subscriptionExpiryDate) return "PRO" // 无到期日的视为永久
+  if (!user || user.subscriptionTier?.toUpperCase() !== SUBSCRIPTION_TIER.PRO) return SUBSCRIPTION_TIER.FREE
+  if (!user.subscriptionExpiryDate) return SUBSCRIPTION_TIER.PRO // 无到期日的视为永久
   if (isExpired(user.subscriptionExpiryDate)) {
     // 已过期 —— 只读返回 FREE，降级由 scripts/expire-sweep.mjs 定时任务处理
     // （GET 端点不再写库，符合 REST 语义；UI 上提示「已过期，等待后台降级」）
-    return "FREE"
+    return SUBSCRIPTION_TIER.FREE
   }
-  return "PRO"
+  return SUBSCRIPTION_TIER.PRO
 }
 
 export async function GET(req: Request) {
@@ -47,7 +48,7 @@ export async function GET(req: Request) {
 
     const tier = await checkSubscription(userId, user)
     // 仅当为 PRO 且不存在有效订阅记录时才视为已取消。
-    const canceled = tier === "PRO" && !user?.creemSubscriptionId
+    const canceled = tier === SUBSCRIPTION_TIER.PRO && !user?.creemSubscriptionId
 
     // 查最近一笔 PAID 订单的渠道和周期，用于前端区分按钮显示
     const lastPaidOrder = await prisma.paymentOrder.findFirst({

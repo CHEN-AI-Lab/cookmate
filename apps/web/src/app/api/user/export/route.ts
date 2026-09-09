@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { isDemoUser } from "@/lib/auth-helpers"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 export async function GET() {
   try {
@@ -38,7 +39,7 @@ export async function GET() {
       name: user.name || "-",
       email: user.email || "-",
       phone: user.phone ? user.phone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2") : "-",
-      plan: user.subscriptionTier === "PRO" ? "Pro 专业版" : "Free 免费版",
+      plan: user.subscriptionTier === SUBSCRIPTION_TIER.PRO ? "Pro 专业版" : "Free 免费版",
       dietType: user.dietType || "不限",
       cuisinePref: user.cuisinePref || "不限",
       servingSize: `${user.servingSize} 人份`,

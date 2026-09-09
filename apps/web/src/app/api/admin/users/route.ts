@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/admin-auth"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 // 管理员专用：用户列表（注册用户、套餐、到期时间、注册日期）。
 // 鉴权见 requireAdmin（ADMIN_EMAILS 白名单，fail-closed）。
@@ -40,8 +41,8 @@ export async function GET() {
     orderCount: u._count.paymentOrders,
   }))
 
-  const proCount = parsed.filter((u) => u.subscriptionTier === "PRO").length
-  const freeCount = parsed.filter((u) => u.subscriptionTier === "FREE").length
+  const proCount = parsed.filter((u) => u.subscriptionTier === SUBSCRIPTION_TIER.PRO).length
+  const freeCount = parsed.filter((u) => u.subscriptionTier === SUBSCRIPTION_TIER.FREE).length
 
   return NextResponse.json({
     total: parsed.length,

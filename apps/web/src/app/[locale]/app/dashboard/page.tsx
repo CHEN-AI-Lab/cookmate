@@ -7,6 +7,7 @@ import { StatsCard } from "@/components/features/StatsCard"
 import { HeroCTA } from "@/components/features/HeroCTA"
 import { QuickActionCard } from "@/components/features/QuickActionCard"
 import Link from "next/link"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 interface DashboardStats {
   pantryCount: number
@@ -58,7 +59,7 @@ export default function DashboardPage() {
                         <p className='text-text-secondary mt-1 text-sm'>{td("welcomeDesc")}</p>
           </div>
           <span className='hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-accent text-xs font-semibold rounded-full'>
-            {stats?.subscriptionTier === "PRO" ? td("proUser") : td("freeUser")}
+            {stats?.subscriptionTier === SUBSCRIPTION_TIER.PRO ? td("proUser") : td("freeUser")}
           </span>
         </div>
 
@@ -88,8 +89,8 @@ export default function DashboardPage() {
           {/* AI生成次数 */}
           <StatsCard
             label={td("aiGenerate")}
-            value={isDemoUser ? "3" : stats?.subscriptionTier === "PRO" ? "∞" : `${stats?.todayUsage ?? 0}/1`}
-            subtext={isDemoUser ? td("subtextAiGenerateDemo") : stats?.subscriptionTier === "PRO" ? td("subtextAiGeneratePro") : td("subtextAiGenerateFree")}
+            value={isDemoUser ? "3" : stats?.subscriptionTier === SUBSCRIPTION_TIER.PRO ? "∞" : `${stats?.todayUsage ?? 0}/1`}
+            subtext={isDemoUser ? td("subtextAiGenerateDemo") : stats?.subscriptionTier === SUBSCRIPTION_TIER.PRO ? td("subtextAiGeneratePro") : td("subtextAiGenerateFree")}
           />
 
           {/* 食材数 */}

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma"
 import { generateOrderId } from "@cookmate/shared/utils/order-id"
 import { PRICING } from "@cookmate/shared/constants/pricing"
 import { addMonths, addYears } from "@cookmate/shared/utils/subscription"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 export async function POST(req: Request) {
   try {
@@ -142,7 +143,7 @@ export async function GET(req: Request) {
       const period = checkoutMeta.period
       const newExpiry = period === "annual" ? addYears(now, 1) : addMonths(now, 1)
       const needsUpgrade = user
-        && (user.subscriptionTier !== "PRO"
+        && (user.subscriptionTier !== SUBSCRIPTION_TIER.PRO
           || !user.subscriptionExpiryDate
           || user.subscriptionExpiryDate < newExpiry)
 
@@ -155,7 +156,7 @@ export async function GET(req: Request) {
         await prisma.user.update({
           where: { id: session.user.id },
           data: {
-            subscriptionTier: "PRO",
+            subscriptionTier: SUBSCRIPTION_TIER.PRO,
             subscriptionExpiryDate: expiryDate,
           },
         })

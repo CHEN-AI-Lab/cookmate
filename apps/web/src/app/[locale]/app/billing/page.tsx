@@ -7,6 +7,7 @@ import { PricingCard } from "@/components/features/PricingCard"
 import { PRICING, getPerMonthDisplay, getSaveAmount, getSavePercent } from "@cookmate/shared/constants/pricing"
 import { cn } from "@cookmate/shared/utils"
 import { CHANNEL_ICONS } from "@cookmate/shared/constants/payment-channels"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 interface BillingInfo {
   subscriptionTier: string
@@ -54,7 +55,7 @@ export default function BillingPage() {
       .then((r) => r.json())
       .then((data) => {
         setInfo({
-          subscriptionTier: data.subscriptionTier || "FREE",
+          subscriptionTier: data.subscriptionTier || SUBSCRIPTION_TIER.FREE,
           subscriptionExpiryDate: data.subscriptionExpiryDate,
           isDemoUser: !!data.isDemoUser,
           creemConfigured: !!data.creemConfigured,
@@ -117,7 +118,7 @@ export default function BillingPage() {
 
   if (loading) return <div className="text-center py-16 text-text-secondary">{t("loading")}</div>
 
-  const isFree = info?.subscriptionTier === "FREE"
+  const isFree = info?.subscriptionTier === SUBSCRIPTION_TIER.FREE
   const isDemo = info?.isDemoUser
   const isCreemActive = !isFree && !info?.canceled && info?.paymentChannel === "creem"
   const currentPeriod = info?.subscriptionPeriod // "monthly" | "annual" | null

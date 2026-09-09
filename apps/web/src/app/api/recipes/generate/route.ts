@@ -6,6 +6,7 @@ import { canUseAiToday, incrementAiUsage, isFreeUser, checkRecipeCountLimit, che
 import {
   BLACKLIST, getBlockReason,
 } from "@cookmate/shared/constants/ingredients"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 // Vercel 免费版（Hobby）函数默认上限 10s，AI 生成易被平台掐死 → 显式放宽到 60s（Hobby 最高值）
 export const maxDuration = 60
@@ -114,7 +115,7 @@ export async function POST(req: Request) {
     }).catch((err: unknown) => { console.error("findUnique user error:", err); return null })
 
     const isDev = process.env.NODE_ENV !== "production"
-    const isMock = !hasAIKeyForTier(user?.subscriptionTier ?? "FREE")
+    const isMock = !hasAIKeyForTier(user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE)
     if (!isMock && !isDev) {
       const canGenerate = await canUseAiToday(session.user.id)
       if (!canGenerate) {
@@ -140,13 +141,13 @@ export async function POST(req: Request) {
       dietType: user?.dietType || undefined,
       cuisinePref: user?.cuisinePref || undefined,
       servingSize: user?.servingSize || undefined,
-    }, pantryContext, locale, user?.subscriptionTier ?? "FREE")
+    }, pantryContext, locale, user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE)
 
     T("ai_done")
 
     // 记录本次实际生效的模型与层级。fallback（AI 失败降级 mock）时不记模型，
     // 否则会把假数据算到真实模型头上，污染后续成本/质量分析。
-    const aiTierUsed = user?.subscriptionTier ?? "FREE"
+    const aiTierUsed = user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE
     const aiModelUsed = fallback ? null : (getModelForTier(aiTierUsed) || null)
 
     // 保存生成的菜谱到数据库

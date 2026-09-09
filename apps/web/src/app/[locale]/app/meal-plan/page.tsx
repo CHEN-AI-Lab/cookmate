@@ -20,6 +20,7 @@ import {
   errorLogContext,
   type ApiErrorInfo,
 } from "@cookmate/shared/utils/api-error"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
@@ -73,7 +74,7 @@ export default function MealPlanPage() {
   const [starToast, setStarToast] = useState("")
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [isDemoUser, setIsDemoUser] = useState(false)
-  // 免费版用户标识：与 subscriptionTier === "FREE" 一致，用于 picker 限制最多选 3 天
+  // 免费版用户标识：与 subscriptionTier === SUBSCRIPTION_TIER.FREE 一致，用于 picker 限制最多选 3 天
   const [freeUser, setFreeUser] = useState(false)
   // 收藏上限横幅（持久显示，带内嵌升级链接）：收藏操作在详情弹窗里触发，
   // toast 2.5 秒就没了，用户经常来不及看原因，所以再加一条横幅兜底
@@ -113,7 +114,7 @@ export default function MealPlanPage() {
         // 免费版标识：严格跟后端 isFreeUser() 保持一致——只认 subscriptionTier。
         // 降级由 /api/cron/expire-sweep 统一处理（会把 tier 改成 FREE），
         // 前端不能自行把「到期但仍是 PRO」的用户按免费版显示，否则用户看到自己是会员却受限。
-        if (data.subscriptionTier === "FREE" && !data.isDemoUser) setFreeUser(true)
+        if (data.subscriptionTier === SUBSCRIPTION_TIER.FREE && !data.isDemoUser) setFreeUser(true)
       })
       .catch((err) => console.error("load profile error:", err))
   }, [locale])

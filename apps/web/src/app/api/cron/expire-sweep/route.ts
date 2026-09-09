@@ -12,6 +12,7 @@
  */
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 async function logCron(eventType: string, status: string, detail: Record<string, unknown>) {
   await prisma.webhookLog.create({
@@ -42,11 +43,11 @@ export async function GET(req: Request) {
     const now = new Date()
     const result = await prisma.user.updateMany({
       where: {
-        subscriptionTier: "PRO",
+        subscriptionTier: SUBSCRIPTION_TIER.PRO,
         subscriptionExpiryDate: { lt: now },
       },
       data: {
-        subscriptionTier: "FREE",
+        subscriptionTier: SUBSCRIPTION_TIER.FREE,
         subscriptionExpiryDate: null,
       },
     })

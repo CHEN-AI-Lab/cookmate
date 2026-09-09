@@ -6,7 +6,7 @@ import { useTranslations, useLocale } from "next-intl"
 import { signIn, signOut } from "next-auth/react"
 import Link from "next/link"
 import PasswordInput from "@/components/ui/PasswordInput"
-import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from "@cookmate/shared/constants"
+import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS, SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 export default function SettingsPage() {
   const ts = useTranslations("settings")
@@ -27,7 +27,7 @@ export default function SettingsPage() {
     "东南亚": ts("cuisineSoutheastAsian"), "印度菜": ts("cuisineIndian"),
     "中东菜": ts("cuisineMiddleEastern"), "墨西哥菜": ts("cuisineMexican"),
   }
-  const [settings, setSettings] = useState<{ dietType: string; cuisinePref: string[]; servingSize: number; subscriptionTier: string }>({ dietType: DIET_OPTIONS[0], cuisinePref: [] as string[], servingSize: 2, subscriptionTier: "FREE" })
+  const [settings, setSettings] = useState<{ dietType: string; cuisinePref: string[]; servingSize: number; subscriptionTier: string }>({ dietType: DIET_OPTIONS[0], cuisinePref: [] as string[], servingSize: 2, subscriptionTier: SUBSCRIPTION_TIER.FREE })
   const [profile, setProfile] = useState<{ name: string; phone: string; email: string; loginMethod: string; createdAt: string; hasPassword?: boolean; isDemoUser?: boolean; googleConfigured?: boolean; githubConfigured?: boolean; accounts: { provider: string }[] } | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -75,7 +75,7 @@ export default function SettingsPage() {
                 ? settingsData.settings.cuisinePref.split(",").filter(Boolean)
                 : [],
             servingSize: settingsData.settings?.servingSize ?? 2,
-            subscriptionTier: settingsData.settings?.subscriptionTier ?? "FREE",
+            subscriptionTier: settingsData.settings?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE,
           })
         }
         if (profileData.name !== undefined) {
@@ -531,9 +531,9 @@ const save = async () => {
                 <div className="flex items-center justify-between py-2">
                   <span className="text-sm text-text-secondary">{ts("currentPlan")}</span>
                   <span className={`text-sm font-medium px-2.5 py-0.5 rounded-full ${
-                    settings.subscriptionTier === "PRO" ? "bg-amber-100 text-amber-700" : "bg-surface text-text-secondary"
+                    settings.subscriptionTier === SUBSCRIPTION_TIER.PRO ? "bg-amber-100 text-amber-700" : "bg-surface text-text-secondary"
                   }`}>
-                    {settings.subscriptionTier === "PRO" ? ts("proPlan") : ts("freePlan")}
+                    {settings.subscriptionTier === SUBSCRIPTION_TIER.PRO ? ts("proPlan") : ts("freePlan")}
                   </span>
                 </div>
               </div>
@@ -541,7 +541,7 @@ const save = async () => {
               <p className="text-sm text-gray-400">{ts("profileLoading")}</p>
             )}
             <Link href="/app/billing" className="inline-block mt-5 w-full text-center bg-gradient-to-r from-accent to-orange-400 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
-              {settings.subscriptionTier === "PRO" ? ts("manageSubscription") : ts("upgradePlan")}
+              {settings.subscriptionTier === SUBSCRIPTION_TIER.PRO ? ts("manageSubscription") : ts("upgradePlan")}
             </Link>
           </div>
         </div>

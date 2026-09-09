@@ -1,3 +1,4 @@
+import { SUBSCRIPTION_TIER } from "../constants"
 /**
  * Demo cookie utilities — separate demo user state from NextAuth session.
  *
@@ -23,7 +24,7 @@ export const DEMO_SESSION = {
     name: "体验用户",
     email: "demo@cookmate.local",
     phone: "",
-    subscriptionTier: "FREE" as const,
+    subscriptionTier: SUBSCRIPTION_TIER.FREE,
     onboardingCompleted: false,
     provider: "demo" as const,
     loginMethod: "体验演示" as const,

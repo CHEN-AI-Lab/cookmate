@@ -12,6 +12,7 @@ import {
 } from "@cookmate/shared/api/openai"
 import { canUseAiToday, incrementAiUsage, isFreeUser, checkMealPlanDaysLimitForDays, checkRecipeCountLimitForCount } from "@/lib/auth-helpers"
 import { errMsg, getDayMap } from "@cookmate/shared/utils/meal-plan"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 /** sanitizeWeeklyPlan 的输出类型 */
 type WeekPlan = Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }>
@@ -146,7 +147,7 @@ export async function POST(req: Request) {
     }
 
     if (!isDev) {
-      const isMock = !hasAIKeyForTier(user?.subscriptionTier ?? "FREE")
+      const isMock = !hasAIKeyForTier(user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE)
       if (!isMock) {
         // fail-closed：用量检查出错（如 DB 抖动）时拒绝生成，原实现 catch 返回 true 会让免费用户无限调用付费 AI
         const canGenerate = await canUseAiToday(userId).catch((err: unknown) => { console.error("check usage limit error:", err); return false })
@@ -169,12 +170,12 @@ export async function POST(req: Request) {
       dietType: user?.dietType || undefined,
       cuisinePref: user?.cuisinePref || undefined,
       servingSize: user?.servingSize || 2,
-    }, pantryNames, locale, targetDays, user?.subscriptionTier ?? "FREE")
+    }, pantryNames, locale, targetDays, user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE)
 
     T("ai_done")
 
     // 记录本次实际生效的模型与层级（AI 降级 mock 时不记模型，理由同 recipes/generate）
-    const aiTierUsed = user?.subscriptionTier ?? "FREE"
+    const aiTierUsed = user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE
     const aiModelUsed = fallback ? null : (getModelForTier(aiTierUsed) || null)
 
     if (fallback) {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 // ── 辅助函数：从 webhook 事件中提取各种字段 ──
 
@@ -226,14 +227,14 @@ async function grantAccess(
   const expiryDate = computeExpiryWithCarry(user.subscriptionExpiryDate, period || "monthly")
 
   // 幂等：如果用户已经是 PRO 且新算的到期日 <= 现有到期日，说明已授权，跳过
-  if (user.subscriptionTier === "PRO" && user.subscriptionExpiryDate && expiryDate <= user.subscriptionExpiryDate) {
+  if (user.subscriptionTier === SUBSCRIPTION_TIER.PRO && user.subscriptionExpiryDate && expiryDate <= user.subscriptionExpiryDate) {
     return { granted: false, reason: "already-pro" }
   }
 
   await prisma.user.update({
     where: { id: userId },
     data: {
-      subscriptionTier: "PRO",
+      subscriptionTier: SUBSCRIPTION_TIER.PRO,
       subscriptionExpiryDate: expiryDate,
       creemSubscriptionId: subscriptionId,
     },
@@ -247,7 +248,7 @@ async function grantAccess(
 // 参数 allowRefund=true 时（refund.created），不执行此防护（退款永远是合法的）。
 async function isLateDowngrade(userId: string, expectExpired: Date | null): Promise<boolean> {
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { subscriptionTier: true, subscriptionExpiryDate: true } })
-  if (!user || user.subscriptionTier !== "PRO" || !user.subscriptionExpiryDate) return false
+  if (!user || user.subscriptionTier !== SUBSCRIPTION_TIER.PRO || !user.subscriptionExpiryDate) return false
   // refund 不受此限制：退款永远是合法的，不管当前状态
   if (expectExpired === null) return false
   // 若当前到期日 > 事件预期的过期日，说明升级发生得更晚 → 拒绝降级
@@ -259,7 +260,7 @@ async function revokeAccess(userId: string, clearSubscriptionId: boolean = true)
   await prisma.user.update({
     where: { id: userId },
     data: {
-      subscriptionTier: "FREE",
+      subscriptionTier: SUBSCRIPTION_TIER.FREE,
       subscriptionExpiryDate: null,
       ...(clearSubscriptionId ? { creemSubscriptionId: null } : {}),
     },
@@ -275,7 +276,7 @@ async function syncSubscription(userId: string, subscriptionId: string, periodEn
     where: { id: userId },
     data: {
       creemSubscriptionId: subscriptionId,
-      ...(periodEndDate ? { subscriptionTier: "PRO", subscriptionExpiryDate: periodEndDate } : {}),
+      ...(periodEndDate ? { subscriptionTier: SUBSCRIPTION_TIER.PRO, subscriptionExpiryDate: periodEndDate } : {}),
     },
   }).catch(() => {
     // 用户可能已删除，忽略
@@ -409,14 +410,14 @@ export async function POST(req: Request) {
           // 续费累加：从 max(now, 现有到期日) 起算，再 + 周期
           const expiryDate = computeFallbackExpiry(period, user.subscriptionExpiryDate)
           // 幂等：新算的到期日 <= 现有到期日 → 已授权，跳过
-          const needsUpgrade = user.subscriptionTier !== "PRO"
+          const needsUpgrade = user.subscriptionTier !== SUBSCRIPTION_TIER.PRO
             || !user.subscriptionExpiryDate
             || expiryDate > user.subscriptionExpiryDate
           if (needsUpgrade) {
             await prisma.user.update({
               where: { id: userId },
               data: {
-                subscriptionTier: "PRO",
+                subscriptionTier: SUBSCRIPTION_TIER.PRO,
                 subscriptionExpiryDate: expiryDate,
                 ...(subscriptionId ? { creemSubscriptionId: subscriptionId } : {}),
               },
