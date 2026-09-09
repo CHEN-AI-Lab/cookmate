@@ -131,6 +131,7 @@ interface ConfigResponse {
     creem: { apiKey: string; monthlyProductId: string; annualProductId: string; webhookSecret: string }
     alipay: { appId: string; privateKey: string; publicKey: string }
     auth: { authSecret: string; adminEmails: string }
+    oauth: { googleId: string; googleSecret: string; githubId: string; githubSecret: string }
     cron: { cronSecret: string }
     database: { directUrl: string }
     ai: {
@@ -138,6 +139,7 @@ interface ConfigResponse {
       pro: AiSide
       fallback: { key: AiValue; model: AiPlain; baseUrl: AiPlain }
     }
+    vercelEnvUrl: string | null
   }
   error?: string
 }
@@ -845,7 +847,7 @@ function WebhookStatusBadge({ status }: { status: string }) {
   )
 }
 
-// ── Tab 6：支付配置 ──
+// ── Tab 6：系统配置 ──
 
 const TONE_STYLE: Record<AiTone, string> = {
   ok: "bg-green-100 text-green-700",
@@ -867,6 +869,70 @@ interface ConfigRowSpec {
   required?: boolean
   tone?: AiTone
   tag?: string
+  /** 环境变量原名，点击即复制，方便直接去 Vercel 粘贴 */
+  env?: string
+  /** 字段说明：默认隐藏，由顶部「显示说明」开关控制；ⓘ 图标可随时单独查看 */
+  desc?: string
+}
+
+/** 环境变量名，点击复制。「已复制」悬浮在按钮外侧，避免把按钮撑宽导致换行 */
+function EnvName({ env }: { env: string }) {
+  const [copied, setCopied] = useState(false)
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(env)
+    } catch {
+      // 剪贴板不可用时静默降级，不打断页面
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
+  return (
+    <span className="relative inline-block">
+      <button
+        type="button"
+        onClick={copy}
+        className="px-1 rounded font-mono text-[11px] text-gray-400 whitespace-nowrap hover:bg-gray-200 hover:text-gray-600"
+      >
+        {env}
+      </button>
+      {copied ? (
+        <span className="absolute left-full top-1/2 ml-1.5 -translate-y-1/2 whitespace-nowrap text-[11px] text-green-600">
+          已复制
+        </span>
+      ) : null}
+    </span>
+  )
+}
+
+/** 说明气泡：桌面悬停、移动端点按都能看。用 fixed 定位，避免被卡片 overflow-hidden 裁切 */
+function InfoDot({ text }: { text: string }) {
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+  const show = (r: DOMRect) =>
+    setPos({ top: r.bottom + 8, left: Math.max(12, Math.min(r.left, window.innerWidth - 280)) })
+  return (
+    <>
+      <span
+        role="button"
+        tabIndex={0}
+        aria-label="查看字段说明"
+        className="ml-1 inline-flex h-3.5 w-3.5 cursor-pointer items-center justify-center rounded-full border border-gray-300 text-[10px] text-gray-400 hover:border-blue-400 hover:text-blue-600"
+        onMouseEnter={(e) => show(e.currentTarget.getBoundingClientRect())}
+        onMouseLeave={() => setPos(null)}
+        onClick={(e) => (pos ? setPos(null) : show(e.currentTarget.getBoundingClientRect()))}
+      >
+        i
+      </span>
+      {pos ? (
+        <span
+          className="fixed z-50 max-w-[260px] rounded-lg bg-gray-800 px-2.5 py-1.5 text-[11px] leading-snug text-white"
+          style={{ top: pos.top, left: pos.left }}
+        >
+          {text}
+        </span>
+      ) : null}
+    </>
+  )
 }
 
 /**
@@ -874,21 +940,21 @@ interface ConfigRowSpec {
  * - 显式传 tone 时按 tone 渲染状态色（AI 区块用，支持「回退默认」这类中间态）
  * - 不传 tone 时沿用原有的「已配置 / 未配置」字符串判断，支付等既有行不受影响
  * - tag：值后面挂的灰色小标签，用于标注「默认」等来源信息
+ * - env：环境变量名（可复制）；desc：字段说明（受顶部开关控制，ⓘ 可单独查看）
  */
-function ConfigRow({ label, value, required, tone, tag }: {
-  label: string
-  value: string
-  required?: boolean
-  tone?: AiTone
-  tag?: string
-}) {
+function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc }: ConfigRowSpec & { showDesc: boolean }) {
   const inferred: AiTone | null = tone ?? (value === "已配置" ? "ok" : value === "未配置" ? "error" : null)
   const isMissing = inferred === "error"
   const muted = tag ? "text-text-secondary" : ""
   return (
     <div className={`flex items-center px-4 py-2.5 border-t border-gray-100 ${isMissing && required ? "bg-red-50/50" : ""}`}>
-      <div className="w-[130px] shrink-0 text-gray-700 font-medium text-sm whitespace-nowrap">
-        {label}{required ? <span className="text-red-500 ml-0.5">*</span> : ""}
+      <div className="w-[210px] shrink-0 pr-3">
+        <div className="text-gray-700 font-medium text-sm whitespace-nowrap">
+          {label}{required ? <span className="text-red-500 ml-0.5">*</span> : ""}
+          {desc ? <InfoDot text={desc} /> : null}
+        </div>
+        {env ? <EnvName env={env} /> : null}
+        {desc && showDesc ? <div className="mt-1 text-[12px] leading-snug text-gray-500">{desc}</div> : null}
       </div>
       <div className="flex-1 min-w-0 text-sm">
         {inferred ? (
@@ -906,60 +972,313 @@ function ConfigRow({ label, value, required, tone, tag }: {
   )
 }
 
+/** 字段说明抽屉：说明集中展示，支持按标签 / 变量名 / 说明全文搜索 */
+function ConfigHelpDrawer({ sections, open, onClose }: {
+  sections: { title: string; rows: ConfigRowSpec[] }[]
+  open: boolean
+  onClose: () => void
+}) {
+  const [q, setQ] = useState("")
+  const filtered = useMemo(() => {
+    const kw = q.trim().toLowerCase()
+    return sections
+      .map((s) => ({
+        title: s.title,
+        rows: kw
+          ? s.rows.filter((r) => `${r.label} ${r.env ?? ""} ${r.desc ?? ""}`.toLowerCase().includes(kw))
+          : s.rows,
+      }))
+      .filter((s) => s.rows.length > 0)
+  }, [sections, q])
+
+  if (!open) return null
+  const total = filtered.reduce((n, s) => n + s.rows.length, 0)
+
+  return (
+    <div className="fixed inset-0 z-50" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/30" />
+      <div
+        className="absolute right-0 top-0 bottom-0 flex w-[400px] max-w-[92vw] flex-col border-l border-gray-200 bg-white"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="border-b border-gray-100 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-text-primary">字段说明</span>
+            <button type="button" onClick={onClose} className="text-lg leading-none text-gray-400">×</button>
+          </div>
+          <p className="mt-1 text-[12px] text-gray-500">共 {total} 个字段，可按标签 / 变量名 / 说明搜索</p>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="搜索，例如：域名 / CREEM / 对账"
+            className="mt-2 w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm outline-none focus:border-blue-400"
+          />
+        </div>
+        <div className="flex-1 overflow-y-auto px-4 pb-6">
+          {filtered.map((s) => (
+            <div key={s.title}>
+              <p className="mt-4 mb-1 text-[12px] text-gray-400">{s.title}</p>
+              {s.rows.map((r) => (
+                <div key={r.label + (r.env ?? "")} className="border-t border-gray-100 py-2">
+                  <p className="text-[13px] font-medium text-text-primary">{r.label}</p>
+                  {r.env ? <p className="font-mono text-[11px] text-gray-500">{r.env}</p> : null}
+                  {r.desc ? <p className="mt-1 text-[12px] text-gray-500">{r.desc}</p> : null}
+                </div>
+              ))}
+            </div>
+          ))}
+          {total === 0 ? <p className="py-6 text-center text-[13px] text-gray-400">没有匹配的字段</p> : null}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ConfigTab({ data }: { data: ConfigResponse | null }) {
+  // 说明默认收起；上次的选择记在 localStorage（惰性初始化，避免在 effect 里 setState 触发级联渲染）
+  const [showDesc, setShowDesc] = useState(() => {
+    if (typeof window === "undefined") return false
+    try {
+      return localStorage.getItem("admin-config-show-desc") === "1"
+    } catch {
+      return false
+    }
+  })
+  const [helpOpen, setHelpOpen] = useState(false)
+
+  function toggleDesc() {
+    setShowDesc((v) => {
+      const next = !v
+      try {
+        localStorage.setItem("admin-config-show-desc", next ? "1" : "0")
+      } catch {
+        // 忽略写入失败
+      }
+      return next
+    })
+  }
+
   const c = data?.config
   if (!c) {
     return <div className="text-center py-16 text-text-secondary">无法加载配置</div>
   }
 
-  const sections: { title: string; rows: ConfigRowSpec[] }[] = [
-    { title: "应用", rows: [{ label: "应用地址", value: c.app.url }], },
+  const sections: { title: string; note?: string; rows: ConfigRowSpec[] }[] = [
     {
-      title: "认证",
+      title: "应用",
       rows: [
-        { label: "AUTH_SECRET", value: c.auth.authSecret, required: true },
-        { label: "管理员邮箱", value: c.auth.adminEmails },
+        {
+          label: "应用地址",
+          env: "NEXT_PUBLIC_APP_URL",
+          desc: "网站正式域名，支付回调和邮件里的链接都用它拼接",
+          value: c.app.url,
+        },
       ],
     },
     {
-      title: "支付宝",
+      title: "数据库",
       rows: [
-        { label: "App ID", value: c.alipay.appId },
-        { label: "私钥", value: c.alipay.privateKey },
-        { label: "公钥", value: c.alipay.publicKey },
+        {
+          label: "直连 URL",
+          env: "DIRECT_URL",
+          desc: "数据库直连地址，Vercel 构建时执行迁移用",
+          required: true,
+          value: c.database.directUrl,
+        },
+      ],
+    },
+    {
+      title: "Cron 定时任务",
+      rows: [
+        {
+          label: "定时任务令牌",
+          env: "CRON_SECRET",
+          desc: "订阅降级、取消对账这两个每日定时任务的访问令牌，防止被乱调用",
+          required: true,
+          value: c.cron.cronSecret,
+        },
+      ],
+    },
+    {
+      title: "账号与权限",
+      rows: [
+        {
+          label: "会话加密密钥",
+          env: "AUTH_SECRET",
+          desc: "登录会话的加密密钥，随机长字符串",
+          required: true,
+          value: c.auth.authSecret,
+        },
+        {
+          label: "管理员邮箱",
+          env: "ADMIN_EMAILS",
+          desc: "管理员邮箱白名单，命中的邮箱才能进后台",
+          value: c.auth.adminEmails,
+        },
+      ],
+    },
+    {
+      title: "登录方式（OAuth）",
+      rows: [
+        {
+          label: "Google Client ID",
+          env: "AUTH_GOOGLE_ID",
+          desc: "Google 登录用的应用 ID，Google Cloud 后台创建",
+          value: c.oauth.googleId,
+        },
+        {
+          label: "Google Client 密钥",
+          env: "AUTH_GOOGLE_SECRET",
+          desc: "Google 登录用的应用密钥，和上面那个 ID 配对",
+          value: c.oauth.googleSecret,
+        },
+        {
+          label: "GitHub Client ID",
+          env: "AUTH_GITHUB_ID",
+          desc: "GitHub 登录用的应用 ID，GitHub 后台创建",
+          value: c.oauth.githubId,
+        },
+        {
+          label: "GitHub Client 密钥",
+          env: "AUTH_GITHUB_SECRET",
+          desc: "GitHub 登录用的应用密钥，和上面那个 ID 配对",
+          value: c.oauth.githubSecret,
+        },
       ],
     },
     {
       title: "Creem 支付",
       rows: [
-        { label: "API Key", value: c.creem.apiKey, required: true },
-        { label: "月付产品 ID", value: c.creem.monthlyProductId, required: true },
-        { label: "年付产品 ID", value: c.creem.annualProductId, required: true },
-        { label: "Webhook 密钥", value: c.creem.webhookSecret, required: true },
+        {
+          label: "API Key",
+          env: "CREEM_API_KEY",
+          desc: "Creem 平台密钥，创建收银台会话用",
+          required: true,
+          value: c.creem.apiKey,
+        },
+        {
+          label: "Webhook 密钥",
+          env: "CREEM_WEBHOOK_SECRET",
+          desc: "校验 Creem 回调请求的签名，防伪造通知",
+          required: true,
+          value: c.creem.webhookSecret,
+        },
+        {
+          label: "月付产品 ID",
+          env: "CREEM_MONTHLY_PRODUCT_ID",
+          desc: "Creem 后台创建的月付订阅产品 ID",
+          required: true,
+          value: c.creem.monthlyProductId,
+        },
+        {
+          label: "年付产品 ID",
+          env: "CREEM_ANNUAL_PRODUCT_ID",
+          desc: "Creem 后台创建的年付订阅产品 ID",
+          required: true,
+          value: c.creem.annualProductId,
+        },
       ],
     },
     {
-      title: "Cron 定时任务",
-      rows: [{ label: "CRON_SECRET", value: c.cron.cronSecret, required: true }],
-    },
-    {
-      title: "数据库",
-      rows: [{ label: "直连 URL", value: c.database.directUrl, required: true }],
+      title: "支付宝",
+      note: "登录和支付共用这组配置",
+      rows: [
+        {
+          label: "App ID",
+          env: "AUTH_ALIPAY_ID",
+          desc: "支付宝开放平台分配的应用 ID",
+          value: c.alipay.appId,
+        },
+        {
+          label: "私钥",
+          env: "AUTH_ALIPAY_PRIVATE_KEY",
+          desc: "应用私钥，向支付宝发请求时用来签名",
+          value: c.alipay.privateKey,
+        },
+        {
+          label: "公钥",
+          env: "AUTH_ALIPAY_PUBLIC_KEY",
+          desc: "支付宝公钥，用来验证回调通知是不是支付宝发的",
+          value: c.alipay.publicKey,
+        },
+      ],
     },
     {
       title: "AI 服务（按订阅层级分流）",
       rows: [
-        { label: "免费版 来源", value: c.ai.free.source.text, tone: c.ai.free.source.tone },
-        { label: "免费版 专用 Key", value: c.ai.free.key.text, tone: c.ai.free.key.tone },
-        { label: "免费版 模型", value: c.ai.free.model.text, tag: c.ai.free.model.fromDefault ? "默认" : undefined },
-        { label: "免费版 接口地址", value: c.ai.free.baseUrl.text, tag: c.ai.free.baseUrl.fromDefault ? "默认" : undefined },
-        { label: "付费版 来源", value: c.ai.pro.source.text, tone: c.ai.pro.source.tone },
-        { label: "付费版 专用 Key", value: c.ai.pro.key.text, tone: c.ai.pro.key.tone },
-        { label: "付费版 模型", value: c.ai.pro.model.text, tag: c.ai.pro.model.fromDefault ? "默认" : undefined },
-        { label: "付费版 接口地址", value: c.ai.pro.baseUrl.text, tag: c.ai.pro.baseUrl.fromDefault ? "默认" : undefined },
-        { label: "默认兜底 Key", value: c.ai.fallback.key.text, tone: c.ai.fallback.key.tone },
-        { label: "默认兜底 模型", value: c.ai.fallback.model.text },
-        { label: "默认兜底 接口地址", value: c.ai.fallback.baseUrl.text },
+        {
+          label: "免费版 来源",
+          desc: "根据专用 Key 是否配置自动判断，无对应变量",
+          value: c.ai.free.source.text,
+          tone: c.ai.free.source.tone,
+        },
+        {
+          label: "免费版 专用 Key",
+          env: "AI_API_KEY_FREE",
+          desc: "免费版专用的 AI 服务密钥",
+          value: c.ai.free.key.text,
+          tone: c.ai.free.key.tone,
+        },
+        {
+          label: "免费版 模型",
+          env: "AI_MODEL_FREE",
+          desc: "免费版 AI 请求使用的模型名",
+          value: c.ai.free.model.text,
+          tag: c.ai.free.model.fromDefault ? "默认" : undefined,
+        },
+        {
+          label: "免费版 接口地址",
+          env: "AI_BASE_URL_FREE",
+          desc: "免费版 AI 服务的接口地址",
+          value: c.ai.free.baseUrl.text,
+          tag: c.ai.free.baseUrl.fromDefault ? "默认" : undefined,
+        },
+        {
+          label: "付费版 来源",
+          desc: "根据专用 Key 是否配置自动判断，无对应变量",
+          value: c.ai.pro.source.text,
+          tone: c.ai.pro.source.tone,
+        },
+        {
+          label: "付费版 专用 Key",
+          env: "AI_API_KEY_PRO",
+          desc: "付费版专用的 AI 服务密钥",
+          value: c.ai.pro.key.text,
+          tone: c.ai.pro.key.tone,
+        },
+        {
+          label: "付费版 模型",
+          env: "AI_MODEL_PRO",
+          desc: "付费版 AI 请求使用的模型名",
+          value: c.ai.pro.model.text,
+          tag: c.ai.pro.model.fromDefault ? "默认" : undefined,
+        },
+        {
+          label: "付费版 接口地址",
+          env: "AI_BASE_URL_PRO",
+          desc: "付费版 AI 服务的接口地址",
+          value: c.ai.pro.baseUrl.text,
+          tag: c.ai.pro.baseUrl.fromDefault ? "默认" : undefined,
+        },
+        {
+          label: "默认兜底 Key",
+          env: "AI_API_KEY",
+          desc: "免费/付费版都没配专用 Key 时的兜底密钥",
+          value: c.ai.fallback.key.text,
+          tone: c.ai.fallback.key.tone,
+        },
+        {
+          label: "默认兜底 模型",
+          env: "AI_MODEL",
+          desc: "兜底请求使用的模型名",
+          value: c.ai.fallback.model.text,
+        },
+        {
+          label: "默认兜底 接口地址",
+          env: "AI_BASE_URL",
+          desc: "兜底请求使用的接口地址",
+          value: c.ai.fallback.baseUrl.text,
+        },
       ],
     },
   ]
@@ -969,10 +1288,41 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
       <p className="text-text-secondary text-sm">
         生产环境配置核对（只显示是否已配置，不暴露密钥原文）。带 * 为必填项，标红「未配置」会导致对应功能不可用。
       </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={toggleDesc}
+          className={`rounded-lg border px-3 py-1.5 text-sm ${showDesc ? "border-blue-300 bg-blue-50 text-blue-700" : "border-gray-300 text-gray-600"}`}
+        >
+          {showDesc ? "隐藏说明" : "显示说明"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setHelpOpen(true)}
+          className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600"
+        >
+          字段说明（可搜索）
+        </button>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {sections.map((s) => (
           <div key={s.title} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-            <h3 className="px-4 py-3 font-semibold text-text-primary bg-gray-50 border-b border-gray-100">{s.title}</h3>
+            <div className="flex items-center justify-between gap-2 bg-gray-50 px-4 py-3 border-b border-gray-100">
+              <h3 className="font-semibold text-text-primary">
+                {s.title}
+                {s.note ? <span className="ml-2 text-[12px] font-normal text-gray-400">{s.note}</span> : null}
+              </h3>
+              {c.vercelEnvUrl ? (
+                <a
+                  href={c.vercelEnvUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="whitespace-nowrap text-[12px] text-blue-600 hover:underline"
+                >
+                  在 Vercel 中管理 ↗
+                </a>
+              ) : null}
+            </div>
             <div>
               {s.rows.map((r) => (
                 <ConfigRow
@@ -982,12 +1332,16 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
                   required={r.required}
                   tone={r.tone}
                   tag={r.tag}
+                  env={r.env}
+                  desc={r.desc}
+                  showDesc={showDesc}
                 />
               ))}
             </div>
           </div>
         ))}
       </div>
+      <ConfigHelpDrawer sections={sections} open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   )
 }

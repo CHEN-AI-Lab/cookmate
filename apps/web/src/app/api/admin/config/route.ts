@@ -33,6 +33,12 @@ export async function GET() {
       authSecret: mask(process.env.AUTH_SECRET),
       adminEmails: process.env.ADMIN_EMAILS || "未配置",
     },
+    oauth: {
+      googleId: mask(process.env.AUTH_GOOGLE_ID),
+      googleSecret: mask(process.env.AUTH_GOOGLE_SECRET),
+      githubId: mask(process.env.AUTH_GITHUB_ID),
+      githubSecret: mask(process.env.AUTH_GITHUB_SECRET),
+    },
     cron: {
       cronSecret: mask(process.env.CRON_SECRET),
     },
@@ -48,6 +54,8 @@ export async function GET() {
         model: { text: process.env.AI_MODEL || "未设置", fromDefault: false },
       },
     },
+    // 后台「在 Vercel 中管理」跳转地址，由环境变量提供，未配置则不显示该入口
+    vercelEnvUrl: process.env.VERCEL_ENV_CONSOLE_URL || null,
   }
 
   return NextResponse.json({ ok: true, config })
