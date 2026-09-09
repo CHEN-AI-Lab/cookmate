@@ -12,3 +12,4 @@ package-lock.json
 test-results/
 .turbo/
 .vercel
+test-pages/
