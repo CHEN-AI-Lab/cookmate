@@ -905,36 +905,6 @@ function EnvName({ env }: { env: string }) {
   )
 }
 
-/** 说明气泡：桌面悬停、移动端点按都能看。用 fixed 定位，避免被卡片 overflow-hidden 裁切 */
-function InfoDot({ text }: { text: string }) {
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
-  const show = (r: DOMRect) =>
-    setPos({ top: r.bottom + 8, left: Math.max(12, Math.min(r.left, window.innerWidth - 280)) })
-  return (
-    <>
-      <span
-        role="button"
-        tabIndex={0}
-        aria-label="查看字段说明"
-        className="ml-1 inline-flex h-3.5 w-3.5 cursor-pointer items-center justify-center rounded-full border border-gray-300 text-[10px] text-gray-400 hover:border-blue-400 hover:text-blue-600"
-        onMouseEnter={(e) => show(e.currentTarget.getBoundingClientRect())}
-        onMouseLeave={() => setPos(null)}
-        onClick={(e) => (pos ? setPos(null) : show(e.currentTarget.getBoundingClientRect()))}
-      >
-        i
-      </span>
-      {pos ? (
-        <span
-          className="fixed z-50 max-w-[260px] rounded-lg bg-gray-800 px-2.5 py-1.5 text-[11px] leading-snug text-white"
-          style={{ top: pos.top, left: pos.left }}
-        >
-          {text}
-        </span>
-      ) : null}
-    </>
-  )
-}
-
 /**
  * 配置行。
  * - 显式传 tone 时按 tone 渲染状态色（AI 区块用，支持「回退默认」这类中间态）
@@ -946,12 +916,21 @@ function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc }: C
   const inferred: AiTone | null = tone ?? (value === "已配置" ? "ok" : value === "未配置" ? "error" : null)
   const isMissing = inferred === "error"
   const muted = tag ? "text-text-secondary" : ""
+  // 说明气泡：鼠标悬浮在标签列上显示（触屏点按同样有效）。用 fixed 定位，避免被卡片裁切
+  const [tip, setTip] = useState<{ top: number; left: number } | null>(null)
+  const showTip = (r: DOMRect) =>
+    setTip({ top: r.bottom + 8, left: Math.max(12, Math.min(r.left, window.innerWidth - 280)) })
+  const toggleTip = (r: DOMRect) => (tip ? setTip(null) : showTip(r))
   return (
     <div className={`flex items-center px-4 py-2.5 border-t border-gray-100 ${isMissing && required ? "bg-red-50/50" : ""}`}>
-      <div className="w-[210px] shrink-0 pr-3">
+      <div
+        className="w-[210px] shrink-0 pr-3"
+        onMouseEnter={(e) => (desc ? showTip(e.currentTarget.getBoundingClientRect()) : undefined)}
+        onMouseLeave={() => setTip(null)}
+        onClick={(e) => (desc ? toggleTip(e.currentTarget.getBoundingClientRect()) : undefined)}
+      >
         <div className="text-gray-700 font-medium text-sm whitespace-nowrap">
           {label}{required ? <span className="text-red-500 ml-0.5">*</span> : ""}
-          {desc ? <InfoDot text={desc} /> : null}
         </div>
         {env ? <EnvName env={env} /> : null}
         {desc && showDesc ? <div className="mt-1 text-[12px] leading-snug text-gray-500">{desc}</div> : null}
@@ -968,6 +947,14 @@ function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc }: C
           </span>
         )}
       </div>
+      {tip && desc ? (
+        <span
+          className="fixed z-50 max-w-[260px] rounded-lg bg-gray-800 px-2.5 py-1.5 text-[11px] leading-snug text-white"
+          style={{ top: tip.top, left: tip.left }}
+        >
+          {desc}
+        </span>
+      ) : null}
     </div>
   )
 }
@@ -1292,8 +1279,11 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
         <button
           type="button"
           onClick={toggleDesc}
-          className={`rounded-lg border px-3 py-1.5 text-sm ${showDesc ? "border-blue-300 bg-blue-50 text-blue-700" : "border-gray-300 text-gray-600"}`}
+          className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${showDesc ? "border-blue-300 bg-blue-50 text-blue-700" : "border-gray-300 text-gray-600"}`}
         >
+          <span className={`relative inline-flex h-[18px] w-[32px] items-center rounded-full ${showDesc ? "bg-blue-500" : "bg-gray-300"}`}>
+            <span className={`absolute h-[14px] w-[14px] rounded-full bg-white transition-transform ${showDesc ? "translate-x-[16px]" : "translate-x-[2px]"}`} />
+          </span>
           {showDesc ? "隐藏说明" : "显示说明"}
         </button>
         <button
