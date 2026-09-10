@@ -5,7 +5,7 @@ import { PRICING } from '@cookmate/shared/constants/pricing'
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from '@cookmate/shared/constants/preferences'
 import { INGREDIENT_LABELS, displayIngredient, displayQuantity } from '@cookmate/shared/constants/ingredients'
 import { isChineseLocale } from '@cookmate/shared/constants/locales'
-import { getDemoPantryItems, getDemoGroceryList, displaySourceTitle } from '@cookmate/shared/demo-data'
+import { getDemoPantryItems, getDemoGroceryList, displaySourceTitle, getDemoRecipes, getDemoMealPlan } from '@cookmate/shared/demo-data'
 
 describe('APP_NAME', () => {
   it('is CookMate', () => {
@@ -238,5 +238,24 @@ describe('grocery 来源标题显示（体验版 i18n 回归）', () => {
       }
     }
     expect(missing).toEqual([])
+  })
+})
+
+describe('示例菜谱/周计划：非中文语系一律英文（体验模式语言口径）', () => {
+  it('getDemoRecipes：ja 英文、zh-TW 中文、zh-CN 中文', () => {
+    expect(getDemoRecipes('ja')[0].title).toMatch(/^[A-Za-z]/)
+    expect(getDemoRecipes('zh-TW')[0].title).toMatch(/[一-龥]/)
+    expect(getDemoRecipes('zh-CN')[0].title).toMatch(/[一-龥]/)
+    expect(getDemoRecipes('en')[0].title).toMatch(/^[A-Za-z]/)
+  })
+
+  it('getDemoMealPlan：ja 全英文、zh-TW 全中文', () => {
+    const jaTitles = getDemoMealPlan('ja').slots.map((s) => s.recipe?.title || '').filter(Boolean)
+    expect(jaTitles.length).toBeGreaterThan(0)
+    for (const t of jaTitles) expect(t).toMatch(/^[A-Za-z]/)
+
+    const zhTitles = getDemoMealPlan('zh-TW').slots.map((s) => s.recipe?.title || '').filter(Boolean)
+    expect(zhTitles.length).toBeGreaterThan(0)
+    for (const t of zhTitles) expect(t).toMatch(/[一-龥]/)
   })
 })

@@ -3,6 +3,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { encode } from 'next-auth/jwt'
 import { hasVerifiedSessionCookie, decodeSessionUserIdFromCookieHeader } from '@/lib/session-cookie'
+import { DEMO_COOKIE_NAME } from '@cookmate/shared/utils/demo-guard'
 
 const SECRET = 'test-secret-for-session-cookie'
 const SALT = 'authjs.session-token'
@@ -57,6 +58,25 @@ describe('hasVerifiedSessionCookie', () => {
     const secureSalt = '__Secure-authjs.session-token'
     const token = await encode({ token: { sub: 'u1' }, secret: SECRET, salt: secureSalt })
     expect(await hasVerifiedSessionCookie(cookie({ [secureSalt]: token }))).toBe(true)
+  })
+
+  it('正式用户残留体验 cookie + 有效会话 → true（middleware 绝不能误伤真实用户）', async () => {
+    const token = await encode({ token: { sub: 'u1' }, secret: SECRET, salt: SALT })
+    expect(
+      await hasVerifiedSessionCookie(cookie({
+        [DEMO_COOKIE_NAME]: 'anything.sig',
+        'authjs.session-token': token,
+      }))
+    ).toBe(true)
+  })
+
+  it('体验 cookie + 垃圾 session cookie → false（这正是要拦的绕过）', async () => {
+    expect(
+      await hasVerifiedSessionCookie(cookie({
+        [DEMO_COOKIE_NAME]: 'anything.sig',
+        'authjs.session-token': 'garbage',
+      }))
+    ).toBe(false)
   })
 
   it('没有 session cookie → false', async () => {
