@@ -25,6 +25,14 @@ describe('isDemoUser', () => {
     expect(isDemoUser({ user: { id: 'demography-1' } })).toBe(false))
   it('邮箱域名含 cookmate.local 但不是体验邮箱 → false', () =>
     expect(isDemoUser({ user: { email: 'notdemo@cookmate.local' } })).toBe(false))
+  // ⚠️ 传参陷阱：必须传整个 session（内部读 session.user.id）。
+  // 传 session.user 会恒返回 false —— 曾因此让 app/layout.tsx 的体验态全局失效：
+  // 语言下拉不筛选成两种、切换语言不给提示、体验引导不出现。
+  it('必须传整个 session：传 session.user 恒 false', () => {
+    const session = { user: { id: 'demo-user-id' } }
+    expect(isDemoUser(session)).toBe(true)
+    expect(isDemoUser(session.user)).toBe(false)
+  })
 })
 
 describe('canUseAiToday', () => {
