@@ -5,6 +5,7 @@ import { routing } from "@/i18n/routing"
 import { err, getLocaleFromCookie } from "@cookmate/shared/utils/locale"
 import { hasDemoCookieHeader, isDemoWriteAllowed, isSafeMethod } from "@cookmate/shared/utils/demo-guard"
 import { hasVerifiedSessionCookie } from "@/lib/session-cookie"
+import { locales } from "@cookmate/shared/constants/locales"
 
 const intlMiddleware = createMiddleware(routing)
 
@@ -57,6 +58,20 @@ export async function proxy(request: NextRequest) {
       { error: err(locale, "demoReadOnly"), demoRestricted: true },
       { status: 403 },
     )
+  }
+
+  // ── 体验用户只允许中文 / 英文：手敲 /ja/... /zh-TW/... 也要挡住 ──
+  // 语言下拉只给两种是 UX，URL 拦不住等于限制形同虚设。
+  // 判定复用写拦截同一套（有 demo cookie 且没有可验证的真实会话）—— 真实用户即使
+  // 残留 demo cookie 也不被误伤。只对页面请求生效（/api/ 不管）。
+  const demoOnly = hasDemoCookieHeader(cookieHeader) && !(await hasVerifiedSessionCookie(cookieHeader))
+  if (demoOnly && !pathname.startsWith("/api/")) {
+    const seg = pathname.split("/")[1]
+    if (seg && seg !== "en" && seg !== "zh-CN" && (locales as readonly string[]).includes(seg)) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/en" + pathname.slice(seg.length + 1)
+      return NextResponse.redirect(url)
+    }
   }
 
   if (pathname.startsWith("/api/auth/")) {
