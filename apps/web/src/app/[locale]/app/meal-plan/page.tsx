@@ -72,6 +72,12 @@ export default function MealPlanPage() {
   const [notice, setNotice] = useState("")
   const [detail, setDetail] = useState<{ day: number; meal: string } | null>(null)
   const [starToast, setStarToast] = useState("")
+  const [demoToast, setDemoToast] = useState("")
+  // 体验模式统一提示（文案与全站一致）
+  const showDemoToast = () => {
+    setDemoToast(t("demoLocked"))
+    setTimeout(() => setDemoToast(""), 2500)
+  }
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [isDemoUser, setIsDemoUser] = useState(false)
   // 免费版用户标识：与 subscriptionTier === SUBSCRIPTION_TIER.FREE 一致，用于 picker 限制最多选 3 天
@@ -264,8 +270,7 @@ export default function MealPlanPage() {
   const deleteSlot = async () => {
     if (!detail || !plan) return
     if (isDemoUser) {
-      setStarToast(t("demoLocked"))
-      setTimeout(() => setStarToast(""), 2500)
+      showDemoToast()
       return
     }
     setDeleteConfirm(true)
@@ -329,11 +334,11 @@ export default function MealPlanPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-text-primary">{t("title")}</h1>
         <button
-          onClick={isDemoUser ? undefined : openPicker}
-          disabled={generating || isDemoUser}
+          onClick={isDemoUser ? showDemoToast : openPicker}
+          disabled={generating}
           className="bg-accent text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-orange-600 disabled:opacity-50"
         >
-          {generating ? t("generating") : isDemoUser ? t("demoLocked") : t("generate")}
+          {generating ? t("generating") : t("generate")}
         </button>
       </div>
 
@@ -429,6 +434,12 @@ export default function MealPlanPage() {
       {starToast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-bg-inverse text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
           {starToast}
+        </div>
+      )}
+
+      {demoToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-amber-50 border border-amber-200 text-amber-800 px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+          {demoToast}
         </div>
       )}
 

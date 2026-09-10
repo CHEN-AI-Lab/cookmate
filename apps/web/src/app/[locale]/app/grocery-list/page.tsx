@@ -526,7 +526,7 @@ export default function GroceryListPage() {
 
       {/* Demo user toast */}
       {demoToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-bg-inverse text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-amber-50 border border-amber-200 text-amber-800 px-6 py-3 rounded-xl text-sm shadow-lg z-50">
           {demoToast}
         </div>
       )}

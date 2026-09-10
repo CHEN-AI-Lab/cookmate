@@ -160,11 +160,17 @@ export default function PantryPage() {
             />
           </div>
           <button
-            onClick={() => setShowAddDialog(true)}
-            disabled={isDemoUser}
-            className="shrink-0 bg-gradient-to-r from-orange-400 to-amber-400 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity shadow-sm flex items-center gap-1"
+            onClick={() => {
+              if (isDemoUser) {
+                setDemoToast(t("demoLockedAction"))
+                setTimeout(() => setDemoToast(""), 3000)
+                return
+              }
+              setShowAddDialog(true)
+            }}
+            className="shrink-0 bg-gradient-to-r from-orange-400 to-amber-400 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-sm flex items-center gap-1"
           >
-            {isDemoUser ? t("demoLockedAdd") : t("addButton")}
+            {t("addButton")}
           </button>
         </div>
       </div>
@@ -282,7 +288,7 @@ export default function PantryPage() {
 
       {/* Demo user toast */}
       {demoToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-bg-inverse text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-amber-50 border border-amber-200 text-amber-800 px-6 py-3 rounded-xl text-sm shadow-lg z-50">
           {demoToast}
         </div>
       )}
