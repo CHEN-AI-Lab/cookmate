@@ -94,7 +94,7 @@ export default function DashboardPage() {
           />
 
           {/* 食材数 */}
-          <StatsCard label={td("pantryCount")} value={isDemoUser ? 34 : stats?.pantryCount ?? 0} subtext={isDemoUser ? td("subtextPantryDemo") : td("subtextPantry")} />
+          <StatsCard label={td("pantryCount")} value={isDemoUser ? 24 : stats?.pantryCount ?? 0} subtext={isDemoUser ? td("subtextPantryDemo") : td("subtextPantry")} />
 
           {/* 收藏菜谱 */}
           <StatsCard label={td("starredCount")} value={isDemoUser ? 3 : stats?.starredCount ?? 0} subtext={isDemoUser ? td("subtextStarredDemo") : td("subtextStarred")} />
