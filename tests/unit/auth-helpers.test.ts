@@ -18,6 +18,21 @@ describe('isDemoUser', () => {
   it('demo email → true', () => expect(isDemoUser({ user: { email: 'demo@cookmate.local' } })).toBe(true))
   it('正常用户 → false', () => expect(isDemoUser({ user: { id: 'u1', email: 'a@b.com' } })).toBe(false))
   it('null → false', () => expect(isDemoUser(null)).toBe(false))
+  // 口径锁死：必须是 id/email 白名单精确匹配。
+  // 若改回 id.startsWith("demo") 这类前缀判断，下面两条会失败
+  // —— 真实用户的 id 恰好以 demo 开头就会被误判成体验用户。
+  it('id 以 demo 开头但不在白名单 → false', () =>
+    expect(isDemoUser({ user: { id: 'demography-1' } })).toBe(false))
+  it('邮箱域名含 cookmate.local 但不是体验邮箱 → false', () =>
+    expect(isDemoUser({ user: { email: 'notdemo@cookmate.local' } })).toBe(false))
+  // ⚠️ 传参陷阱：必须传整个 session（内部读 session.user.id）。
+  // 传 session.user 会恒返回 false —— 曾因此让 app/layout.tsx 的体验态全局失效：
+  // 语言下拉不筛选成两种、切换语言不给提示、体验引导不出现。
+  it('必须传整个 session：传 session.user 恒 false', () => {
+    const session = { user: { id: 'demo-user-id' } }
+    expect(isDemoUser(session)).toBe(true)
+    expect(isDemoUser(session.user)).toBe(false)
+  })
 })
 
 describe('canUseAiToday', () => {

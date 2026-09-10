@@ -1,6 +1,8 @@
 // ─── 食材中英文映射 + 风险管控清单 ───
 // 供前端 UI 展示和后端 API 校验共用
 
+import { isChineseLocale } from "./locales"
+
 // ══════════════════════════════════════════
 // 第 1 部分：中英文食材名映射（Chinese → English）
 // 添加新食材时在此追加，两端自动生效
@@ -15,7 +17,7 @@ export const INGREDIENT_LABELS: Record<string, string> = {
   "冬瓜": "Winter Melon", "木耳": "Wood Ear", "洋葱": "Onion",
   "大蒜": "Garlic", "姜": "Ginger", "葱": "Spring Onion",
   "辣椒": "Chili", "青椒": "Green Pepper", "红椒": "Red Pepper",
-  "芹菜": "Celery", "韭菜": "Chinese Chives", "豆芽": "Bean Sprout",
+  "芹菜": "Celery", "韭菜": "Chinese Chives", "豆芽": "Bean Sprout", "蒜苗": "Garlic Sprout",
   "南瓜": "Pumpkin", "苦瓜": "Bitter Melon", "丝瓜": "Luffa",
   "豆角": "Green Bean", "四季豆": "Green Bean", "豌豆": "Pea",
   "玉米": "Corn", "莲藕": "Lotus Root", "山药": "Chinese Yam",
@@ -50,6 +52,7 @@ export const INGREDIENT_LABELS: Record<string, string> = {
   "羊肉": "Lamb", "羊排": "Lamb Chop",
   "培根": "Bacon", "火腿": "Ham", "腊肉": "Cured Meat",
   "香肠": "Sausage", "肉馅": "Ground Meat",
+  "猪肉馅": "Ground Pork", "牛肉末": "Ground Beef",
   "鸡": "Chicken", "鸭": "Duck", "鹅": "Goose",
 
   // 🦐 海鲜水产
@@ -57,6 +60,7 @@ export const INGREDIENT_LABELS: Record<string, string> = {
   "鱼": "Fish", "鲈鱼": "Sea Bass", "三文鱼": "Salmon",
   "鳕鱼": "Cod", "带鱼": "Ribbonfish", "黄花鱼": "Yellow Croaker",
   "龙利鱼": "Sole Fish", "巴沙鱼": "Basa Fish",
+  "草鱼": "Grass Carp", "草鱼/鲈鱼": "Grass Carp / Sea Bass",
   "螃蟹": "Crab", "蟹肉": "Crab Meat",
   "蛤蜊": "Clam", "花蛤": "Clam", "蛏子": "Razor Clam",
   "扇贝": "Scallop", "生蚝": "Oyster", "牡蛎": "Oyster",
@@ -76,10 +80,10 @@ export const INGREDIENT_LABELS: Record<string, string> = {
   "意大利面": "Pasta", "面粉": "Flour", "高筋面粉": "Bread Flour",
   "低筋面粉": "Cake Flour", "糯米": "Glutinous Rice",
   "燕麦": "Oats", "燕麦片": "Oatmeal", "麦片": "Cereal",
-  "面包": "Bread", "吐司": "Toast", "馒头": "Steamed Bun",
+  "面包": "Bread", "吐司": "Toast", "全麦面包": "Whole Wheat Bread", "馒头": "Steamed Bun",
   "饺子皮": "Wonton Wrap", "馄饨皮": "Wonton Wrap",
   "食用油": "Cooking Oil", "花生油": "Peanut Oil",
-  "橄榄油": "Olive Oil", "芝麻油": "Sesame Oil",
+  "橄榄油": "Olive Oil", "芝麻油": "Sesame Oil", "香油": "Sesame Oil",
   "盐": "Salt", "糖": "Sugar", "冰糖": "Rock Sugar",
   "酱油": "Soy Sauce", "老抽": "Dark Soy Sauce", "生抽": "Light Soy Sauce",
   "醋": "Vinegar", "料酒": "Cooking Wine", "蚝油": "Oyster Sauce",
@@ -96,18 +100,61 @@ export const INGREDIENT_LABELS: Record<string, string> = {
 
   // 🍪 零食饮料
   "饼干": "Cookie", "蛋糕": "Cake", "巧克力": "Chocolate",
-  "蜂蜜": "Honey", "茶叶": "Tea", "咖啡": "Coffee",
+  "蜂蜜": "Honey", "茶叶": "Tea", "咖啡": "Coffee", "可乐": "Cola",
 
   // 🧂 调味佐料
   "八角": "Star Anise", "桂皮": "Cinnamon", "香叶": "Bay Leaf",
   "花椒": "Sichuan Pepper", "干辣椒": "Dried Chili",
   "孜然": "Cumin", "咖喱": "Curry",
-  "白胡椒粉": "White Pepper", "黑胡椒粉": "Black Pepper",
+  "白胡椒粉": "White Pepper", "黑胡椒粉": "Black Pepper", "胡椒粉": "Ground Pepper",
   "五香粉": "Five Spice Powder", "十三香": "Thirteen Spices",
 
   // 其他常见
   "水": "Water", "冰块": "Ice", "高汤": "Broth",
   "酵母": "Yeast", "泡打粉": "Baking Powder", "小苏打": "Baking Soda",
+}
+
+// ══════════════════════════════════════════
+// 第 1.5 部分：中英文显示辅助（页面统一调用，避免各页重复实现）
+// ══════════════════════════════════════════
+
+/**
+ * 食材名显示：中文语系原样返回，其余语言查映射表转英文。
+ * 映射表未收录的自由文本（用户自定义食材）原样返回，不做臆造翻译。
+ */
+export function displayIngredient(name: string, locale: string): string {
+  if (!name) return name
+  if (isChineseLocale(locale)) return name
+  return INGREDIENT_LABELS[name] || name
+}
+
+/**
+ * 计量单位显示：中文单位转英文（如「1罐」→「1 can」、「300克」→「300 g」）。
+ * 元组含义为 [中文, 单数, 复数]；数组顺序即替换顺序，
+ * multi-char 单位（千克/毫升）必须排在单字（克/升）之前，否则会被抢先命中。
+ */
+const QUANTITY_UNITS: Array<[string, string, string]> = [
+  ["千克", "kg", "kg"], ["毫升", "ml", "ml"], ["少许", "a pinch", "a pinch"], ["适量", "to taste", "to taste"],
+  ["克", "g", "g"], ["升", "L", "L"],
+  ["罐", "can", "cans"], ["袋", "bag", "bags"], ["盒", "box", "boxes"], ["瓶", "bottle", "bottles"], ["包", "pack", "packs"],
+  ["把", "bunch", "bunches"], ["瓣", "clove", "cloves"], ["片", "slice", "slices"], ["块", "piece", "pieces"],
+  ["个", "pc", "pcs"], ["颗", "pc", "pcs"], ["只", "pc", "pcs"], ["条", "pc", "pcs"], ["根", "pc", "pcs"],
+  ["勺", "tbsp", "tbsp"],
+]
+
+export function displayQuantity(quantity: string, locale: string): string {
+  if (!quantity) return quantity
+  if (isChineseLocale(locale)) return quantity
+  let out = quantity
+  for (const [zh, one, many] of QUANTITY_UNITS) {
+    // 带数字前缀的量按 1 / 非 1 选单复数：「1罐」→「1 can」、「3个」→「3 pcs」
+    out = out.replace(new RegExp(`(\\d+(?:\\.\\d+)?)\\s*${zh}`, "g"), (_m, n: string) =>
+      `${n} ${Number(n) === 1 ? one : many}`
+    )
+    // 无数字前缀的量（少许/适量）等漏网写法：取单数形式
+    if (out.includes(zh)) out = out.split(zh).join(one)
+  }
+  return out.replace(/\s+/g, " ").trim()
 }
 
 // ══════════════════════════════════════════

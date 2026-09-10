@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { isDemoUser } from "@/lib/auth-helpers"
 import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import { CATEGORIES, classifyIngredient, isStaple, decomposeDishName, normalizeIngredientName } from "@cookmate/shared/utils/grocery-categories"
 import { parseIngredient, mergeQuantities } from "@cookmate/shared/utils/grocery-parser"
@@ -152,6 +153,7 @@ export async function GET(req: Request) {
       total: ingredientsWithStatus.length,
       inPantryCount: ingredientsWithStatus.filter((i) => i.inPantry).length,
       manualItems: manualNames,
+      isDemoUser: isDemoUser(session),
     })
   } catch (error) {
     console.error("Grocery list GET:", error)

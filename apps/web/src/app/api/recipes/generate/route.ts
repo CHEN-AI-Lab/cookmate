@@ -2,11 +2,12 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { generateRecipes, normalizeIngredients, hasAIKeyForTier, getModelForTier } from "@cookmate/shared/api/openai"
-import { canUseAiToday, incrementAiUsage, isFreeUser, checkRecipeCountLimit, checkStarredLimit } from "@/lib/auth-helpers"
+import { canUseAiToday, incrementAiUsage, isFreeUser, checkRecipeCountLimit, checkStarredLimit, isDemoUser } from "@/lib/auth-helpers"
 import {
   BLACKLIST, getBlockReason,
 } from "@cookmate/shared/constants/ingredients"
 import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
+import { err, getLocaleFromCookie } from "@cookmate/shared/utils/locale"
 
 // Vercel 免费版（Hobby）函数默认上限 10s，AI 生成易被平台掐死 → 显式放宽到 60s（Hobby 最高值）
 export const maxDuration = 60
@@ -21,6 +22,14 @@ export async function POST(req: Request) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: errMsg("zh-CN", "请先登录", "Please log in first") }, { status: 401 })
   }
+    if (isDemoUser(session)) {
+      // 体验态：写操作在路由自身再拦一道。middleware 的集中拦截依赖 cookie 组合判断，
+      // 伪造一个垃圾 session cookie 即可绕过；此处按会话身份判定，绕过不了。
+      return NextResponse.json(
+        { error: err(getLocaleFromCookie(req), "demoReadOnly"), demoRestricted: true },
+        { status: 403 },
+      )
+    }
 
   // 读取语言偏好
   const cookieHeader = req.headers.get("cookie") || ""

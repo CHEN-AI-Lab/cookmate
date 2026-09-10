@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { getDemoPantryItems } from "@cookmate/shared/demo-data"
 import { UpgradeDialog, UpgradeInline } from "@/components/features/UpgradeLink"
 import { isValidIngredient } from "@cookmate/shared/validators"
+import { displayIngredient } from "@cookmate/shared/constants/ingredients"
 
 interface PantryItem {
   id: string
@@ -19,6 +20,7 @@ export default function PantryPage() {
   const tc = useTranslations("common")
   // 食材库上限等 billing 命名空间的提示（后端返回裸 key，这里负责翻译）
   const tb = useTranslations("billing")
+  const locale = useLocale()
   const [items, setItems] = useState<PantryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
@@ -46,23 +48,19 @@ export default function PantryPage() {
     fetch("/api/pantry")
       .then((r) => r.json())
       .then((data) => {
-        if (data.items) setItems(data.items)
+        // 体验模式：直接渲染示例食材。
+        // 这里必须用同一个接口的 isDemoUser 判断：以前是并行再发一个 /api/user/profile，
+        // 两个请求谁后返回谁覆盖状态，而本接口对体验用户返回的是空数组，
+        // 一旦它后返回就会把示例食材清空 —— 体验版食材库空白就是这么来的。
+        if (data.isDemoUser) {
+          setIsDemoUser(true)
+          setItems(getDemoPantryItems())
+          return
+        }
+        if (Array.isArray(data.items)) setItems(data.items)
       })
       .catch((err) => console.error("load items error:", err))
       .finally(() => setLoading(false))
-  }, [])
-
-  // Check demo user status and pre-fill demo data if needed
-  useEffect(() => {
-    fetch("/api/user/profile")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.isDemoUser) {
-          setIsDemoUser(true)
-          setItems((prev) => prev.length > 0 ? prev : getDemoPantryItems())
-        }
-      })
-      .catch((err) => console.error("load profile error:", err))
   }, [])
 
   const addItem = async (name: string, category?: string) => {
@@ -128,7 +126,12 @@ export default function PantryPage() {
     } catch (err) { console.error("remove item error:", err) }
   }
 
-  const filtered = items.filter((i) => !search || i.name.includes(search))
+  // 搜索同时匹配原文与翻译名：英文界面显示 "Tomato"，用户搜 "番茄" 也该命中
+  const filtered = items.filter((i) => {
+    if (!search) return true
+    const q = search.trim().toLowerCase()
+    return i.name.toLowerCase().includes(q) || displayIngredient(i.name, locale).toLowerCase().includes(q)
+  })
 
   if (loading) return <div className="text-center py-16 text-text-secondary">{t("loading")}</div>
 
@@ -160,11 +163,17 @@ export default function PantryPage() {
             />
           </div>
           <button
-            onClick={() => setShowAddDialog(true)}
-            disabled={isDemoUser}
-            className="shrink-0 bg-gradient-to-r from-orange-400 to-amber-400 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity shadow-sm flex items-center gap-1"
+            onClick={() => {
+              if (isDemoUser) {
+                setDemoToast(t("demoLockedAction"))
+                setTimeout(() => setDemoToast(""), 3000)
+                return
+              }
+              setShowAddDialog(true)
+            }}
+            className="shrink-0 bg-gradient-to-r from-orange-400 to-amber-400 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-sm flex items-center gap-1"
           >
-            {isDemoUser ? t("demoLockedAdd") : t("addButton")}
+            {t("addButton")}
           </button>
         </div>
       </div>
@@ -186,7 +195,7 @@ export default function PantryPage() {
                     : "bg-orange-50 text-accent border-orange-200 hover:bg-orange-100"
                 }`}
               >
-                {item.name}
+                {displayIngredient(item.name, locale)}
                 <button onClick={(e) => { e.stopPropagation(); removeItem(item.id) }} className="ml-1 hover:text-red-600">{isDemoUser ? "" : "×"}</button>
               </span>
             ))}
@@ -273,7 +282,7 @@ export default function PantryPage() {
 
                     {/* 无效输入提示（纯数字/符号等） */}
                     {invalidToast && (
-                      <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
+                      <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center pt-[33vh]">
                         <div className="bg-amber-50 border border-amber-200 text-amber-700 px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center animate-in fade-in zoom-in-95 duration-200">
                           <span>{t("invalidIngredients")}</span>
                         </div>
@@ -282,13 +291,13 @@ export default function PantryPage() {
 
       {/* Demo user toast */}
       {demoToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-bg-inverse text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+        <div className="fixed left-1/2 top-[33vh] -translate-x-1/2 bg-amber-50 border border-amber-200 text-amber-800 px-6 py-3 rounded-xl text-sm shadow-lg z-[100]">
           {demoToast}
         </div>
       )}
       {/* Success toast */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50 flex items-center gap-2">
+        <div className="fixed left-1/2 top-[33vh] -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-xl text-sm shadow-lg z-[100] flex items-center gap-2">
           <span>✅</span> {toast}
         </div>
       )}

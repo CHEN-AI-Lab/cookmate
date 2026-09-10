@@ -4,8 +4,9 @@ import { useState, useEffect } from "react"
 import type { ReactNode } from "react"
 import { useSearchParams } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
-import { INGREDIENT_LABELS } from "@cookmate/shared/constants/ingredients"
+import { displayIngredient } from "@cookmate/shared/constants/ingredients"
 import { isValidIngredient } from "@cookmate/shared/validators"
+import { getDemoPantryItems } from "@cookmate/shared/demo-data"
 import { RecipeCard } from "@/components/features/RecipeCard"
 import { UpgradeDialog, UpgradeInline } from "@/components/features/UpgradeLink"
 
@@ -35,8 +36,8 @@ export default function RecipesPage() {
   // 收藏上限等 billing 命名空间的提示（后端返回裸 key，这里负责翻译）
   const tb = useTranslations("billing")
   const locale = useLocale()
-  const ingLabels = INGREDIENT_LABELS
-  const displayName = (name: string) => locale === "zh-CN" || locale === "zh-TW" ? name : (ingLabels[name] || name)
+  // 食材名显示统一走 shared 映射表：中文语系保留原文，其余语言转英文
+  const displayName = (name: string) => displayIngredient(name, locale)
   const searchParams = useSearchParams()
   const [ingredients, setIngredients] = useState<string[]>(() => {
     const fromUrl = searchParams.get("ingredients")
@@ -65,6 +66,12 @@ export default function RecipesPage() {
   const [isDemoUser, setIsDemoUser] = useState(false)
   const [demoToast, setDemoToast] = useState("")
 
+  // 体验模式统一提示（位置/样式与全站提示条一致）
+  const showDemoToast = () => {
+    setDemoToast(t("demoCannotGenerate"))
+    setTimeout(() => setDemoToast(""), 3000)
+  }
+
   const dayLabel: Record<string, string> = {
     "周一": tmeal("monday"),
     "周二": tmeal("tuesday"),
@@ -91,6 +98,11 @@ export default function RecipesPage() {
   }, [])
 
   const toggleStar = async (recipe: Recipe) => {
+    // 体验态：收藏是写操作，直接给统一提示，不要让它走到接口拿 403 后静默失败
+    if (isDemoUser) {
+      showDemoToast()
+      return
+    }
     const res = await fetch("/api/recipes/star", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -145,7 +157,14 @@ export default function RecipesPage() {
     fetch("/api/user/profile")
       .then((r) => r.json())
       .then((data) => {
-        if (data.isDemoUser) setIsDemoUser(true)
+        if (data.isDemoUser) {
+          setIsDemoUser(true)
+          // 体验用户的食材库是前端静态示例数据（不进数据库），GET /api/pantry 只会返回空数组，
+          // 这里补一次兜底 —— 否则「📦 我的食材库」整块不渲染，体验用户会以为功能没做。
+          // 正式用户走接口返回的真实食材，本分支不执行。
+          setPantryItems((prev) => (prev.length > 0 ? prev : getDemoPantryItems()))
+          setPantryLoaded(true)
+        }
       })
       .catch((err) => console.error("load profile error:", err))
   }, [])
@@ -265,8 +284,7 @@ export default function RecipesPage() {
 
   const generateRecipes = async () => {
     if (isDemoUser) {
-      setDemoToast(t("demoCannotGenerate"))
-      setTimeout(() => setDemoToast(""), 3000)
+      showDemoToast()
       return
     }
     if (ingredients.length === 0) {
@@ -459,7 +477,7 @@ export default function RecipesPage() {
               index={idx}
               isStarred={starredIds.has(recipe.id?.toString() || "")}
               onToggleStar={toggleStar}
-              onAddToPlan={(r) => setAddDialog({ recipe: r, day: DAY_VALUES[0], meal: MEAL_VALUES[0] })}
+              onAddToPlan={(r) => isDemoUser ? showDemoToast() : setAddDialog({ recipe: r, day: DAY_VALUES[0], meal: MEAL_VALUES[0] })}
               onDelete={(r) => setDeleteDialog(r)}
               isFromPantry={isFromPantry}
               expanded={expanded === `${idx}`}
@@ -510,8 +528,8 @@ export default function RecipesPage() {
       )}
 
       {dupDialog && (
-        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
-          <div className="bg-card border border-gray-100 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center pt-[33vh]">
+          <div className="bg-amber-50 border border-amber-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
             <span className="text-amber-500 text-base shrink-0">⚠️</span>
             <span className="text-text-primary">{t("duplicateIngredient", { name: dupDialog })}</span>
           </div>
@@ -551,32 +569,32 @@ export default function RecipesPage() {
       )}
 
       {addMsg && (
-        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
-          <div className="bg-card border border-gray-100 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center pt-[33vh]">
+          <div className="bg-amber-50 border border-amber-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
             <span className="text-text-primary">{addMsg}</span>
           </div>
         </div>
       )}
 
       {starToast && (
-        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
-          <div className="bg-card border border-gray-100 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center pt-[33vh]">
+          <div className="bg-amber-50 border border-amber-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
             <span className="text-text-primary">{starToast}</span>
           </div>
         </div>
       )}
 
       {demoToast && (
-        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
-          <div className="bg-card border border-gray-100 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
-            <span className="text-text-primary">{demoToast}</span>
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center pt-[33vh]">
+          <div className="bg-amber-50 border border-amber-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+            <span className="text-amber-800">{demoToast}</span>
           </div>
         </div>
       )}
 
       {deleteError && (
-        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
-          <div className="bg-card border border-gray-100 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center pt-[33vh]">
+          <div className="bg-amber-50 border border-amber-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
             <span className="text-red-600 text-base shrink-0">❌</span>
             <span className="text-text-primary">{deleteError}</span>
           </div>

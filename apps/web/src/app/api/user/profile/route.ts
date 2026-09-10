@@ -3,11 +3,33 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { isDemoUser } from "@/lib/auth-helpers"
 import { err } from "@cookmate/shared/utils/locale"
+import { DEMO_LINKED_ACCOUNTS } from "@cookmate/shared/utils/demo-guard"
+import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 export async function GET() {
   try {
     const session = await auth()
     if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+
+    // ── 体验用户：不查库，直接返回演示资料 ──
+    // accounts 返回「已绑定 Google / GitHub」的假账号，使设置页不再渲染「+关联」按钮，
+    // 从源头堵死体验用户把真实第三方账号绑进来的路径（真实边界在服务端，这里是纵深防御）。
+    if (isDemoUser(session)) {
+      return NextResponse.json({
+        name: session.user.name || "",
+        phone: "",
+        email: session.user.email || "",
+        loginMethod: "体验演示",
+        createdAt: new Date().toISOString(),
+        subscriptionTier: SUBSCRIPTION_TIER.FREE,
+        hasPassword: false,
+        subscriptionExpiryDate: null,
+        isDemoUser: true,
+        accounts: DEMO_LINKED_ACCOUNTS.map((a) => ({ provider: a.provider })),
+        googleConfigured: !!(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET),
+        githubConfigured: !!(process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET),
+      })
+    }
 
 const user = await prisma.user.findUnique({
         where: { id: session.user.id },

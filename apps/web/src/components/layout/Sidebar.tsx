@@ -6,9 +6,10 @@ import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { useTranslations } from "next-intl"
 import { useLocale } from "next-intl"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useLayoutEffect } from "react"
 import { createPortal } from "react-dom"
 import { locales, localeNames } from "@cookmate/shared/constants"
+import { isChineseLocale } from "@cookmate/shared/constants/locales"
 
 const navItems = [
   { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
@@ -116,6 +117,10 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
   })
   const router = useRouter()
   const menuRef = useRef<HTMLDivElement>(null)
+  // 语言子菜单 portal 到 body：按钮 ref 用于测量弹出位置，子菜单 ref 用于点击外部判定
+  const langBtnRef = useRef<HTMLButtonElement>(null)
+  const submenuRef = useRef<HTMLDivElement>(null)
+  const [langPos, setLangPos] = useState<{ top: number; left: number } | null>(null)
   const locale = useLocale()
 
   // Auto-dismiss toast after 2.5s
@@ -125,12 +130,39 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
     return () => clearTimeout(timer)
   }, [demoLangToast])
 
-  // Close on click outside — also close lang sub-menu
+  // 语言子菜单打开时，按钮位置测量 → 决定 portal 的 fixed 坐标；
+  // 关闭时清空坐标（避免下次打开瞬间用到旧值）。
+  useLayoutEffect(() => {
+    if (langOpen && langBtnRef.current) {
+      const r = langBtnRef.current.getBoundingClientRect()
+      setLangPos({ top: r.top, left: r.right + 8 })
+    } else {
+      setLangPos(null)
+    }
+  }, [langOpen])
+
+  // 子菜单打开期间，滚动 / 缩放窗口会让 fixed 坐标失效 → 直接关闭
+  useEffect(() => {
+    if (!langOpen) return
+    const close = () => { setLangOpen(false); setLangPos(null) }
+    window.addEventListener("scroll", close, true)
+    window.addEventListener("resize", close)
+    return () => {
+      window.removeEventListener("scroll", close, true)
+      window.removeEventListener("resize", close)
+    }
+  }, [langOpen])
+
+  // Close on click outside — also close lang sub-menu.
+  // 需把 portal 出去的子菜单也算「内部」，否则点子菜单的选项会被先当作「外部」关掉。
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      const inMenu = menuRef.current && menuRef.current.contains(e.target as Node)
+      const inSubmenu = submenuRef.current && submenuRef.current.contains(e.target as Node)
+      if (!inMenu && !inSubmenu) {
         setOpen(false)
         setLangOpen(false)
+        setLangPos(null)
       }
     }
     document.addEventListener("mousedown", handleClick)
@@ -141,7 +173,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
     <>
       {demoLangToast && typeof document !== "undefined" && createPortal(
         /* Centered toast — floats in middle of screen, auto-dismisses 2.5s */
-        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[99999]">
+        <div className="fixed inset-0 flex items-start justify-center pt-[33vh] pointer-events-none z-[99999]">
           <div className="bg-amber-50 border border-amber-200 text-amber-700 px-5 py-3 rounded-xl text-sm shadow-lg">
             {demoLangToast}
           </div>
@@ -157,7 +189,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
         <span className="flex items-center justify-center w-7 h-7 rounded-full bg-orange-100 text-accent text-xs font-bold shrink-0">
           {initial}
         </span>
-        <span className="truncate flex-1">{isDemoUser && (locale === "en" || locale.startsWith("en")) ? "Demo User" : name}</span>
+        <span className="truncate flex-1">{isDemoUser && !isChineseLocale(locale) ? "Demo User" : name}</span>
         <svg className={`w-4 h-4 text-text-secondary transition-transform ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="6 9 12 15 18 9" />
         </svg>
@@ -178,6 +210,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
           {/* Language sub-menu */}
           <div className="relative">
             <button
+              ref={langBtnRef}
               onClick={(e) => { e.stopPropagation(); setLangOpen(!langOpen) }}
               className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-text-secondary hover:bg-surface hover:text-accent transition-colors"
             >
@@ -185,8 +218,12 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
               <span className="flex-1 text-left">{t("language")}</span>
               <svg className={`w-3 h-3 text-text-secondary transition-transform ${langOpen ? "rotate-90" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
-            {langOpen && (
-              <div className="absolute left-full top-0 ml-2 bg-card border border-gray-100 rounded-lg shadow-lg py-1 min-w-[110px] z-50">
+            {langOpen && langPos && typeof document !== "undefined" && createPortal(
+              <div
+                ref={submenuRef}
+                style={{ position: "fixed", top: langPos.top, left: langPos.left, zIndex: 50 }}
+                className="bg-card border border-gray-100 rounded-lg shadow-lg py-1 w-[110px]"
+              >
                 {locales
                   .filter((l) => !isDemoUser || l === "zh-CN" || l === "en")
                   .map((l) => {
@@ -199,7 +236,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
                                               setOpen(false)
                                               if (isDemoUser && l !== "zh-CN" && l !== "en") return
                                               if (isDemoUser) {
-                                                const msg = l === "zh-CN" ? "体验用户只能在中文和英文间切换" : "Demo users can only switch between Chinese and English"
+                                                const msg = t("demoLangToast")
                                                 setDemoLangToast(msg)
                                                 sessionStorage.setItem("demoLangToast", msg)
                                                 setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 2500)
@@ -213,7 +250,8 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
                     </button>
                   )
                 })}
-              </div>
+              </div>,
+              document.body
             )}
           </div>
           <div className="border-t border-border my-1" />

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { isFreeUser, checkStarredLimit } from "@/lib/auth-helpers"
+import { isFreeUser, checkStarredLimit, isDemoUser } from "@/lib/auth-helpers"
+import { err, getLocaleFromCookie } from "@cookmate/shared/utils/locale"
 
 export async function GET() {
   const session = await auth()
@@ -22,6 +23,14 @@ export async function GET() {
 export async function PATCH(req: Request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+  if (isDemoUser(session)) {
+    // 体验态：写操作在路由自身再拦一道。middleware 的集中拦截依赖 cookie 组合判断，
+    // 伪造一个垃圾 session cookie 即可绕过；此处按会话身份判定，绕过不了。
+    return NextResponse.json(
+      { error: err(getLocaleFromCookie(req), "demoReadOnly"), demoRestricted: true },
+      { status: 403 },
+    )
+  }
 
   try {
     const { recipeId } = await req.json()

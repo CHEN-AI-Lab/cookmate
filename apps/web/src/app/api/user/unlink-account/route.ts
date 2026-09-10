@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { isDemoUser } from "@/lib/auth-helpers"
+import { err, getLocaleFromCookie } from "@cookmate/shared/utils/locale"
 
 export async function POST(request: Request) {
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 })
+  }
+
+  // 体验用户不存在真实绑定记录，解绑请求一律拒绝（纵深防御：middleware 已拦一层）
+  if (isDemoUser(session)) {
+    return NextResponse.json({ error: err(getLocaleFromCookie(request), "demoNoLink") }, { status: 403 })
   }
 
   const userId = session.user.id

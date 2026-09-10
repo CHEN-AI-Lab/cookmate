@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import { isValidIngredient } from "@cookmate/shared/validators"
-import { isFreeUser, checkPantryLimit } from "@/lib/auth-helpers"
+import { isFreeUser, checkPantryLimit, isDemoUser } from "@/lib/auth-helpers"
 
 export async function GET(req: Request) {
   const loc = getLocaleFromCookie(req)
@@ -16,7 +16,7 @@ export async function GET(req: Request) {
       orderBy: { createdAt: "desc" },
     }).catch((err: unknown) => { console.error("findMany pantry items error:", err); return [] })
 
-    return NextResponse.json({ items })
+    return NextResponse.json({ items, isDemoUser: isDemoUser(session) })
   } catch (error) {
     console.error("Pantry GET:", error)
     return NextResponse.json({ error: err(loc, "requestFailed") }, { status: 500 })

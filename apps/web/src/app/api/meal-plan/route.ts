@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { isDemoUser } from "@/lib/auth-helpers"
 import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import {
   generateWeeklyPlan,
@@ -75,7 +76,7 @@ export async function GET(req: Request) {
       orderBy: { weekStart: "asc" },
     }).catch((err: unknown) => { console.error("findMany meal plans error:", err); return [] })
 
-    return NextResponse.json({ plans, weekStart: monday.toISOString() })
+    return NextResponse.json({ plans, weekStart: monday.toISOString(), isDemoUser: isDemoUser(session) })
   } catch (error) {
     console.error("Meal plan GET:", error)
     return NextResponse.json({ error: err(loc, "requestFailed") }, { status: 500 })

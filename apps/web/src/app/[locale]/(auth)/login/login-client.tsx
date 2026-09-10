@@ -10,7 +10,7 @@ import { useTranslations, useLocale } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { useSearchParams } from "next/navigation"
 
-export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boolean; userName?: string }) {
+export default function LoginClient({ isLoggedIn, userName, isDemo }: { isLoggedIn?: boolean; userName?: string; isDemo?: boolean }) {
   const t = useTranslations('auth')
   const tv = useTranslations('validation')
   const tc = useTranslations('common')
@@ -58,6 +58,12 @@ export default function LoginClient({ isLoggedIn, userName }: { isLoggedIn?: boo
   const [emailMsg, setEmailMsg] = useState("")
 
   // 已登录用户直接跳转（解决已打开页面不触发服务端 redirect 的问题）
+  // 体验用户点「去登录」进来：先退出体验态（清除体验 cookie）
+  useEffect(() => {
+    if (!isDemo) return
+    fetch("/api/auth/demo-logout", { method: "POST" }).catch(() => {})
+  }, [isDemo])
+
   useEffect(() => {
     if (!isLoggedIn) return
     // 关联 OAuth 失败回跳（已登录 + OAuthAccountNotLinked/AccountNotLinked）：

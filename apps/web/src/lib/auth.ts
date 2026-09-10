@@ -30,11 +30,13 @@ import { prisma } from "@/lib/prisma"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import WeChatProvider from "@/lib/providers/wechat"
 import { hasDemoCookie, DEMO_SESSION } from "@cookmate/shared/utils/demo-cookie"
+import { isDemoOnlyRequest } from "@cookmate/shared/utils/demo-guard"
 import { cookies } from "next/headers"
 import { AsyncLocalStorage } from "node:async_hooks"
 import { decode } from "next-auth/jwt"
 import { checkLoginRateLimit, recordLoginAttempt } from "@cookmate/shared/utils/login-rate-limit"
 import { checkOtpRateLimit, recordOtpAttempt } from "@cookmate/shared/utils/otp-rate-limit"
+import { decodeSessionUserIdFromCookieHeader } from "@/lib/session-cookie"
 
 const providers = []
 
@@ -266,63 +268,14 @@ export function runWithRequestCookie<T>(cookieHeader: string, fn: () => T): T {
   return requestCookieStore.run(cookieHeader, fn)
 }
 
-// 解析 Cookie 请求头（name=value; ...）→ 普通对象。值不解码（JWT 为 base64url，无需转义）
-function parseCookieHeader(header: string): Record<string, string> {
-  const out: Record<string, string> = {}
-  if (!header) return out
-  for (const pair of header.split(";")) {
-    const idx = pair.indexOf("=")
-    if (idx <= 0) continue
-    const name = pair.slice(0, idx).trim()
-    const value = pair.slice(idx + 1).trim()
-    if (name) out[name] = value
-  }
-  return out
-}
-
-// 从 Cookie 头里取会话 token（含分片拼接）并解码，返回 userId
-async function decodeSessionFromCookieHeader(cookieHeader: string): Promise<string | null> {
-  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
-  if (!secret) {
-    console.error("[link-account] 缺少 AUTH_SECRET / 缺少 NEXTAUTH_SECRET")
-    return null
-  }
-  try {
-    const parsed = parseCookieHeader(cookieHeader)
-    const baseNames = ["__Secure-authjs.session-token", "authjs.session-token"]
-    for (const base of baseNames) {
-      const escaped = base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-      const full = parsed[base]
-      if (full) {
-        const decoded = await decode({ token: full, salt: base, secret })
-        if (decoded?.sub) return decoded.sub
-      }
-      // 分片拼接：__Secure-authjs.session-token.0 / .1 ...
-      const indices: number[] = []
-      for (const key of Object.keys(parsed)) {
-        const m = key.match(new RegExp(`^${escaped}\\.(\\d+)$`))
-        if (m) indices.push(Number(m[1]))
-      }
-      if (indices.length > 0) {
-        indices.sort((a, b) => a - b)
-        const token = indices.map((i) => parsed[`${base}.${i}`]).join("")
-        const decoded = await decode({ token, salt: base, secret })
-        if (decoded?.sub) return decoded.sub
-      }
-    }
-  } catch (e) {
-    console.error("[link-account] 从请求头解码 session 异常:", e)
-  }
-  return null
-}
-
+// 会话 cookie 解析 / 验签已抽到 lib/session-cookie.ts（Edge middleware 也要用同一套逻辑）
 // 读取当前登录会话的用户 id（"关联账号"场景判定：已登录用户发起的 OAuth = 关联操作）。
 // 优先用 AsyncLocalStorage 里路由层注入的原始 Cookie 头（在 OAuth 回调上下文可靠可读），
 // 仅在缺失时回退到 next/headers 的 cookies()。
 async function getSessionUserId(): Promise<string | null> {
   const injectedCookie = requestCookieStore.getStore()
   if (injectedCookie !== undefined) {
-    const userId = await decodeSessionFromCookieHeader(injectedCookie)
+    const userId = await decodeSessionUserIdFromCookieHeader(injectedCookie)
     if (userId) return userId
     // 注入存在但解不出 → 回退 next/headers 兜底一次
   }
@@ -391,6 +344,15 @@ const { handlers: nextAuthHandlers, auth: nextAuthAuth, signIn, signOut } = Next
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.type === "oauth" || account?.type === "oidc") {
+        // ── 体验用户禁止发起 OAuth ──
+        // 体验态只有 cookie、没有真实会话，此时 signIn 不是「关联」，
+        // 而是「用第三方账号登录 / 自动注册」，会把真实账号牵扯进来。
+        // 前端已隐藏关联按钮，这里是绕不过去的服务端边界。
+        const injectedCookie = requestCookieStore.getStore()
+        if (injectedCookie !== undefined && isDemoOnlyRequest(injectedCookie)) {
+          return "/app/settings?linkError=demo"
+        }
+
         // ── 关联模式：已登录用户从设置页发起 OAuth = "关联账号"操作 ──
         // signIn() 本质是登录（会把 session 切到 OAuth 身份甚至新建用户），
         // 真正的关联在这里拦截：返回字符串 = 直接重定向且不签发新 session，当前登录态保持不变
