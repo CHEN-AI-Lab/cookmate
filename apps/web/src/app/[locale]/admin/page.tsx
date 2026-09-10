@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
+import { CHANNEL_ICONS, CHANNEL_LABELS } from "@cookmate/shared/constants/payment-channels"
 
 // ── 类型 ──
 
@@ -19,6 +20,7 @@ interface CancelLog {
 
 interface CancelLogsResponse {
   total?: number
+  limit?: number
   failed?: number
   completed?: number
   lastFailedAt?: string | null
@@ -42,6 +44,7 @@ interface AdminOrder {
 
 interface OrdersResponse {
   total?: number
+  limit?: number
   paidCount?: number
   creemRevenue?: number
   alipayRevenue?: number
@@ -66,6 +69,7 @@ interface WebhookLogItem {
 
 interface WebhookLogsResponse {
   total?: number
+  limit?: number
   failed?: number
   logs?: WebhookLogItem[]
   error?: string
@@ -85,6 +89,7 @@ interface AdminUser {
 
 interface UsersResponse {
   total?: number
+  limit?: number
   proCount?: number
   freeCount?: number
   users?: AdminUser[]
@@ -101,6 +106,7 @@ interface CronLogItem {
 
 interface CronLogsResponse {
   total?: number
+  limit?: number
   logs?: CronLogItem[]
   error?: string
 }
@@ -343,6 +349,12 @@ export default function AdminPage() {
 
 // ── Tab 1：订单列表 ──
 
+// 实付与应收不一致（金额或币种不同）——单元格标红与顶部告警横幅共用同一判定
+function isAmountMismatch(o: AdminOrder): boolean {
+  return o.paidAmount != null
+    && (o.paidAmount !== o.amount || (!!o.paidCurrency && !!o.currency && o.paidCurrency !== o.currency))
+}
+
 function OrdersTab({ data }: { data: OrdersResponse | null }) {
   const orders = data?.orders ?? []
   const [filterChannel, setFilterChannel] = useState<string>("")
@@ -358,6 +370,9 @@ function OrdersTab({ data }: { data: OrdersResponse | null }) {
   const hasFilter = filterChannel || filterStatus
   const clearFilter = () => { setFilterChannel(""); setFilterStatus("") }
 
+  // 实付 ≠ 应收 的订单（当前筛选范围内），用于顶部告警横幅
+  const amountMismatchOrders = useMemo(() => filtered.filter(isAmountMismatch), [filtered])
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
@@ -366,6 +381,13 @@ function OrdersTab({ data }: { data: OrdersResponse | null }) {
         <StatCard label="Creem 收入" value={fmtAmount(hasFilter ? filtered.filter((o) => o.status === "PAID" && o.channel === "creem").reduce((s, o) => s + o.amount, 0) : (data?.creemRevenue ?? 0), "USD")} tone="amber" />
         <StatCard label="支付宝收入" value={fmtAmount(hasFilter ? filtered.filter((o) => o.status === "PAID" && o.channel === "alipay").reduce((s, o) => s + o.amount, 0) : (data?.alipayRevenue ?? 0), "CNY")} tone="amber" />
       </div>
+
+      {amountMismatchOrders.length > 0 && (
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+          <span className="font-semibold">⚠ 金额异常 {amountMismatchOrders.length} 笔</span>
+          <span className="text-red-600">实付金额与应收金额不一致，已在下方表格标红。请核对支付渠道后台价格与代码定价常量。</span>
+        </div>
+      )}
 
       {/* 筛选栏 */}
       <div className="flex flex-wrap items-center gap-2">
@@ -389,6 +411,10 @@ function OrdersTab({ data }: { data: OrdersResponse | null }) {
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          {orders.length >= (data?.limit ?? 200) && (
+            <p className="text-xs text-text-secondary">仅显示最近 {data?.limit ?? 200} 条记录，更早的记录未展示</p>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-text-secondary">
@@ -397,8 +423,8 @@ function OrdersTab({ data }: { data: OrdersResponse | null }) {
                   <th className="text-left px-4 py-3 font-medium" title="Creem/支付宝生成的订单号">订单号</th>
                   <th className="text-left px-4 py-3 font-medium" title="支付渠道：creem 或 alipay">渠道</th>
                   <th className="text-left px-4 py-3 font-medium" title="订阅周期：monthly 月付 / annual 年付">周期</th>
-                  <th className="text-left px-4 py-3 font-medium" title="网站应收金额（下单时按定价常量写入）">应收金额</th>
-                  <th className="text-left px-4 py-3 font-medium" title="支付平台回调的实付金额（未支付/历史订单为 -）；与应收不一致时标红">实付金额</th>
+                  <th className="text-right px-4 py-3 font-medium" title="网站应收金额（下单时按定价常量写入）">应收金额</th>
+                  <th className="text-right px-4 py-3 font-medium" title="支付平台回调的实付金额（未支付/历史订单为 -）；与应收不一致时标红">实付金额</th>
                   <th className="text-left px-4 py-3 font-medium" title="订单状态：待支付/已支付/已取消/已退款/已过期">状态</th>
                   <th className="text-left px-4 py-3 font-medium" title="下单用户的邮箱">用户邮箱</th>
                 </tr>
@@ -408,11 +434,23 @@ function OrdersTab({ data }: { data: OrdersResponse | null }) {
                   <tr key={o.id} className={o.status === "PAID" ? "" : "opacity-60"}>
                     <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(o.createdAt)}</td>
                     <td className="px-4 py-3 text-gray-700 font-mono text-xs">{o.orderId}</td>
-                    <td className="px-4 py-3 text-gray-700">{o.channel}</td>
+                    <td className="px-4 py-3"><ChannelCell channel={o.channel} /></td>
                     <td className="px-4 py-3 text-gray-700">{fmtPeriod(o.period)}</td>
-                    <td className="px-4 py-3 text-gray-700 font-medium">{fmtAmount(o.amount, o.currency)}</td>
-                    <td className={`px-4 py-3 font-medium whitespace-nowrap ${o.paidAmount != null && (o.paidAmount !== o.amount || (o.paidCurrency && o.currency && o.paidCurrency !== o.currency)) ? "text-red-600" : "text-gray-700"}`}>
-                      {o.paidAmount != null ? fmtAmount(o.paidAmount, o.paidCurrency ?? o.currency) : "-"}
+                    <td className="px-4 py-3 text-gray-700 font-medium text-right tabular-nums">{fmtAmount(o.amount, o.currency)}</td>
+                    <td className="px-4 py-3 font-medium whitespace-nowrap text-right tabular-nums">
+                      {o.paidAmount == null ? (
+                        <span className="text-gray-400">-</span>
+                      ) : isAmountMismatch(o) ? (
+                        <span
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold tabular-nums"
+                          title={`实付与应收不一致 —— 应收 ${fmtAmount(o.amount, o.currency)} / 实付 ${fmtAmount(o.paidAmount, o.paidCurrency ?? o.currency)}`}
+                        >
+                          <span aria-hidden>⚠</span>
+                          {fmtAmount(o.paidAmount, o.paidCurrency ?? o.currency)}
+                        </span>
+                      ) : (
+                        <span className="text-gray-700">{fmtAmount(o.paidAmount, o.paidCurrency ?? o.currency)}</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={o.status} />
@@ -476,6 +514,10 @@ function WebhooksTab({ data }: { data: WebhookLogsResponse | null }) {
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          {logs.length >= (data?.limit ?? 200) && (
+            <p className="text-xs text-text-secondary">仅显示最近 {data?.limit ?? 200} 条记录，更早的记录未展示</p>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-text-secondary">
@@ -492,9 +534,9 @@ function WebhooksTab({ data }: { data: WebhookLogsResponse | null }) {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filtered.map((l) => (
-                  <tr key={l.id} className={l.status.startsWith("failed") ? "bg-red-50/50" : ""}>
+                  <tr key={l.id} className={l.status.startsWith("failed") || l.status === "processed:amount-mismatch" ? "bg-red-50/50" : ""}>
                     <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
-                    <td className="px-4 py-3 text-gray-700">{l.source}</td>
+                    <td className="px-4 py-3"><ChannelCell channel={l.source} /></td>
                     <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.eventType ?? "-"}</td>
                     <td className="px-4 py-3">
                       <WebhookStatusBadge status={l.status} />
@@ -583,6 +625,10 @@ function CancelsTab({ data }: { data: CancelLogsResponse | null }) {
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          {logs.length >= (data?.limit ?? 200) && (
+            <p className="text-xs text-text-secondary">仅显示最近 {data?.limit ?? 200} 条记录，更早的记录未展示</p>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-text-secondary">
@@ -600,7 +646,7 @@ function CancelsTab({ data }: { data: CancelLogsResponse | null }) {
                 {filtered.map((l) => (
                   <tr key={l.id} className={l.status === "failed" ? "bg-red-50/50" : ""}>
                     <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
-                    <td className="px-4 py-3 text-gray-700">{l.channel ?? "-"}</td>
+                    <td className="px-4 py-3"><ChannelCell channel={l.channel} /></td>
                     <td className="px-4 py-3">
                       {l.status === "failed" ? (
                         <span className="inline-flex px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold">失败</span>
@@ -668,6 +714,10 @@ function UsersTab({ data }: { data: UsersResponse | null }) {
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          {users.length >= (data?.limit ?? 200) && (
+            <p className="text-xs text-text-secondary">仅显示最近 {data?.limit ?? 200} 条记录，更早的记录未展示</p>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-text-secondary">
@@ -677,7 +727,7 @@ function UsersTab({ data }: { data: UsersResponse | null }) {
                   <th className="text-left px-4 py-3 font-medium" title="用户昵称">用户名</th>
                   <th className="text-left px-4 py-3 font-medium" title="当前套餐：FREE 免费版 / PRO 付费版">套餐</th>
                   <th className="text-left px-4 py-3 font-medium" title="付费到期时间（FREE 用户为空）">到期时间</th>
-                  <th className="text-left px-4 py-3 font-medium" title="该用户创建的订单总数">订单数</th>
+                  <th className="text-right px-4 py-3 font-medium" title="该用户创建的订单总数">订单数</th>
                   <th className="text-left px-4 py-3 font-medium" title="新用户引导是否完成">引导完成</th>
                 </tr>
               </thead>
@@ -697,7 +747,7 @@ function UsersTab({ data }: { data: UsersResponse | null }) {
                     <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
                       {u.subscriptionExpiryDate ? fmtTime(u.subscriptionExpiryDate) : "-"}
                     </td>
-                    <td className="px-4 py-3 text-gray-700">{u.orderCount}</td>
+                    <td className="px-4 py-3 text-gray-700 text-right tabular-nums">{u.orderCount}</td>
                     <td className="px-4 py-3 text-gray-700">{u.onboardingCompleted ? "✅" : "—"}</td>
                   </tr>
                 ))}
@@ -752,6 +802,10 @@ function CronsTab({ data }: { data: CronLogsResponse | null }) {
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          {logs.length >= (data?.limit ?? 100) && (
+            <p className="text-xs text-text-secondary">仅显示最近 {data?.limit ?? 100} 条记录，更早的记录未展示</p>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-text-secondary">
@@ -802,8 +856,22 @@ function StatCard({ label, value, tone }: { label: string; value: number | strin
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-5">
       <p className="text-text-secondary text-sm">{label}</p>
-      <p className={`text-3xl font-bold mt-1 ${toneClass}`}>{value}</p>
+      <p className={`text-3xl font-bold mt-1 tabular-nums ${toneClass}`}>{value}</p>
     </div>
+  )
+}
+
+// 渠道/来源单元格：官方 logo + 中文名（图标与名称统一取自 shared/constants/payment-channels，
+// 本文件不重新定义渠道图标）。未收录的渠道回退显示原始英文名。
+function ChannelCell({ channel }: { channel: string | null | undefined }) {
+  if (!channel) return <span className="text-gray-400">-</span>
+  const icon = CHANNEL_ICONS[channel]
+  const label = CHANNEL_LABELS[channel] ?? channel
+  return (
+    <span className="inline-flex items-center gap-1.5 text-gray-700" title={label}>
+      {icon ? <span className="w-4 h-4 shrink-0" dangerouslySetInnerHTML={{ __html: icon }} /> : null}
+      <span className="whitespace-nowrap">{label}</span>
+    </span>
   )
 }
 
@@ -813,6 +881,15 @@ function StatusBadge({ status }: { status: string }) {
   }
   if (status === "PENDING") {
     return <span className="inline-flex px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-xs font-semibold">待支付</span>
+  }
+  if (status === "CANCELED") {
+    return <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">已取消</span>
+  }
+  if (status === "EXPIRED") {
+    return <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">已过期</span>
+  }
+  if (status === "REFUNDED") {
+    return <span className="inline-flex px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold">已退款</span>
   }
   return <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">{status}</span>
 }
@@ -828,12 +905,21 @@ function WebhookStatusBadge({ status }: { status: string }) {
     "failed:user-not-found": "用户不存在",
     "failed:error": "处理异常",
     "ignored:late-downgrade": "迟到降级跳过",
+    "processed:amount-mismatch": "金额不一致",
+    "failed:amount-mismatch": "金额不一致",
+    "failed:amount-unknown": "金额无法匹配",
+    "failed:order-not-found": "订单不存在",
+    "failed:no-public-key": "未配置公钥",
+    "failed:no-out-trade-no": "缺少订单号",
+    "failed:appid": "应用ID不符",
   }
   const tone: Record<string, string> = {
     received: "bg-amber-100 text-amber-600",
     processed: "bg-green-100 text-green-600",
     duplicate: "bg-amber-100 text-amber-700",
     ignored: "bg-gray-100 text-gray-500",
+    // 金额不一致虽属"已处理"，但必须用警示色（否则红/灰难辨，告警会被漏看）
+    "processed:amount-mismatch": "bg-red-100 text-red-600",
   }
   const failed = status.startsWith("failed")
   const ignored = status.startsWith("ignored")

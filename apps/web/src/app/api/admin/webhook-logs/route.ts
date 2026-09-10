@@ -46,6 +46,7 @@ export async function GET() {
 
   return NextResponse.json({
     total: parsed.length,
+    limit: 200,
     failed,
     logs: parsed,
   })
