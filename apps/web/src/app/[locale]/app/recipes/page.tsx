@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import { displayIngredient } from "@cookmate/shared/constants/ingredients"
 import { isValidIngredient } from "@cookmate/shared/validators"
+import { getDemoPantryItems } from "@cookmate/shared/demo-data"
 import { RecipeCard } from "@/components/features/RecipeCard"
 import { UpgradeDialog, UpgradeInline } from "@/components/features/UpgradeLink"
 
@@ -156,7 +157,14 @@ export default function RecipesPage() {
     fetch("/api/user/profile")
       .then((r) => r.json())
       .then((data) => {
-        if (data.isDemoUser) setIsDemoUser(true)
+        if (data.isDemoUser) {
+          setIsDemoUser(true)
+          // 体验用户的食材库是前端静态示例数据（不进数据库），GET /api/pantry 只会返回空数组，
+          // 这里补一次兜底 —— 否则「📦 我的食材库」整块不渲染，体验用户会以为功能没做。
+          // 正式用户走接口返回的真实食材，本分支不执行。
+          setPantryItems((prev) => (prev.length > 0 ? prev : getDemoPantryItems()))
+          setPantryLoaded(true)
+        }
       })
       .catch((err) => console.error("load profile error:", err))
   }, [])
