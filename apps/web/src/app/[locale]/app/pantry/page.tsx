@@ -46,23 +46,19 @@ export default function PantryPage() {
     fetch("/api/pantry")
       .then((r) => r.json())
       .then((data) => {
-        if (data.items) setItems(data.items)
+        // 体验模式：直接渲染示例食材。
+        // 这里必须用同一个接口的 isDemoUser 判断：以前是并行再发一个 /api/user/profile，
+        // 两个请求谁后返回谁覆盖状态，而本接口对体验用户返回的是空数组，
+        // 一旦它后返回就会把示例食材清空 —— 体验版食材库空白就是这么来的。
+        if (data.isDemoUser) {
+          setIsDemoUser(true)
+          setItems(getDemoPantryItems())
+          return
+        }
+        if (Array.isArray(data.items)) setItems(data.items)
       })
       .catch((err) => console.error("load items error:", err))
       .finally(() => setLoading(false))
-  }, [])
-
-  // Check demo user status and pre-fill demo data if needed
-  useEffect(() => {
-    fetch("/api/user/profile")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.isDemoUser) {
-          setIsDemoUser(true)
-          setItems((prev) => prev.length > 0 ? prev : getDemoPantryItems())
-        }
-      })
-      .catch((err) => console.error("load profile error:", err))
   }, [])
 
   const addItem = async (name: string, category?: string) => {
