@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { getDemoGroceryList } from "@cookmate/shared/demo-data"
 import { UpgradeDialog, UpgradeInline } from "@/components/features/UpgradeLink"
+import { displayIngredient, displayQuantity } from "@cookmate/shared/constants/ingredients"
 
 interface IngredientItem {
   name: string
@@ -21,6 +22,7 @@ export default function GroceryListPage() {
   const tg = useTranslations("grocery")
   const tb = useTranslations("billing")
   const catLabels = tg.raw("catLabels") as Record<string, string>
+  const locale = useLocale()
   // Category name translation lookup (API returns Chinese names)
   const [categories, setCategories] = useState<CategoryGroup[]>([])
   const [loading, setLoading] = useState(true)
@@ -373,8 +375,8 @@ export default function GroceryListPage() {
                           openSourceDialog(item)
                         }}
                       >
-                        {item.name}
-                        {item.quantity && <span className="text-text-secondary font-normal"> ({item.quantity})</span>}
+                        {displayIngredient(item.name, locale)}
+                        {item.quantity && <span className="text-text-secondary font-normal"> ({displayQuantity(item.quantity, locale)})</span>}
                       </span>
                       {item.inPantry && (
                         <span className="text-[10px] text-green-600 bg-green-50 px-1 rounded shrink-0">{tg("inPantry")}</span>
@@ -396,7 +398,7 @@ export default function GroceryListPage() {
                     <label key={i} className="text-sm flex items-center gap-1.5 cursor-pointer hover:text-accent transition-colors">
                       <input type="checkbox" checked={checked.has(name)} onChange={() => toggleCheck(name)} className="rounded accent-accent w-3.5 h-3.5" />
                       <span className={`${checked.has(name) ? "text-text-secondary line-through" : "text-text-secondary"}`}>
-                        {name}
+                        {displayIngredient(name, locale)}
                       </span>
                       <button onClick={() => removeManualItem(name)} className="text-text-secondary hover:text-red-600 text-xs ml-auto">✕</button>
                     </label>
@@ -419,7 +421,7 @@ export default function GroceryListPage() {
               {stapleOpen && (
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-text-secondary">
                   {stapleItems.map((name) => (
-                    <span key={name} className="px-1.5 py-0.5 bg-surface rounded">{name}</span>
+                    <span key={name} className="px-1.5 py-0.5 bg-surface rounded">{displayIngredient(name, locale)}</span>
                   ))}
                 </div>
               )}
@@ -516,10 +518,10 @@ export default function GroceryListPage() {
 
       {/* 重复添加提示 */}
       {dupDialog && (
-        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center pt-[33vh]">
           <div className="bg-card border border-gray-100 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
             <span className="text-amber-500 text-base shrink-0">⚠️</span>
-            <span className="text-text-primary">{tg("alreadyInList", { name: dupDialog })}</span>
+            <span className="text-text-primary">{tg("alreadyInList", { name: displayIngredient(dupDialog, locale) })}</span>
           </div>
         </div>
       )}

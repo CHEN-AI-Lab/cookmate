@@ -3,6 +3,8 @@ import { MEAL_TYPES, DIETARY_PREFERENCES, DIFFICULTY_LEVELS, SUBSCRIPTION_TIERS,
 import { apiError, API_ERRORS } from '@cookmate/shared/constants/api-errors'
 import { PRICING } from '@cookmate/shared/constants/pricing'
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from '@cookmate/shared/constants/preferences'
+import { INGREDIENT_LABELS, isChineseLocale, displayIngredient, displayQuantity } from '@cookmate/shared/constants/ingredients'
+import { getDemoPantryItems, getDemoGroceryList } from '@cookmate/shared/demo-data'
 
 describe('APP_NAME', () => {
   it('is CookMate', () => {
@@ -140,5 +142,68 @@ describe('preferences', () => {
 
   it('has serving sizes 1-6', () => {
     expect(SERVING_SIZE_OPTIONS).toEqual([1, 2, 3, 4, 5, 6])
+  })
+})
+
+
+describe('ingredients 显示辅助（体验版 i18n 回归）', () => {
+  it('isChineseLocale 只认 zh 开头的语系', () => {
+    expect(isChineseLocale('zh-CN')).toBe(true)
+    expect(isChineseLocale('zh-TW')).toBe(true)
+    expect(isChineseLocale('en')).toBe(false)
+    expect(isChineseLocale('ja')).toBe(false)
+  })
+
+  it('displayIngredient 中文语系保留原文', () => {
+    expect(displayIngredient('番茄', 'zh-CN')).toBe('番茄')
+    expect(displayIngredient('番茄', 'zh-TW')).toBe('番茄')
+  })
+
+  it('displayIngredient 非中文语系转英文', () => {
+    expect(displayIngredient('番茄', 'en')).toBe('Tomato')
+    expect(displayIngredient('鸡胸肉', 'ja')).toBe('Chicken Breast')
+  })
+
+  it('displayIngredient 未收录的自由文本与空值原样返回', () => {
+    expect(displayIngredient('奶奶的秘制酱', 'en')).toBe('奶奶的秘制酱')
+    expect(displayIngredient('', 'en')).toBe('')
+  })
+
+  it('示例食材库的食材全部有英文映射', () => {
+    const missing = getDemoPantryItems()
+      .map((i) => i.name)
+      .filter((n) => displayIngredient(n, 'en') === n)
+    expect(missing).toEqual([])
+  })
+
+  it('示例购物清单的食材全部有英文映射', () => {
+    const { categories, stapleItems } = getDemoGroceryList()
+    const names = new Set<string>(stapleItems)
+    for (const cat of categories) for (const item of cat.items) names.add(item.name)
+    const missing = [...names].filter((n) => displayIngredient(n, 'en') === n)
+    expect(missing).toEqual([])
+  })
+
+  it('displayQuantity 带数字前缀时按单复数转换', () => {
+    expect(displayQuantity('1罐', 'en')).toBe('1 can')
+    expect(displayQuantity('3个', 'en')).toBe('3 pcs')
+    expect(displayQuantity('300克', 'en')).toBe('300 g')
+  })
+
+  it('displayQuantity 多字单位不被单字抢先命中', () => {
+    expect(displayQuantity('1千克', 'en')).toBe('1 kg')
+    expect(displayQuantity('500毫升', 'en')).toBe('500 ml')
+  })
+
+  it('displayQuantity 处理无数字前缀单位与中文语系', () => {
+    expect(displayQuantity('适量', 'en')).toBe('to taste')
+    expect(displayQuantity('1罐', 'zh-CN')).toBe('1罐')
+  })
+
+  it('INGREDIENT_LABELS 无重复或空值', () => {
+    for (const [zh, en] of Object.entries(INGREDIENT_LABELS)) {
+      expect(zh.trim().length).toBeGreaterThan(0)
+      expect(en.trim().length).toBeGreaterThan(0)
+    }
   })
 })

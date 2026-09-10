@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { getDemoPantryItems } from "@cookmate/shared/demo-data"
 import { UpgradeDialog, UpgradeInline } from "@/components/features/UpgradeLink"
 import { isValidIngredient } from "@cookmate/shared/validators"
+import { displayIngredient } from "@cookmate/shared/constants/ingredients"
 
 interface PantryItem {
   id: string
@@ -19,6 +20,7 @@ export default function PantryPage() {
   const tc = useTranslations("common")
   // 食材库上限等 billing 命名空间的提示（后端返回裸 key，这里负责翻译）
   const tb = useTranslations("billing")
+  const locale = useLocale()
   const [items, setItems] = useState<PantryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
@@ -124,7 +126,12 @@ export default function PantryPage() {
     } catch (err) { console.error("remove item error:", err) }
   }
 
-  const filtered = items.filter((i) => !search || i.name.includes(search))
+  // 搜索同时匹配原文与翻译名：英文界面显示 "Tomato"，用户搜 "番茄" 也该命中
+  const filtered = items.filter((i) => {
+    if (!search) return true
+    const q = search.trim().toLowerCase()
+    return i.name.toLowerCase().includes(q) || displayIngredient(i.name, locale).toLowerCase().includes(q)
+  })
 
   if (loading) return <div className="text-center py-16 text-text-secondary">{t("loading")}</div>
 
@@ -188,7 +195,7 @@ export default function PantryPage() {
                     : "bg-orange-50 text-accent border-orange-200 hover:bg-orange-100"
                 }`}
               >
-                {item.name}
+                {displayIngredient(item.name, locale)}
                 <button onClick={(e) => { e.stopPropagation(); removeItem(item.id) }} className="ml-1 hover:text-red-600">{isDemoUser ? "" : "×"}</button>
               </span>
             ))}
@@ -275,7 +282,7 @@ export default function PantryPage() {
 
                     {/* 无效输入提示（纯数字/符号等） */}
                     {invalidToast && (
-                      <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
+                      <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center pt-[33vh]">
                         <div className="bg-amber-50 border border-amber-200 text-amber-700 px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center animate-in fade-in zoom-in-95 duration-200">
                           <span>{t("invalidIngredients")}</span>
                         </div>

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import type { ReactNode } from "react"
 import { useSearchParams } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
-import { INGREDIENT_LABELS } from "@cookmate/shared/constants/ingredients"
+import { displayIngredient } from "@cookmate/shared/constants/ingredients"
 import { isValidIngredient } from "@cookmate/shared/validators"
 import { RecipeCard } from "@/components/features/RecipeCard"
 import { UpgradeDialog, UpgradeInline } from "@/components/features/UpgradeLink"
@@ -35,8 +35,8 @@ export default function RecipesPage() {
   // 收藏上限等 billing 命名空间的提示（后端返回裸 key，这里负责翻译）
   const tb = useTranslations("billing")
   const locale = useLocale()
-  const ingLabels = INGREDIENT_LABELS
-  const displayName = (name: string) => locale === "zh-CN" || locale === "zh-TW" ? name : (ingLabels[name] || name)
+  // 食材名显示统一走 shared 映射表：中文语系保留原文，其余语言转英文
+  const displayName = (name: string) => displayIngredient(name, locale)
   const searchParams = useSearchParams()
   const [ingredients, setIngredients] = useState<string[]>(() => {
     const fromUrl = searchParams.get("ingredients")
