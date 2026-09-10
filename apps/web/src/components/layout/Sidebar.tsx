@@ -222,7 +222,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
               <div
                 ref={submenuRef}
                 style={{ position: "fixed", top: langPos.top, left: langPos.left, zIndex: 50 }}
-                className="bg-card border border-gray-100 rounded-lg shadow-lg py-1 min-w-[110px]"
+                className="bg-card border border-gray-100 rounded-lg shadow-lg py-1 w-[110px]"
               >
                 {locales
                   .filter((l) => !isDemoUser || l === "zh-CN" || l === "en")
