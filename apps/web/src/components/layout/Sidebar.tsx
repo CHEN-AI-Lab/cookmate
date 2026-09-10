@@ -122,9 +122,6 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
   const submenuRef = useRef<HTMLDivElement>(null)
   const [langPos, setLangPos] = useState<{ top: number; left: number } | null>(null)
   const locale = useLocale()
-  // 4 个语种时用 2×2 网格压紧（正式用户），≤3 个仍用竖排（体验用户 2 个本来就不长，不要为它改样式）
-  const visibleLocales = locales.filter((l) => !isDemoUser || l === "zh-CN" || l === "en")
-  const useGrid = visibleLocales.length >= 4
 
   // Auto-dismiss toast after 2.5s
   useEffect(() => {
@@ -225,11 +222,11 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
               <div
                 ref={submenuRef}
                 style={{ position: "fixed", top: langPos.top, left: langPos.left, zIndex: 50 }}
-                className={(useGrid
-                  ? "bg-gray-100 border border-gray-100 rounded-md shadow-md grid grid-cols-2 gap-px w-[168px]"
-                  : "bg-card border border-gray-100 rounded-md shadow-md py-0.5 min-w-[96px]")}
+                className="bg-card border border-gray-100 rounded-md shadow-md py-0.5 min-w-[96px]"
               >
-                {visibleLocales.map((l) => {
+                {locales
+                  .filter((l) => !isDemoUser || l === "zh-CN" || l === "en")
+                  .map((l) => {
                   const active = l === locale
                   return (
                     <button
@@ -247,7 +244,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
                                               // replace 而非 push：切换语言不往历史栈加记录，返回按钮回到上一个界面
                                               router.replace(window.location.pathname.replace(new RegExp("^/(?:" + locales.join("|") + ")(/|$)"), "/") || "/", { locale: l })
                                             }}
-                      className={"w-full text-left px-3 py-1.5 text-sm bg-card transition-colors " + (active ? "text-accent bg-orange-50 font-medium" : "text-text-secondary hover:bg-orange-50 hover:text-accent")}
+                      className={"w-full text-left px-3 py-1.5 text-sm transition-colors " + (active ? "text-accent bg-orange-50 font-medium" : "text-text-secondary hover:bg-orange-50 hover:text-accent")}
                     >
                       {localeNames[l] || l}
                     </button>
