@@ -1,10 +1,18 @@
 "use client"
 
-import { signIn } from "next-auth/react"
+import { useRouter } from "@/i18n/navigation"
 import { useState } from "react"
 
+/**
+ * 一键进入体验模式。
+ *
+ * 注意：体验登录走独立的 HMAC 签名 cookie（POST /api/auth/demo-login），
+ * 不经过 NextAuth —— demo provider 早已从 auth.ts 移除，
+ * 继续调用 signIn("demo") 会直接失败（点了没反应）。
+ */
 export default function DemoLoginButton({ children, className }: { children: React.ReactNode; className?: string }) {
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   return (
     <button
@@ -12,12 +20,17 @@ export default function DemoLoginButton({ children, className }: { children: Rea
         if (loading) return
         setLoading(true)
         try {
-          await signIn("demo", { callbackUrl: "/app/dashboard" })
+          const res = await fetch("/api/auth/demo-login", { method: "POST" })
+          if (!res.ok) {
+            setLoading(false)
+            return
+          }
+          router?.push("/app/dashboard")
         } catch {
           setLoading(false)
         }
       }}
-      className={`${className} relative`}
+      className={className + " relative"}
     >
       <span className={loading ? "opacity-0" : ""}>{children}</span>
       {loading && (

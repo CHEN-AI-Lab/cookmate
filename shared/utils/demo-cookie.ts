@@ -1,4 +1,5 @@
 import { SUBSCRIPTION_TIER } from "../constants"
+import { DEMO_COOKIE_NAME } from "./demo-guard"
 /**
  * Demo cookie utilities — separate demo user state from NextAuth session.
  *
@@ -14,7 +15,6 @@ import { SUBSCRIPTION_TIER } from "../constants"
 
 import crypto from "node:crypto"
 
-const DEMO_COOKIE_NAME = "cookmate_demo"
 const DEMO_TOKEN_TTL = 24 * 60 * 60 // seconds
 
 /** Demo user object returned by auth() when the demo cookie is present. */

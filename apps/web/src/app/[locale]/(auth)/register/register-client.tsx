@@ -7,7 +7,7 @@ import OAuthLoadingOverlay from "@/components/ui/OAuthLoadingOverlay"
 import { useToast } from "@/components/ui/Toast"
 import { useRouter } from "@/i18n/navigation"
 
-export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: boolean; userName?: string }) {
+export default function RegisterClient({ isLoggedIn, userName, isDemo }: { isLoggedIn?: boolean; userName?: string; isDemo?: boolean }) {
   const t = useTranslations('auth')
   const router = useRouter()
   const tv = useTranslations('validation')
@@ -34,6 +34,13 @@ export default function RegisterClient({ isLoggedIn, userName }: { isLoggedIn?: 
       router?.push("/app/dashboard")
     }
   }, [isLoggedIn, router])
+
+  // 体验用户点「免费注册」进来：先退出体验态（清除体验 cookie）。
+  // 否则注册成功后的写接口仍会被体验模式守卫拦截。
+  useEffect(() => {
+    if (!isDemo) return
+    fetch("/api/auth/demo-logout", { method: "POST" }).catch(() => {})
+  }, [isDemo])
 
   useEffect(() => {
     if (countdown > 0) {

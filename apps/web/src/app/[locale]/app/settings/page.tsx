@@ -92,7 +92,9 @@ export default function SettingsPage() {
     const linkError = params.get("linkError")
     const linked = params.get("linked")
     if (linkError) {
-      if (linkError === "failed") {
+      if (linkError === "demo") {
+        setTimeout(() => setGlobalToast(ts("demoToast")), 0)
+      } else if (linkError === "failed") {
         setTimeout(() => setGlobalToast(ta("linkFailed")), 0)
       } else if (linkError === "bound") {
         const providerParam = params.get("provider") || ""
@@ -109,7 +111,7 @@ export default function SettingsPage() {
       setTimeout(() => setGlobalToast(""), 6000)
       window.history.replaceState({}, "", `/${locale}/app/settings`)
     }
-  }, [locale, ta])
+  }, [locale, ta, ts])
 
   const saveName = async () => {
     if (!editNameValue.trim() || editNameValue.trim() === profile?.name) {
@@ -165,6 +167,11 @@ export default function SettingsPage() {
 
   // ── OAuth 解绑 ──
   const handleUnlinkClick = (provider: string) => {
+    if (profile?.isDemoUser) {
+      setGlobalToast(ts("demoToast"))
+      setTimeout(() => setGlobalToast(""), 3000)
+      return
+    }
     setUnlinkConfirmProvider(provider)
     setUnlinkError("")
     setNeedsManualRevoke(false)
@@ -172,6 +179,13 @@ export default function SettingsPage() {
 
   // ── 关联 OAuth：已登录用户点"关联" → 走 OAuth 授权 → Auth.js 自动把新账号绑到当前用户 ──
   const handleLink = async (provider: string) => {
+    // 体验用户没有真实会话，signIn 会变成「用第三方账号登录/自动注册」，
+    // 绝不能放行 —— 必须在发起 OAuth 之前拦住。
+    if (profile?.isDemoUser) {
+      setGlobalToast(ts("demoToast"))
+      setTimeout(() => setGlobalToast(""), 3000)
+      return
+    }
     try {
       await signIn(provider, { callbackUrl: `/${locale}/app/settings?linked=${provider}` })
     } catch {
@@ -499,13 +513,15 @@ const save = async () => {
                               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.43 9.8 8.21 11.39.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5 1 .1-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 016.02 0c2.3-1.55 3.3-1.23 3.3-1.23.66 1.66.25 2.87.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.22.7.82.58C20.57 21.8 24 17.31 24 12c0-6.63-5.37-12-12-12z"/></svg>
                             )}
                             {acc.provider === "google" ? "Google" : "GitHub"}
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleUnlinkClick(acc.provider) }}
-                              className="text-gray-400 hover:text-red-600 transition-colors ml-1"
-                              title={ta("unlink")}
-                            >
-                              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                            </button>
+                            {!profile?.isDemoUser && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleUnlinkClick(acc.provider) }}
+                                className="text-gray-400 hover:text-red-600 transition-colors ml-1"
+                                title={ta("unlink")}
+                              >
+                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                              </button>
+                            )}
                           </span>
                         ))}
                       {profile.googleConfigured && !profile.accounts.some((a) => a.provider === "google") && (

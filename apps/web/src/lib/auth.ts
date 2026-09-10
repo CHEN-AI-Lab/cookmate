@@ -30,6 +30,7 @@ import { prisma } from "@/lib/prisma"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import WeChatProvider from "@/lib/providers/wechat"
 import { hasDemoCookie, DEMO_SESSION } from "@cookmate/shared/utils/demo-cookie"
+import { isDemoOnlyRequest } from "@cookmate/shared/utils/demo-guard"
 import { cookies } from "next/headers"
 import { AsyncLocalStorage } from "node:async_hooks"
 import { decode } from "next-auth/jwt"
@@ -391,6 +392,15 @@ const { handlers: nextAuthHandlers, auth: nextAuthAuth, signIn, signOut } = Next
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.type === "oauth" || account?.type === "oidc") {
+        // ── 体验用户禁止发起 OAuth ──
+        // 体验态只有 cookie、没有真实会话，此时 signIn 不是「关联」，
+        // 而是「用第三方账号登录 / 自动注册」，会把真实账号牵扯进来。
+        // 前端已隐藏关联按钮，这里是绕不过去的服务端边界。
+        const injectedCookie = requestCookieStore.getStore()
+        if (injectedCookie !== undefined && isDemoOnlyRequest(injectedCookie)) {
+          return "/app/settings?linkError=demo"
+        }
+
         // ── 关联模式：已登录用户从设置页发起 OAuth = "关联账号"操作 ──
         // signIn() 本质是登录（会把 session 切到 OAuth 身份甚至新建用户），
         // 真正的关联在这里拦截：返回字符串 = 直接重定向且不签发新 session，当前登录态保持不变

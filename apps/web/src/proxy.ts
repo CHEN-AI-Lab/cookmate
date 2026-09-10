@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { routing } from "@/i18n/routing"
 import { err, getLocaleFromCookie } from "@cookmate/shared/utils/locale"
+import { isDemoOnlyRequest, isDemoWriteAllowed, isSafeMethod } from "@cookmate/shared/utils/demo-guard"
 
 const intlMiddleware = createMiddleware(routing)
 
@@ -34,6 +35,23 @@ function cleanup() {
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // ── 体验模式统一拦截（默认拒绝写操作） ──
+  // 只有体验 cookie、没有真实登录会话的请求，一切非安全方法一律 403。
+  // 拦截集中在这一处：后续新增任何写接口都会自动受限，不需要再逐个路由补判断。
+  // 白名单见 demo-guard.ts 的 DEMO_WRITE_ALLOWLIST_PREFIXES（目前只有 NextAuth 自身流程）。
+  const cookieHeader = request.headers.get("cookie")
+  if (
+    isDemoOnlyRequest(cookieHeader) &&
+    !isSafeMethod(request.method) &&
+    !isDemoWriteAllowed(pathname)
+  ) {
+    const locale = getLocaleFromCookie(request as unknown as Request)
+    return NextResponse.json(
+      { error: err(locale, "demoReadOnly"), demoRestricted: true },
+      { status: 403 },
+    )
+  }
 
   if (pathname.startsWith("/api/auth/")) {
     cleanup()
@@ -74,10 +92,14 @@ export function proxy(request: NextRequest) {
     return res
   }
 
+  // 其余 /api 请求不参与国际化重写（此前 matcher 未覆盖 /api，行为保持一致）
+  if (pathname.startsWith("/api/")) return NextResponse.next()
+
   return intlMiddleware(request)
 }
 
 export const config = {
   // 注意：/api/auth/:path* 必须在排除 api 的规则之前声明，否则 auth 限流永远不生效
-  matcher: ["/api/auth/:path*", "/((?!api|_next|_vercel|.*\\..*).*)"],
+  // /api/:path* 为体验模式守卫而加：需要拦住所有业务写接口
+  matcher: ["/api/auth/:path*", "/api/:path*", "/((?!api|_next|_vercel|.*\\..*).*)"],
 }

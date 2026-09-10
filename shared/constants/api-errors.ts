@@ -14,6 +14,8 @@ export const API_ERRORS = {
   demoNoPayment:             { zh: "体验用户不支持付费，请注册后使用",    en: "Demo users cannot make payments. Please sign up." },
   demoNoBind:                { zh: "体验用户不支持绑定邮箱，请注册后使用", en: "Demo users cannot bind email. Please sign up." },
   demoNoProfile:             { zh: "体验用户不支持修改资料，请注册后使用", en: "Demo users cannot modify profiles. Please sign up." },
+  demoReadOnly:              { zh: "体验模式仅供浏览，注册后即可使用完整功能",  en: "Demo mode is read-only. Sign up to use all features." },
+  demoNoLink:                { zh: "体验用户不支持关联第三方账号，请注册后使用",  en: "Demo users cannot link third-party accounts. Please sign up." },
 
   // ── Payment ──
   paymentNotConfigured:      { zh: "支付系统正在配置中，上线后即可使用", en: "Payment system is being configured. Available after launch." },
