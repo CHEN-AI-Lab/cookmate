@@ -1,12 +1,8 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/expire-sweep",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/reconcile-cancellations",
-      "schedule": "0 1 * * *"
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "preview": true
     }
-  ]
+  }
 }
