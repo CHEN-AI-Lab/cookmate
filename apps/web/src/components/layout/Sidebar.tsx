@@ -222,7 +222,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
               <div
                 ref={submenuRef}
                 style={{ position: "fixed", top: langPos.top, left: langPos.left, zIndex: 50 }}
-                className="bg-card border border-gray-100 rounded-lg shadow-lg py-1 min-w-[110px]"
+                className="bg-card border border-gray-100 rounded-md shadow-md py-0.5 min-w-[96px]"
               >
                 {locales
                   .filter((l) => !isDemoUser || l === "zh-CN" || l === "en")
@@ -244,7 +244,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
                                               // replace 而非 push：切换语言不往历史栈加记录，返回按钮回到上一个界面
                                               router.replace(window.location.pathname.replace(new RegExp("^/(?:" + locales.join("|") + ")(/|$)"), "/") || "/", { locale: l })
                                             }}
-                      className={"w-full text-left px-4 py-2 text-sm transition-colors " + (active ? "text-accent bg-orange-50 font-medium" : "text-text-secondary hover:bg-orange-50 hover:text-accent")}
+                      className={"w-full text-left px-3 py-1.5 text-sm transition-colors " + (active ? "text-accent bg-orange-50 font-medium" : "text-text-secondary hover:bg-orange-50 hover:text-accent")}
                     >
                       {localeNames[l] || l}
                     </button>
