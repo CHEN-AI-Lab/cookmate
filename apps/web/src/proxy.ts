@@ -3,7 +3,8 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { routing } from "@/i18n/routing"
 import { err, getLocaleFromCookie } from "@cookmate/shared/utils/locale"
-import { isDemoOnlyRequest, isDemoWriteAllowed, isSafeMethod } from "@cookmate/shared/utils/demo-guard"
+import { hasDemoCookieHeader, isDemoWriteAllowed, isSafeMethod } from "@cookmate/shared/utils/demo-guard"
+import { hasVerifiedSessionCookie } from "@/lib/session-cookie"
 
 const intlMiddleware = createMiddleware(routing)
 
@@ -33,16 +34,21 @@ function cleanup() {
   }
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // ── 体验模式统一拦截（默认拒绝写操作） ──
-  // 只有体验 cookie、没有真实登录会话的请求，一切非安全方法一律 403。
+  // 「有体验 cookie 且没有可验证的真实登录会话」的请求，一切非安全方法一律 403。
   // 拦截集中在这一处：后续新增任何写接口都会自动受限，不需要再逐个路由补判断。
   // 白名单见 demo-guard.ts 的 DEMO_WRITE_ALLOWLIST_PREFIXES（目前只有 NextAuth 自身流程）。
+  //
+  // 体验态判定走真验签（hasVerifiedSessionCookie）：session cookie 若只看名字存在性，
+  // 攻击者塞一个同名垃圾值就能让判定失效、绕过本拦截。路由层的 isDemoUser 守卫是第二道
+  // 防线，但第一道也要尽可能把住。没有 demo cookie 的请求不进验签分支，真实用户零额外开销。
   const cookieHeader = request.headers.get("cookie")
   if (
-    isDemoOnlyRequest(cookieHeader) &&
+    hasDemoCookieHeader(cookieHeader) &&
+    !(await hasVerifiedSessionCookie(cookieHeader)) &&
     !isSafeMethod(request.method) &&
     !isDemoWriteAllowed(pathname)
   ) {

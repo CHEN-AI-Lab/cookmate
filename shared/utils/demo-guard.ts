@@ -14,7 +14,7 @@
 export const DEMO_COOKIE_NAME = 'cookmate_demo'
 
 /** NextAuth 会话 cookie 基础名（生产为 __Secure- 前缀，超长时会分片成 .0/.1） */
-const SESSION_COOKIE_BASES = ['authjs.session-token', '__Secure-authjs.session-token']
+export const SESSION_COOKIE_BASES = ['authjs.session-token', '__Secure-authjs.session-token']
 
 /** 请求头里是否带体验 cookie（只判存在性，不验签 —— 见 isDemoOnlyRequest 说明） */
 export function hasDemoCookieHeader(cookieHeader: string | null): boolean {
