@@ -387,7 +387,6 @@
     "addFailed": "Add failed, please try again later",
     "cancel": "Cancel",
     "add": "Add",
-    "demoLockedAdd": "🔒 Sign up to add",
     "demoLockedAction": "Demo mode is read-only. Sign up to use all features.",
     "searchIcon": "🔍",
     "catLabels": {

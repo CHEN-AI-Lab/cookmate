@@ -301,6 +301,11 @@ export default function MealPlanPage() {
   }
 
   const toggleStar = async (recipeId: string) => {
+    // 体验态：收藏是写操作，直接给统一提示，不要让它走到接口拿 403 后静默失败
+    if (isDemoUser) {
+      showDemoToast()
+      return
+    }
     const r = await fetch("/api/recipes/star", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },

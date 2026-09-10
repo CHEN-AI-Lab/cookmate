@@ -199,7 +199,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
                                               setOpen(false)
                                               if (isDemoUser && l !== "zh-CN" && l !== "en") return
                                               if (isDemoUser) {
-                                                const msg = l === "zh-CN" ? "体验用户只能在中文和英文间切换" : "Demo users can only switch between Chinese and English"
+                                                const msg = t("demoLangToast")
                                                 setDemoLangToast(msg)
                                                 sessionStorage.setItem("demoLangToast", msg)
                                                 setTimeout(() => { setDemoLangToast(""); sessionStorage.removeItem("demoLangToast") }, 2500)

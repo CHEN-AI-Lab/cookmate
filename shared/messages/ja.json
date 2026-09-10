@@ -373,7 +373,6 @@
     "myItems": "マイ食材（{count}）",
     "empty": "食材が登録されていません",
     "addButton": "追加",
-    "demoLockedAdd": "🔒",
     "addDialogTitle": "食材を追加",
     "added": "追加しました ",
     "addFailed": "追加に失敗しました。しばらくしてからやり直してください",

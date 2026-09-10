@@ -1,3 +1,5 @@
+import { isChineseLocale } from "@cookmate/shared/constants/ingredients"
+
 export interface DemoRecipe {
   id: string
   title: string
@@ -14,7 +16,8 @@ export interface DemoRecipe {
 
 export function getDemoRecipes(locale = "zh-CN"): DemoRecipe[] {
   const now = new Date()
-  const isZh = locale === "zh-CN"
+  // 中文语系（zh-CN / zh-TW）显示中文示例内容，其余语言一律显示英文（体验模式语言口径）
+  const isZh = isChineseLocale(locale)
 
   return [
     // ── 中餐 ──────────────────────────────────────────────

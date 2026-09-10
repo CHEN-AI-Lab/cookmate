@@ -26,7 +26,7 @@ export function getDemoGroceryList(): {
         { name: "猪肉馅", quantity: "200g", inPantry: false, sources: [{ title: "豆浆+肉包子（周二早餐）", quantity: "150g" }, { title: "麻婆豆腐（周三晚餐）", quantity: "50g" }] },
         { name: "五花肉", quantity: "300g", inPantry: false, sources: [{ title: "回锅肉（周五午餐）", quantity: "300g" }] },
         { name: "草鱼/鲈鱼", quantity: "1条", inPantry: false, sources: [{ title: "水煮鱼（周六午餐）", quantity: "1条" }] },
-        { name: "鸡翅", quantity: "500g", inPantry: false, sources: [{ title: "可乐鸡翅（周日上午餐）", quantity: "500g" }] },
+        { name: "鸡翅", quantity: "500g", inPantry: false, sources: [{ title: "可乐鸡翅（周日早餐）", quantity: "500g" }] },
         { name: "牛腩", quantity: "500g", inPantry: false, sources: [{ title: "西红柿炖牛腩（周日晚餐）", quantity: "500g" }] },
         { name: "牛肉末", quantity: "100g", inPantry: false, sources: [{ title: "麻婆豆腐（周三晚餐）", quantity: "50g" }] },
       ],
@@ -76,7 +76,7 @@ export function getDemoGroceryList(): {
         { name: "番茄酱", quantity: "1瓶", inPantry: false, sources: [{ title: "糖醋里脊（周四午餐）", quantity: "2勺" }, { title: "西红柿炖牛腩（周日晚餐）", quantity: "1勺" }] },
         { name: "蚝油", quantity: "适量", inPantry: true, sources: [] },
         { name: "料酒", quantity: "适量", inPantry: true, sources: [] },
-        { name: "可乐", quantity: "1罐", inPantry: false, sources: [{ title: "可乐鸡翅（周日上午餐）", quantity: "1罐" }] },
+        { name: "可乐", quantity: "1罐", inPantry: false, sources: [{ title: "可乐鸡翅（周日早餐）", quantity: "1罐" }] },
       ],
     },
   ]

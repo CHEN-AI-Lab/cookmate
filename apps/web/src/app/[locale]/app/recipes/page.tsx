@@ -65,6 +65,12 @@ export default function RecipesPage() {
   const [isDemoUser, setIsDemoUser] = useState(false)
   const [demoToast, setDemoToast] = useState("")
 
+  // 体验模式统一提示（位置/样式与全站提示条一致）
+  const showDemoToast = () => {
+    setDemoToast(t("demoCannotGenerate"))
+    setTimeout(() => setDemoToast(""), 3000)
+  }
+
   const dayLabel: Record<string, string> = {
     "周一": tmeal("monday"),
     "周二": tmeal("tuesday"),
@@ -91,6 +97,11 @@ export default function RecipesPage() {
   }, [])
 
   const toggleStar = async (recipe: Recipe) => {
+    // 体验态：收藏是写操作，直接给统一提示，不要让它走到接口拿 403 后静默失败
+    if (isDemoUser) {
+      showDemoToast()
+      return
+    }
     const res = await fetch("/api/recipes/star", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -265,8 +276,7 @@ export default function RecipesPage() {
 
   const generateRecipes = async () => {
     if (isDemoUser) {
-      setDemoToast(t("demoCannotGenerate"))
-      setTimeout(() => setDemoToast(""), 3000)
+      showDemoToast()
       return
     }
     if (ingredients.length === 0) {
@@ -459,7 +469,7 @@ export default function RecipesPage() {
               index={idx}
               isStarred={starredIds.has(recipe.id?.toString() || "")}
               onToggleStar={toggleStar}
-              onAddToPlan={(r) => setAddDialog({ recipe: r, day: DAY_VALUES[0], meal: MEAL_VALUES[0] })}
+              onAddToPlan={(r) => isDemoUser ? showDemoToast() : setAddDialog({ recipe: r, day: DAY_VALUES[0], meal: MEAL_VALUES[0] })}
               onDelete={(r) => setDeleteDialog(r)}
               isFromPantry={isFromPantry}
               expanded={expanded === `${idx}`}

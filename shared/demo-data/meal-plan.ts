@@ -1,6 +1,8 @@
 // Demo meal plan — 7 days x 3 meals with bilingual (zh/en) recipes
 // All 8 cuisine types: 中餐, 西餐, 日料, 韩餐, 东南亚, 印度菜, 中东菜, 墨西哥菜
 
+import { isChineseLocale } from "@cookmate/shared/constants/ingredients"
+
 export interface DemoRecipe {
   id: string
   title: string
@@ -91,7 +93,7 @@ const recipeDefs: Record<string, RecipeDefinition> = {
       title: "Tomato Scrambled Eggs + Rice",
       description: "China's quintessential home-style dish — tangy tomatoes with silky scrambled eggs, perfectly paired with steamed rice.",
       ingredients: "tomatoes,eggs,scallion,salt,sugar,cooking oil,rice",
-      steps: "1.Beat eggs with a pinch of salt\n2.Cut tomatoes into wedges\n3.S果真ramble eggs in hot oil until set, remove\n4.In the same pan, cook tomatoes until juicy\n5.Add a pinch of sugar to enhance flavor\n6.Return eggs and toss together\n7.Garnish with scallions and serve over rice",
+      steps: "1.Beat eggs with a pinch of salt\n2.Cut tomatoes into wedges\n3.Scramble eggs in hot oil until set, remove\n4.In the same pan, cook tomatoes until juicy\n5.Add a pinch of sugar to enhance flavor\n6.Return eggs and toss together\n7.Garnish with scallions and serve over rice",
     },
     cookingTime: 20,
     calories: 420,
@@ -823,7 +825,8 @@ function getMonday(): string {
 export function getDemoMealPlan(locale = "zh-CN"): DemoMealPlan {
   const weekStart = getMonday()
   const slots: DemoSlot[] = []
-  const isEN = locale === "en"
+  // 中文语系（zh-CN / zh-TW）显示中文示例内容，其余语言一律显示英文（体验模式语言口径）
+  const isEN = !isChineseLocale(locale)
 
   dayRecipeKeys.forEach((meals, dayIdx) => {
     meals.forEach((key, mealIdx) => {

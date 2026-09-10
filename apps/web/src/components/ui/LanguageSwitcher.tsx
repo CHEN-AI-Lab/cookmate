@@ -1,6 +1,6 @@
 "use client"
 
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { usePathname, useRouter } from "@/i18n/navigation"
 import { locales, localeNames } from "@cookmate/shared/constants"
 import { useCallback, useRef, useState, useEffect } from "react"
@@ -12,6 +12,7 @@ export default function LanguageSwitcher({
   isDemoUser?: boolean
 }) {
   const locale = useLocale()
+  const t = useTranslations("nav")
   const pathname = usePathname()
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -51,9 +52,7 @@ export default function LanguageSwitcher({
       setOpen(false)
       if (isDemoUser && nextLocale !== "zh-CN" && nextLocale !== "en") return
       if (isDemoUser) {
-        const msg = nextLocale === "zh-CN"
-          ? "体验用户只能在中文和英文间切换"
-          : "Demo users can only switch between Chinese and English"
+        const msg = t("demoLangToast")
         setToast(msg)
         sessionStorage.setItem("demoLangToast", msg)
         setTimeout(() => { setToast(""); sessionStorage.removeItem("demoLangToast") }, 2500)
@@ -61,7 +60,7 @@ export default function LanguageSwitcher({
       // replace 而非 push：切换语言不往历史栈加记录，返回按钮回到上一个界面而不是上一个语言
       router.replace(pathname, { locale: nextLocale })
     },
-    [pathname, router, isDemoUser],
+    [pathname, router, isDemoUser, t],
   )
 
   return (

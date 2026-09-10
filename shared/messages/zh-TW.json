@@ -379,7 +379,6 @@
     "loading": "加載中...",
     "alreadyInPantry": "「{name}」已在食材庫中",
     "addFailed": "添加失敗，請稍後重試",
-    "demoLockedAdd": "🔒 註冊後可添加",
     "demoLockedAction": "體驗模式僅供瀏覽，註冊後即可使用完整功能",
     "catLabels": {
       "🥛 乳品豆制品": "🥛 乳品豆製品",

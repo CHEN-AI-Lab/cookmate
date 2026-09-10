@@ -69,6 +69,30 @@ describe("isDemoWriteAllowed", () => {
     expect(isDemoWriteAllowed("/api/user/unlink-account")).toBe(false)
     expect(isDemoWriteAllowed("/api/creem/create-checkout")).toBe(false)
   })
+  it("未逐个补路由守卫的写接口同样由中间件兜住（不接受任何业务写接口进白名单）", () => {
+    // 这些接口的 handler 里没有 isDemoUser 判断，体验态完全依赖 proxy.ts 的集中拦截。
+    // 一旦有人为了「放行某个接口」往 DEMO_WRITE_ALLOWLIST_PREFIXES 里加业务前缀，这里会失败。
+    const unguardedWriteEndpoints = [
+      "/api/grocery-list/manual",
+      "/api/grocery-list/purchase",
+      "/api/meal-plan/add",
+      "/api/meal-plan/delete",
+      "/api/meal-plan/slot",
+      "/api/orders/order_123",
+      "/api/pantry/item_1",
+      "/api/recipes",
+      "/api/recipes/rec_1",
+      "/api/recipes/rec_1/star",
+      "/api/recipes/generate",
+      "/api/recipes/star",
+    ]
+    for (const path of unguardedWriteEndpoints) {
+      expect(isDemoWriteAllowed(path)).toBe(false)
+      expect(isSafeMethod("POST")).toBe(false)
+      // 纯体验态请求 + 写方法 + 不在白名单 = 必被 403 拦下
+      expect(isDemoOnlyRequest(DEMO)).toBe(true)
+    }
+  })
 })
 
 describe("DEMO_LINKED_ACCOUNTS", () => {
