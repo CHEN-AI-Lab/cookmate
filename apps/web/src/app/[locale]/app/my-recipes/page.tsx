@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useTranslations, useLocale } from "next-intl"
 import { getDemoRecipes } from "@cookmate/shared/demo-data"
 import { CUISINE_LABELS } from "@cookmate/shared/constants"
+import { isChineseLocale } from "@cookmate/shared/constants/locales"
 import { UpgradeDialog, UpgradeInline } from "@/components/features/UpgradeLink"
 
 interface Recipe {
@@ -426,7 +427,7 @@ export default function MyRecipesPage() {
                       <div className="flex flex-wrap gap-2 mt-1.5 text-xs text-text-secondary">
                         {recipe.cookingTime && <span>⏱ {recipe.cookingTime}{tr("minutes")}</span>}
                         {recipe.calories && <span>🔥 {recipe.calories}{tr("caloriesShort")}</span>}
-                        {recipe.cuisineType && <span>{locale === "en" || locale.startsWith("en") ? (CUISINE_LABELS[recipe.cuisineType] || recipe.cuisineType) : recipe.cuisineType}</span>}
+                        {recipe.cuisineType && <span>{!isChineseLocale(locale) ? (CUISINE_LABELS[recipe.cuisineType] || recipe.cuisineType) : recipe.cuisineType}</span>}
                         {recipe.difficulty && (
                           <span className="px-1.5 py-0.5 rounded bg-orange-50 text-accent">{diffLabel(recipe.difficulty)}</span>
                         )}

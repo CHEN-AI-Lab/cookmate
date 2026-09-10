@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useLocale } from "next-intl"
+import { isChineseLocale } from "@cookmate/shared/constants/locales"
 import Link from "next/link"
 
 const STORAGE_KEY = "cookmate_demo_onboarding_done"
@@ -25,8 +26,10 @@ const steps = {
 
 export default function DemoOnboarding() {
   const locale = useLocale()
-  const isEn = locale === "en" || locale.startsWith("en")
-  const content = isEn ? steps.en : steps["zh-CN"]
+  // 体验模式语言口径：中文语系看中文，其余语言（含 ja）一律看英文
+  const isZh = isChineseLocale(locale)
+  const showEnglish = !isZh
+  const content = isZh ? steps["zh-CN"] : steps.en
   const [step, setStep] = useState(0)
   const [visible, setVisible] = useState(false)
 
@@ -84,25 +87,25 @@ export default function DemoOnboarding() {
                 <div className="flex gap-2 mt-5">
                   {step > 0 && step < content.length - 1 && (
                     <button onClick={prev} className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-gray-100 rounded-xl hover:bg-surface transition-colors">
-                      {isEn ? "← Back" : "← 上一步"}
+                      {showEnglish ? "← Back" : "← 上一步"}
                     </button>
                   )}
                   {step === 0 && (
                     <button onClick={close} className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-gray-100 rounded-xl hover:bg-surface transition-colors">
-                      {isEn ? "Skip" : "跳过"}
+                      {showEnglish ? "Skip" : "跳过"}
                     </button>
                   )}
                   {step < content.length - 1 ? (
                     <button onClick={next} className="flex-1 px-4 py-2.5 text-sm text-white bg-accent rounded-xl hover:bg-orange-600 font-medium transition-colors">
-                      {isEn ? "Next →" : "下一步 →"}
+                      {showEnglish ? "Next →" : "下一步 →"}
                     </button>
                   ) : (
                     <div className="flex gap-2 w-full">
                       <button onClick={close} className="flex-1 px-4 py-2.5 text-sm text-text-secondary border border-gray-100 rounded-xl hover:bg-surface transition-colors">
-                        {isEn ? "Later" : "稍后"}
+                        {showEnglish ? "Later" : "稍后"}
                       </button>
                       <Link href="/register" onClick={close} className="flex-1 px-4 py-2.5 text-sm text-center text-white bg-accent rounded-xl hover:bg-orange-600 font-medium transition-colors">
-                        {isEn ? "Free Sign Up" : "免费注册"}
+                        {showEnglish ? "Free Sign Up" : "免费注册"}
                       </Link>
                     </div>
                   )}

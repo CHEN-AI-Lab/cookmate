@@ -1,3 +1,6 @@
+import { isChineseLocale } from "@cookmate/shared/constants/locales"
+import { DEMO_DISH_TITLE_EN } from "./meal-plan"
+
 export interface DemoIngredientItem {
   name: string
   quantity: string
@@ -86,4 +89,35 @@ export function getDemoGroceryList(): {
   const stapleItems = ["盐", "糖", "淀粉", "胡椒粉", "香油", "料酒"]
 
   return { categories, total, inPantryCount, stapleItems }
+}
+
+/** 示例周计划里没有的菜名（购物清单来源标题专用补充） */
+const EXTRA_DISH_EN: Record<string, string> = {
+  "番茄炒蛋": "Scrambled Eggs with Tomatoes",
+}
+
+const WEEKDAY_EN: Record<string, string> = {
+  "周一": "Mon", "周二": "Tue", "周三": "Wed", "周四": "Thu",
+  "周五": "Fri", "周六": "Sat", "周日": "Sun",
+}
+
+const MEAL_EN: Record<string, string> = {
+  "早餐": "breakfast", "午餐": "lunch", "晚餐": "dinner",
+}
+
+/**
+ * 购物清单「来源」标题显示。
+ *
+ * 示例数据的标题形如「宫保鸡丁（周一午餐）」：食材名可以查表翻译，菜名不行，
+ * 所以在显示层把它拆成「菜名 + 周次 + 餐次」再拼成「Kung Pao Chicken (Mon lunch)」。
+ * 中文语系原样返回；菜名或周次/餐次认不出来时也原样返回，不做臆造翻译。
+ */
+export function displaySourceTitle(title: string, locale: string): string {
+  if (!title) return title
+  if (isChineseLocale(locale)) return title
+  const m = title.match(/^(.+?)（(周[一二三四五六日])(早餐|午餐|晚餐)）$/)
+  if (!m) return title
+  const dish = DEMO_DISH_TITLE_EN[m[1]] || EXTRA_DISH_EN[m[1]]
+  if (!dish) return title
+  return `${dish} (${WEEKDAY_EN[m[2]]} ${MEAL_EN[m[3]]})`
 }

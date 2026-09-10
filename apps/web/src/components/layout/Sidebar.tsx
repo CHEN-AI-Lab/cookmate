@@ -9,6 +9,7 @@ import { useLocale } from "next-intl"
 import { useState, useRef, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { locales, localeNames } from "@cookmate/shared/constants"
+import { isChineseLocale } from "@cookmate/shared/constants/locales"
 
 const navItems = [
   { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
@@ -157,7 +158,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
         <span className="flex items-center justify-center w-7 h-7 rounded-full bg-orange-100 text-accent text-xs font-bold shrink-0">
           {initial}
         </span>
-        <span className="truncate flex-1">{isDemoUser && (locale === "en" || locale.startsWith("en")) ? "Demo User" : name}</span>
+        <span className="truncate flex-1">{isDemoUser && !isChineseLocale(locale) ? "Demo User" : name}</span>
         <svg className={`w-4 h-4 text-text-secondary transition-transform ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="6 9 12 15 18 9" />
         </svg>

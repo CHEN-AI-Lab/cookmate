@@ -1,4 +1,4 @@
-import { isChineseLocale } from "@cookmate/shared/constants/ingredients"
+import { isChineseLocale } from "@cookmate/shared/constants/locales"
 
 export interface DemoRecipe {
   id: string

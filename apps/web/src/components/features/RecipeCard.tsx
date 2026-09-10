@@ -1,6 +1,7 @@
 "use client"
 import { useTranslations, useLocale } from "next-intl"
 import { CUISINE_LABELS } from "@cookmate/shared/constants"
+import { isChineseLocale } from "@cookmate/shared/constants/locales"
 
 interface Recipe {
   id: string
@@ -101,7 +102,7 @@ export function RecipeCard({
             <div className="flex flex-wrap gap-3 mt-2 text-xs">
               <span>⏱ {recipe.cookingTime}{t("minutes")}</span>
               <span>🔥 {recipe.calories}{t("caloriesShort")}</span>
-              <span>{locale === "en" || locale.startsWith("en") ? (CUISINE_LABELS[recipe.cuisineType] || recipe.cuisineType) : recipe.cuisineType}</span>
+              <span>{!isChineseLocale(locale) ? (CUISINE_LABELS[recipe.cuisineType] || recipe.cuisineType) : recipe.cuisineType}</span>
               <span className={`px-2 py-0.5 rounded-full ${diffColor(recipe.difficulty)}`}>
                 {difficultyLabel(recipe.difficulty)}
               </span>

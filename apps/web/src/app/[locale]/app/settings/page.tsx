@@ -7,6 +7,7 @@ import { signIn, signOut } from "next-auth/react"
 import Link from "next/link"
 import PasswordInput from "@/components/ui/PasswordInput"
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS, SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
+import { isChineseLocale } from "@cookmate/shared/constants/locales"
 
 export default function SettingsPage() {
   const ts = useTranslations("settings")
@@ -343,7 +344,7 @@ const save = async () => {
                                   </div>
                                 ) : (
                                   <>
-                                    {profile?.isDemoUser && (locale === "en" || locale.startsWith("en")) ? "Demo User" : profile.name || ts("notSet")}
+                                    {profile?.isDemoUser && !isChineseLocale(locale) ? "Demo User" : profile.name || ts("notSet")}
                                     <button onClick={() => { if (profile?.isDemoUser) { setGlobalToast(ts("demoToast")); setTimeout(() => setGlobalToast(""), 3000); return } setEditNameValue(profile.name || ""); setEditingName(true) }} className="ml-2 text-accent text-xs hover:underline disabled:text-gray-300 disabled:cursor-not-allowed">{ts("editName")}</button>
                                   </>
                                 )}
@@ -352,9 +353,9 @@ const save = async () => {
                             <div className="flex items-center justify-between py-2 border-b border-border">
                               <span className="text-sm text-text-secondary">{ts("loginMethod")}</span>
                   <span className="text-sm font-medium text-text-primary">
-                {profile?.isDemoUser && (locale === "en" || locale.startsWith("en"))
+                {profile?.isDemoUser && !isChineseLocale(locale)
                   ? "Demo Login"
-                  : locale.startsWith("zh")
+                  : isChineseLocale(locale)
                     ? profile.loginMethod
                     : ts("loginMethod_" + profile.loginMethod) || profile.loginMethod}</span>
                 </div>

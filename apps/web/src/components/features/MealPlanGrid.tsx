@@ -1,5 +1,6 @@
 "use client"
 import { useTranslations, useLocale } from "next-intl"
+import { isChineseLocale } from "@cookmate/shared/constants/locales"
 
 const MEAL_TYPES = ["breakfast", "lunch", "dinner"]
 const MEAL_EMOJIS: Record<string, string> = {
@@ -34,7 +35,7 @@ interface MealPlanGridProps {
 export function MealPlanGrid({ plan, onSlotClick }: MealPlanGridProps) {
   const t = useTranslations("mealPlan")
   const locale = useLocale()
-  const timeSuffix = locale === "en" || locale.startsWith("en") ? " min" : " 分钟"
+  const timeSuffix = isChineseLocale(locale) ? " 分钟" : " min"
   const DAY_LABELS = [
     t("monday"), t("tuesday"), t("wednesday"),
     t("thursday"), t("friday"), t("saturday"), t("sunday"),

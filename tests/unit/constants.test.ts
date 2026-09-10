@@ -3,8 +3,9 @@ import { MEAL_TYPES, DIETARY_PREFERENCES, DIFFICULTY_LEVELS, SUBSCRIPTION_TIERS,
 import { apiError, API_ERRORS } from '@cookmate/shared/constants/api-errors'
 import { PRICING } from '@cookmate/shared/constants/pricing'
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS } from '@cookmate/shared/constants/preferences'
-import { INGREDIENT_LABELS, isChineseLocale, displayIngredient, displayQuantity } from '@cookmate/shared/constants/ingredients'
-import { getDemoPantryItems, getDemoGroceryList } from '@cookmate/shared/demo-data'
+import { INGREDIENT_LABELS, displayIngredient, displayQuantity } from '@cookmate/shared/constants/ingredients'
+import { isChineseLocale } from '@cookmate/shared/constants/locales'
+import { getDemoPantryItems, getDemoGroceryList, displaySourceTitle } from '@cookmate/shared/demo-data'
 
 describe('APP_NAME', () => {
   it('is CookMate', () => {
@@ -205,5 +206,37 @@ describe('ingredients 显示辅助（体验版 i18n 回归）', () => {
       expect(zh.trim().length).toBeGreaterThan(0)
       expect(en.trim().length).toBeGreaterThan(0)
     }
+  })
+})
+
+describe('grocery 来源标题显示（体验版 i18n 回归）', () => {
+  it('中文语系原样返回', () => {
+    expect(displaySourceTitle('宫保鸡丁（周一午餐）', 'zh-CN')).toBe('宫保鸡丁（周一午餐）')
+    expect(displaySourceTitle('宫保鸡丁（周一午餐）', 'zh-TW')).toBe('宫保鸡丁（周一午餐）')
+  })
+
+  it('非中文语系拼成「英文菜名 (周次 餐次)」', () => {
+    expect(displaySourceTitle('宫保鸡丁（周一午餐）', 'en')).toBe('Kung Pao Chicken (Mon lunch)')
+    expect(displaySourceTitle('红烧排骨（周二午餐）', 'ja')).toBe('Braised Spare Ribs (Tue lunch)')
+    expect(displaySourceTitle('麻婆豆腐（周三晚餐）', 'en')).toBe('Mapo Tofu (Wed dinner)')
+  })
+
+  it('认不出菜名或格式时原样返回，不臆造翻译', () => {
+    expect(displaySourceTitle('奶奶的秘制酱（周一午餐）', 'en')).toBe('奶奶的秘制酱（周一午餐）')
+    expect(displaySourceTitle('宫保鸡丁', 'en')).toBe('宫保鸡丁')
+    expect(displaySourceTitle('', 'en')).toBe('')
+  })
+
+  it('示例购物清单的来源标题全部可翻译成英文', () => {
+    const { categories } = getDemoGroceryList()
+    const missing: string[] = []
+    for (const cat of categories) {
+      for (const item of cat.items) {
+        for (const s of item.sources) {
+          if (displaySourceTitle(s.title, 'en') === s.title) missing.push(s.title)
+        }
+      }
+    }
+    expect(missing).toEqual([])
   })
 })

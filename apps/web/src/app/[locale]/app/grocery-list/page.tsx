@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useTranslations, useLocale } from "next-intl"
-import { getDemoGroceryList } from "@cookmate/shared/demo-data"
+import { getDemoGroceryList, displaySourceTitle } from "@cookmate/shared/demo-data"
 import { UpgradeDialog, UpgradeInline } from "@/components/features/UpgradeLink"
 import { displayIngredient, displayQuantity } from "@cookmate/shared/constants/ingredients"
 
@@ -489,7 +489,7 @@ export default function GroceryListPage() {
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-text-primary">
-                {tg("sourceOf", { name: sourceDialog.name })}
+                {tg("sourceOf", { name: displayIngredient(sourceDialog.name, locale) })}
               </h3>
               <button
                 onClick={() => setSourceDialog(null)}
@@ -501,8 +501,8 @@ export default function GroceryListPage() {
             <div className="space-y-3">
               {sourceDialog.sources.map((src, i) => (
                 <div key={i} className="flex items-center justify-between bg-orange-50 rounded-xl px-4 py-3">
-                  <span className="text-sm font-medium text-text-primary">{src.title}</span>
-                  <span className="text-sm text-text-secondary">{src.quantity}</span>
+                  <span className="text-sm font-medium text-text-primary">{displaySourceTitle(src.title, locale)}</span>
+                  <span className="text-sm text-text-secondary">{displayQuantity(src.quantity, locale)}</span>
                 </div>
               ))}
             </div>

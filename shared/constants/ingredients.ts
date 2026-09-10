@@ -1,6 +1,8 @@
 // ─── 食材中英文映射 + 风险管控清单 ───
 // 供前端 UI 展示和后端 API 校验共用
 
+import { isChineseLocale } from "./locales"
+
 // ══════════════════════════════════════════
 // 第 1 部分：中英文食材名映射（Chinese → English）
 // 添加新食材时在此追加，两端自动生效
@@ -115,11 +117,6 @@ export const INGREDIENT_LABELS: Record<string, string> = {
 // ══════════════════════════════════════════
 // 第 1.5 部分：中英文显示辅助（页面统一调用，避免各页重复实现）
 // ══════════════════════════════════════════
-
-/** 中文语系（zh-CN / zh-TW 等）保留中文原文 */
-export function isChineseLocale(locale: string): boolean {
-  return typeof locale === "string" && locale.startsWith("zh")
-}
 
 /**
  * 食材名显示：中文语系原样返回，其余语言查映射表转英文。
