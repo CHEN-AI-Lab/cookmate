@@ -779,7 +779,7 @@ function CronsTab({ data }: { data: CronLogsResponse | null }) {
     <div className="space-y-4">
       <div>
         <p className="text-text-secondary text-sm">
-          Vercel Cron 定时任务执行记录（每日 03:00 过期降级 / 04:00 取消对账）。
+          Vercel Cron 定时任务执行记录（每日 00:00 过期降级 / 01:00 取消对账，UTC 时间；对应北京时间 08:00 / 09:00）。
           状态为「失败」= 定时任务执行出错，需检查服务端日志。
         </p>
       </div>
