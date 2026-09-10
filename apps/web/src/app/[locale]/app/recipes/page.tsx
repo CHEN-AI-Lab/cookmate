@@ -510,7 +510,7 @@ export default function RecipesPage() {
       )}
 
       {dupDialog && (
-        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center pt-[33vh]">
           <div className="bg-amber-50 border border-amber-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
             <span className="text-amber-500 text-base shrink-0">⚠️</span>
             <span className="text-text-primary">{t("duplicateIngredient", { name: dupDialog })}</span>
@@ -551,7 +551,7 @@ export default function RecipesPage() {
       )}
 
       {addMsg && (
-        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center pt-[33vh]">
           <div className="bg-amber-50 border border-amber-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
             <span className="text-text-primary">{addMsg}</span>
           </div>
@@ -559,7 +559,7 @@ export default function RecipesPage() {
       )}
 
       {starToast && (
-        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center pt-[33vh]">
           <div className="bg-amber-50 border border-amber-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
             <span className="text-text-primary">{starToast}</span>
           </div>
@@ -567,7 +567,7 @@ export default function RecipesPage() {
       )}
 
       {demoToast && (
-        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center pt-[33vh]">
           <div className="bg-amber-50 border border-amber-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
             <span className="text-amber-800">{demoToast}</span>
           </div>
@@ -575,7 +575,7 @@ export default function RecipesPage() {
       )}
 
       {deleteError && (
-        <div className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-[15vh]">
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center pt-[33vh]">
           <div className="bg-amber-50 border border-amber-200 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
             <span className="text-red-600 text-base shrink-0">❌</span>
             <span className="text-text-primary">{deleteError}</span>

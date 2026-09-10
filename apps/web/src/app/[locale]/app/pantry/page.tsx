@@ -288,13 +288,13 @@ export default function PantryPage() {
 
       {/* Demo user toast */}
       {demoToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-amber-50 border border-amber-200 text-amber-800 px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+        <div className="fixed left-1/2 top-[33vh] -translate-x-1/2 bg-amber-50 border border-amber-200 text-amber-800 px-6 py-3 rounded-xl text-sm shadow-lg z-[100]">
           {demoToast}
         </div>
       )}
       {/* Success toast */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50 flex items-center gap-2">
+        <div className="fixed left-1/2 top-[33vh] -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-xl text-sm shadow-lg z-[100] flex items-center gap-2">
           <span>✅</span> {toast}
         </div>
       )}

@@ -454,7 +454,7 @@ export default function GroceryListPage() {
 
       {/* 添加到食材库通知 */}
       {purchaseNotify && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-bounce-in">
+        <div className="fixed left-1/2 top-[33vh] -translate-x-1/2 z-[100] animate-bounce-in">
           <div className="bg-green-600 text-white px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2">
             {purchaseNotify.existing ? (
               <>{tg("alreadyInPantry", { name: purchaseNotify.name })}</>
@@ -526,7 +526,7 @@ export default function GroceryListPage() {
 
       {/* Demo user toast */}
       {demoToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-amber-50 border border-amber-200 text-amber-800 px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+        <div className="fixed left-1/2 top-[33vh] -translate-x-1/2 bg-amber-50 border border-amber-200 text-amber-800 px-6 py-3 rounded-xl text-sm shadow-lg z-[100]">
           {demoToast}
         </div>
       )}

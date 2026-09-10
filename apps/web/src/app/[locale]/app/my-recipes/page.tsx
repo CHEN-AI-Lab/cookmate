@@ -46,6 +46,7 @@ export default function MyRecipesPage() {
   const [addMsg, setAddMsg] = useState("")
   const [conflictData, setConflictData] = useState<{ existingTitle: string; recipe: Recipe } | null>(null)
   const [toast, setToast] = useState("")
+  const [demoToast, setDemoToast] = useState("")
   // 收藏上限横幅（持久显示，带内嵌升级链接）；toast 太快消失，用户来不及看原因
   const [starBanner, setStarBanner] = useState(false)
   const [filter, setFilter] = useState<"all" | "starred">("all")
@@ -64,6 +65,12 @@ export default function MyRecipesPage() {
     setToast(msg)
     setTimeout(() => setToast(""), 2500)
   }, [])
+
+  // 体验模式统一提示：与全站同一文案、同一位置、同一配色
+  const showDemoToast = useCallback(() => {
+    setDemoToast(tr("demoToast"))
+    setTimeout(() => setDemoToast(""), 2500)
+  }, [tr])
 
   const loadRecipes = async (pageNum = 1, filterType?: string) => {
     try {
@@ -151,7 +158,7 @@ export default function MyRecipesPage() {
 
   const toggleStar = async (recipeId: string) => {
     if (isDemoUser) {
-      showToast(tr("demoToast"))
+      showDemoToast()
       return
     }
     const res = await fetch("/api/recipes/star", {
@@ -196,7 +203,7 @@ export default function MyRecipesPage() {
 
   const deleteRecipes = async () => {
     if (isDemoUser) {
-      showToast(tr("demoToast"))
+      showDemoToast()
       setDeleteDialog(null)
       return
     }
@@ -345,7 +352,7 @@ export default function MyRecipesPage() {
               <button
                 onClick={() => {
                   if (isDemoUser) {
-                    showToast(tr("demoToast"))
+                    showDemoToast()
                     return
                   }
                   setIsSelectMode(true)
@@ -466,7 +473,7 @@ export default function MyRecipesPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => isDemoUser ? showToast(tr("demoToast")) : setAddDialog({ recipeId: recipe.id, title: recipe.title })}
+                    onClick={() => isDemoUser ? showDemoToast() : setAddDialog({ recipeId: recipe.id, title: recipe.title })}
                     className="mt-4 bg-orange-50 text-accent px-4 py-2 rounded-xl text-sm font-medium hover:bg-orange-100 transition-colors"
                   >
                     {tr("addToPlan")}
@@ -577,7 +584,7 @@ export default function MyRecipesPage() {
       )}
 
       {addMsg && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-bg-inverse text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50">
+        <div className="fixed left-1/2 top-[33vh] -translate-x-1/2 bg-card border border-border text-text-primary px-6 py-3 rounded-xl text-sm shadow-lg z-[100]">
           {addMsg}
         </div>
       )}
@@ -598,8 +605,14 @@ export default function MyRecipesPage() {
       )}
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-bg-inverse text-white px-6 py-3 rounded-xl text-sm shadow-lg z-50 transition-all">
+        <div className="fixed left-1/2 top-[33vh] -translate-x-1/2 bg-card border border-border text-text-primary px-6 py-3 rounded-xl text-sm shadow-lg z-[100] transition-all">
           {toast}
+        </div>
+      )}
+
+      {demoToast && (
+        <div className="fixed left-1/2 top-[33vh] -translate-x-1/2 bg-amber-50 border border-amber-200 text-amber-800 px-6 py-3 rounded-xl text-sm shadow-lg z-[100]">
+          {demoToast}
         </div>
       )}
     </div>
