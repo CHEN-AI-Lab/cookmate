@@ -2,10 +2,20 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { isStaple } from "@cookmate/shared/utils/grocery-categories"
+import { isDemoUser } from "@/lib/auth-helpers"
+import { err, getLocaleFromCookie } from "@cookmate/shared/utils/locale"
 
 export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+  if (isDemoUser(session)) {
+    // 体验态：写操作在路由自身再拦一道。middleware 的集中拦截依赖 cookie 组合判断，
+    // 伪造一个垃圾 session cookie 即可绕过；此处按会话身份判定，绕过不了。
+    return NextResponse.json(
+      { error: err(getLocaleFromCookie(req), "demoReadOnly"), demoRestricted: true },
+      { status: 403 },
+    )
+  }
   try {
     const { name } = await req.json()
     if (!name) return NextResponse.json({ error: "请输入物品名称" }, { status: 400 })
@@ -29,6 +39,14 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+  if (isDemoUser(session)) {
+    // 体验态：写操作在路由自身再拦一道。middleware 的集中拦截依赖 cookie 组合判断，
+    // 伪造一个垃圾 session cookie 即可绕过；此处按会话身份判定，绕过不了。
+    return NextResponse.json(
+      { error: err(getLocaleFromCookie(req), "demoReadOnly"), demoRestricted: true },
+      { status: 403 },
+    )
+  }
   try {
     const { name } = await req.json()
     if (!name?.trim()) return NextResponse.json({ error: "缺少物品名称" }, { status: 400 })

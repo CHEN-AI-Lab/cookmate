@@ -909,6 +909,7 @@
     "updateFailed": "Update failed",
     "bindFailed": "Binding failed",
     "requestFailed": "Request failed, please try again later",
+    "demoReadOnly": "Demo mode is read-only. Sign up to unlock all features.",
     "nothingToUpdate": "Nothing to update",
     "userNotFound": "User not found",
     "missingParams": "Missing parameters",

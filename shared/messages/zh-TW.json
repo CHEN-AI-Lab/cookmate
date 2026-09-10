@@ -909,6 +909,7 @@
     "updateFailed": "更新失敗",
     "bindFailed": "綁定失敗",
     "requestFailed": "請求失敗，請稍後重試",
+    "demoReadOnly": "體驗模式僅供瀏覽，註冊後即可使用完整功能",
     "nothingToUpdate": "沒有要更新的內容",
     "userNotFound": "用戶不存在",
     "missingParams": "參數不完整",
