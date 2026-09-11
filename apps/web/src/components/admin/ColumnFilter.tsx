@@ -241,7 +241,7 @@ function TextBody({
         className="w-full rounded-lg border border-border bg-white px-2.5 py-1.5 text-[12.5px] text-text-primary outline-none focus:border-accent"
       />
       <p className="mt-1.5 text-[11px] text-text-secondary">
-        模糊匹配 · 不区分大小写 · 输入完自动生效（回车立即生效）
+        模糊匹配 · 不区分大小写 · 输入完自动生效
       </p>
     </>
   )
