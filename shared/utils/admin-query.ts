@@ -58,3 +58,36 @@ export function isAmountMismatch(o: {
   if (o.paidAmount !== o.amount) return true
   return !!o.paidCurrency && !!o.currency && o.paidCurrency !== o.currency
 }
+
+/** 用户订阅状态（后台「用户列表」展示用）。口径对齐 Stripe / Chargebee：active / canceled / expired，一次性买断单列。 */
+export type SubscriptionStatus = "active" | "canceled" | "onetime" | "expired" | "free" | "unknown"
+
+/**
+ * 判定顺序很重要：
+ *  1. 免费 → free（没有订阅状态可言）
+ *  2. 有 Creem 订阅ID → active（Creem 是「会不会自动续费」的事实来源）
+ *  3. 本地无订阅ID 且到期日已过 → expired（等每日降级任务跑掉）
+ *  4. 最后一笔已支付订单是支付宝 → onetime（一次性买断，不是取消）
+ *  5. 最后一笔是 Creem → canceled（取消后当前周期用完自动降级）
+ *  6. 什么都查不到 → unknown（历史脏数据，不硬猜）
+ *
+ * ⚠️ 为什么需要 lastPaidChannel：取消订阅后本地会把 creemSubscriptionId 清空，
+ * 此时「取消的 Creem 订阅」和「支付宝一次性买断」在 User 表上长得一模一样，只能靠支付渠道区分。
+ */
+export function deriveSubscriptionStatus(input: {
+  isPro: boolean
+  creemSubscriptionId: string | null
+  subscriptionExpiryDate: Date | string | null
+  lastPaidChannel: string | null
+  now?: Date
+}): SubscriptionStatus {
+  if (!input.isPro) return "free"
+  if (input.creemSubscriptionId) return "active"
+  const expiry = input.subscriptionExpiryDate ? new Date(input.subscriptionExpiryDate) : null
+  if (expiry && !Number.isNaN(expiry.getTime()) && expiry.getTime() < (input.now ?? new Date()).getTime()) {
+    return "expired"
+  }
+  if (input.lastPaidChannel === "alipay") return "onetime"
+  if (input.lastPaidChannel === "creem") return "canceled"
+  return "unknown"
+}

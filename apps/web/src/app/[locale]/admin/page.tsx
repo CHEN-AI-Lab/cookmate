@@ -4,7 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react"
 import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 import { CHANNEL_ICONS, CHANNEL_LABELS } from "@cookmate/shared/constants/payment-channels"
 import { useTableQuery, type TableQuery } from "@cookmate/shared/hooks/useTableQuery"
-import { isAmountMismatch } from "@cookmate/shared/utils/admin-query"
+import { isAmountMismatch, type SubscriptionStatus } from "@cookmate/shared/utils/admin-query"
 import { Th } from "@/components/admin/ColumnFilter"
 import { DataTablePagination } from "@/components/admin/DataTablePagination"
 
@@ -98,6 +98,7 @@ interface AdminUser {
   onboardingCompleted: boolean
   createdAt: string
   orderCount: number
+  subStatus?: SubscriptionStatus | null
 }
 
 interface UsersResponse {
@@ -269,6 +270,24 @@ const TIER_OPTIONS = [
   { value: "PRO", label: "Pro" },
   { value: "FREE", label: "Free" },
 ]
+
+// 用户订阅状态（口径对齐 Stripe / Chargebee：active / canceled / expired；一次性买断单列，不算取消）
+const SUB_STATUS: Record<SubscriptionStatus, { label: string; cls: string }> = {
+  active: { label: "订阅中（自动续费）", cls: "bg-green-100 text-green-600" },
+  canceled: { label: "已取消（到期降级）", cls: "bg-orange-100 text-orange-600" },
+  onetime: { label: "一次性（支付宝）", cls: "bg-blue-100 text-blue-600" },
+  expired: { label: "已过期", cls: "bg-gray-100 text-gray-500" },
+  unknown: { label: "状态未知", cls: "bg-gray-100 text-gray-500" },
+  free: { label: "免费版", cls: "bg-gray-100 text-gray-500" },
+}
+
+function SubStatusBadge({ status }: { status: SubscriptionStatus | null | undefined }) {
+  // 免费用户没有订阅状态，显示「-」避免和左边「套餐」列重复
+  if (!status || status === "free") return <span className="text-gray-400">-</span>
+  const s = SUB_STATUS[status]
+  if (!s) return <span className="text-gray-400">-</span>
+  return <span className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${s.cls}`}>{s.label}</span>
+}
 
 const CANCEL_STATUS_OPTIONS = [
   { value: "completed", label: "成功" },
@@ -894,13 +913,17 @@ function UsersTab({ q }: { q: TableQuery<UsersResponse> }) {
                   value={q.filters.name}
                   onChange={(v) => q.setFilter("name", v)}
                 />
-                <Th
-                  label="套餐"
-                  hint="当前套餐：FREE 免费版 / PRO 付费版"
-                  filter={{ type: "select", options: TIER_OPTIONS }}
-                  value={q.filters.tier}
-                  onChange={(v) => q.setFilter("tier", v)}
-                />
+                    <Th
+                      label="套餐"
+                      hint="当前套餐：FREE 免费版 / PRO 付费版"
+                      filter={{ type: "select", options: TIER_OPTIONS }}
+                      value={q.filters.tier}
+                      onChange={(v) => q.setFilter("tier", v)}
+                    />
+                    <Th
+                      label="订阅状态"
+                      hint="订阅中=Creem 自动续费；已取消=取消后到期降级；一次性=支付宝买断（不算取消）"
+                    />
                 <Th label="到期时间" hint="付费到期时间（FREE 用户为空）" />
                 <Th label="订单数" align="right" hint="该用户创建的订单总数" />
                 <Th label="引导完成" hint="新用户引导是否完成" />
@@ -912,17 +935,20 @@ function UsersTab({ q }: { q: TableQuery<UsersResponse> }) {
                   <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(u.createdAt)}</td>
                   <td className="px-4 py-3 text-gray-700 text-xs">{u.email ?? u.phone ?? "-"}</td>
                   <td className="px-4 py-3 text-gray-700">{u.name ?? "-"}</td>
-                  <td className="px-4 py-3">
-                    {u.subscriptionTier === SUBSCRIPTION_TIER.PRO ? (
-                      <span className="inline-flex px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-xs font-semibold">
-                        Pro
-                      </span>
-                    ) : (
-                      <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">
-                        Free
-                      </span>
-                    )}
-                  </td>
+                      <td className="px-4 py-3">
+                        {u.subscriptionTier === SUBSCRIPTION_TIER.PRO ? (
+                          <span className="inline-flex px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-xs font-semibold">
+                            Pro
+                          </span>
+                        ) : (
+                          <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">
+                            Free
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <SubStatusBadge status={u.subStatus} />
+                      </td>
                   <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
                     {u.subscriptionExpiryDate ? fmtTime(u.subscriptionExpiryDate) : "-"}
                   </td>

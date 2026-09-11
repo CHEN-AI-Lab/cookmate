@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/admin-auth"
 import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
-import { parsePage, parsePageSize, parseListParam, parseDateRange } from "@cookmate/shared/utils/admin-query"
+import { parsePage, parsePageSize, parseListParam, parseDateRange, deriveSubscriptionStatus } from "@cookmate/shared/utils/admin-query"
 
 // 管理员专用：用户列表（注册用户、套餐、到期时间、注册日期）。
 // 鉴权见 requireAdmin（ADMIN_EMAILS 白名单，fail-closed）。
@@ -46,6 +46,7 @@ export async function GET(req: Request) {
         phone: true,
         subscriptionTier: true,
         subscriptionExpiryDate: true,
+        creemSubscriptionId: true,
         onboardingCompleted: true,
         createdAt: true,
         _count: {
@@ -57,6 +58,22 @@ export async function GET(req: Request) {
     prisma.user.count({ where: { ...where, subscriptionTier: SUBSCRIPTION_TIER.FREE } }),
   ])
 
+  // 每个用户最近一笔「已支付」订单的渠道 —— 用来区分「已取消的 Creem 订阅」和「支付宝一次性买断」：
+  // 取消后本地会把 creemSubscriptionId 清空，两者在 User 表上长得一样，只能靠支付渠道区分。
+  // 只查当前页这 50 个用户，一次批量查（不是逐个查，避免 N+1）。
+  const pageUserIds = users.map((u) => u.id)
+  const lastPaids = pageUserIds.length
+    ? await prisma.paymentOrder.findMany({
+        where: { userId: { in: pageUserIds }, status: "PAID" },
+        orderBy: { createdAt: "desc" },
+        select: { userId: true, channel: true },
+      })
+    : []
+  const lastChannelByUser = new Map<string, string>()
+  for (const o of lastPaids) {
+    if (!lastChannelByUser.has(o.userId)) lastChannelByUser.set(o.userId, o.channel)
+  }
+
   const parsed = users.map((u) => ({
     id: u.id,
     email: u.email,
@@ -67,6 +84,12 @@ export async function GET(req: Request) {
     onboardingCompleted: u.onboardingCompleted,
     createdAt: u.createdAt.toISOString(),
     orderCount: u._count.paymentOrders,
+    subStatus: deriveSubscriptionStatus({
+      isPro: u.subscriptionTier === SUBSCRIPTION_TIER.PRO,
+      creemSubscriptionId: u.creemSubscriptionId,
+      subscriptionExpiryDate: u.subscriptionExpiryDate,
+      lastPaidChannel: lastChannelByUser.get(u.id) ?? null,
+    }),
   }))
 
   return NextResponse.json({
