@@ -324,6 +324,33 @@ async function syncSubscription(userId: string, subscriptionId: string, periodEn
   })
 }
 
+// 记录 Creem 官方订阅状态（纯同步，不改权限）
+// 每个 subscription.* 事件都带 Creem 自己的 status，原样存到 User.creemSubscriptionStatus，
+// 后台「订阅状态」列就能直接用官方状态，不用只靠本地字段反推。
+// userId 优先取 metadata；取不到时用订阅ID反查 —— subscription.paid 可能早于
+// checkout.completed 到达，那时 metadata 里还没有本地用户信息。
+async function recordCreemStatus(event: Record<string, unknown>): Promise<void> {
+  const status = extractStatus(event)
+  if (!status) return
+  let userId = await resolveUserId(event)
+  if (!userId) {
+    const subscriptionId = extractSubscriptionId(event)
+    if (!subscriptionId) return
+    const matched = await prisma.user.findFirst({
+      where: { creemSubscriptionId: subscriptionId },
+      select: { id: true },
+    })
+    userId = matched?.id ?? null
+  }
+  if (!userId) return
+  await prisma.user.update({
+    where: { id: userId },
+    data: { creemSubscriptionStatus: status },
+  }).catch(() => {
+    // 用户可能已删除，忽略
+  })
+}
+
 // ── 事件ID去重 ──
 
 // 检查事件是否已处理过（幂等保护）
@@ -413,6 +440,13 @@ export async function POST(req: Request) {
     if (eventId && await isAlreadyProcessed(eventId)) {
       logWebhook("creem", rawEventType, "duplicate", undefined, eventId)
       return NextResponse.json({ success: true, message: "duplicate event" })
+    }
+
+    // ── Creem 官方订阅状态落库 ──
+    // 只同步状态字段，不碰权限（权限仍由下面各自的分支 grantAccess / revokeAccess 负责）。
+    // 放在去重判断之后，重复投递不会产生多余的写库。
+    if (rawEventType?.startsWith("subscription.")) {
+      await recordCreemStatus(event)
     }
 
     // ── checkout.completed ──

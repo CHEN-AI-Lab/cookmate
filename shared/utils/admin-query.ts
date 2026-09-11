@@ -59,8 +59,30 @@ export function isAmountMismatch(o: {
   return !!o.paidCurrency && !!o.currency && o.paidCurrency !== o.currency
 }
 
-/** 用户订阅状态（后台「用户列表」展示用）。口径对齐 Stripe / Chargebee：active / canceled / expired，一次性买断单列。 */
-export type SubscriptionStatus = "active" | "canceled" | "onetime" | "expired" | "free" | "unknown"
+/** 用户订阅状态（后台「用户列表」展示用）。口径对齐 Stripe / Chargebee：active / canceled / expired，
+ *  一次性买断单列（One-time），另外把支付异常和暂停也单列出来（Creem 官方就有这两种状态）。 */
+export type SubscriptionStatus =
+  | "active" // 订阅中，会自动续费
+  | "canceled" // 已取消 / 已预约取消，当前周期内仍可用
+  | "onetime" // 支付宝一次性买断（不是订阅，也谈不上取消）
+  | "expired" // 已过期
+  | "issue" // 欠费待处理（Creem: past_due / unpaid / incomplete）
+  | "paused" // 已暂停（Creem: paused）
+  | "free" // 免费版
+  | "unknown" // 查不到依据，不硬猜
+
+/** Creem 官方订阅状态 → 后台展示口径（仅收录官方文档列出的取值） */
+const CREEM_STATUS_MAP: Record<string, SubscriptionStatus> = {
+  active: "active",
+  trialing: "active", // 我们没开通试用，但语义上仍可访问
+  scheduled_cancel: "canceled", // 已预约取消，当前周期内仍可用
+  canceled: "canceled",
+  expired: "expired",
+  past_due: "issue",
+  unpaid: "issue",
+  incomplete: "issue",
+  paused: "paused",
+}
 
 /**
  * 判定顺序很重要：
@@ -69,17 +91,20 @@ export type SubscriptionStatus = "active" | "canceled" | "onetime" | "expired" |
  *     定时任务（正式环境每天一次）才把数据库降级，中间这段窗口里数据库的 tier 还是旧的、
  *     Creem 订阅ID也可能还在 —— 这时若先看订阅ID会误判成「订阅中」。
  *     管理后台必须按到期日说话，和「到期时间」列保持一致。
- *  3. 有 Creem 订阅ID → active（Creem 是「会不会自动续费」的事实来源）
- *  4. 最后一笔已支付订单是支付宝 → onetime（一次性买断，不是取消）
- *  5. 最后一笔是 Creem → canceled（取消后当前周期用完自动降级）
- *  6. 什么都查不到 → unknown（历史脏数据，不硬猜）
+ *  3. **有 Creem 官方状态就用它**（webhook 落库的权威来源，见 User.creemSubscriptionStatus）
+ *  4. 没有官方状态（支付宝用户 / 落库之前的历史数据）→ 退回下面几条本地反推：
+ *     有 Creem 订阅ID → active；最后一笔已支付是支付宝 → onetime；是 Creem → canceled
+ *  5. 什么都查不到 → unknown（历史脏数据，不硬猜）
  *
- * ⚠️ 为什么需要 lastPaidChannel：取消订阅后本地会把 creemSubscriptionId 清空，
+ * ⚠️ 为什么还需要 lastPaidChannel：取消订阅后本地会把 creemSubscriptionId 清空，
  * 此时「取消的 Creem 订阅」和「支付宝一次性买断」在 User 表上长得一模一样，只能靠支付渠道区分。
+ * 这是「没有官方状态时」的兜底 —— 有了落库的官方状态后，Creem 用户走第 3 条，不再靠猜。
  */
 export function deriveSubscriptionStatus(input: {
   isPro: boolean
   creemSubscriptionId: string | null
+  /** Creem 官方订阅状态（webhook 落库），支付宝用户为空 */
+  creemSubscriptionStatus?: string | null
   subscriptionExpiryDate: Date | string | null
   lastPaidChannel: string | null
   now?: Date
@@ -89,6 +114,8 @@ export function deriveSubscriptionStatus(input: {
   if (expiry && !Number.isNaN(expiry.getTime()) && expiry.getTime() < (input.now ?? new Date()).getTime()) {
     return "expired"
   }
+  const official = CREEM_STATUS_MAP[input.creemSubscriptionStatus ?? ""]
+  if (official) return official
   if (input.creemSubscriptionId) return "active"
   if (input.lastPaidChannel === "alipay") return "onetime"
   if (input.lastPaidChannel === "creem") return "canceled"

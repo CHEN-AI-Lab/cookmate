@@ -271,12 +271,15 @@ const TIER_OPTIONS = [
   { value: "FREE", label: "Free" },
 ]
 
-// 用户订阅状态（口径对齐 Stripe / Chargebee：active / canceled / expired；一次性买断单列，不算取消）
+// 用户订阅状态（口径对齐 Stripe / Chargebee：active / canceled / expired；一次性买断单列，不算取消）。
+// issue / paused 是 Creem 官方就有的状态（欠费重试、暂停），落库后直接映射过来。
 const SUB_STATUS: Record<SubscriptionStatus, { label: string; cls: string }> = {
   active: { label: "订阅中（自动续费）", cls: "bg-green-100 text-green-600" },
   canceled: { label: "已取消（到期降级）", cls: "bg-orange-100 text-orange-600" },
   onetime: { label: "一次性（支付宝）", cls: "bg-blue-100 text-blue-600" },
   expired: { label: "已过期", cls: "bg-gray-100 text-gray-500" },
+  issue: { label: "欠费待处理", cls: "bg-red-100 text-red-600" },
+  paused: { label: "已暂停", cls: "bg-gray-100 text-gray-500" },
   unknown: { label: "状态未知", cls: "bg-gray-100 text-gray-500" },
   free: { label: "免费版", cls: "bg-gray-100 text-gray-500" },
 }

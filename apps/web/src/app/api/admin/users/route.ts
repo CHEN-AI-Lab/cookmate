@@ -47,6 +47,7 @@ export async function GET(req: Request) {
         subscriptionTier: true,
         subscriptionExpiryDate: true,
         creemSubscriptionId: true,
+        creemSubscriptionStatus: true,
         onboardingCompleted: true,
         createdAt: true,
         _count: {
@@ -87,6 +88,7 @@ export async function GET(req: Request) {
     subStatus: deriveSubscriptionStatus({
       isPro: u.subscriptionTier === SUBSCRIPTION_TIER.PRO,
       creemSubscriptionId: u.creemSubscriptionId,
+      creemSubscriptionStatus: u.creemSubscriptionStatus,
       subscriptionExpiryDate: u.subscriptionExpiryDate,
       lastPaidChannel: lastChannelByUser.get(u.id) ?? null,
     }),

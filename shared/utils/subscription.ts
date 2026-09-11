@@ -1,6 +1,8 @@
 // ─── Subscription Utilities ───
 // 订阅相关的辅助函数
 
+import { SUBSCRIPTION_TIER } from "../constants"
+
 /** 检查订阅是否过期，过期自动降级（按日期比较，忽略时分秒） */
 export function isExpired(expiryDate: Date): boolean {
   const now = new Date()
@@ -8,6 +10,30 @@ export function isExpired(expiryDate: Date): boolean {
   const expiry = new Date(expiryDate)
   expiry.setUTCHours(0, 0, 0, 0)
   return now > expiry
+}
+
+/**
+ * 有效套餐（到期感知）—— **判断「该给哪一档权限」时必须用这个，不要直接读 subscriptionTier 字段**。
+ *
+ * 为什么需要它：数据库里的 subscriptionTier 由每天 UTC 00:00（北京 08:00）的
+ * `/api/cron/expire-sweep` 统一降级，而且该任务**只在正式环境跑**（preview 不触发）。
+ * 所以在「到期日已过 → 定时任务跑到」这段窗口里，字段仍然是 PRO，
+ * 但用户页面（dashboard 的 checkSubscription）是实时按到期日算的、已经显示免费版了。
+ * 两边不一致就会出现「页面说免费、功能照给 PRO」——以前正是这个原因产生过一个线上 bug。
+ *
+ * 规则：
+ *   - 非 PRO → FREE
+ *   - PRO 但没有到期日 → PRO（无到期日视为永久）
+ *   - PRO 且到期日已过 → FREE
+ *   - 其余 → PRO
+ */
+export function effectiveTier(
+  subscriptionTier: string | null | undefined,
+  subscriptionExpiryDate: Date | string | null | undefined,
+): string {
+  if (subscriptionTier?.toUpperCase() !== SUBSCRIPTION_TIER.PRO) return SUBSCRIPTION_TIER.FREE
+  if (!subscriptionExpiryDate) return SUBSCRIPTION_TIER.PRO
+  return isExpired(new Date(subscriptionExpiryDate)) ? SUBSCRIPTION_TIER.FREE : SUBSCRIPTION_TIER.PRO
 }
 
 /**
