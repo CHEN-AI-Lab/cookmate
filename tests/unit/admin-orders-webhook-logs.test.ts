@@ -64,6 +64,8 @@ describe('admin orders GET', () => {
     expect(res.status).toBe(200)
     const json = await res.json()
     expect(json.total).toBe(2)
+    // 全局总数（不受筛选影响），供 tab 角标用
+    expect(json.totalAll).toBe(2)
     expect(json.paidCount).toBe(1)
     // 收入按渠道分开：PAID 只有 creem 订单（16900 美分），alipay 无 PAID → 0
     expect(json.creemRevenue).toBe(16900)

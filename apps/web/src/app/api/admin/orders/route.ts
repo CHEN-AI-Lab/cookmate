@@ -42,8 +42,10 @@ export async function GET(req: Request) {
     ...(email ? { user: { email: { contains: email, mode: "insensitive" } } } : {}),
   }
 
-  const [total, orders, grouped, paidForMismatch] = await Promise.all([
+  const [total, totalAll, orders, grouped, paidForMismatch] = await Promise.all([
     prisma.paymentOrder.count({ where }),
+    // 全局总数（不受筛选影响），供「订单」tab 角标用：无异常时显示它
+    prisma.paymentOrder.count(),
     prisma.paymentOrder.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -95,6 +97,7 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     total,
+    totalAll,
     page,
     pageSize,
     paidCount,

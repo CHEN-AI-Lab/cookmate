@@ -131,7 +131,8 @@ export function makePrisma() {
         return rec
       }),
       findMany: vi.fn(async () => []),
-      count: vi.fn(async ({ where }: any) => {
+      count: vi.fn(async (args?: any) => {
+        const where = args?.where
         return [...stores.users.values()].filter((u: any) => matchUser(u, where)).length
       }),
       updateMany: vi.fn(async ({ where, data }: any) => {
@@ -198,7 +199,9 @@ export function makePrisma() {
         if (take) list = list.slice(0, take)
         return list
       }),
-      count: vi.fn(async ({ where }: any) => {
+      count: vi.fn(async (args?: any) => {
+        // 允许无参调用（真实 Prisma 的 count() 可以不带 where）
+        const where = args?.where
         return [...stores.orders.values()].filter((o: any) => matchOrder(o, where)).length
       }),
       // 后台订单 Tab 的统计用：按 channel × status 分组拿到条数与金额
@@ -297,7 +300,8 @@ export function makePrisma() {
         }
         return { count }
       }),
-      count: vi.fn(async ({ where }: any) => {
+      count: vi.fn(async (args?: any) => {
+        const where = args?.where
         return [...stores.logs.values()].filter((l: any) => matchLog(l, where)).length
       }),
     },
