@@ -149,7 +149,14 @@ export function Th({
             <div
               ref={panelRef}
               style={{ position: "fixed", left: pos.left, top: pos.top }}
-              className="z-[100] max-h-[calc(100vh-24px)] w-[240px] overflow-y-auto rounded-xl border border-border bg-card p-3 shadow-lg"
+              className={cn(
+                "z-[100] max-h-[calc(100vh-24px)] overflow-y-auto rounded-xl border border-border bg-card p-3 shadow-lg",
+                // 复选面板宽度随内容收缩：选项常常就两三个字（Creem / 月付），
+                // 固定 240px 会在右边留一大块空白，看着很空。
+                // 文本 / 日期面板保持固定宽 —— 输入框和日历需要稳定宽度，且内部有 w-full 子元素，
+                // 不能跟着收缩（见 MEMORY 里「portal 面板别给子元素 w-full」那条坑）。
+                filter.type === "select" ? "w-auto min-w-[140px]" : "w-[240px]",
+              )}
             >
               <p className="mb-2 text-[12px] font-semibold text-text-primary">{label}</p>
               {filter.type === "text" && (
