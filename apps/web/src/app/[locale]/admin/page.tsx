@@ -1,8 +1,12 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 import { CHANNEL_ICONS, CHANNEL_LABELS } from "@cookmate/shared/constants/payment-channels"
+import { useTableQuery, type TableQuery } from "@cookmate/shared/hooks/useTableQuery"
+import { isAmountMismatch } from "@cookmate/shared/utils/admin-query"
+import { Th } from "@/components/admin/ColumnFilter"
+import { DataTablePagination } from "@/components/admin/DataTablePagination"
 
 // ── 类型 ──
 
@@ -20,8 +24,11 @@ interface CancelLog {
 
 interface CancelLogsResponse {
   total?: number
-  limit?: number
+  totalAll?: number
+  page?: number
+  pageSize?: number
   failed?: number
+  failedAll?: number
   completed?: number
   lastFailedAt?: string | null
   logs?: CancelLog[]
@@ -44,10 +51,13 @@ interface AdminOrder {
 
 interface OrdersResponse {
   total?: number
-  limit?: number
+  totalAll?: number
+  page?: number
+  pageSize?: number
   paidCount?: number
   creemRevenue?: number
   alipayRevenue?: number
+  mismatchCount?: number
   orders?: AdminOrder[]
   error?: string
 }
@@ -69,8 +79,11 @@ interface WebhookLogItem {
 
 interface WebhookLogsResponse {
   total?: number
-  limit?: number
+  totalAll?: number
+  page?: number
+  pageSize?: number
   failed?: number
+  failedAll?: number
   logs?: WebhookLogItem[]
   error?: string
 }
@@ -89,7 +102,9 @@ interface AdminUser {
 
 interface UsersResponse {
   total?: number
-  limit?: number
+  totalAll?: number
+  page?: number
+  pageSize?: number
   proCount?: number
   freeCount?: number
   users?: AdminUser[]
@@ -106,7 +121,11 @@ interface CronLogItem {
 
 interface CronLogsResponse {
   total?: number
-  limit?: number
+  totalAll?: number
+  page?: number
+  pageSize?: number
+  failed?: number
+  failedAll?: number
   logs?: CronLogItem[]
   error?: string
 }
@@ -166,9 +185,9 @@ function fmtTime(iso: string) {
 }
 
 // 金额格式化：按订单的 currency 字段区分币种（新增渠道只需加一行配置）
-const CURRENCY_SYMBOLS: Record<string, string> = { USD: "$", CNY: "¥" }
+const CURRENCY_SYMBOLS: Record<string, string> = { USD: "$", CNY: "\u00a5" }
 
-function fmtAmount(amount: number, currency?: string) {
+function fmtAmount(amount: number, currency?: string | null) {
   const symbol = currency ? (CURRENCY_SYMBOLS[currency] || "?") : "?"
   return `${symbol}${(amount / 100).toFixed(2)}`
 }
@@ -179,16 +198,132 @@ function fmtPeriod(period: string | null) {
   return "-"
 }
 
-// 并发拉取订单 / 回调流水 / 取消审计 / 用户列表 / Cron 日志 / 支付配置六组数据
-function fetchAdminData() {
-  return Promise.all([
-    fetch("/api/admin/orders").then(async (r) => ({ ok: r.ok, data: await r.json() })),
-    fetch("/api/admin/webhook-logs").then(async (r) => ({ ok: r.ok, data: await r.json() })),
-    fetch("/api/admin/cancel-logs").then(async (r) => ({ ok: r.ok, data: await r.json() })),
-    fetch("/api/admin/users").then(async (r) => ({ ok: r.ok, data: await r.json() })),
-    fetch("/api/admin/cron-logs").then(async (r) => ({ ok: r.ok, data: await r.json() })),
-    fetch("/api/admin/config").then(async (r) => ({ ok: r.ok, data: await r.json() })),
-  ])
+// 回调事件类型中英映射：列表显示中文，悬浮显示英文原文（与状态列同一套做法）。
+// 未收录的值原样回退显示。
+const EVENT_CN: Record<string, string> = {
+  "checkout.completed": "结账完成",
+  "subscription.paid": "订阅已付款",
+  "subscription.active": "订阅生效",
+  "subscription.trialing": "订阅试用中",
+  "subscription.update": "订阅信息更新",
+  "subscription.canceled": "订阅已取消",
+  "subscription.scheduled_cancel": "订阅预约取消",
+  "subscription.paused": "订阅已暂停",
+  "subscription.past_due": "订阅逾期未付",
+  "subscription.expired": "订阅已过期",
+  "refund.created": "退款已创建",
+  TRADE_SUCCESS: "交易成功",
+  WAIT_BUYER_PAY: "等待付款",
+  TRADE_CLOSED: "交易关闭",
+  TRADE_FINISHED: "交易完成",
+  "appid-mismatch": "应用ID不符",
+}
+
+function WebhookEventCell({ eventType }: { eventType: string | null }) {
+  if (!eventType) return <span className="text-gray-400">-</span>
+  return (
+    <span className="font-mono text-xs text-gray-700" title={eventType}>
+      {EVENT_CN[eventType] ?? eventType}
+    </span>
+  )
+}
+
+// ── 筛选控件用到的静态选项 ──
+
+const CHANNEL_OPTIONS = [
+  { value: "creem", label: "Creem" },
+  { value: "alipay", label: "支付宝" },
+]
+
+const PERIOD_OPTIONS = [
+  { value: "monthly", label: "月付" },
+  { value: "annual", label: "年付" },
+]
+
+const ORDER_STATUS_OPTIONS = [
+  { value: "PAID", label: "已支付" },
+  { value: "PENDING", label: "待支付" },
+  { value: "CANCELED", label: "已取消" },
+  { value: "EXPIRED", label: "已过期" },
+  { value: "REFUNDED", label: "已退款" },
+]
+
+const WEBHOOK_STATUS_OPTIONS = [
+  { value: "received", label: "已收到" },
+  { value: "processed", label: "已处理" },
+  { value: "processed:amount-mismatch", label: "金额不一致" },
+  { value: "duplicate", label: "重复跳过" },
+  { value: "ignored", label: "已忽略" },
+  { value: "failed:signature", label: "签名失败" },
+  { value: "failed:unresolved", label: "无法解析" },
+  { value: "failed:user-not-found", label: "用户不存在" },
+  { value: "failed:order-not-found", label: "订单不存在" },
+  { value: "failed:amount-mismatch", label: "金额不一致（失败）" },
+  { value: "failed:amount-unknown", label: "金额无法匹配" },
+  { value: "failed:error", label: "处理异常" },
+]
+
+const EVENT_OPTIONS = Object.keys(EVENT_CN).map((k) => ({ value: k, label: EVENT_CN[k] }))
+
+const TIER_OPTIONS = [
+  { value: "PRO", label: "Pro" },
+  { value: "FREE", label: "Free" },
+]
+
+const CANCEL_STATUS_OPTIONS = [
+  { value: "completed", label: "成功" },
+  { value: "failed", label: "失败" },
+]
+
+const CRON_TASK_OPTIONS = [
+  { value: "expire-sweep", label: "expire-sweep（过期降级）" },
+  { value: "reconcile-cancellations", label: "reconcile-cancellations（取消对账）" },
+]
+
+const CRON_STATUS_OPTIONS = [
+  { value: "processed", label: "成功" },
+  { value: "failed", label: "失败" },
+]
+
+/** 把 { total } 从任意列表响应里取出来 */
+function totalOf(data: unknown): number {
+  if (data && typeof data === "object" && "total" in data) {
+    const t = (data as { total?: unknown }).total
+    if (typeof t === "number") return t
+  }
+  return 0
+}
+
+/** 筛选状态条：共 N 条 + 已筛选 M 项 + 清除全部 */
+function FilterStatus({ q, unit }: { q: TableQuery<unknown>; unit: string }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-xs">
+      <span className="text-text-secondary">
+        共 {totalOf(q.data)} 条{unit}
+      </span>
+      {q.activeCount > 0 ? (
+        <>
+          <span className="rounded-full bg-accent/10 px-2 py-0.5 font-semibold text-accent">
+            已筛选 {q.activeCount} 项
+          </span>
+          <button type="button" onClick={q.clearFilters} className="text-red-600 underline">
+            清除全部
+          </button>
+        </>
+      ) : null}
+    </div>
+  )
+}
+
+/** 表格底部的「暂无数据 / 加载中 / 出错」提示 */
+function TableState({ q, emptyText }: { q: TableQuery<unknown>; emptyText: string }) {
+  if (q.error) {
+    return <div className="p-8 text-center text-sm text-red-600">{q.error}</div>
+  }
+  if (q.loading) {
+    return <div className="p-8 text-center text-sm text-text-secondary">加载中…</div>
+  }
+  return <div className="p-8 text-center text-sm text-text-secondary">{emptyText}</div>
 }
 
 // ── 页面 ──
@@ -196,76 +331,33 @@ function fetchAdminData() {
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("orders")
 
-  // 订单
-  const [ordersData, setOrdersData] = useState<OrdersResponse | null>(null)
-  // 回调流水
-  const [webhookData, setWebhookData] = useState<WebhookLogsResponse | null>(null)
-  // 取消审计
-  const [cancelData, setCancelData] = useState<CancelLogsResponse | null>(null)
-  // 用户列表
-  const [usersData, setUsersData] = useState<UsersResponse | null>(null)
-  // Cron 日志
-  const [cronData, setCronData] = useState<CronLogsResponse | null>(null)
-  // 支付配置
-  const [configData, setConfigData] = useState<ConfigResponse | null>(null)
+  // 六组数据各自独立分页 + 筛选；全都在这里调用，
+  // 这样切 tab 不会丢筛选状态，且每个 tab 的角标随时能读到全局数
+  const ordersQ = useTableQuery<OrdersResponse>("/api/admin/orders")
+  const webhooksQ = useTableQuery<WebhookLogsResponse>("/api/admin/webhook-logs")
+  const cancelsQ = useTableQuery<CancelLogsResponse>("/api/admin/cancel-logs")
+  const usersQ = useTableQuery<UsersResponse>("/api/admin/users")
+  const cronsQ = useTableQuery<CronLogsResponse>("/api/admin/cron-logs")
+  const configQ = useTableQuery<ConfigResponse>("/api/admin/config")
 
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const all = [ordersQ, webhooksQ, cancelsQ, usersQ, cronsQ, configQ]
+  const pending = all.some((q) => q.loading && q.data === null && !q.error)
+  const anyLoading = all.some((q) => q.loading)
+  const firstError = all.find((q) => q.error && q.data === null)
 
-  // 统一处理五个接口的返回结果
-  const applyResult = useCallback((results: { ok: boolean; data: { error?: string } }[]) => {
-    const [orders, webhooks, cancels, users, crons, config] = results
-    const firstErr = results.find((x) => !x.ok)
-    if (firstErr) {
-      setError(firstErr.data.error || `请求失败`)
-      return
-    }
-    setOrdersData(orders.data as OrdersResponse)
-    setWebhookData(webhooks.data as WebhookLogsResponse)
-    setCancelData(cancels.data as CancelLogsResponse)
-    setUsersData(users.data as UsersResponse)
-    setCronData(crons.data as CronLogsResponse)
-    setConfigData(config.data as ConfigResponse)
-  }, [])
-
-  // 首次加载：loading/error 已由 useState 默认值（true/null）提供，
-  // effect 内不同步 setState，避免级联渲染（react-hooks 规则）
-  useEffect(() => {
-    let cancelled = false
-    fetchAdminData()
-      .then((res) => {
-        if (!cancelled) applyResult(res)
-      })
-      .catch((e) => {
-        if (!cancelled) setError(String(e))
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [applyResult])
-
-  // 手动刷新（事件处理器内允许同步 setState）
   const refresh = useCallback(() => {
-    setLoading(true)
-    setError(null)
-    fetchAdminData()
-      .then((res) => applyResult(res))
-      .catch((e) => setError(String(e)))
-      .finally(() => setLoading(false))
-  }, [applyResult])
+    for (const q of [ordersQ, webhooksQ, cancelsQ, usersQ, cronsQ, configQ]) q.reload()
+  }, [ordersQ, webhooksQ, cancelsQ, usersQ, cronsQ, configQ])
 
-  if (loading) {
+  if (pending) {
     return <div className="text-center py-16 text-text-secondary">加载中…</div>
   }
 
-  if (error) {
+  if (firstError) {
     return (
       <div className="max-w-3xl mx-auto py-16 px-4">
         <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
-          <p className="text-red-600 font-semibold">{error}</p>
+          <p className="text-red-600 font-semibold">{firstError.error}</p>
           <p className="text-text-secondary text-sm mt-2">
             无权限访问此页面，仅限管理员使用。
           </p>
@@ -274,22 +366,19 @@ export default function AdminPage() {
     )
   }
 
-  const tabs: Array<{ key: Tab; label: string; badge?: number; badgeTone?: "red" | "gray" }> = [
-    { key: "orders", label: "订单列表", badge: ordersData?.total ?? 0, badgeTone: "gray" },
-    { key: "webhooks", label: "回调流水", badge: webhookData?.total ?? 0, badgeTone: "gray" },
-    {
-      key: "cancels",
-      label: "取消审计",
-      badge: (cancelData?.failed ?? 0) > 0 ? cancelData?.failed : undefined,
-      badgeTone: "red",
-    },
-    { key: "users", label: "用户列表", badge: usersData?.total ?? 0, badgeTone: "gray" },
-    {
-      key: "crons",
-      label: "Cron 日志",
-      badge: (cronData?.logs ?? []).some((l) => l.status === "failed") ? 1 : undefined,
-      badgeTone: "red",
-    },
+  // 角标规则：有异常 → 红色显示异常数；无异常 → 灰色显示总数。
+  // 异常数取「全量」口径（不受当前筛选影响），否则一筛选就看不到真问题了。
+  const badge = (anomaly: number | undefined, allCount: number | undefined) => {
+    const a = anomaly ?? 0
+    return a > 0 ? { n: a, red: true } : { n: allCount ?? 0, red: false }
+  }
+
+  const tabs: Array<{ key: Tab; label: string; n?: number; red?: boolean }> = [
+    { key: "orders", label: "订单列表", ...badge(ordersQ.data?.mismatchCount, ordersQ.data?.totalAll) },
+    { key: "webhooks", label: "回调流水", ...badge(webhooksQ.data?.failedAll, webhooksQ.data?.totalAll) },
+    { key: "cancels", label: "取消审计", ...badge(cancelsQ.data?.failedAll, cancelsQ.data?.totalAll) },
+    { key: "users", label: "用户列表", ...badge(undefined, usersQ.data?.totalAll) },
+    { key: "crons", label: "Cron 日志", ...badge(cronsQ.data?.failedAll, cronsQ.data?.totalAll) },
     { key: "config", label: "系统配置" },
   ]
 
@@ -299,15 +388,15 @@ export default function AdminPage() {
         <div>
           <h1 className="text-2xl font-bold text-text-primary tracking-tight">支付后台</h1>
           <p className="text-text-secondary text-sm mt-1">
-            订单 / 回调 / 取消审计 一站式查看。各列表最多展示最近 200 条（最新在前）。
+            订单 / 回调流水 / 取消审计 / 用户 / Cron 日志 / 系统配置 —— 统一查看。每页 50 条，点列头漏斗即可筛选。
           </p>
         </div>
         <button
           onClick={refresh}
-          disabled={loading}
+          disabled={anyLoading}
           className="px-4 py-2 rounded-xl border border-gray-200 text-text-secondary text-sm hover:bg-gray-50 disabled:opacity-50 shrink-0"
         >
-          {loading ? "刷新中…" : "刷新"}
+          {anyLoading ? "刷新中…" : "刷新"}
         </button>
       </div>
 
@@ -324,520 +413,638 @@ export default function AdminPage() {
             }`}
           >
             {t.label}
-            {t.badge !== undefined && t.badge > 0 && (
+            {t.n !== undefined && t.n > 0 && (
               <span
                 className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                  t.badgeTone === "red" ? "bg-red-100 text-red-600" : "bg-surface text-text-secondary"
+                  t.red ? "bg-red-100 text-red-600" : "bg-surface text-text-secondary"
                 }`}
               >
-                {t.badge}
+                {t.n}
               </span>
             )}
           </button>
         ))}
       </div>
 
-      {tab === "orders" && <OrdersTab data={ordersData} />}
-      {tab === "webhooks" && <WebhooksTab data={webhookData} />}
-      {tab === "cancels" && <CancelsTab data={cancelData} />}
-      {tab === "users" && <UsersTab data={usersData} />}
-      {tab === "crons" && <CronsTab data={cronData} />}
-      {tab === "config" && <ConfigTab data={configData} />}
+      {tab === "orders" && <OrdersTab q={ordersQ} />}
+      {tab === "webhooks" && <WebhooksTab q={webhooksQ} />}
+      {tab === "cancels" && <CancelsTab q={cancelsQ} />}
+      {tab === "users" && <UsersTab q={usersQ} />}
+      {tab === "crons" && <CronsTab q={cronsQ} />}
+      {tab === "config" && <ConfigTab data={configQ.data} />}
     </div>
   )
 }
 
 // ── Tab 1：订单列表 ──
 
-// 实付与应收不一致（金额或币种不同）——单元格标红与顶部告警横幅共用同一判定
-function isAmountMismatch(o: AdminOrder): boolean {
-  return o.paidAmount != null
-    && (o.paidAmount !== o.amount || (!!o.paidCurrency && !!o.currency && o.paidCurrency !== o.currency))
-}
-
-function OrdersTab({ data }: { data: OrdersResponse | null }) {
-  const orders = data?.orders ?? []
-  const [filterChannel, setFilterChannel] = useState<string>("")
-  const [filterStatus, setFilterStatus] = useState<string>("")
-
-  const channels = useMemo(() => [...new Set(orders.map((o) => o.channel).filter(Boolean))] as string[], [orders])
-  const statuses = useMemo(() => [...new Set(orders.map((o) => o.status).filter(Boolean))] as string[], [orders])
-
-  const filtered = useMemo(() => {
-    return orders.filter((o) => (!filterChannel || o.channel === filterChannel) && (!filterStatus || o.status === filterStatus))
-  }, [orders, filterChannel, filterStatus])
-
-  const hasFilter = filterChannel || filterStatus
-  const clearFilter = () => { setFilterChannel(""); setFilterStatus("") }
-
-  // 实付 ≠ 应收 的订单（当前筛选范围内），用于顶部告警横幅
-  const amountMismatchOrders = useMemo(() => filtered.filter(isAmountMismatch), [filtered])
+function OrdersTab({ q }: { q: TableQuery<OrdersResponse> }) {
+  const orders = q.data?.orders ?? []
+  const mismatch = q.data?.mismatchCount ?? 0
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <StatCard label="总订单" value={hasFilter ? filtered.length : data?.total ?? 0} tone="gray" />
-        <StatCard label="已支付" value={hasFilter ? filtered.filter((o) => o.status === "PAID").length : data?.paidCount ?? 0} tone="green" />
-        <StatCard label="Creem 收入" value={fmtAmount(hasFilter ? filtered.filter((o) => o.status === "PAID" && o.channel === "creem").reduce((s, o) => s + o.amount, 0) : (data?.creemRevenue ?? 0), "USD")} tone="amber" />
-        <StatCard label="支付宝收入" value={fmtAmount(hasFilter ? filtered.filter((o) => o.status === "PAID" && o.channel === "alipay").reduce((s, o) => s + o.amount, 0) : (data?.alipayRevenue ?? 0), "CNY")} tone="amber" />
+        <StatCard label="筛选结果" value={q.data?.total ?? 0} tone="gray" />
+        <StatCard label="已支付" value={q.data?.paidCount ?? 0} tone="green" />
+        <StatCard label="Creem 收入" value={fmtAmount(q.data?.creemRevenue ?? 0, "USD")} tone="amber" />
+        <StatCard
+          label="支付宝收入"
+          value={fmtAmount(q.data?.alipayRevenue ?? 0, "CNY")}
+          tone="amber"
+        />
       </div>
 
-      {amountMismatchOrders.length > 0 && (
+      {mismatch > 0 && (
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
-          <span className="font-semibold">⚠ 金额异常 {amountMismatchOrders.length} 笔</span>
-          <span className="text-red-600">实付金额与应收金额不一致，已在下方表格标红。请核对支付渠道后台价格与代码定价常量。</span>
+          <span className="font-semibold">⚠ 金额异常 {mismatch} 笔</span>
+          <span className="text-red-600">
+            实付金额与应收金额不一致，已在下方表格标红。请核对支付渠道后台价格与代码定价常量。
+          </span>
         </div>
       )}
 
-      {/* 筛选栏 */}
-      <div className="flex flex-wrap items-center gap-2">
-        <select value={filterChannel} onChange={(e) => setFilterChannel(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
-          <option value="">全部渠道</option>
-          {channels.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
-          <option value="">全部状态</option>
-          {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
-        {hasFilter && (
-          <button onClick={clearFilter} className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">清除</button>
-        )}
-        {hasFilter && <span className="text-xs text-text-secondary">筛选结果：{filtered.length} 条</span>}
-      </div>
+      <FilterStatus q={q} unit="订单" />
 
-      {orders.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-text-secondary">
-          暂无订单
-        </div>
-      ) : (
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-          {orders.length >= (data?.limit ?? 200) && (
-            <p className="text-xs text-text-secondary">仅显示最近 {data?.limit ?? 200} 条记录，更早的记录未展示</p>
-          )}
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-text-secondary">
-                <tr>
-                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap" title="订单创建时间">时间</th>
-                  <th className="text-left px-4 py-3 font-medium" title="Creem/支付宝生成的订单号">订单号</th>
-                  <th className="text-left px-4 py-3 font-medium" title="支付渠道：creem 或 alipay">渠道</th>
-                  <th className="text-left px-4 py-3 font-medium" title="订阅周期：monthly 月付 / annual 年付">周期</th>
-                  <th className="text-right px-4 py-3 font-medium" title="网站应收金额（下单时按定价常量写入）">应收金额</th>
-                  <th className="text-right px-4 py-3 font-medium" title="支付平台回调的实付金额（未支付/历史订单为 -）；与应收不一致时标红">实付金额</th>
-                  <th className="text-left px-4 py-3 font-medium" title="订单状态：待支付/已支付/已取消/已退款/已过期">状态</th>
-                  <th className="text-left px-4 py-3 font-medium" title="下单用户的邮箱">用户邮箱</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filtered.map((o) => (
-                  <tr key={o.id} className={o.status === "PAID" ? "" : "opacity-60"}>
-                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(o.createdAt)}</td>
-                    <td className="px-4 py-3 text-gray-700 font-mono text-xs">{o.orderId}</td>
-                    <td className="px-4 py-3"><ChannelCell channel={o.channel} /></td>
-                    <td className="px-4 py-3 text-gray-700">{fmtPeriod(o.period)}</td>
-                    <td className="px-4 py-3 text-gray-700 font-medium text-right tabular-nums">{fmtAmount(o.amount, o.currency)}</td>
-                    <td className="px-4 py-3 font-medium whitespace-nowrap text-right tabular-nums">
-                      {o.paidAmount == null ? (
-                        <span className="text-gray-400">-</span>
-                      ) : isAmountMismatch(o) ? (
-                        <span
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold tabular-nums"
-                          title={`实付与应收不一致 —— 应收 ${fmtAmount(o.amount, o.currency)} / 实付 ${fmtAmount(o.paidAmount, o.paidCurrency ?? o.currency)}`}
-                        >
-                          <span aria-hidden>⚠</span>
-                          {fmtAmount(o.paidAmount, o.paidCurrency ?? o.currency)}
-                        </span>
-                      ) : (
-                        <span className="text-gray-700">{fmtAmount(o.paidAmount, o.paidCurrency ?? o.currency)}</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={o.status} />
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 text-xs">{o.userEmail ?? "-"}</td>
+      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        {orders.length === 0 ? (
+          <TableState q={q} emptyText="暂无订单" />
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-text-secondary">
+                  <tr>
+                    <Th
+                      label="时间"
+                      hint="订单创建时间"
+                      filter={{ type: "date" }}
+                      value={q.filters.createdAt}
+                      onChange={(v) => q.setFilter("createdAt", v)}
+                    />
+                    <Th
+                      label="用户邮箱"
+                      hint="下单用户的邮箱"
+                      filter={{ type: "text", placeholder: "如 gmail.com" }}
+                      value={q.filters.email}
+                      onChange={(v) => q.setFilter("email", v)}
+                    />
+                    <Th
+                      label="订单号"
+                      hint="Creem / 支付宝生成的订单号"
+                      filter={{ type: "text", placeholder: "如 ord_" }}
+                      value={q.filters.orderId}
+                      onChange={(v) => q.setFilter("orderId", v)}
+                    />
+                    <Th
+                      label="渠道"
+                      hint="支付渠道：creem 或 alipay"
+                      filter={{ type: "select", options: CHANNEL_OPTIONS }}
+                      value={q.filters.channel}
+                      onChange={(v) => q.setFilter("channel", v)}
+                    />
+                    <Th
+                      label="周期"
+                      hint="订阅周期：月付 / 年付"
+                      filter={{ type: "select", options: PERIOD_OPTIONS }}
+                      value={q.filters.period}
+                      onChange={(v) => q.setFilter("period", v)}
+                    />
+                    <Th
+                      label="应收金额"
+                      align="right"
+                      hint="网站应收金额（下单时按定价常量写入）"
+                    />
+                    <Th
+                      label="实付金额"
+                      align="right"
+                      hint="支付平台回调的实付金额（未支付为 -）；与应收不一致时标红"
+                    />
+                    <Th
+                      label="状态"
+                      hint="订单状态：待支付 / 已支付 / 已取消 / 已退款 / 已过期"
+                      filter={{ type: "select", options: ORDER_STATUS_OPTIONS }}
+                      value={q.filters.status}
+                      onChange={(v) => q.setFilter("status", v)}
+                    />
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {orders.map((o) => (
+                    <tr key={o.id} className={o.status === "PAID" ? "" : "opacity-60"}>
+                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(o.createdAt)}</td>
+                      <td className="px-4 py-3 text-gray-700 text-xs">{o.userEmail ?? "-"}</td>
+                      <td className="px-4 py-3 text-gray-700 font-mono text-xs">{o.orderId}</td>
+                      <td className="px-4 py-3">
+                        <ChannelCell channel={o.channel} />
+                      </td>
+                      <td className="px-4 py-3 text-gray-700">{fmtPeriod(o.period)}</td>
+                      <td className="px-4 py-3 text-gray-700 font-medium text-right tabular-nums">
+                        {fmtAmount(o.amount, o.currency)}
+                      </td>
+                      <td className="px-4 py-3 font-medium whitespace-nowrap text-right tabular-nums">
+                        {o.paidAmount == null ? (
+                          <span className="text-gray-400">-</span>
+                        ) : isAmountMismatch(o) ? (
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold tabular-nums"
+                            title={`实付与应收不一致 —— 应收 ${fmtAmount(o.amount, o.currency)} / 实付 ${fmtAmount(o.paidAmount, o.paidCurrency ?? o.currency)}`}
+                          >
+                            <span aria-hidden>⚠</span>
+                            {fmtAmount(o.paidAmount, o.paidCurrency ?? o.currency)}
+                          </span>
+                        ) : (
+                          <span className="text-gray-700">
+                            {fmtAmount(o.paidAmount, o.paidCurrency ?? o.currency)}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <StatusBadge status={o.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <DataTablePagination
+              page={q.page}
+              pageSize={q.pageSize}
+              total={q.data?.total ?? 0}
+              onPageChange={q.setPage}
+            />
+          </>
+        )}
+      </div>
     </div>
   )
 }
 
 // ── Tab 2：回调流水 ──
 
-function WebhooksTab({ data }: { data: WebhookLogsResponse | null }) {
-  const logs = data?.logs ?? []
+function WebhooksTab({ q }: { q: TableQuery<WebhookLogsResponse> }) {
+  const logs = q.data?.logs ?? []
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [filterSource, setFilterSource] = useState<string>("")
-  const [filterStatus, setFilterStatus] = useState<string>("")
-
-  const sources = useMemo(() => [...new Set(logs.map((l) => l.source).filter(Boolean))] as string[], [logs])
-  const statuses = useMemo(() => [...new Set(logs.map((l) => l.status).filter(Boolean))] as string[], [logs])
-
-  const filtered = useMemo(() => {
-    return logs.filter((l) => (!filterSource || l.source === filterSource) && (!filterStatus || l.status === filterStatus))
-  }, [logs, filterSource, filterStatus])
-
-  const hasFilter = filterSource || filterStatus
-  const clearFilter = () => { setFilterSource(""); setFilterStatus("") }
 
   return (
     <div className="space-y-4">
+      <p className="text-text-secondary text-sm">
+        记录支付渠道（Creem / 支付宝）推送的每一次 webhook 通知。状态「失败」= 已收到但未处理成功，
+        可能导致用户付款后未升级，需人工核对。
+      </p>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <StatCard label="回调总数" value={hasFilter ? filtered.length : data?.total ?? 0} tone="gray" />
-        <StatCard label="失败回调" value={hasFilter ? filtered.filter((l) => l.status.startsWith("failed")).length : (data?.failed ?? 0)} tone={(data?.failed ?? 0) > 0 ? "red" : "gray"} />
+        <StatCard label="筛选结果" value={q.data?.total ?? 0} tone="gray" />
+        <StatCard
+          label="失败回调"
+          value={q.data?.failed ?? 0}
+          tone={(q.data?.failed ?? 0) > 0 ? "red" : "gray"}
+        />
       </div>
 
-      {/* 筛选栏 */}
-      <div className="flex flex-wrap items-center gap-2">
-        <select value={filterSource} onChange={(e) => setFilterSource(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
-          <option value="">全部来源</option>
-          {sources.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
-          <option value="">全部状态</option>
-          {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
-        {hasFilter && (
-          <button onClick={clearFilter} className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">清除</button>
-        )}
-        {hasFilter && <span className="text-xs text-text-secondary">筛选结果：{filtered.length} 条</span>}
-      </div>
+      <FilterStatus q={q} unit="回调" />
 
-      {logs.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-text-secondary">
-          暂无回调记录
-        </div>
-      ) : (
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-          {logs.length >= (data?.limit ?? 200) && (
-            <p className="text-xs text-text-secondary">仅显示最近 {data?.limit ?? 200} 条记录，更早的记录未展示</p>
-          )}
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-text-secondary">
-                <tr>
-                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap" title="回调到达时间">时间</th>
-                  <th className="text-left px-4 py-3 font-medium" title="回调来源渠道（creem/alipay）">来源</th>
-                  <th className="text-left px-4 py-3 font-medium" title="Creem/支付宝的事件类型，如 checkout.completed、subscription.paid">事件</th>
-                  <th className="text-left px-4 py-3 font-medium" title="本条回调的处理结果：已收到/已处理/失败/重复跳过">状态</th>
-                  <th className="text-left px-4 py-3 font-medium" title="Creem 分配的事件唯一标识（evt_xxx），用于去重，同一事件只保留一条">事件ID</th>
-                  <th className="text-left px-4 py-3 font-medium" title="触发此回调的用户邮箱">用户</th>
-                  <th className="text-left px-4 py-3 font-medium" title="Creem 订阅ID（sub_xxx），关联用户的订阅记录">订阅ID</th>
-                  <th className="text-left px-4 py-3 font-medium" title="Creem 原始请求体 JSON，点击可展开查看">原文</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filtered.map((l) => (
-                  <tr key={l.id} className={l.status.startsWith("failed") || l.status === "processed:amount-mismatch" ? "bg-red-50/50" : ""}>
-                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
-                    <td className="px-4 py-3"><ChannelCell channel={l.source} /></td>
-                    <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.eventType ?? "-"}</td>
-                    <td className="px-4 py-3">
-                      <WebhookStatusBadge status={l.status} />
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 font-mono text-xs max-w-[160px] truncate" title={l.eventId ?? ""}>
-                      {l.eventId ?? "-"}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
-                      {l.userEmail ?? (l.userId ? l.userId.slice(0, 8) + "…" : "-")}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 font-mono text-xs max-w-[120px] truncate" title={l.subscriptionId ?? ""}>
-                      {l.subscriptionId ?? "-"}
-                    </td>
-                    <td className="px-4 py-3 text-xs">
-                      {l.rawPreview ? (
-                        <button
-                          onClick={() => setExpandedId(expandedId === l.id ? null : l.id)}
-                          className="text-accent hover:underline"
-                        >
-                          {expandedId === l.id ? "收起" : "查看"}
-                        </button>
-                      ) : (
-                        "-"
-                      )}
-                      {expandedId === l.id && (
-                        <pre className="mt-2 p-2 bg-gray-50 rounded-lg text-xs max-w-md max-h-48 overflow-auto whitespace-pre-wrap break-all">
-                          {l.rawPreview}
-                        </pre>
-                      )}
-                    </td>
+      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        {logs.length === 0 ? (
+          <TableState q={q} emptyText="暂无回调记录" />
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-text-secondary">
+                  <tr>
+                    <Th
+                      label="时间"
+                      hint="回调到达时间"
+                      filter={{ type: "date" }}
+                      value={q.filters.createdAt}
+                      onChange={(v) => q.setFilter("createdAt", v)}
+                    />
+                    <Th
+                      label="来源"
+                      hint="回调来源渠道（creem / alipay）"
+                      filter={{ type: "select", options: CHANNEL_OPTIONS }}
+                      value={q.filters.source}
+                      onChange={(v) => q.setFilter("source", v)}
+                    />
+                    <Th
+                      label="事件"
+                      hint="渠道事件类型（列表显示中文，悬浮显示英文原文）"
+                      filter={{ type: "select", options: EVENT_OPTIONS }}
+                      value={q.filters.eventType}
+                      onChange={(v) => q.setFilter("eventType", v)}
+                    />
+                    <Th
+                      label="状态"
+                      hint="本条回调的处理结果（列表显示中文，悬浮显示英文原文）"
+                      filter={{ type: "select", options: WEBHOOK_STATUS_OPTIONS }}
+                      value={q.filters.status}
+                      onChange={(v) => q.setFilter("status", v)}
+                    />
+                    <Th
+                      label="用户"
+                      hint="触发此回调的用户邮箱"
+                      filter={{ type: "text", placeholder: "如 gmail.com" }}
+                      value={q.filters.email}
+                      onChange={(v) => q.setFilter("email", v)}
+                    />
+                    <Th
+                      label="订阅ID"
+                      hint="Creem 订阅ID（sub_xxx）"
+                      filter={{ type: "text", placeholder: "如 sub_" }}
+                      value={q.filters.subscriptionId}
+                      onChange={(v) => q.setFilter("subscriptionId", v)}
+                    />
+                    <Th
+                      label="事件ID"
+                      hint="Creem 事件唯一标识（evt_xxx），用于去重"
+                      filter={{ type: "text", placeholder: "如 evt_" }}
+                      value={q.filters.eventId}
+                      onChange={(v) => q.setFilter("eventId", v)}
+                    />
+                    <th className="text-left px-4 py-3 font-medium" title="回调原始请求体 JSON">
+                      原文
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {logs.map((l) => (
+                    <tr
+                      key={l.id}
+                      className={
+                        l.status.startsWith("failed") || l.status === "processed:amount-mismatch"
+                          ? "bg-red-50/50"
+                          : ""
+                      }
+                    >
+                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
+                      <td className="px-4 py-3">
+                        <ChannelCell channel={l.source} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <WebhookEventCell eventType={l.eventType} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <WebhookStatusBadge status={l.status} />
+                      </td>
+                      <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
+                        {l.userEmail ?? (l.userId ? l.userId.slice(0, 8) + "…" : "-")}
+                      </td>
+                      <td
+                        className="px-4 py-3 text-gray-700 font-mono text-xs max-w-[120px] truncate"
+                        title={l.subscriptionId ?? ""}
+                      >
+                        {l.subscriptionId ?? "-"}
+                      </td>
+                      <td
+                        className="px-4 py-3 text-gray-700 font-mono text-xs max-w-[160px] truncate"
+                        title={l.eventId ?? ""}
+                      >
+                        {l.eventId ?? "-"}
+                      </td>
+                      <td className="px-4 py-3 text-xs">
+                        {l.rawPreview ? (
+                          <button
+                            type="button"
+                            onClick={() => setExpandedId(expandedId === l.id ? null : l.id)}
+                            className="text-accent hover:underline"
+                          >
+                            {expandedId === l.id ? "收起" : "查看"}
+                          </button>
+                        ) : (
+                          "-"
+                        )}
+                        {expandedId === l.id && (
+                          <pre className="mt-2 p-2 bg-gray-50 rounded-lg text-xs max-w-md max-h-48 overflow-auto whitespace-pre-wrap break-all">
+                            {l.rawPreview}
+                          </pre>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <DataTablePagination
+              page={q.page}
+              pageSize={q.pageSize}
+              total={q.data?.total ?? 0}
+              onPageChange={q.setPage}
+            />
+          </>
+        )}
+      </div>
     </div>
   )
 }
 
 // ── Tab 3：取消审计 ──
 
-function CancelsTab({ data }: { data: CancelLogsResponse | null }) {
-  const logs = data?.logs ?? []
-  const [filterChannel, setFilterChannel] = useState<string>("")
-
-  const channels = useMemo(() => [...new Set(logs.map((l) => l.channel).filter(Boolean))] as string[], [logs])
-  const filtered = useMemo(() => {
-    return logs.filter((l) => (!filterChannel || l.channel === filterChannel))
-  }, [logs, filterChannel])
-
-  const hasFilter = filterChannel
-  const clearFilter = () => { setFilterChannel("") }
+function CancelsTab({ q }: { q: TableQuery<CancelLogsResponse> }) {
+  const logs = q.data?.logs ?? []
 
   return (
     <div className="space-y-4">
-      <div>
-        <p className="text-text-secondary text-sm">
-          记录每一次「取消订阅」尝试。状态为「失败」= 上游（Creem）没取消成功，
-          需去 Creem 后台补刀，或让用户重新点一次「取消」。
-        </p>
-      </div>
+      <p className="text-text-secondary text-sm">
+        记录每一次「取消订阅」尝试。状态为「失败」= 上游（Creem）没取消成功，
+        需去 Creem 后台补刀，或让用户重新点一次「取消」。
+      </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard label="失败取消" value={hasFilter ? filtered.filter((l) => l.status === "failed").length : (data?.failed ?? 0)} tone="red" />
-        <StatCard label="成功取消" value={hasFilter ? filtered.filter((l) => l.status !== "failed").length : (data?.completed ?? 0)} tone="green" />
-        <StatCard label="总记录" value={hasFilter ? filtered.length : (data?.total ?? 0)} tone="gray" />
+        <StatCard
+          label="失败取消"
+          value={q.data?.failed ?? 0}
+          tone={(q.data?.failed ?? 0) > 0 ? "red" : "gray"}
+        />
+        <StatCard label="成功取消" value={q.data?.completed ?? 0} tone="green" />
+        <StatCard label="筛选结果" value={q.data?.total ?? 0} tone="gray" />
       </div>
 
-      {/* 筛选栏 */}
-      <div className="flex flex-wrap items-center gap-2">
-        <select value={filterChannel} onChange={(e) => setFilterChannel(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
-          <option value="">全部渠道</option>
-          {channels.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-        {hasFilter && (
-          <button onClick={clearFilter} className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">清除</button>
-        )}
-        {hasFilter && <span className="text-xs text-text-secondary">筛选结果：{filtered.length} 条</span>}
-      </div>
+      <FilterStatus q={q} unit="记录" />
 
-      {logs.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-text-secondary">
-          ✅ 暂无取消记录
-        </div>
-      ) : (
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-          {logs.length >= (data?.limit ?? 200) && (
-            <p className="text-xs text-text-secondary">仅显示最近 {data?.limit ?? 200} 条记录，更早的记录未展示</p>
-          )}
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-text-secondary">
-                <tr>
-                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap" title="取消操作时间">时间</th>
-                  <th className="text-left px-4 py-3 font-medium" title="支付渠道：creem 或 alipay">渠道</th>
-                  <th className="text-left px-4 py-3 font-medium" title="取消结果：成功=Creem确认取消/失败=上游拒绝">状态</th>
-                  <th className="text-left px-4 py-3 font-medium" title="发起取消的用户ID（内部标识）">用户ID</th>
-                  <th className="text-left px-4 py-3 font-medium" title="发起取消的用户邮箱">用户</th>
-                  <th className="text-left px-4 py-3 font-medium" title="Creem 订阅ID（sub_xxx）">订阅ID</th>
-                  <th className="text-left px-4 py-3 font-medium" title="失败时的错误信息">错误</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filtered.map((l) => (
-                  <tr key={l.id} className={l.status === "failed" ? "bg-red-50/50" : ""}>
-                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
-                    <td className="px-4 py-3"><ChannelCell channel={l.channel} /></td>
-                    <td className="px-4 py-3">
-                      {l.status === "failed" ? (
-                        <span className="inline-flex px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold">失败</span>
-                      ) : (
-                        <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">成功</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 font-mono text-xs" title={l.userId ?? ""}>
-                      {l.userId ?? "-"}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
-                      {l.userEmail ?? "-"}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.subscriptionId ?? "-"}</td>
-                    <td className="px-4 py-3 text-red-600 text-xs max-w-xs break-words">{l.error || "-"}</td>
+      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        {logs.length === 0 ? (
+          <TableState q={q} emptyText="✅ 暂无取消记录" />
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-text-secondary">
+                  <tr>
+                    <Th
+                      label="时间"
+                      hint="取消操作时间"
+                      filter={{ type: "date" }}
+                      value={q.filters.createdAt}
+                      onChange={(v) => q.setFilter("createdAt", v)}
+                    />
+                    <Th
+                      label="渠道"
+                      hint="支付渠道（目前只有 creem 有订阅可取消）"
+                      filter={{ type: "select", options: CHANNEL_OPTIONS }}
+                      value={q.filters.channel}
+                      onChange={(v) => q.setFilter("channel", v)}
+                    />
+                    <Th
+                      label="状态"
+                      hint="成功 = Creem 已确认取消；失败 = 上游拒绝"
+                      filter={{ type: "select", options: CANCEL_STATUS_OPTIONS }}
+                      value={q.filters.status}
+                      onChange={(v) => q.setFilter("status", v)}
+                    />
+                    <Th
+                      label="用户"
+                      hint="发起取消的用户邮箱（悬浮可看用户ID）"
+                      filter={{ type: "text", placeholder: "如 gmail.com" }}
+                      value={q.filters.email}
+                      onChange={(v) => q.setFilter("email", v)}
+                    />
+                    <Th
+                      label="订阅ID"
+                      hint="Creem 订阅ID（sub_xxx）"
+                      filter={{ type: "text", placeholder: "如 sub_" }}
+                      value={q.filters.subscriptionId}
+                      onChange={(v) => q.setFilter("subscriptionId", v)}
+                    />
+                    <Th
+                      label="错误"
+                      hint="失败时的错误信息（该列暂不支持筛选）"
+                    />
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {logs.map((l) => (
+                    <tr key={l.id} className={l.status === "failed" ? "bg-red-50/50" : ""}>
+                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
+                      <td className="px-4 py-3">
+                        <ChannelCell channel={l.channel} />
+                      </td>
+                      <td className="px-4 py-3">
+                        {l.status === "failed" ? (
+                          <span className="inline-flex px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold">
+                            失败
+                          </span>
+                        ) : (
+                          <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">
+                            成功
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
+                        <span title={l.userId ?? ""}>{l.userEmail ?? "-"}</span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-700 font-mono text-xs">
+                        {l.subscriptionId ?? "-"}
+                      </td>
+                      <td className="px-4 py-3 text-red-600 text-xs max-w-xs break-words">
+                        {l.error || "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <DataTablePagination
+              page={q.page}
+              pageSize={q.pageSize}
+              total={q.data?.total ?? 0}
+              onPageChange={q.setPage}
+            />
+          </>
+        )}
+      </div>
     </div>
   )
 }
 
 // ── Tab 4：用户列表 ──
 
-function UsersTab({ data }: { data: UsersResponse | null }) {
-  const users = data?.users ?? []
-  const [filterTier, setFilterTier] = useState<string>("")
-
-  const tiers = useMemo(() => [...new Set(users.map((u) => u.subscriptionTier).filter(Boolean))] as string[], [users])
-
-  const filtered = useMemo(() => {
-    return users.filter((u) => (!filterTier || u.subscriptionTier === filterTier))
-  }, [users, filterTier])
-
-  const hasFilter = filterTier
-  const clearFilter = () => { setFilterTier("") }
+function UsersTab({ q }: { q: TableQuery<UsersResponse> }) {
+  const users = q.data?.users ?? []
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard label="用户总数" value={hasFilter ? filtered.length : (data?.total ?? 0)} tone="gray" />
-        <StatCard label="Pro 用户" value={hasFilter ? filtered.filter((u) => u.subscriptionTier === SUBSCRIPTION_TIER.PRO).length : (data?.proCount ?? 0)} tone="green" />
-        <StatCard label="免费用户" value={hasFilter ? filtered.filter((u) => u.subscriptionTier !== SUBSCRIPTION_TIER.PRO).length : (data?.freeCount ?? 0)} tone="gray" />
+        <StatCard label="筛选结果" value={q.data?.total ?? 0} tone="gray" />
+        <StatCard label="Pro 用户" value={q.data?.proCount ?? 0} tone="green" />
+        <StatCard label="免费用户" value={q.data?.freeCount ?? 0} tone="gray" />
       </div>
 
-      {/* 筛选栏 */}
-      <div className="flex flex-wrap items-center gap-2">
-        <select value={filterTier} onChange={(e) => setFilterTier(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
-          <option value="">全部套餐</option>
-          {tiers.map((t) => <option key={t} value={t}>{t === SUBSCRIPTION_TIER.PRO ? "Pro" : "Free"}</option>)}
-        </select>
-        {hasFilter && (
-          <button onClick={clearFilter} className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">清除</button>
-        )}
-        {hasFilter && <span className="text-xs text-text-secondary">筛选结果：{filtered.length} 条</span>}
-      </div>
+      <FilterStatus q={q} unit="用户" />
 
-      {users.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-text-secondary">
-          暂无用户
-        </div>
-      ) : (
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-          {users.length >= (data?.limit ?? 200) && (
-            <p className="text-xs text-text-secondary">仅显示最近 {data?.limit ?? 200} 条记录，更早的记录未展示</p>
-          )}
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-text-secondary">
-                <tr>
-                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap" title="用户注册时间">注册时间</th>
-                  <th className="text-left px-4 py-3 font-medium" title="注册邮箱">邮箱</th>
-                  <th className="text-left px-4 py-3 font-medium" title="用户昵称">用户名</th>
-                  <th className="text-left px-4 py-3 font-medium" title="当前套餐：FREE 免费版 / PRO 付费版">套餐</th>
-                  <th className="text-left px-4 py-3 font-medium" title="付费到期时间（FREE 用户为空）">到期时间</th>
-                  <th className="text-right px-4 py-3 font-medium" title="该用户创建的订单总数">订单数</th>
-                  <th className="text-left px-4 py-3 font-medium" title="新用户引导是否完成">引导完成</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filtered.map((u) => (
-                  <tr key={u.id}>
-                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(u.createdAt)}</td>
-                    <td className="px-4 py-3 text-gray-700 text-xs">{u.email ?? u.phone ?? "-"}</td>
-                    <td className="px-4 py-3 text-gray-700">{u.name ?? "-"}</td>
-                    <td className="px-4 py-3">
-                      {u.subscriptionTier === SUBSCRIPTION_TIER.PRO ? (
-                        <span className="inline-flex px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-xs font-semibold">Pro</span>
-                      ) : (
-                        <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">Free</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
-                      {u.subscriptionExpiryDate ? fmtTime(u.subscriptionExpiryDate) : "-"}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 text-right tabular-nums">{u.orderCount}</td>
-                    <td className="px-4 py-3 text-gray-700">{u.onboardingCompleted ? "✅" : "—"}</td>
+      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        {users.length === 0 ? (
+          <TableState q={q} emptyText="暂无用户" />
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-text-secondary">
+                  <tr>
+                    <Th
+                      label="注册时间"
+                      hint="用户注册时间"
+                      filter={{ type: "date" }}
+                      value={q.filters.createdAt}
+                      onChange={(v) => q.setFilter("createdAt", v)}
+                    />
+                    <Th
+                      label="邮箱"
+                      hint="注册邮箱"
+                      filter={{ type: "text", placeholder: "如 gmail.com" }}
+                      value={q.filters.email}
+                      onChange={(v) => q.setFilter("email", v)}
+                    />
+                    <Th
+                      label="用户名"
+                      hint="用户昵称"
+                      filter={{ type: "text", placeholder: "昵称关键字" }}
+                      value={q.filters.name}
+                      onChange={(v) => q.setFilter("name", v)}
+                    />
+                    <Th
+                      label="套餐"
+                      hint="当前套餐：FREE 免费版 / PRO 付费版"
+                      filter={{ type: "select", options: TIER_OPTIONS }}
+                      value={q.filters.tier}
+                      onChange={(v) => q.setFilter("tier", v)}
+                    />
+                    <Th label="到期时间" hint="付费到期时间（FREE 用户为空）" />
+                    <Th label="订单数" align="right" hint="该用户创建的订单总数" />
+                    <Th label="引导完成" hint="新用户引导是否完成" />
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {users.map((u) => (
+                    <tr key={u.id}>
+                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(u.createdAt)}</td>
+                      <td className="px-4 py-3 text-gray-700 text-xs">{u.email ?? u.phone ?? "-"}</td>
+                      <td className="px-4 py-3 text-gray-700">{u.name ?? "-"}</td>
+                      <td className="px-4 py-3">
+                        {u.subscriptionTier === SUBSCRIPTION_TIER.PRO ? (
+                          <span className="inline-flex px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-xs font-semibold">
+                            Pro
+                          </span>
+                        ) : (
+                          <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">
+                            Free
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
+                        {u.subscriptionExpiryDate ? fmtTime(u.subscriptionExpiryDate) : "-"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-700 text-right tabular-nums">{u.orderCount}</td>
+                      <td className="px-4 py-3 text-gray-700">{u.onboardingCompleted ? "✅" : "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <DataTablePagination
+              page={q.page}
+              pageSize={q.pageSize}
+              total={q.data?.total ?? 0}
+              onPageChange={q.setPage}
+            />
+          </>
+        )}
+      </div>
     </div>
   )
 }
 
 // ── Tab 5：Cron 日志 ──
 
-function CronsTab({ data }: { data: CronLogsResponse | null }) {
-  const logs = data?.logs ?? []
-  const [filterStatus, setFilterStatus] = useState<string>("")
-
-  const statuses = useMemo(() => [...new Set(logs.map((l) => l.status).filter(Boolean))] as string[], [logs])
-
-  const filtered = useMemo(() => {
-    return logs.filter((l) => (!filterStatus || l.status === filterStatus))
-  }, [logs, filterStatus])
-
-  const hasFilter = filterStatus
-  const clearFilter = () => { setFilterStatus("") }
+function CronsTab({ q }: { q: TableQuery<CronLogsResponse> }) {
+  const logs = q.data?.logs ?? []
 
   return (
     <div className="space-y-4">
-      <div>
-        <p className="text-text-secondary text-sm">
-          Vercel Cron 定时任务执行记录（每日 00:00 过期降级 / 01:00 取消对账，UTC 时间；对应北京时间 08:00 / 09:00）。
-          状态为「失败」= 定时任务执行出错，需检查服务端日志。
-        </p>
+      <p className="text-text-secondary text-sm">
+        Vercel Cron 定时任务执行记录（每日 00:00 过期降级 / 01:00 取消对账，UTC 时间；对应北京时间 08:00 / 09:00）。
+        状态为「失败」= 定时任务执行出错，需检查服务端日志。
+      </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <StatCard label="筛选结果" value={q.data?.total ?? 0} tone="gray" />
+        <StatCard
+          label="失败执行"
+          value={q.data?.failed ?? 0}
+          tone={(q.data?.failed ?? 0) > 0 ? "red" : "gray"}
+        />
       </div>
 
-      {/* 筛选栏 */}
-      <div className="flex flex-wrap items-center gap-2">
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30">
-          <option value="">全部状态</option>
-          {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
-        {hasFilter && (
-          <button onClick={clearFilter} className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50">清除</button>
-        )}
-        {hasFilter && <span className="text-xs text-text-secondary">筛选结果：{filtered.length} 条</span>}
-      </div>
+      <FilterStatus q={q} unit="记录" />
 
-      {logs.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-text-secondary">
-          暂无 Cron 执行记录（部署后每日自动执行，执行时写入）
-        </div>
-      ) : (
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-          {logs.length >= (data?.limit ?? 100) && (
-            <p className="text-xs text-text-secondary">仅显示最近 {data?.limit ?? 100} 条记录，更早的记录未展示</p>
-          )}
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-text-secondary">
-                <tr>
-                  <th className="text-left px-4 py-3 font-medium whitespace-nowrap" title="Cron 任务执行时间">执行时间</th>
-                  <th className="text-left px-4 py-3 font-medium" title="定时任务名称：expire-sweep 过期降级 / reconcile-cancellations 取消对账">任务</th>
-                  <th className="text-left px-4 py-3 font-medium" title="执行结果：success 成功 / error 失败">状态</th>
-                  <th className="text-left px-4 py-3 font-medium" title="处理详情：受影响的用户数、失败数等">详情</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filtered.map((l) => (
-                  <tr key={l.id} className={l.status === "failed" ? "bg-red-50/50" : ""}>
-                    <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
-                    <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.eventType ?? "-"}</td>
-                    <td className="px-4 py-3">
-                      {l.status === "failed" ? (
-                        <span className="inline-flex px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold">失败</span>
-                      ) : (
-                        <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">成功</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 text-xs max-w-md break-words">
-                      <pre className="whitespace-pre-wrap break-all font-mono text-xs">{JSON.stringify(l.detail)}</pre>
-                    </td>
+      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        {logs.length === 0 ? (
+          <TableState q={q} emptyText="暂无 Cron 执行记录（部署后每日自动执行，执行时写入）" />
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-text-secondary">
+                  <tr>
+                    <Th
+                      label="执行时间"
+                      hint="Cron 任务执行时间"
+                      filter={{ type: "date" }}
+                      value={q.filters.createdAt}
+                      onChange={(v) => q.setFilter("createdAt", v)}
+                    />
+                    <Th
+                      label="任务"
+                      hint="expire-sweep 过期降级 / reconcile-cancellations 取消对账"
+                      filter={{ type: "select", options: CRON_TASK_OPTIONS }}
+                      value={q.filters.task}
+                      onChange={(v) => q.setFilter("task", v)}
+                    />
+                    <Th
+                      label="状态"
+                      hint="执行结果：成功 / 失败"
+                      filter={{ type: "select", options: CRON_STATUS_OPTIONS }}
+                      value={q.filters.status}
+                      onChange={(v) => q.setFilter("status", v)}
+                    />
+                    <Th label="详情" hint="处理详情：受影响的用户数、失败数等" />
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {logs.map((l) => (
+                    <tr key={l.id} className={l.status === "failed" ? "bg-red-50/50" : ""}>
+                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
+                      <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.eventType ?? "-"}</td>
+                      <td className="px-4 py-3">
+                        {l.status === "failed" ? (
+                          <span className="inline-flex px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold">
+                            失败
+                          </span>
+                        ) : (
+                          <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">
+                            成功
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-gray-700 text-xs max-w-md break-words">
+                        <pre className="whitespace-pre-wrap break-all font-mono text-xs">
+                          {JSON.stringify(l.detail)}
+                        </pre>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <DataTablePagination
+              page={q.page}
+              pageSize={q.pageSize}
+              total={q.data?.total ?? 0}
+              onPageChange={q.setPage}
+            />
+          </>
+        )}
+      </div>
     </div>
   )
 }

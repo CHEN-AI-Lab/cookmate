@@ -540,6 +540,7 @@
     "proPlanDesc": "すべての機能を解放、無制限で利用可能",
     "freeBadge": "🆓 無料",
     "expiryDate": "有効期限：{date}",
+    "nextCharge": "次回のお支払い：{date}",
     "paymentMethods": "支払い方法",
     "payDesc": "スキャンして支払う・安全・迅速",
     "subscriptionManage": "サブスクリプション管理",

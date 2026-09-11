@@ -33,6 +33,66 @@ function usageKey(userId: string, date: any): string {
   return `${userId}_${t}`
 }
 
+// ── where 条件匹配（对齐真实 Prisma 的常见算子：等值 / in / contains / startsWith / not / 日期区间）──
+
+function matchVal(cond: any, value: any): boolean {
+  if (cond === undefined) return true
+  if (cond !== null && typeof cond === 'object') {
+    if (Array.isArray(cond.in)) return cond.in.includes(value)
+    if (typeof cond.startsWith === 'string') return String(value ?? '').startsWith(cond.startsWith)
+    if (typeof cond.contains === 'string') return String(value ?? '').includes(cond.contains)
+    // { not: null } 在 Prisma 里等价于「非空」，undefined 也算空
+    if ('not' in cond) return cond.not == null ? value != null : value !== cond.not
+    return true
+  }
+  return value === cond
+}
+
+function matchDate(cond: any, value: any): boolean {
+  if (!cond) return true
+  const t = value instanceof Date ? value.getTime() : new Date(value).getTime()
+  if (cond.gte && !(t >= new Date(cond.gte).getTime())) return false
+  if (cond.lte && !(t <= new Date(cond.lte).getTime())) return false
+  return true
+}
+
+function matchOrder(o: any, where: any): boolean {
+  if (!where) return true
+  return (
+    matchVal(where.userId, o.userId) &&
+    matchVal(where.channel, o.channel) &&
+    matchVal(where.status, o.status) &&
+    matchVal(where.period, o.period) &&
+    matchVal(where.externalCheckoutId, o.externalCheckoutId) &&
+    matchVal(where.orderId, o.orderId) &&
+    matchVal(where.paidAmount, o.paidAmount) &&
+    matchDate(where.createdAt, o.createdAt)
+  )
+}
+
+function matchLog(l: any, where: any): boolean {
+  if (!where) return true
+  return (
+    matchVal(where.source, l.source) &&
+    matchVal(where.status, l.status) &&
+    matchVal(where.eventType, l.eventType) &&
+    matchVal(where.userId, l.userId) &&
+    matchVal(where.subscriptionId, l.subscriptionId) &&
+    matchVal(where.eventId, l.eventId) &&
+    matchDate(where.createdAt, l.createdAt)
+  )
+}
+
+function matchUser(u: any, where: any): boolean {
+  if (!where) return true
+  return (
+    matchVal(where.email, u.email) &&
+    matchVal(where.name, u.name) &&
+    matchVal(where.subscriptionTier, u.subscriptionTier) &&
+    matchDate(where.createdAt, u.createdAt)
+  )
+}
+
 /** 用于测试「免费额度已用完」场景：直接种入当天 usage 记录 */
 export function seedUsageDaily(userId: string, count: number) {
   const today = new Date()
@@ -70,6 +130,9 @@ export function makePrisma() {
         return rec
       }),
       findMany: vi.fn(async () => []),
+      count: vi.fn(async ({ where }: any) => {
+        return [...stores.users.values()].filter((u: any) => matchUser(u, where)).length
+      }),
       updateMany: vi.fn(async ({ where, data }: any) => {
         let count = 0
         for (const u of stores.users.values()) {
@@ -127,16 +190,32 @@ export function makePrisma() {
         return list[0] || null
       }),
       findUnique: vi.fn(async ({ where }: any) => stores.orders.get(where.orderId) || null),
-      findMany: vi.fn(async ({ where, orderBy, take }: any) => {
-        let list = [...stores.orders.values()].filter(
-          (o: any) =>
-            (!where.userId || o.userId === where.userId) &&
-            (!where.channel || o.channel === where.channel) &&
-            (!where.externalCheckoutId || o.externalCheckoutId === where.externalCheckoutId),
-        )
+      findMany: vi.fn(async ({ where, orderBy, take, skip }: any) => {
+        let list = [...stores.orders.values()].filter((o: any) => matchOrder(o, where))
         if (orderBy?.createdAt === 'desc') list.sort((a: any, b: any) => b.createdAt - a.createdAt)
+        if (skip) list = list.slice(skip)
         if (take) list = list.slice(0, take)
         return list
+      }),
+      count: vi.fn(async ({ where }: any) => {
+        return [...stores.orders.values()].filter((o: any) => matchOrder(o, where)).length
+      }),
+      // 后台订单 Tab 的统计用：按 channel × status 分组拿到条数与金额
+      groupBy: vi.fn(async ({ by, where }: any) => {
+        const keys: string[] = by || []
+        const map = new Map<string, any>()
+        for (const o of [...stores.orders.values()].filter((x: any) => matchOrder(x, where))) {
+          const k = keys.map((f) => String(o[f])).join('\u0001')
+          let g = map.get(k)
+          if (!g) {
+            g = { _count: { _all: 0 }, _sum: { amount: 0 } }
+            for (const f of keys) g[f] = o[f]
+            map.set(k, g)
+          }
+          g._count._all += 1
+          g._sum.amount += o.amount ?? 0
+        }
+        return [...map.values()]
       }),
       create: vi.fn(async ({ data }: any) => {
         const rec = { id: data.orderId || `po_${Date.now()}`, createdAt: Date.now(), updatedAt: Date.now(), ...data }
@@ -179,19 +258,25 @@ export function makePrisma() {
       }),
     },
     webhookLog: {
-      findMany: vi.fn(async ({ where, orderBy, take }: any) => {
-        let list = [...stores.logs.values()]
-        if (where?.source) list = list.filter((l: any) => l.source === where.source)
-        if (where?.status) list = list.filter((l: any) => l.status === where.status)
+      findMany: vi.fn(async ({ where, orderBy, take, skip }: any) => {
+        let list = [...stores.logs.values()].filter((l: any) => matchLog(l, where))
         if (orderBy?.createdAt === 'desc') list.sort((a: any, b: any) => b.createdAt - a.createdAt)
+        if (skip) list = list.slice(skip)
         if (take) list = list.slice(0, take)
         return list
       }),
-      findFirst: vi.fn(async ({ where }: any) => {
-        for (const l of stores.logs.values()) {
-          if (where.eventId && l.eventId === where.eventId && (!where.status || l.status === where.status)) return l
+      findFirst: vi.fn(async ({ where, orderBy }: any) => {
+        // 原路子：按 eventId 精确查（去重判断用）
+        if (where?.eventId) {
+          for (const l of stores.logs.values()) {
+            if (l.eventId === where.eventId && (!where.status || l.status === where.status)) return l
+          }
+          return null
         }
-        return null
+        // 新增路子：按 source / status 取最新一条（后台「取消审计」取 lastFailedAt 用）
+        const list = [...stores.logs.values()].filter((l: any) => matchLog(l, where))
+        if (orderBy?.createdAt === 'desc') list.sort((a: any, b: any) => b.createdAt - a.createdAt)
+        return list[0] ?? null
       }),
       create: vi.fn(async ({ data }: any) => {
         const id = `wl_${Date.now()}_${Math.random().toString(36).slice(2)}`
@@ -212,13 +297,7 @@ export function makePrisma() {
         return { count }
       }),
       count: vi.fn(async ({ where }: any) => {
-        let n = 0
-        for (const l of stores.logs.values()) {
-          if (where?.source && l.source !== where.source) continue
-          if (where?.status && l.status !== where.status) continue
-          n++
-        }
-        return n
+        return [...stores.logs.values()].filter((l: any) => matchLog(l, where)).length
       }),
     },
     recipe: {

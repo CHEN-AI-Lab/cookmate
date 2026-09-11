@@ -545,6 +545,7 @@
     "freeBadge": "🆓 Free",
     "proBadge": "🌟 Pro",
     "expiryDate": "Expires: {date}",
+    "nextCharge": "Next charge: {date}",
     "paymentMethods": "Payment Methods",
     "payDesc": "Scan to pay · Safe & Fast",
     "subscriptionManage": "Subscription Management",

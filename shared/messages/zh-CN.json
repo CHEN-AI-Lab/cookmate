@@ -545,6 +545,7 @@
     "freeBadge": "🆓 免费版",
     "proBadge": "🌟 Pro",
     "expiryDate": "到期时间：{date}",
+    "nextCharge": "下次扣款：{date}",
     "paymentMethods": "支付方式",
     "payDesc": "扫码即付 · 安全快捷",
     "subscriptionManage": "订阅管理",

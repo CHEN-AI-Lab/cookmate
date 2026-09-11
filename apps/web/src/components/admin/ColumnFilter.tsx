@@ -1,0 +1,427 @@
+"use client"
+
+// 后台表格「列头筛选」—— 每个可筛选列的标题旁一个漏斗，点开对应的筛选面板。
+//
+// 为什么用 portal：面板要越过表格容器的 overflow-x-auto 弹出，写在 th 里会被裁掉。
+// 外部点击判定把面板 ref 与触发按钮 ref 都算进去，否则点面板内部会被判成「点了外部」。
+//
+// 时间列设计（2026-09-11 调研 + 用户反馈）：预设相对区间优先（今天/近7天/近30天/本月），
+// 自绘日历兜底 —— 不使用原生 input[type=date]（用户明确反馈「非常难用」）。
+
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
+import { cn } from "@cookmate/shared/utils"
+import {
+  DATE_PRESET_KEYS,
+  presetToRange,
+  toYmd,
+  ymdOf,
+  type DatePresetKey,
+} from "@cookmate/shared/constants/date-presets"
+import { isFilterActive, type FilterValue } from "@cookmate/shared/hooks/useTableQuery"
+
+export type ColumnFilterDef =
+  | { type: "text"; placeholder?: string }
+  | { type: "select"; options: ReadonlyArray<{ value: string; label: string }> }
+  | { type: "date" }
+
+const PRESET_LABELS: Record<DatePresetKey, string> = {
+  today: "今天",
+  "7d": "近 7 天",
+  "30d": "近 30 天",
+  month: "本月",
+  custom: "自定义",
+}
+
+const WEEKDAYS = ["一", "二", "三", "四", "五", "六", "日"]
+
+const FUNNEL_PATH = "M1.5 2h9L7.3 6v3.4L4.7 11V6L1.5 2z"
+
+/** 表头单元格：标题 +（可选）筛选漏斗。hint 挂在标题文字上，漏斗自己带「筛选」提示。 */
+export function Th({
+  label,
+  hint,
+  filter,
+  value,
+  onChange,
+  align = "left",
+}: {
+  label: string
+  hint?: string
+  filter?: ColumnFilterDef
+  value?: FilterValue
+  onChange?: (v: FilterValue) => void
+  align?: "left" | "right"
+}) {
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false)
+  // 每次「重置」让筛选面板里的子组件重新挂载一次，子组件的本地状态天然清空
+  // （比在 useEffect 里 setState 同步外部值更干净，也不会触发级联渲染）
+  const [resetKey, setResetKey] = useState(0)
+  const [pos, setPos] = useState({ left: 0, top: 0 })
+  const on = isFilterActive(value)
+
+  useLayoutEffect(() => {
+    if (!open) return
+    const place = () => {
+      const r = btnRef.current?.getBoundingClientRect()
+      if (!r) return
+      const w = panelRef.current?.offsetWidth ?? 240
+      const h = panelRef.current?.offsetHeight ?? 280
+      const left = Math.max(12, Math.min(r.left, window.innerWidth - w - 12))
+      let top = r.bottom + 6
+      if (top + h > window.innerHeight - 12) top = Math.max(12, r.top - h - 6)
+      setPos({ left, top })
+    }
+    place()
+    const onScroll = () => {
+      const r = btnRef.current?.getBoundingClientRect()
+      if (!r || r.bottom < 0 || r.top > window.innerHeight) {
+        setOpen(false)
+        return
+      }
+      place()
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false)
+    }
+    window.addEventListener("scroll", onScroll, true)
+    window.addEventListener("resize", onScroll)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      window.removeEventListener("scroll", onScroll, true)
+      window.removeEventListener("resize", onScroll)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node | null
+      if (!t) return
+      if (panelRef.current?.contains(t) || btnRef.current?.contains(t)) return
+      setOpen(false)
+    }
+    document.addEventListener("mousedown", onDown)
+    return () => document.removeEventListener("mousedown", onDown)
+  }, [open])
+
+  return (
+    <th
+      className={cn(
+        "px-4 py-3 font-medium whitespace-nowrap",
+        align === "right" ? "text-right" : "text-left",
+        on && "bg-accent/10",
+      )}
+    >
+      <span className={cn("inline-flex items-center gap-1", align === "right" && "flex-row-reverse")}>
+        <span title={hint} className={cn(on && "text-accent")}>
+          {label}
+        </span>
+        {filter && onChange ? (
+          <button
+            ref={btnRef}
+            type="button"
+            title="筛选"
+            aria-label={`筛选：${label}`}
+            onClick={() => setOpen((v) => !v)}
+            className={cn(
+              "inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border border-transparent text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600",
+              on && "text-accent",
+            )}
+          >
+            <svg viewBox="0 0 12 12" className="h-[10px] w-[10px]" aria-hidden="true">
+              <path d={FUNNEL_PATH} fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+            </svg>
+          </button>
+        ) : null}
+      </span>
+
+      {open && onChange && filter
+        ? createPortal(
+            <div
+              ref={panelRef}
+              style={{ position: "fixed", left: pos.left, top: pos.top }}
+              className="z-[100] w-[240px] rounded-xl border border-border bg-card p-3 shadow-lg"
+            >
+              <p className="mb-2 text-[12px] font-semibold text-text-primary">{label}</p>
+              {filter.type === "text" && (
+              <TextBody key={resetKey} value={value} placeholder={filter.placeholder} onChange={onChange} />
+              )}
+              {filter.type === "select" && (
+                <SelectBody key={resetKey} options={filter.options} value={value} onChange={onChange} />
+              )}
+              {filter.type === "date" && <DateBody key={resetKey} value={value} onChange={onChange} />}
+              <div className="mt-2.5 flex items-center justify-between border-t border-border pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onChange(undefined)
+                    setResetKey((k) => k + 1)
+                  }}
+                  className="text-[12px] text-text-secondary hover:text-text-primary"
+                >
+                  重置
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="rounded-lg border border-border px-2.5 py-1 text-[12px] text-text-primary hover:bg-surface"
+                >
+                  关闭
+                </button>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+    </th>
+  )
+}
+
+function TextBody({
+  value,
+  placeholder,
+  onChange,
+}: {
+  value?: FilterValue
+  placeholder?: string
+  onChange: (v: FilterValue) => void
+}) {
+  const external = typeof value === "string" ? value : ""
+  const [local, setLocal] = useState(external)
+  // 用 ref 存最新的 onChange：父组件每次渲染都会换一个新函数，
+  // 直接放进依赖里会让防抖定时器被反复重置，永远不触发。
+  const cb = useRef(onChange)
+  useEffect(() => {
+    cb.current = onChange
+  })
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (local !== external) cb.current(local)
+    }, 350)
+    return () => clearTimeout(t)
+  }, [local, external])
+
+  return (
+    <>
+      <input
+        type="text"
+        value={local}
+        placeholder={placeholder ?? "包含…"}
+        onChange={(e) => setLocal(e.target.value)}
+        className="w-full rounded-lg border border-border bg-white px-2.5 py-1.5 text-[12.5px] text-text-primary outline-none focus:border-accent"
+      />
+      <p className="mt-1.5 text-[11px] text-text-secondary">模糊匹配，输入后自动生效</p>
+    </>
+  )
+}
+
+function SelectBody({
+  options,
+  value,
+  onChange,
+}: {
+  options: ReadonlyArray<{ value: string; label: string }>
+  value?: FilterValue
+  onChange: (v: FilterValue) => void
+}) {
+  const arr = Array.isArray(value) ? value : []
+  const toggle = (v: string) => {
+    onChange(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v])
+  }
+  return (
+    <>
+      <div className="flex flex-col gap-1.5">
+        {options.map((o) => (
+          <label key={o.value} className="flex cursor-pointer items-center gap-2 text-[12.5px] text-text-primary">
+            <input type="checkbox" checked={arr.includes(o.value)} onChange={() => toggle(o.value)} />
+            {o.label}
+          </label>
+        ))}
+      </div>
+      <p className="mt-1.5 text-[11px] text-text-secondary">可多选，多选之间为「或」</p>
+    </>
+  )
+}
+
+function DateBody({ value, onChange }: { value?: FilterValue; onChange: (v: FilterValue) => void }) {
+  const range = value && typeof value === "object" && !Array.isArray(value) ? value : undefined
+  const preset = range?.preset
+  const [cal, setCal] = useState(() => {
+    const base = range?.from ? new Date(`${range.from}T00:00:00`) : new Date()
+    return { y: base.getFullYear(), m: base.getMonth() }
+  })
+
+  const applyPreset = (p: DatePresetKey) => {
+    if (p === "custom") {
+      onChange({ from: range?.from ?? "", to: range?.to ?? "", preset: "custom" })
+      return
+    }
+    if (preset === p) {
+      onChange(undefined)
+      return
+    }
+    const r = presetToRange(p)
+    if (r) onChange({ ...r, preset: p })
+  }
+
+  const pickDay = (day: string) => {
+    if (!range?.from || (range.from && range.to)) {
+      onChange({ from: day, to: "", preset: "custom" })
+      return
+    }
+    if (day < range.from) onChange({ from: day, to: range.from, preset: "custom" })
+    else onChange({ from: range.from, to: day, preset: "custom" })
+  }
+
+  const y = cal.y
+  const m = cal.m
+  const startDow = (new Date(y, m, 1).getDay() + 6) % 7
+  const dayCount = new Date(y, m + 1, 0).getDate()
+  const todayStr = toYmd(new Date())
+  const curY = new Date().getFullYear()
+  const years: number[] = []
+  for (let yy = curY - 6; yy <= curY + 1; yy++) years.push(yy)
+
+  const from = range?.from ?? ""
+  const to = range?.to ?? ""
+  const summary =
+    preset === "custom"
+      ? from || to
+        ? `自定义 ${from || "…"} → ${to || "…"}`
+        : ""
+      : preset
+        ? `${PRESET_LABELS[preset]} ${presetToRange(preset)?.from ?? ""} ~ ${presetToRange(preset)?.to ?? ""}`
+        : ""
+
+  const shift = (delta: number) => {
+    let mm = m + delta
+    let yy = y
+    if (mm < 0) {
+      mm = 11
+      yy -= 1
+    }
+    if (mm > 11) {
+      mm = 0
+      yy += 1
+    }
+    setCal({ y: yy, m: mm })
+  }
+
+  return (
+    <>
+      <div className="flex flex-wrap gap-1.5">
+        {DATE_PRESET_KEYS.map((p) => (
+          <button
+            key={p}
+            type="button"
+            onClick={() => applyPreset(p)}
+            className={cn(
+              "rounded-full border px-2.5 py-1 text-[12px] transition-colors",
+              preset === p
+                ? "border-accent bg-accent text-white"
+                : "border-border bg-white text-text-primary hover:border-accent hover:text-accent",
+            )}
+          >
+            {PRESET_LABELS[p]}
+          </button>
+        ))}
+      </div>
+
+      {preset === "custom" && (
+        <div className="mt-2 w-[212px]">
+          <div className="mb-1.5 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => shift(-1)}
+              className="rounded-md border border-border bg-white px-2 py-0.5 text-[13px] leading-none text-text-primary hover:bg-surface"
+            >
+              ‹
+            </button>
+            <div className="flex items-center gap-1">
+              <select
+                value={y}
+                onChange={(e) => setCal({ y: Number(e.target.value), m })}
+                className="rounded-md border border-border bg-white px-1 py-0.5 text-[12px] text-text-primary"
+              >
+                {years.map((yy) => (
+                  <option key={yy} value={yy}>
+                    {yy}
+                  </option>
+                ))}
+              </select>
+              <span className="text-[12px] text-text-secondary">年</span>
+              <select
+                value={m}
+                onChange={(e) => setCal({ y, m: Number(e.target.value) })}
+                className="rounded-md border border-border bg-white px-1 py-0.5 text-[12px] text-text-primary"
+              >
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i} value={i}>
+                    {i + 1}
+                  </option>
+                ))}
+              </select>
+              <span className="text-[12px] text-text-secondary">月</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => shift(1)}
+              className="rounded-md border border-border bg-white px-2 py-0.5 text-[13px] leading-none text-text-primary hover:bg-surface"
+            >
+              ›
+            </button>
+          </div>
+
+          <div className="grid grid-cols-7 gap-0.5 text-center text-[11px] text-text-secondary">
+            {WEEKDAYS.map((w) => (
+              <div key={w}>{w}</div>
+            ))}
+          </div>
+          <div className="mt-1 grid grid-cols-7 gap-0.5">
+            {Array.from({ length: startDow }, (_, i) => (
+              <div key={`b${i}`} />
+            ))}
+            {Array.from({ length: dayCount }, (_, i) => {
+              const day = i + 1
+              const ds = ymdOf(y, m, day)
+              const edge = ds === from || ds === to
+              const inRange = !!from && !!to && ds >= from && ds <= to
+              return (
+                <button
+                  key={ds}
+                  type="button"
+                  onClick={() => pickDay(ds)}
+                  className={cn(
+                    "rounded-lg border border-transparent py-1 text-[12px] transition-colors",
+                    edge
+                      ? "bg-accent font-semibold text-white"
+                      : inRange
+                        ? "bg-accent/10 text-text-primary"
+                        : ds === todayStr
+                          ? "font-semibold text-accent hover:bg-surface"
+                          : "text-text-primary hover:bg-surface",
+                  )}
+                >
+                  {day}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      <p className="mt-1.5 text-[11px] text-text-secondary">
+        {summary
+          ? `当前：${summary}`
+          : preset === "custom"
+            ? "点一个日期作为起始，再点一个作为结束"
+            : "点上面一键筛选，不用碰日期控件。"}
+      </p>
+    </>
+  )
+}

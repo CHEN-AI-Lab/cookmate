@@ -9,8 +9,13 @@ vi.mock('@/lib/prisma', async () => {
 vi.mock('@/lib/auth', () => ({ auth: vi.fn() }))
 
 import { auth } from '@/lib/auth'
-import { GET as ordersGET } from '@/app/api/admin/orders/route'
-import { GET as webhookLogsGET } from '@/app/api/admin/webhook-logs/route'
+import { GET as ordersRoute } from '@/app/api/admin/orders/route'
+import { GET as webhookLogsRoute } from '@/app/api/admin/webhook-logs/route'
+
+// 路由现在接收 Request（要读分页 / 筛选参数），测试统一造一个请求对象
+const req = (path: string) => new Request(`http://localhost${path}`)
+const ordersGET = () => ordersRoute(req('/api/admin/orders'))
+const webhookLogsGET = () => webhookLogsRoute(req('/api/admin/webhook-logs'))
 
 const sampleOrders = [
   { id: 'o1', orderId: 'CKCR20260901AABBCCDD', channel: 'creem', period: 'annual', amount: 16900, currency: 'USD', status: 'PAID', createdAt: new Date('2026-09-01T10:00:00Z'), user: { email: 'a@x.com' } },
@@ -25,8 +30,10 @@ const sampleWebhookLogs = [
 beforeEach(() => {
   resetPrisma()
   process.env.ADMIN_EMAILS = 'admin@cookmate.com'
-  prismaMock.paymentOrder.findMany.mockResolvedValue(sampleOrders)
-  prismaMock.webhookLog.findMany.mockResolvedValue(sampleWebhookLogs)
+  // 直接种进内存 store：findMany / count / groupBy 三个查询拿到的是同一份数据。
+  // 路由改成分页后，total 走 count、分渠道收入走 groupBy，不再从 findMany 的结果里算。
+  for (const o of sampleOrders) stores.orders.set(o.orderId, o)
+  for (const l of sampleWebhookLogs) stores.logs.set(l.id, l)
 })
 
 describe('admin orders GET', () => {
@@ -105,9 +112,8 @@ describe('admin webhook-logs GET', () => {
   })
 
   it('rawBody 完整返回不截断', async () => {
-    prismaMock.webhookLog.findMany.mockResolvedValue([
-      { id: 'w3', source: 'creem', eventType: 'x', status: 'received', eventId: null, createdAt: new Date(), rawBody: 'x'.repeat(1000) },
-    ])
+    stores.logs.clear()
+    stores.logs.set('w3', { id: 'w3', source: 'creem', eventType: 'x', status: 'received', eventId: null, createdAt: new Date(), rawBody: 'x'.repeat(1000) })
     ;(auth as any).mockResolvedValue({ user: { id: 'u1', email: 'admin@cookmate.com' } })
     const res = await webhookLogsGET()
     const json = await res.json()

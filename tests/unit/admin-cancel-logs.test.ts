@@ -23,8 +23,9 @@ const sampleLogs = [
 beforeEach(() => {
   resetPrisma()
   process.env.ADMIN_EMAILS = 'admin@cookmate.com,backup@cookmate.com'
-  // mock prisma.webhookLog.findMany 返回样本日志
-  prismaMock.webhookLog.findMany.mockResolvedValue(sampleLogs)
+  // 直接种进内存 store：findMany / count / findFirst 拿到的是同一份数据。
+  // 路由改成分页后，total / failed / completed / lastFailedAt 都走聚合查询，不再从 findMany 结果里算。
+  for (const l of sampleLogs) stores.logs.set(l.id, l)
 })
 
 describe('admin cancel-logs GET', () => {
@@ -105,9 +106,8 @@ describe('admin cancel-logs GET', () => {
   })
 
   it('rawBody 非合法 JSON → detail 为空对象，不抛错', async () => {
-    prismaMock.webhookLog.findMany.mockResolvedValue([
-      { id: 'wl3', source: 'cancel', eventType: 'creem', status: 'failed', rawBody: 'not-json', createdAt: new Date() },
-    ])
+    stores.logs.clear()
+    stores.logs.set('wl3', { id: 'wl3', source: 'cancel', eventType: 'creem', status: 'failed', rawBody: 'not-json', createdAt: new Date() })
     ;(auth as any).mockResolvedValue({ user: { id: 'u1', email: 'admin@cookmate.com' } })
     const res = await GET(getReq())
     expect(res.status).toBe(200)
@@ -117,7 +117,7 @@ describe('admin cancel-logs GET', () => {
   })
 
   it('无 cancel 日志 → 返回空列表', async () => {
-    prismaMock.webhookLog.findMany.mockResolvedValue([])
+    stores.logs.clear()
     ;(auth as any).mockResolvedValue({ user: { id: 'u1', email: 'admin@cookmate.com' } })
     const res = await GET(getReq())
     expect(res.status).toBe(200)
