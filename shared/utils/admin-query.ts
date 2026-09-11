@@ -65,8 +65,11 @@ export type SubscriptionStatus = "active" | "canceled" | "onetime" | "expired" |
 /**
  * 判定顺序很重要：
  *  1. 免费 → free（没有订阅状态可言）
- *  2. 有 Creem 订阅ID → active（Creem 是「会不会自动续费」的事实来源）
- *  3. 本地无订阅ID 且到期日已过 → expired（等每日降级任务跑掉）
+ *  2. **先看到期日**：到期日已过 → expired。
+ *     定时任务（正式环境每天一次）才把数据库降级，中间这段窗口里数据库的 tier 还是旧的、
+ *     Creem 订阅ID也可能还在 —— 这时若先看订阅ID会误判成「订阅中」。
+ *     管理后台必须按到期日说话，和「到期时间」列保持一致。
+ *  3. 有 Creem 订阅ID → active（Creem 是「会不会自动续费」的事实来源）
  *  4. 最后一笔已支付订单是支付宝 → onetime（一次性买断，不是取消）
  *  5. 最后一笔是 Creem → canceled（取消后当前周期用完自动降级）
  *  6. 什么都查不到 → unknown（历史脏数据，不硬猜）
@@ -82,11 +85,11 @@ export function deriveSubscriptionStatus(input: {
   now?: Date
 }): SubscriptionStatus {
   if (!input.isPro) return "free"
-  if (input.creemSubscriptionId) return "active"
   const expiry = input.subscriptionExpiryDate ? new Date(input.subscriptionExpiryDate) : null
   if (expiry && !Number.isNaN(expiry.getTime()) && expiry.getTime() < (input.now ?? new Date()).getTime()) {
     return "expired"
   }
+  if (input.creemSubscriptionId) return "active"
   if (input.lastPaidChannel === "alipay") return "onetime"
   if (input.lastPaidChannel === "creem") return "canceled"
   return "unknown"

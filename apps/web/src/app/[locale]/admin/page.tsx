@@ -475,7 +475,7 @@ function OrdersTab({ q }: { q: TableQuery<OrdersResponse> }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <StatCard label="筛选结果" value={q.data?.total ?? 0} tone="gray" />
+        <StatCard label="总订单" value={q.data?.total ?? 0} tone="gray" />
         <StatCard label="已支付" value={q.data?.paidCount ?? 0} tone="green" />
         <StatCard label="Creem 收入" value={fmtAmount(q.data?.creemRevenue ?? 0, "USD")} tone="amber" />
         <StatCard
@@ -619,7 +619,7 @@ function WebhooksTab({ q }: { q: TableQuery<WebhookLogsResponse> }) {
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <StatCard label="筛选结果" value={q.data?.total ?? 0} tone="gray" />
+        <StatCard label="回调总数" value={q.data?.total ?? 0} tone="gray" />
         <StatCard
           label="失败回调"
           value={q.data?.failed ?? 0}
@@ -777,7 +777,7 @@ function CancelsTab({ q }: { q: TableQuery<CancelLogsResponse> }) {
           tone={(q.data?.failed ?? 0) > 0 ? "red" : "gray"}
         />
         <StatCard label="成功取消" value={q.data?.completed ?? 0} tone="green" />
-        <StatCard label="筛选结果" value={q.data?.total ?? 0} tone="gray" />
+        <StatCard label="总记录" value={q.data?.total ?? 0} tone="gray" />
       </div>
 
       <FilterStatus q={q} unit="记录" />
@@ -880,7 +880,7 @@ function UsersTab({ q }: { q: TableQuery<UsersResponse> }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard label="筛选结果" value={q.data?.total ?? 0} tone="gray" />
+        <StatCard label="用户总数" value={q.data?.total ?? 0} tone="gray" />
         <StatCard label="Pro 用户" value={q.data?.proCount ?? 0} tone="green" />
         <StatCard label="免费用户" value={q.data?.freeCount ?? 0} tone="gray" />
       </div>
@@ -984,7 +984,7 @@ function CronsTab({ q }: { q: TableQuery<CronLogsResponse> }) {
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <StatCard label="筛选结果" value={q.data?.total ?? 0} tone="gray" />
+        <StatCard label="总记录" value={q.data?.total ?? 0} tone="gray" />
         <StatCard
           label="失败执行"
           value={q.data?.failed ?? 0}
