@@ -7,8 +7,14 @@ import { WORKER_URL, FALLBACK_URL } from '../constants'
 const ENV =
   (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_VERCEL_ENV) || 'development'
 
-export function useVisitTracking(project: string, page?: string | null, tool?: string) {
+export function useVisitTracking(
+  project: string,
+  page?: string | null,
+  tool?: string,
+  enabled: boolean = true,
+) {
   useEffect(() => {
+    // enabled=false 时整体跳过（如后台管理页只有管理员使用，不计入访问统计）
     const payload = JSON.stringify({
       project,
       page: page === null ? undefined : page || window.location.pathname,
@@ -30,6 +36,7 @@ export function useVisitTracking(project: string, page?: string | null, tool?: s
         navigator.sendBeacon(FALLBACK_URL, payload)
       }
     }
+    if (!enabled) return
     track()
-  }, [project, page, tool])
+  }, [project, page, tool, enabled])
 }
