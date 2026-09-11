@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
+import { trackEvent } from "@cookmate/shared/utils/track"
 
 // ── 辅助函数：从 webhook 事件中提取各种字段 ──
 
@@ -465,6 +466,8 @@ export async function POST(req: Request) {
                 ...(subscriptionId ? { creemSubscriptionId: subscriptionId } : {}),
               },
             })
+            // 行为埋点：付款成功 —— 仅在本次实际升级（needsUpgrade）时计一次，幂等跳过不计
+            await trackEvent("pay_success_creem")
           }
         }
       }
@@ -515,6 +518,10 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "user not found for metadata.userId" }, { status: 500 })
       }
 
+      if (result.granted) {
+        // 行为埋点：付款成功 —— subscription.paid 实际授予访问权限时计一次
+        await trackEvent("pay_success_creem")
+      }
       // result.reason === "already-pro"：幂等跳过，不算失败，正常返回
       await logWebhook("creem", "subscription.paid", "processed", undefined, eventId ?? undefined, { userId: userId ?? undefined, subscriptionId: subscriptionId ?? undefined })
       return NextResponse.json({ success: true })

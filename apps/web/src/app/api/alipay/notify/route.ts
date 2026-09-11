@@ -4,6 +4,7 @@ import { verifyNotify } from "@cookmate/shared/api/alipay-pay"
 import { PRICING } from "@cookmate/shared/constants/pricing"
 import { addMonths } from "@cookmate/shared/utils/subscription"
 import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
+import { trackEvent } from "@cookmate/shared/utils/track"
 
 // 支付宝异步通知写入 WebhookLog（与 Creem 一致，便于对账 + 审计追溯）
 // 失败时 console.error（Vercel Logs 自动聚合），不再完全静默
@@ -126,6 +127,8 @@ if (Number(actualAmount) !== Number(expectedAmount)) {
               ...(order.period ? { subscriptionPeriod: order.period } : {}),
             },
           })
+          // 行为埋点：付款成功 —— 订单真正从 PENDING→PAID 变更成功时计一次，重复回调幂等不重复计
+          await trackEvent("pay_success_alipay")
         }
       }
       await logWebhook(tradeStatus, "processed", JSON.stringify(params))
