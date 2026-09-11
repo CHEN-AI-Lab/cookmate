@@ -324,7 +324,7 @@
     "freeLimitHint": "免费版本周还可规划 {days} 天",
     "freeLimitReached": "免费版本周 3 天规划额度已用完，<upgrade>升级 Pro</upgrade> 解锁整周计划",
     "freeLimitExceed": "本次选择了 {picked} 天，超出本周剩余额度（还剩 {remaining} 天）。<upgrade>升级 Pro</upgrade> 可规划整周",
-    "genError_mealPlanDaysLimit": "免费版每周最多规划 3 天，请减少生成天数或升级 Pro",
+    "genError_mealPlanDaysLimit": "免费版每周最多规划 3 天，请减少生成天数或<upgrade>升级 Pro</upgrade>",
     "genError_recipeLimit": "菜谱总数已达免费版上限（25 个），周计划会一次性写入多个菜谱，请清理菜谱或升级 Pro",
     "mealPlanDaysLimit": "免费版每周最多规划 3 天，升级 Pro 解锁整周计划"
   },

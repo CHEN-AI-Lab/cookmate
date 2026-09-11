@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import { isDemoUser } from "@/lib/auth-helpers"
 import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
+import { effectiveTier } from "@cookmate/shared/utils/subscription"
 
 export async function GET(req: Request) {
   const loc = getLocaleFromCookie(req)
@@ -13,7 +14,7 @@ export async function GET(req: Request) {
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { dietType: true, cuisinePref: true, servingSize: true, subscriptionTier: true },
+      select: { dietType: true, cuisinePref: true, servingSize: true, subscriptionTier: true, subscriptionExpiryDate: true },
     }).catch((err: unknown) => { console.error("findUnique user error:", err); return null })
 
     // 返回默认值，避免前端显示为空（但cuisinePref为空表示没选）
@@ -22,7 +23,11 @@ export async function GET(req: Request) {
         dietType: user?.dietType ?? "不限",
         cuisinePref: user?.cuisinePref && user.cuisinePref !== "不限" ? user.cuisinePref : "",
         servingSize: user?.servingSize ?? 2,
-        subscriptionTier: user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE,
+        // 到期感知：设置页的套餐标识要和账单页（dashboard 的实时口径）一致，
+        // 否则会出现「账单页说免费版、设置页说 Pro」。
+        subscriptionTier: user
+          ? effectiveTier(user.subscriptionTier, user.subscriptionExpiryDate)
+          : SUBSCRIPTION_TIER.FREE,
       },
     })
   } catch (error) {
