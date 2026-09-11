@@ -294,19 +294,21 @@ function totalOf(data: unknown): number {
   return 0
 }
 
-/** 筛选状态条：共 N 条 + 已筛选 M 项 + 清除全部 */
+/** 筛选状态条：共 N 条 + 已筛选 M 项 + 清除全部
+ *  ⚠️ 三者统一用 leading-5、都不加竖向 padding：否则「已筛选」胶囊一出现（或消失）
+ *  会把这一行撑高/缩矮，页面在筛选前后会跳一下。 */
 function FilterStatus({ q, unit }: { q: TableQuery<unknown>; unit: string }) {
   return (
-    <div className="flex flex-wrap items-center gap-2 text-xs">
+    <div className="flex min-h-6 flex-wrap items-center gap-2 text-xs leading-5">
       <span className="text-text-secondary">
         共 {totalOf(q.data)} 条{unit}
       </span>
       {q.activeCount > 0 ? (
         <>
-          <span className="rounded-full bg-accent/10 px-2 py-0.5 font-semibold text-accent">
+          <span className="rounded-full bg-accent/10 px-2 font-semibold leading-5 text-accent">
             已筛选 {q.activeCount} 项
           </span>
-          <button type="button" onClick={q.clearFilters} className="text-red-600 underline">
+          <button type="button" onClick={q.clearFilters} className="leading-5 text-red-600 underline">
             清除全部
           </button>
         </>

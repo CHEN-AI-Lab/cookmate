@@ -75,6 +75,10 @@ export function Th({
       setPos({ left, top })
     }
     place()
+    // 面板高度会随内容变（切到「自定义」时日历才展开）。只依赖 open 会漏掉这次尺寸变化，
+    // 定位就停留在旧高度上，面板下半截跑到视口外看不到。用 ResizeObserver 盯着，尺寸一变就重算。
+    const ro = new ResizeObserver(place)
+    if (panelRef.current) ro.observe(panelRef.current)
     const onScroll = () => {
       const r = btnRef.current?.getBoundingClientRect()
       if (!r || r.bottom < 0 || r.top > window.innerHeight) {
@@ -90,6 +94,7 @@ export function Th({
     window.addEventListener("resize", onScroll)
     document.addEventListener("keydown", onKey)
     return () => {
+      ro.disconnect()
       window.removeEventListener("scroll", onScroll, true)
       window.removeEventListener("resize", onScroll)
       document.removeEventListener("keydown", onKey)
@@ -144,7 +149,7 @@ export function Th({
             <div
               ref={panelRef}
               style={{ position: "fixed", left: pos.left, top: pos.top }}
-              className="z-[100] w-[240px] rounded-xl border border-border bg-card p-3 shadow-lg"
+              className="z-[100] max-h-[calc(100vh-24px)] w-[240px] overflow-y-auto rounded-xl border border-border bg-card p-3 shadow-lg"
             >
               <p className="mb-2 text-[12px] font-semibold text-text-primary">{label}</p>
               {filter.type === "text" && (
