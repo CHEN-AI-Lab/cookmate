@@ -197,6 +197,12 @@ function TextBody({
 }) {
   const external = typeof value === "string" ? value : ""
   const [local, setLocal] = useState(external)
+  const [tick, setTick] = useState(0)
+  // 输入法「组词中」标志。中文/日文输入法在候选词未上屏时，input.value 是拼音字母
+  // （如输入「陈」时框里先是 "chen"），这时候绝对不能拿去查询：
+  // 会查不到 → 列表瞬间变空 → 表被提示行替换 → 筛选面板跟着被卸载，
+  // 用户看到的就是「还没输完框就退出了，还提示暂无数据」。
+  const composing = useRef(false)
   // 用 ref 存最新的 onChange：父组件每次渲染都会换一个新函数，
   // 直接放进依赖里会让防抖定时器被反复重置，永远不触发。
   const cb = useRef(onChange)
@@ -206,10 +212,11 @@ function TextBody({
 
   useEffect(() => {
     const t = setTimeout(() => {
+      if (composing.current) return
       if (local !== external) cb.current(local)
     }, 350)
     return () => clearTimeout(t)
-  }, [local, external])
+  }, [local, external, tick])
 
   return (
     <>
@@ -218,9 +225,24 @@ function TextBody({
         value={local}
         placeholder={placeholder ?? "包含…"}
         onChange={(e) => setLocal(e.target.value)}
+        onCompositionStart={() => {
+          composing.current = true
+        }}
+        onCompositionEnd={() => {
+          composing.current = false
+          // 组词结束时重新起一次计时，否则这次输入要等到下次敲键才会提交
+          setTick((t) => t + 1)
+        }}
+        onKeyDown={(e) => {
+          // 输入法用回车「确认候选词」时，不该当成「提交筛选」
+          if (e.key !== "Enter" || e.nativeEvent.isComposing || composing.current) return
+          if (local !== external) cb.current(local)
+        }}
         className="w-full rounded-lg border border-border bg-white px-2.5 py-1.5 text-[12.5px] text-text-primary outline-none focus:border-accent"
       />
-      <p className="mt-1.5 text-[11px] text-text-secondary">模糊匹配，输入后自动生效</p>
+      <p className="mt-1.5 text-[11px] text-text-secondary">
+        模糊匹配 · 不区分大小写 · 输入完自动生效（回车立即生效）
+      </p>
     </>
   )
 }

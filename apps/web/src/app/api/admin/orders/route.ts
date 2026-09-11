@@ -35,11 +35,11 @@ export async function GET(req: Request) {
 
   const where: Prisma.PaymentOrderWhereInput = {
     ...(createdAt ? { createdAt } : {}),
-    ...(orderId ? { orderId: { contains: orderId } } : {}),
+    ...(orderId ? { orderId: { contains: orderId, mode: "insensitive" } } : {}),
     ...(channels.length > 0 ? { channel: { in: channels } } : {}),
     ...(periods.length > 0 ? { period: { in: periods } } : {}),
     ...(statuses.length > 0 ? { status: { in: statuses } } : {}),
-    ...(email ? { user: { email: { contains: email } } } : {}),
+    ...(email ? { user: { email: { contains: email, mode: "insensitive" } } } : {}),
   }
 
   const [total, orders, grouped, paidForMismatch] = await Promise.all([

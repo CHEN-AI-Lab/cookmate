@@ -32,11 +32,11 @@ export async function GET(req: Request) {
   if (channels.length > 0) where.eventType = { in: channels }
   const statuses = parseListParam(searchParams.get("status"))
   if (statuses.length > 0) where.status = { in: statuses }
-  if (subscriptionId) where.subscriptionId = { contains: subscriptionId }
+  if (subscriptionId) where.subscriptionId = { contains: subscriptionId, mode: "insensitive" }
   if (email) {
     // WebhookLog 只存 userId，没有到 User 的关系字段 → 先按邮箱查出 userId 集合
     const matched = await prisma.user.findMany({
-      where: { email: { contains: email } },
+      where: { email: { contains: email, mode: "insensitive" } },
       select: { id: true },
       take: 500,
     })

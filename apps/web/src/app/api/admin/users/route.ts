@@ -26,8 +26,8 @@ export async function GET(req: Request) {
 
   const where: Prisma.UserWhereInput = {}
   if (createdAt) where.createdAt = createdAt
-  if (email) where.email = { contains: email }
-  if (name) where.name = { contains: name }
+  if (email) where.email = { contains: email, mode: "insensitive" }
+  if (name) where.name = { contains: name, mode: "insensitive" }
   const tiers = parseListParam(searchParams.get("tier"))
   if (tiers.length > 0) where.subscriptionTier = { in: tiers }
 

@@ -39,8 +39,9 @@ function matchVal(cond: any, value: any): boolean {
   if (cond === undefined) return true
   if (cond !== null && typeof cond === 'object') {
     if (Array.isArray(cond.in)) return cond.in.includes(value)
-    if (typeof cond.startsWith === 'string') return String(value ?? '').startsWith(cond.startsWith)
-    if (typeof cond.contains === 'string') return String(value ?? '').includes(cond.contains)
+    // 对齐真实接口：后台文本筛选一律 mode: "insensitive"（大小写不敏感）
+    if (typeof cond.startsWith === 'string') return String(value ?? '').toLowerCase().startsWith(cond.startsWith.toLowerCase())
+    if (typeof cond.contains === 'string') return String(value ?? '').toLowerCase().includes(cond.contains.toLowerCase())
     // { not: null } 在 Prisma 里等价于「非空」，undefined 也算空
     if ('not' in cond) return cond.not == null ? value != null : value !== cond.not
     return true
