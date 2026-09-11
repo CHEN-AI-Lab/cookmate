@@ -270,7 +270,6 @@ function SelectBody({
           </label>
         ))}
       </div>
-      <p className="mt-1.5 text-[11px] text-text-secondary">可多选，多选之间为「或」</p>
     </>
   )
 }
