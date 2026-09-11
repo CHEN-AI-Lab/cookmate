@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { trackEvent } from "@cookmate/shared/utils/track"
 import { generateRecipes, normalizeIngredients, hasAIKeyForTier, getModelForTier } from "@cookmate/shared/api/openai"
 import { canUseAiToday, incrementAiUsage, isFreeUser, checkRecipeCountLimit, checkStarredLimit, isDemoUser } from "@/lib/auth-helpers"
 import {
@@ -201,6 +202,8 @@ export async function POST(req: Request) {
     }
 
     T("save_done")
+
+    if (!fallback) await trackEvent("ai_generate")
 
     return NextResponse.json({ recipes: savedRecipes, fallback })
   } catch (error) {

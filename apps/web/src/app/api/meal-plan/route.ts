@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { trackEvent } from "@cookmate/shared/utils/track"
 import { isDemoUser } from "@/lib/auth-helpers"
 import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import {
@@ -294,6 +295,8 @@ export async function POST(req: Request) {
         console.error("Failed to save meal plan to DB (returning generated data only):", err)
       }
     }
+
+    if (!fallback) await trackEvent("ai_mealplan")
 
     return NextResponse.json({
       plan: mealPlan,

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { isDemoUser } from "@/lib/auth-helpers"
 import { createCheckout, retrieveCheckout, retrieveProduct, isCreemConfigured } from "@cookmate/shared/api/creem"
 import { prisma } from "@/lib/prisma"
+import { trackEvent } from "@cookmate/shared/utils/track"
 import { generateOrderId } from "@cookmate/shared/utils/order-id"
 import { PRICING } from "@cookmate/shared/constants/pricing"
 import { addMonths, addYears } from "@cookmate/shared/utils/subscription"
@@ -98,6 +99,8 @@ export async function POST(req: Request) {
         },
       })
     }
+
+    await trackEvent("checkout_creem")
 
     return NextResponse.json({ url: checkoutUrl, sessionId })
   } catch (error: unknown) {
