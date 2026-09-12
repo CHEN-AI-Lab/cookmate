@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
+import { isPaidTier, computeRenewalExpiry } from "@cookmate/shared/utils/subscription"
+import { trackEvent } from "@cookmate/shared/utils/track"
 
 // ── 辅助函数：从 webhook 事件中提取各种字段 ──
 
@@ -140,35 +142,6 @@ function extractOrderPayment(event: Record<string, unknown>): { amount?: number;
   return Object.keys(result).length > 0 ? result : null
 }
 
-// 续费累加：从 max(now, 现有到期日) 起算，再 + 周期
-// 首次购买（FREE→PRO）：base=now，行为不变
-// 续费（PRO→PRO）：base=现有到期日，正确累加
-function computeExpiryWithCarry(existingExpiry: Date | null, period: string): Date {
-  const now = new Date()
-  const base = existingExpiry && existingExpiry > now ? existingExpiry : now
-  const expiry = new Date(base)
-  if (period === "annual") {
-    expiry.setUTCFullYear(expiry.getUTCFullYear() + 1)
-  } else {
-    expiry.setUTCMonth(expiry.getUTCMonth() + 1)
-  }
-  return expiry
-}
-
-// 兜底计算到期日（当事件未携带官方 current_period_end_date 时）
-// 从 max(now, 现有到期日) 起算，不再从 now 起算
-function computeFallbackExpiry(period?: string, existingExpiry?: Date | null): Date {
-  const now = new Date()
-  const base = existingExpiry && existingExpiry > now ? existingExpiry : now
-  const expiry = new Date(base)
-  if (period === "annual") {
-    expiry.setUTCFullYear(expiry.getUTCFullYear() + 1)
-  } else {
-    expiry.setUTCMonth(expiry.getUTCMonth() + 1)
-  }
-  return expiry
-}
-
 // 通过 creemSubscriptionId 反查 userId（metadata 没带 userId 时的兜底）
 async function findUserIdBySubscriptionId(subscriptionId: string): Promise<string | null> {
   const user = await prisma.user.findFirst({
@@ -262,17 +235,24 @@ async function grantAccess(
   // 续费累加：从 max(now, 现有到期日) 起算，再 + 周期
   // 首次购买（FREE→PRO）：base=now
   // 续费（PRO→PRO）：base=现有到期日，正确累加
-  const expiryDate = computeExpiryWithCarry(user.subscriptionExpiryDate, period || "monthly")
+  const expiryDate = computeRenewalExpiry(user.subscriptionExpiryDate, period || "monthly")
 
-  // 幂等：如果用户已经是 PRO 且新算的到期日 <= 现有到期日，说明已授权，跳过
-  if (user.subscriptionTier === SUBSCRIPTION_TIER.PRO && user.subscriptionExpiryDate && expiryDate <= user.subscriptionExpiryDate) {
+  // 幂等：如果用户已经是付费档且新算的到期日 <= 现有到期日，说明已授权，跳过
+  // （用 isPaidTier 而非硬比 PRO：家庭版等付费档同样适用）
+  if (isPaidTier(user.subscriptionTier) && user.subscriptionExpiryDate && expiryDate <= user.subscriptionExpiryDate) {
     return { granted: false, reason: "already-pro" }
   }
+
+  // 已是付费档（PRO / FAMILY …）就不动档位，只延长期限 ——
+  // 续费事件不该把家庭版用户降级成 Pro。对 PRO / FREE 用户结果与原来完全一致。
+  const nextTier = isPaidTier(user.subscriptionTier)
+    ? user.subscriptionTier.toUpperCase()
+    : SUBSCRIPTION_TIER.PRO
 
   await prisma.user.update({
     where: { id: userId },
     data: {
-      subscriptionTier: SUBSCRIPTION_TIER.PRO,
+      subscriptionTier: nextTier,
       subscriptionExpiryDate: expiryDate,
       ...(period ? { subscriptionPeriod: period } : {}),
       creemSubscriptionId: subscriptionId,
@@ -287,7 +267,7 @@ async function grantAccess(
 // 参数 allowRefund=true 时（refund.created），不执行此防护（退款永远是合法的）。
 async function isLateDowngrade(userId: string, expectExpired: Date | null): Promise<boolean> {
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { subscriptionTier: true, subscriptionExpiryDate: true } })
-  if (!user || user.subscriptionTier !== SUBSCRIPTION_TIER.PRO || !user.subscriptionExpiryDate) return false
+  if (!user || !isPaidTier(user.subscriptionTier) || !user.subscriptionExpiryDate) return false
   // refund 不受此限制：退款永远是合法的，不管当前状态
   if (expectExpired === null) return false
   // 若当前到期日 > 事件预期的过期日，说明升级发生得更晚 → 拒绝降级
@@ -311,6 +291,8 @@ async function revokeAccess(userId: string, clearSubscriptionId: boolean = true)
 
 // 同步订阅信息（subscription.active / update 用）
 // 只同步 creemSubscriptionId；有 periodEndDate 时同步到期日和 PRO
+// ⚠️ 这里会把档位写成 PRO：Creem 侧目前只配置了 PRO 商品，任何 Creem 订阅事件都代表买的是 PRO。
+//    以后若把家庭版也放到 Creem 卖，必须先加「商品ID → 档位」的映射，否则会把家庭版降级成 Pro。
 async function syncSubscription(userId: string, subscriptionId: string, periodEndDate?: Date | null): Promise<void> {
   await prisma.user.update({
     where: { id: userId },
@@ -321,6 +303,38 @@ async function syncSubscription(userId: string, subscriptionId: string, periodEn
   }).catch(() => {
     // 用户可能已删除，忽略
   })
+}
+
+// 记录 Creem 官方订阅状态（纯同步，不改权限）
+// 每个 subscription.* 事件都带 Creem 自己的 status，原样存到 User.creemSubscriptionStatus，
+// 后台「订阅状态」列就能直接用官方状态，不用只靠本地字段反推。
+// userId 优先取 metadata；取不到时用订阅ID反查 —— subscription.paid 可能早于
+// checkout.completed 到达，那时 metadata 里还没有本地用户信息。
+//
+// ⚠️ 整个函数必须自己吞掉所有异常：这是「附加信息」，跑在真正的授权/撤销分支之前，
+// 一旦因 DB 抖动抛出去会让整个 webhook 返回 500，害得 Creem 反复重投本该成功的事件。
+async function recordCreemStatus(event: Record<string, unknown>): Promise<void> {
+  try {
+    const status = extractStatus(event)
+    if (!status) return
+    let userId = await resolveUserId(event)
+    if (!userId) {
+      const subscriptionId = extractSubscriptionId(event)
+      if (!subscriptionId) return
+      const matched = await prisma.user.findFirst({
+        where: { creemSubscriptionId: subscriptionId },
+        select: { id: true },
+      })
+      userId = matched?.id ?? null
+    }
+    if (!userId) return
+    await prisma.user.update({
+      where: { id: userId },
+      data: { creemSubscriptionStatus: status },
+    })
+  } catch (err) {
+    console.error("[creem-webhook] recordCreemStatus failed:", err)
+  }
 }
 
 // ── 事件ID去重 ──
@@ -414,6 +428,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, message: "duplicate event" })
     }
 
+    // ── Creem 官方订阅状态落库 ──
+    // 只同步状态字段，不碰权限（权限仍由下面各自的分支 grantAccess / revokeAccess 负责）。
+    // 放在去重判断之后，重复投递不会产生多余的写库。
+    if (rawEventType?.startsWith("subscription.")) {
+      await recordCreemStatus(event)
+    }
+
     // ── checkout.completed ──
     // 记录订单（PENDING → PAID）+ 同步订阅ID + 升级兜底
     // 官方推荐 subscription.paid 作为升级入口，但该事件并非必然到达（如测试模式只发 checkout.completed）；
@@ -450,21 +471,28 @@ export async function POST(req: Request) {
         const user = await prisma.user.findUnique({ where: { id: userId } })
         if (user) {
           // 续费累加：从 max(now, 现有到期日) 起算，再 + 周期
-          const expiryDate = computeFallbackExpiry(period, user.subscriptionExpiryDate)
+          const expiryDate = computeRenewalExpiry(user.subscriptionExpiryDate, period || "monthly")
           // 幂等：新算的到期日 <= 现有到期日 → 已授权，跳过
-          const needsUpgrade = user.subscriptionTier !== SUBSCRIPTION_TIER.PRO
+          // （用 isPaidTier 而非硬比 PRO：家庭版等付费档同样适用）
+          const needsUpgrade = !isPaidTier(user.subscriptionTier)
             || !user.subscriptionExpiryDate
             || expiryDate > user.subscriptionExpiryDate
           if (needsUpgrade) {
+            // 已是付费档就不动档位，只延长期限（避免把家庭版降级成 Pro）
+            const nextTier = isPaidTier(user.subscriptionTier)
+              ? user.subscriptionTier.toUpperCase()
+              : SUBSCRIPTION_TIER.PRO
             await prisma.user.update({
               where: { id: userId },
               data: {
-                subscriptionTier: SUBSCRIPTION_TIER.PRO,
+                subscriptionTier: nextTier,
                 subscriptionExpiryDate: expiryDate,
                 ...(period ? { subscriptionPeriod: period } : {}),
                 ...(subscriptionId ? { creemSubscriptionId: subscriptionId } : {}),
               },
             })
+            // 行为埋点：付款成功 —— 仅在本次实际升级（needsUpgrade）时计一次，幂等跳过不计
+            await trackEvent("pay_success_creem")
           }
         }
       }
@@ -515,6 +543,10 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "user not found for metadata.userId" }, { status: 500 })
       }
 
+      if (result.granted) {
+        // 行为埋点：付款成功 —— subscription.paid 实际授予访问权限时计一次
+        await trackEvent("pay_success_creem")
+      }
       // result.reason === "already-pro"：幂等跳过，不算失败，正常返回
       await logWebhook("creem", "subscription.paid", "processed", undefined, eventId ?? undefined, { userId: userId ?? undefined, subscriptionId: subscriptionId ?? undefined })
       return NextResponse.json({ success: true })

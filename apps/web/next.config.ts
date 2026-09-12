@@ -28,7 +28,9 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self'",
-              "connect-src 'self'",
+              // connect-src 需放行 https：页面访问统计上报到外部 stats-worker（与 aaigc 的 proxy.ts 口径一致），
+              // 收紧到 'self' 会导致浏览器拦截上报，访问量/来源/国家等前端统计数据断流（2026-09-03 引入）
+              "connect-src 'self' https:",
               "frame-ancestors 'self'",
               "object-src 'none'",
               "base-uri 'self'",

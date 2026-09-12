@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { isExpired } from "@cookmate/shared/utils/subscription"
+import { isExpired, effectiveTier } from "@cookmate/shared/utils/subscription"
 import { STARRED_RECIPE_LIMIT, RECIPE_COUNT_LIMIT, PANTRY_ITEM_LIMIT, MEAL_PLAN_DAYS_LIMIT, AI_DAILY_LIMIT } from "@cookmate/shared/constants/usage-limits"
 import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
@@ -28,18 +28,19 @@ export async function getCurrentUser() {
 }
 
 /**
- * 检查用户是否为免费版（订阅已过期视为免费）
+ * 检查用户是否为免费版（**到期感知**）
+ *
+ * 不能用数据库字段直接判：降级由 /api/cron/expire-sweep 负责（每天 UTC 00:00 = 北京 08:00，
+ * 且只有正式环境会跑，preview 永远不跑）。在这段窗口里用户页面（dashboard 的 checkSubscription）
+ * 已经按到期日实时算、显示免费版了；这里若还按字段把用户当 PRO，就变成「页面说免费、功能照给」。
+ * 统一走 effectiveTier()，和页面、和 AI 生成接口用同一套判断。
  */
 export async function isFreeUser(userId: string): Promise<boolean> {
   const user = await prisma.user.findUnique({ where: { id: userId } })
   if (!user) return true
-  // 这里故意不主动把「已过期但 tier 还是 PRO」的用户判成免费版：
-  // 降级统一由 /api/cron/expire-sweep 负责（Vercel Cron 每天 UTC 03:00 触发，仅生产环境生效），
-  // 它会把 tier 改成 FREE 并清空 subscriptionExpiryDate，届时前端显示与后端限制同步生效。
-  // 若在此处提前限制，会出现「用户资料页还显示 PRO、功能却已被限」的割裂，等同于线上事故。
-  if (user.subscriptionTier !== SUBSCRIPTION_TIER.FREE) return false
+  // 到期日还在未来 → 付费期有效，不算免费（含「tier 已降级但到期日未清空」这种中间态）
   if (user.subscriptionExpiryDate && !isExpired(user.subscriptionExpiryDate)) return false
-  return true
+  return effectiveTier(user.subscriptionTier, user.subscriptionExpiryDate) === SUBSCRIPTION_TIER.FREE
 }
 
 /**
@@ -147,9 +148,10 @@ export async function canUseAiToday(userId: string): Promise<boolean> {
   })
   if (!user) return false
 
-  // 是否免费版统一以 subscriptionTier 为准，与 isFreeUser() 口径保持一致：
-  // 降级交给 /api/cron/expire-sweep，不能在请求时提前把 PRO 用户当免费版扣额度。
-  if (user.subscriptionTier !== SUBSCRIPTION_TIER.FREE) return true
+  // **到期感知**：tier 还是 PRO 但到期日已过 → 按免费版扣每日额度。
+  // 以前这里直接判 subscriptionTier 字段，导致过期用户在定时任务跑之前一直拿「无限额度」，
+  // 而用户页面早就显示免费版了 —— 就是那次的「过期了还能无限生成」。
+  if (effectiveTier(user.subscriptionTier, user.subscriptionExpiryDate) !== SUBSCRIPTION_TIER.FREE) return true
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)

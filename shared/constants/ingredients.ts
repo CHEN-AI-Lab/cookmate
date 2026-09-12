@@ -235,8 +235,9 @@ export const BLACKLIST = [
 ]
 
 export function getBlockReason(invalid: string[], locale: string): string {
+  // 口径统一走 isChineseLocale（中文语系中文，其余 en/ja 一律英文）
   const err = (zh: string, en: string) =>
-    locale === "en" || locale.startsWith("en") ? en : zh
+    isChineseLocale(locale) ? zh : en
   for (const item of invalid) {
     if (FICTIONAL.some((w) => item.includes(w)))
       return err(

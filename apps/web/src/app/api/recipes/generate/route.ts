@@ -1,20 +1,22 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { trackEvent } from "@cookmate/shared/utils/track"
 import { generateRecipes, normalizeIngredients, hasAIKeyForTier, getModelForTier } from "@cookmate/shared/api/openai"
+import { effectiveTier } from "@cookmate/shared/utils/subscription"
+import { pickLocaleText } from "@cookmate/shared/constants/locales"
 import { canUseAiToday, incrementAiUsage, isFreeUser, checkRecipeCountLimit, checkStarredLimit, isDemoUser } from "@/lib/auth-helpers"
 import {
   BLACKLIST, getBlockReason,
 } from "@cookmate/shared/constants/ingredients"
-import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 import { err, getLocaleFromCookie } from "@cookmate/shared/utils/locale"
 
 // Vercel 免费版（Hobby）函数默认上限 10s，AI 生成易被平台掐死 → 显式放宽到 60s（Hobby 最高值）
 export const maxDuration = 60
 
-/** 根据 locale 返回对应语言的错误消息 */
+/** 双语错误消息（口径统一走 shared/constants/locales 的 pickLocaleText） */
 function errMsg(locale: string, zh: string, en: string): string {
-  return locale === "en" ? en : zh
+  return pickLocaleText(locale, zh, en)
 }
 
 export async function POST(req: Request) {
@@ -120,11 +122,16 @@ export async function POST(req: Request) {
     // 读取用户偏好与订阅层级：tier 决定走哪套 AI provider，需在下面的 isMock 判断前取到
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { dietType: true, cuisinePref: true, servingSize: true, subscriptionTier: true },
+      select: { dietType: true, cuisinePref: true, servingSize: true, subscriptionTier: true, subscriptionExpiryDate: true },
     }).catch((err: unknown) => { console.error("findUnique user error:", err); return null })
 
+    // 到期感知的有效套餐：数据库字段要等每天 UTC 00:00（北京 08:00）的降级任务才更新，
+    // 且该任务只在正式环境跑。空窗里字段还是 PRO，但用户页面已经显示免费版了 ——
+    // 这里必须按到期日自己再算一次，否则就是「页面说免费、AI 却照给 PRO 的模型和额度」。
+    const tier = effectiveTier(user?.subscriptionTier, user?.subscriptionExpiryDate)
+
     const isDev = process.env.NODE_ENV !== "production"
-    const isMock = !hasAIKeyForTier(user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE)
+    const isMock = !hasAIKeyForTier(tier)
     if (!isMock && !isDev) {
       const canGenerate = await canUseAiToday(session.user.id)
       if (!canGenerate) {
@@ -150,13 +157,13 @@ export async function POST(req: Request) {
       dietType: user?.dietType || undefined,
       cuisinePref: user?.cuisinePref || undefined,
       servingSize: user?.servingSize || undefined,
-    }, pantryContext, locale, user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE)
+    }, pantryContext, locale, tier)
 
     T("ai_done")
 
     // 记录本次实际生效的模型与层级。fallback（AI 失败降级 mock）时不记模型，
     // 否则会把假数据算到真实模型头上，污染后续成本/质量分析。
-    const aiTierUsed = user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE
+    const aiTierUsed = tier
     const aiModelUsed = fallback ? null : (getModelForTier(aiTierUsed) || null)
 
     // 保存生成的菜谱到数据库
@@ -201,6 +208,8 @@ export async function POST(req: Request) {
     }
 
     T("save_done")
+
+    if (!fallback) await trackEvent("ai_generate")
 
     return NextResponse.json({ recipes: savedRecipes, fallback })
   } catch (error) {

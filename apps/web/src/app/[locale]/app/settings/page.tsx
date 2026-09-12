@@ -7,6 +7,7 @@ import { signIn, signOut } from "next-auth/react"
 import Link from "next/link"
 import PasswordInput from "@/components/ui/PasswordInput"
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS, SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
+import { isPaidTier } from "@cookmate/shared/utils/subscription"
 import { isChineseLocale } from "@cookmate/shared/constants/locales"
 
 export default function SettingsPage() {
@@ -548,9 +549,9 @@ const save = async () => {
                 <div className="flex items-center justify-between py-2">
                   <span className="text-sm text-text-secondary">{ts("currentPlan")}</span>
                   <span className={`text-sm font-medium px-2.5 py-0.5 rounded-full ${
-                    settings.subscriptionTier === SUBSCRIPTION_TIER.PRO ? "bg-amber-100 text-amber-700" : "bg-surface text-text-secondary"
+                    isPaidTier(settings.subscriptionTier) ? "bg-amber-100 text-amber-700" : "bg-surface text-text-secondary"
                   }`}>
-                    {settings.subscriptionTier === SUBSCRIPTION_TIER.PRO ? ts("proPlan") : ts("freePlan")}
+                    {isPaidTier(settings.subscriptionTier) ? ts("proPlan") : ts("freePlan")}
                   </span>
                 </div>
               </div>
@@ -558,7 +559,7 @@ const save = async () => {
               <p className="text-sm text-gray-400">{ts("profileLoading")}</p>
             )}
             <Link href="/app/billing" className="inline-block mt-5 w-full text-center bg-gradient-to-r from-accent to-orange-400 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
-              {settings.subscriptionTier === SUBSCRIPTION_TIER.PRO ? ts("manageSubscription") : ts("upgradePlan")}
+              {isPaidTier(settings.subscriptionTier) ? ts("manageSubscription") : ts("upgradePlan")}
             </Link>
           </div>
         </div>

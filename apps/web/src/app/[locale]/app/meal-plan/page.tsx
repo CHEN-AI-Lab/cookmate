@@ -85,6 +85,9 @@ export default function MealPlanPage() {
   // 收藏上限横幅（持久显示，带内嵌升级链接）：收藏操作在详情弹窗里触发，
   // toast 2.5 秒就没了，用户经常来不及看原因，所以再加一条横幅兜底
   const [starBanner, setStarBanner] = useState(false)
+  // 免费版周计划天数上限：用居中弹框（与收藏/菜谱等免费上限同一套交互），
+  // 不用页面顶部横幅 —— 横幅在顶部，用户点完「生成」根本看不到，而且升级入口不可点。
+  const [daysLimitDialog, setDaysLimitDialog] = useState(false)
   const [limitNotice, setLimitNotice] = useState<null | { kind: "reached" } | { kind: "exceed"; picked: number; remaining: number }>(null)
   // 免费版剩余可规划天数：3 - 本周已规划天数（0 = 已用完）
   const [freeRemainingDays, setFreeRemainingDays] = useState(0)
@@ -117,9 +120,9 @@ export default function MealPlanPage() {
           setIsDemoUser(true)
           setPlan((prev) => prev || getDemoMealPlan(locale))
         }
-        // 免费版标识：严格跟后端 isFreeUser() 保持一致——只认 subscriptionTier。
-        // 降级由 /api/cron/expire-sweep 统一处理（会把 tier 改成 FREE），
-        // 前端不能自行把「到期但仍是 PRO」的用户按免费版显示，否则用户看到自己是会员却受限。
+        // 免费版标识：以 /api/user/profile 返回的套餐为准 —— 它已经是「到期感知」的结果
+        // （effectiveTier），与账单页、与后端额度限制同一套判断。
+        // 以前这里依赖数据库原始字段，导致已过期的用户在前端仍被当成 Pro，前端拦截整体失效。
         if (data.subscriptionTier === SUBSCRIPTION_TIER.FREE && !data.isDemoUser) setFreeUser(true)
       })
       .catch((err) => console.error("load profile error:", err))
@@ -192,7 +195,8 @@ export default function MealPlanPage() {
           if (res.status === 403) {
             if (data?.error === "mealPlanDaysLimit") {
               console.error(errorLogContext("meal-plan:generate", { kind: "paymentRequired", status: 403, detail: "meal_plan_days_limit", retryable: false }))
-              setError(t("genError_mealPlanDaysLimit"))
+              // 弹居中弹框（文案里带可点的「升级 Pro」），不往页面顶部塞横幅
+              setDaysLimitDialog(true)
               setErrorInfo(null)
               return
             }
@@ -384,6 +388,16 @@ export default function MealPlanPage() {
             upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline>,
           })}
           onClose={() => setStarBanner(false)}
+        />
+      )}
+
+      {/* 免费版周计划天数上限：同样居中弹框，升级入口嵌在文案中间，可点 */}
+      {daysLimitDialog && (
+        <UpgradeDialog
+          text={t.rich("genError_mealPlanDaysLimit", {
+            upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline>,
+          })}
+          onClose={() => setDaysLimitDialog(false)}
         />
       )}
 

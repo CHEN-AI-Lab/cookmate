@@ -206,17 +206,28 @@ export default function BillingPage() {
           </div>
 
         {!isFree && info?.subscriptionExpiryDate && !info?.canceled && (
-          <div className="mt-4 flex items-center gap-3">
-            <div className={cn(
-              "text-sm font-medium px-3 py-1 rounded-full",
-              daysLeft <= 7 ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"
-            )}>
-              {t("daysLeft", { days: daysLeft })}
+          isCreemActive ? (
+            // Creem 自动续费中：到期日就是下一次扣款日。
+            // 显示「剩余 N 天」会让人误以为要断供，所以订阅态改成明确的「下次扣款」；
+            // 取消后（canceled）用下面那段的「到期时间」，一次性付款（支付宝）仍显示剩余天数。
+            <div className="mt-4 flex items-center gap-3">
+              <div className="text-sm font-medium px-3 py-1 rounded-full bg-amber-50 text-amber-600">
+                {t("nextCharge", { date: new Date(info.subscriptionExpiryDate).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" }) })}
+              </div>
             </div>
-            <span className="text-xs text-text-secondary">
-              {t("expiryDate", { date: new Date(info.subscriptionExpiryDate).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" }) })}
-            </span>
-          </div>
+          ) : (
+            <div className="mt-4 flex items-center gap-3">
+              <div className={cn(
+                "text-sm font-medium px-3 py-1 rounded-full",
+                daysLeft <= 7 ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"
+              )}>
+                {t("daysLeft", { days: daysLeft })}
+              </div>
+              <span className="text-xs text-text-secondary">
+                {t("expiryDate", { date: new Date(info.subscriptionExpiryDate).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" }) })}
+              </span>
+            </div>
+          )
         )}
         {!isFree && info?.subscriptionExpiryDate && info?.canceled && (
           <p className="text-xs text-text-secondary mt-2">

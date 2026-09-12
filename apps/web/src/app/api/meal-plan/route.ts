@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { trackEvent } from "@cookmate/shared/utils/track"
 import { isDemoUser } from "@/lib/auth-helpers"
 import { getLocaleFromCookie, err } from "@cookmate/shared/utils/locale"
 import {
@@ -13,7 +14,7 @@ import {
 } from "@cookmate/shared/api/openai"
 import { canUseAiToday, incrementAiUsage, isFreeUser, checkMealPlanDaysLimitForDays, checkRecipeCountLimitForCount } from "@/lib/auth-helpers"
 import { errMsg, getDayMap } from "@cookmate/shared/utils/meal-plan"
-import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
+import { effectiveTier } from "@cookmate/shared/utils/subscription"
 
 /** sanitizeWeeklyPlan 的输出类型 */
 type WeekPlan = Record<string, { breakfast: RecipeResult; lunch: RecipeResult; dinner: RecipeResult }>
@@ -119,6 +120,11 @@ export async function POST(req: Request) {
 
     const isDev = process.env.NODE_ENV !== "production"
 
+    // 到期感知的有效套餐：数据库字段要等每天 UTC 00:00（北京 08:00）的降级任务才更新，
+    // 且该任务只在正式环境跑。这段空窗里字段还是 PRO，但用户页面已经显示免费版了 ——
+    // 这里必须按到期日自己再算一次，否则就是「页面说免费、AI 却照给 PRO 的模型和额度」。
+    const tier = effectiveTier(user?.subscriptionTier, user?.subscriptionExpiryDate)
+
     // 免费版周计划天数限制：本次新增天数与本周已占用天数取并集，超过 3 天直接拒绝。
     // 放在 AI 调用之前，避免白烧一次生成（一次生成 = 最多 21 个菜谱，还会占满 25 个菜谱上限）。
     if (!isDev) {
@@ -148,7 +154,7 @@ export async function POST(req: Request) {
     }
 
     if (!isDev) {
-      const isMock = !hasAIKeyForTier(user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE)
+      const isMock = !hasAIKeyForTier(tier)
       if (!isMock) {
         // fail-closed：用量检查出错（如 DB 抖动）时拒绝生成，原实现 catch 返回 true 会让免费用户无限调用付费 AI
         const canGenerate = await canUseAiToday(userId).catch((err: unknown) => { console.error("check usage limit error:", err); return false })
@@ -171,12 +177,12 @@ export async function POST(req: Request) {
       dietType: user?.dietType || undefined,
       cuisinePref: user?.cuisinePref || undefined,
       servingSize: user?.servingSize || 2,
-    }, pantryNames, locale, targetDays, user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE)
+    }, pantryNames, locale, targetDays, tier)
 
     T("ai_done")
 
     // 记录本次实际生效的模型与层级（AI 降级 mock 时不记模型，理由同 recipes/generate）
-    const aiTierUsed = user?.subscriptionTier ?? SUBSCRIPTION_TIER.FREE
+    const aiTierUsed = tier
     const aiModelUsed = fallback ? null : (getModelForTier(aiTierUsed) || null)
 
     if (fallback) {
@@ -294,6 +300,8 @@ export async function POST(req: Request) {
         console.error("Failed to save meal plan to DB (returning generated data only):", err)
       }
     }
+
+    if (!fallback) await trackEvent("ai_mealplan")
 
     return NextResponse.json({
       plan: mealPlan,

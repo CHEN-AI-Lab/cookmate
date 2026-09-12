@@ -324,7 +324,7 @@
     "freeLimitHint": "Free plan: {days} days left this week",
     "freeLimitReached": "This week's 3 free planning days are used up. <upgrade>Upgrade to Pro</upgrade> to plan the whole week",
     "freeLimitExceed": "You picked {picked} days, more than the {remaining} day(s) left this week. <upgrade>Upgrade to Pro</upgrade> to plan the whole week",
-    "genError_mealPlanDaysLimit": "Free plan allows up to 3 days per week. Pick fewer days or upgrade to Pro",
+    "genError_mealPlanDaysLimit": "Free plan allows up to 3 days per week. Pick fewer days or <upgrade>upgrade to Pro</upgrade>",
     "genError_recipeLimit": "Recipe limit reached (25). A weekly plan writes several recipes at once, so delete some recipes or upgrade to Pro",
     "mealPlanDaysLimit": "Free plan allows up to 3 days per week. Upgrade to Pro for a full week"
   },
@@ -545,6 +545,7 @@
     "freeBadge": "🆓 Free",
     "proBadge": "🌟 Pro",
     "expiryDate": "Expires: {date}",
+    "nextCharge": "Next charge: {date}",
     "paymentMethods": "Payment Methods",
     "payDesc": "Scan to pay · Safe & Fast",
     "subscriptionManage": "Subscription Management",
