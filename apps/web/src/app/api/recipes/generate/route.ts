@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { trackEvent } from "@cookmate/shared/utils/track"
 import { generateRecipes, normalizeIngredients, hasAIKeyForTier, getModelForTier } from "@cookmate/shared/api/openai"
 import { effectiveTier } from "@cookmate/shared/utils/subscription"
+import { pickLocaleText } from "@cookmate/shared/constants/locales"
 import { canUseAiToday, incrementAiUsage, isFreeUser, checkRecipeCountLimit, checkStarredLimit, isDemoUser } from "@/lib/auth-helpers"
 import {
   BLACKLIST, getBlockReason,
@@ -13,9 +14,9 @@ import { err, getLocaleFromCookie } from "@cookmate/shared/utils/locale"
 // Vercel 免费版（Hobby）函数默认上限 10s，AI 生成易被平台掐死 → 显式放宽到 60s（Hobby 最高值）
 export const maxDuration = 60
 
-/** 根据 locale 返回对应语言的错误消息 */
+/** 双语错误消息（口径统一走 shared/constants/locales 的 pickLocaleText） */
 function errMsg(locale: string, zh: string, en: string): string {
-  return locale === "en" ? en : zh
+  return pickLocaleText(locale, zh, en)
 }
 
 export async function POST(req: Request) {
