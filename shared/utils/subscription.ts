@@ -40,6 +40,20 @@ export function effectiveTier(
 }
 
 /**
+ * 是否付费档（非 FREE、且非空）。
+ *
+ * ⚠️ 判断「是付费还是免费」一律用这个，**不要写 `tier === SUBSCRIPTION_TIER.PRO`** ——
+ * SUBSCRIPTION_TIER 除了 FREE / PRO 还有 **FAMILY**，硬比 PRO 会把家庭版当成免费版
+ * （`shared/api/openai.ts` 的 normalizeTier 明确写着「PRO / FAMILY 走付费端」）。
+ * 展示文案暂沿用现有的 Pro/Free 两档：FAMILY 尚未售卖、中文名也未定，
+ * 等要上家庭版时再补 familyPlan 文案与档位名称。
+ */
+export function isPaidTier(subscriptionTier: string | null | undefined): boolean {
+  const upper = (subscriptionTier ?? "").toUpperCase()
+  return !!upper && upper !== SUBSCRIPTION_TIER.FREE
+}
+
+/**
  * 给定日期加 N 个月，自动处理月底越界。
  *
  * 例：1月31日 + 1月 → 2月28/29日（不是3月3日）

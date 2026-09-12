@@ -103,7 +103,8 @@ const CREEM_STATUS_MAP: Record<string, SubscriptionStatus> = {
  * 这是「没有官方状态时」的兜底 —— 有了落库的官方状态后，Creem 用户走第 3 条，不再靠猜。
  */
 export function deriveSubscriptionStatus(input: {
-  isPro: boolean
+  /** 是否付费档（PRO / FAMILY 等都算，非 FREE）。**不要传 `tier === PRO`** */
+  isPaid: boolean
   creemSubscriptionId: string | null
   /** Creem 官方订阅状态（webhook 落库），支付宝用户为空 */
   creemSubscriptionStatus?: string | null
@@ -111,7 +112,7 @@ export function deriveSubscriptionStatus(input: {
   lastPaidChannel: string | null
   now?: Date
 }): SubscriptionStatus {
-  if (!input.isPro) return "free"
+  if (!input.isPaid) return "free"
   const expiry = input.subscriptionExpiryDate ? new Date(input.subscriptionExpiryDate) : null
   if (expiry && !Number.isNaN(expiry.getTime()) && expiry.getTime() < (input.now ?? new Date()).getTime()) {
     return "expired"

@@ -5,6 +5,7 @@ import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 import { CHANNEL_ICONS, CHANNEL_LABELS } from "@cookmate/shared/constants/payment-channels"
 import { useTableQuery, type TableQuery } from "@cookmate/shared/hooks/useTableQuery"
 import { isAmountMismatch, type SubscriptionStatus } from "@cookmate/shared/utils/admin-query"
+import { isPaidTier } from "@cookmate/shared/utils/subscription"
 import { Th } from "@/components/admin/ColumnFilter"
 import { DataTablePagination } from "@/components/admin/DataTablePagination"
 
@@ -939,9 +940,11 @@ function UsersTab({ q }: { q: TableQuery<UsersResponse> }) {
                   <td className="px-4 py-3 text-gray-700 text-xs">{u.email ?? u.phone ?? "-"}</td>
                   <td className="px-4 py-3 text-gray-700">{u.name ?? "-"}</td>
                       <td className="px-4 py-3">
-                        {u.subscriptionTier === SUBSCRIPTION_TIER.PRO ? (
+                        {/* 付费档（PRO / FAMILY …）统一走付费样式并显示真实档位名 ——
+                            硬比 PRO 会把家庭版显示成 Free */}
+                        {isPaidTier(u.subscriptionTier) ? (
                           <span className="inline-flex px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-xs font-semibold">
-                            Pro
+                            {u.subscriptionTier === SUBSCRIPTION_TIER.PRO ? "Pro" : u.subscriptionTier}
                           </span>
                         ) : (
                           <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">

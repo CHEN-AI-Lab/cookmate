@@ -138,7 +138,14 @@ export function makePrisma() {
       updateMany: vi.fn(async ({ where, data }: any) => {
         let count = 0
         for (const u of stores.users.values()) {
-          if (where.subscriptionTier !== undefined && u.subscriptionTier !== where.subscriptionTier) continue
+          // 支持 subscriptionTier 的两种写法：等值 "PRO" 与 { not: "FREE" }
+          // （expire-sweep 现在用后者，好把 FAMILY 等所有付费档一起降级）
+          const tierCond = where.subscriptionTier
+          if (tierCond !== undefined) {
+            if (tierCond && typeof tierCond === 'object' && 'not' in tierCond) {
+              if (u.subscriptionTier === tierCond.not) continue
+            } else if (u.subscriptionTier !== tierCond) continue
+          }
           const lt = where.subscriptionExpiryDate?.lt
           if (lt && !(u.subscriptionExpiryDate && u.subscriptionExpiryDate < lt)) continue
           Object.assign(u, data)

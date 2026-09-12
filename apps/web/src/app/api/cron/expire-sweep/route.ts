@@ -43,7 +43,8 @@ export async function GET(req: Request) {
     const now = new Date()
     const result = await prisma.user.updateMany({
       where: {
-        subscriptionTier: SUBSCRIPTION_TIER.PRO,
+        // 所有付费档（PRO / FAMILY …）到期都要降级 —— 硬比 PRO 会漏掉家庭版，让它白拿付费权限
+        subscriptionTier: { not: SUBSCRIPTION_TIER.FREE },
         subscriptionExpiryDate: { lt: now },
       },
       data: {
@@ -51,7 +52,7 @@ export async function GET(req: Request) {
         subscriptionExpiryDate: null,
       },
     })
-    console.log(`[cron/expire-sweep] ${result.count} 个 PRO 用户已降级为 FREE（截至 ${now.toISOString()}）`)
+    console.log(`[cron/expire-sweep] ${result.count} 个付费档用户已降级为 FREE（截至 ${now.toISOString()}）`)
     await logCron("expire-sweep", "processed", { count: result.count, executedAt: now.toISOString() })
     return NextResponse.json({
       success: true,

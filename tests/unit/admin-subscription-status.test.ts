@@ -3,7 +3,7 @@
 // 用测试把顺序钉死。
 import { describe, it, expect } from 'vitest'
 import { deriveSubscriptionStatus } from '@cookmate/shared/utils/admin-query'
-import { effectiveTier, isExpired } from '@cookmate/shared/utils/subscription'
+import { effectiveTier, isExpired, isPaidTier } from '@cookmate/shared/utils/subscription'
 import { SUBSCRIPTION_TIER } from '@cookmate/shared/constants'
 
 const NOW = new Date('2026-09-11T00:00:00Z')
@@ -12,7 +12,7 @@ const TOMORROW = new Date('2026-09-12T00:00:00Z')
 
 function derive(over: Partial<Parameters<typeof deriveSubscriptionStatus>[0]> = {}) {
   return deriveSubscriptionStatus({
-    isPro: true,
+    isPaid: true,
     creemSubscriptionId: null,
     creemSubscriptionStatus: null,
     subscriptionExpiryDate: TOMORROW,
@@ -24,8 +24,8 @@ function derive(over: Partial<Parameters<typeof deriveSubscriptionStatus>[0]> = 
 
 describe('deriveSubscriptionStatus — 基础口径', () => {
   it('免费用户 → free', () => {
-    expect(derive({ isPro: false })).toBe('free')
-    expect(derive({ isPro: false, creemSubscriptionStatus: 'active' })).toBe('free')
+    expect(derive({ isPaid: false })).toBe('free')
+    expect(derive({ isPaid: false, creemSubscriptionStatus: 'active' })).toBe('free')
   })
 
   it('PRO 且到期日已过 → expired（优先级高于 Creem 官方状态与订阅ID）', () => {
@@ -126,5 +126,21 @@ describe('effectiveTier — 到期感知的有效套餐', () => {
     // 到期了才降级（与 PRO 同一口径）
     const past = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
     expect(effectiveTier(SUBSCRIPTION_TIER.FAMILY, past)).toBe(SUBSCRIPTION_TIER.FREE)
+  })
+})
+
+describe('isPaidTier — 付费档判定（不要用 tier === PRO）', () => {
+  it('FREE / 空值 → false', () => {
+    expect(isPaidTier(SUBSCRIPTION_TIER.FREE)).toBe(false)
+    expect(isPaidTier('free')).toBe(false)
+    expect(isPaidTier(null)).toBe(false)
+    expect(isPaidTier(undefined)).toBe(false)
+    expect(isPaidTier('')).toBe(false)
+  })
+
+  it('PRO / FAMILY 等付费档 → true', () => {
+    expect(isPaidTier(SUBSCRIPTION_TIER.PRO)).toBe(true)
+    expect(isPaidTier('pro')).toBe(true)
+    expect(isPaidTier(SUBSCRIPTION_TIER.FAMILY)).toBe(true)
   })
 })

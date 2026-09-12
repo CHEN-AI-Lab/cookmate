@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
+import { isPaidTier } from "@cookmate/shared/utils/subscription"
 import { trackEvent } from "@cookmate/shared/utils/track"
 
 // ── 辅助函数：从 webhook 事件中提取各种字段 ──
@@ -265,15 +266,22 @@ async function grantAccess(
   // 续费（PRO→PRO）：base=现有到期日，正确累加
   const expiryDate = computeExpiryWithCarry(user.subscriptionExpiryDate, period || "monthly")
 
-  // 幂等：如果用户已经是 PRO 且新算的到期日 <= 现有到期日，说明已授权，跳过
-  if (user.subscriptionTier === SUBSCRIPTION_TIER.PRO && user.subscriptionExpiryDate && expiryDate <= user.subscriptionExpiryDate) {
+  // 幂等：如果用户已经是付费档且新算的到期日 <= 现有到期日，说明已授权，跳过
+  // （用 isPaidTier 而非硬比 PRO：家庭版等付费档同样适用）
+  if (isPaidTier(user.subscriptionTier) && user.subscriptionExpiryDate && expiryDate <= user.subscriptionExpiryDate) {
     return { granted: false, reason: "already-pro" }
   }
+
+  // 已是付费档（PRO / FAMILY …）就不动档位，只延长期限 ——
+  // 续费事件不该把家庭版用户降级成 Pro。对 PRO / FREE 用户结果与原来完全一致。
+  const nextTier = isPaidTier(user.subscriptionTier)
+    ? user.subscriptionTier.toUpperCase()
+    : SUBSCRIPTION_TIER.PRO
 
   await prisma.user.update({
     where: { id: userId },
     data: {
-      subscriptionTier: SUBSCRIPTION_TIER.PRO,
+      subscriptionTier: nextTier,
       subscriptionExpiryDate: expiryDate,
       ...(period ? { subscriptionPeriod: period } : {}),
       creemSubscriptionId: subscriptionId,
@@ -288,7 +296,7 @@ async function grantAccess(
 // 参数 allowRefund=true 时（refund.created），不执行此防护（退款永远是合法的）。
 async function isLateDowngrade(userId: string, expectExpired: Date | null): Promise<boolean> {
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { subscriptionTier: true, subscriptionExpiryDate: true } })
-  if (!user || user.subscriptionTier !== SUBSCRIPTION_TIER.PRO || !user.subscriptionExpiryDate) return false
+  if (!user || !isPaidTier(user.subscriptionTier) || !user.subscriptionExpiryDate) return false
   // refund 不受此限制：退款永远是合法的，不管当前状态
   if (expectExpired === null) return false
   // 若当前到期日 > 事件预期的过期日，说明升级发生得更晚 → 拒绝降级
@@ -312,6 +320,8 @@ async function revokeAccess(userId: string, clearSubscriptionId: boolean = true)
 
 // 同步订阅信息（subscription.active / update 用）
 // 只同步 creemSubscriptionId；有 periodEndDate 时同步到期日和 PRO
+// ⚠️ 这里会把档位写成 PRO：Creem 侧目前只配置了 PRO 商品，任何 Creem 订阅事件都代表买的是 PRO。
+//    以后若把家庭版也放到 Creem 卖，必须先加「商品ID → 档位」的映射，否则会把家庭版降级成 Pro。
 async function syncSubscription(userId: string, subscriptionId: string, periodEndDate?: Date | null): Promise<void> {
   await prisma.user.update({
     where: { id: userId },
@@ -492,14 +502,19 @@ export async function POST(req: Request) {
           // 续费累加：从 max(now, 现有到期日) 起算，再 + 周期
           const expiryDate = computeFallbackExpiry(period, user.subscriptionExpiryDate)
           // 幂等：新算的到期日 <= 现有到期日 → 已授权，跳过
-          const needsUpgrade = user.subscriptionTier !== SUBSCRIPTION_TIER.PRO
+          // （用 isPaidTier 而非硬比 PRO：家庭版等付费档同样适用）
+          const needsUpgrade = !isPaidTier(user.subscriptionTier)
             || !user.subscriptionExpiryDate
             || expiryDate > user.subscriptionExpiryDate
           if (needsUpgrade) {
+            // 已是付费档就不动档位，只延长期限（避免把家庭版降级成 Pro）
+            const nextTier = isPaidTier(user.subscriptionTier)
+              ? user.subscriptionTier.toUpperCase()
+              : SUBSCRIPTION_TIER.PRO
             await prisma.user.update({
               where: { id: userId },
               data: {
-                subscriptionTier: SUBSCRIPTION_TIER.PRO,
+                subscriptionTier: nextTier,
                 subscriptionExpiryDate: expiryDate,
                 ...(period ? { subscriptionPeriod: period } : {}),
                 ...(subscriptionId ? { creemSubscriptionId: subscriptionId } : {}),

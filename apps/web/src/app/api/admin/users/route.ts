@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { requireAdmin } from "@/lib/admin-auth"
 import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 import { parsePage, parsePageSize, parseListParam, parseDateRange, deriveSubscriptionStatus } from "@cookmate/shared/utils/admin-query"
+import { isPaidTier } from "@cookmate/shared/utils/subscription"
 
 // 管理员专用：用户列表（注册用户、套餐、到期时间、注册日期）。
 // 鉴权见 requireAdmin（ADMIN_EMAILS 白名单，fail-closed）。
@@ -55,7 +56,8 @@ export async function GET(req: Request) {
         },
       },
     }),
-    prisma.user.count({ where: { ...where, subscriptionTier: SUBSCRIPTION_TIER.PRO } }),
+    // 付费档（PRO / FAMILY 等，非 FREE）与免费档 —— 不要硬比 PRO，否则家庭版两边都不计、数字对不上
+    prisma.user.count({ where: { ...where, subscriptionTier: { not: SUBSCRIPTION_TIER.FREE } } }),
     prisma.user.count({ where: { ...where, subscriptionTier: SUBSCRIPTION_TIER.FREE } }),
   ])
 
@@ -86,7 +88,8 @@ export async function GET(req: Request) {
     createdAt: u.createdAt.toISOString(),
     orderCount: u._count.paymentOrders,
     subStatus: deriveSubscriptionStatus({
-      isPro: u.subscriptionTier === SUBSCRIPTION_TIER.PRO,
+      // 是否付费档（PRO / FAMILY 都算）—— 不硬比 PRO，否则家庭版会被当成免费版
+      isPaid: isPaidTier(u.subscriptionTier),
       creemSubscriptionId: u.creemSubscriptionId,
       creemSubscriptionStatus: u.creemSubscriptionStatus,
       subscriptionExpiryDate: u.subscriptionExpiryDate,

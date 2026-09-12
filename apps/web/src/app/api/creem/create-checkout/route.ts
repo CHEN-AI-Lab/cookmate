@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma"
 import { trackEvent } from "@cookmate/shared/utils/track"
 import { generateOrderId } from "@cookmate/shared/utils/order-id"
 import { PRICING } from "@cookmate/shared/constants/pricing"
-import { addMonths, addYears } from "@cookmate/shared/utils/subscription"
+import { addMonths, addYears, isPaidTier } from "@cookmate/shared/utils/subscription"
 import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 
 export async function POST(req: Request) {
@@ -166,7 +166,7 @@ export async function GET(req: Request) {
       const period = checkoutMeta.period
       const newExpiry = period === "annual" ? addYears(now, 1) : addMonths(now, 1)
       const needsUpgrade = user
-        && (user.subscriptionTier !== SUBSCRIPTION_TIER.PRO
+        && (!isPaidTier(user.subscriptionTier)
           || !user.subscriptionExpiryDate
           || user.subscriptionExpiryDate < newExpiry)
 
@@ -176,10 +176,14 @@ export async function GET(req: Request) {
           ? user.subscriptionExpiryDate
           : now
         const expiryDate = period === "annual" ? addYears(base, 1) : addMonths(base, 1)
+        // 已是付费档（PRO / FAMILY …）就不动档位，只延长期限；对 PRO / FREE 用户结果不变
+        const nextTier = isPaidTier(user.subscriptionTier)
+          ? user.subscriptionTier.toUpperCase()
+          : SUBSCRIPTION_TIER.PRO
         await prisma.user.update({
           where: { id: session.user.id },
           data: {
-            subscriptionTier: SUBSCRIPTION_TIER.PRO,
+            subscriptionTier: nextTier,
             subscriptionExpiryDate: expiryDate,
           },
         })
