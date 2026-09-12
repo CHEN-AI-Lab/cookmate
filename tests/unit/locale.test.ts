@@ -24,9 +24,16 @@ describe('e / t', () => {
     expect(t('en-US', '中文', 'English')).toBe('English')
   })
 
-  it('returns Chinese for other locales', () => {
+  it('returns Chinese for Chinese locales (zh-CN / zh-TW)', () => {
     expect(e('zh-CN', '中文', 'English')).toBe('中文')
-    expect(t('ja', '中文', 'English')).toBe('中文')
+    expect(t('zh-TW', '中文', 'English')).toBe('中文')
+  })
+
+  it('returns English for non-Chinese locales like ja（口径见 shared/constants/locales.ts 的 isChineseLocale）', () => {
+    // 口径统一后走 pickLocaleText / isChineseLocale：只有中文语系取中文，
+    // 其余（en / ja 等）一律英文 —— 旧实现 `locale === "en" || startsWith("en")` 会让 ja 掉回中文。
+    expect(t('ja', '中文', 'English')).toBe('English')
+    expect(e('ja', '中文', 'English')).toBe('English')
   })
 })
 

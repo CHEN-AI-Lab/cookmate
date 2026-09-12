@@ -54,6 +54,30 @@ export function isPaidTier(subscriptionTier: string | null | undefined): boolean
 }
 
 /**
+ * 续费到期日计算（webhook 支付成功 / 兜底授权共用这一份，禁止在各自文件里再复制）。
+ *
+ * 续费累加：从 max(now, 现有到期日) 起算，再加一个周期。
+ * - 首次购买（无到期日 / 已过期）：base = now
+ * - 续费（未到期）：base = 现有到期日 → 正确累加，权益不缩水
+ *
+ * ⚠️ 注意：这里用的是 setUTCMonth(+1) 的朴素写法，月末（29/30/31 日）购买会落到下下月
+ *   （例如 1/31 → 3/2），与同文件处理月末的 addMonths() 行为不同。
+ *   这是既有线上行为 —— 存量用户的到期日都是这么算出来的，改用 addMonths 会改变他们的到期日，
+ *   必须单独评估后再动，不要顺手替换。
+ */
+export function computeRenewalExpiry(existingExpiry: Date | null, period: string): Date {
+  const now = new Date()
+  const base = existingExpiry && existingExpiry > now ? existingExpiry : now
+  const expiry = new Date(base)
+  if (period === "annual") {
+    expiry.setUTCFullYear(expiry.getUTCFullYear() + 1)
+  } else {
+    expiry.setUTCMonth(expiry.getUTCMonth() + 1)
+  }
+  return expiry
+}
+
+/**
  * 给定日期加 N 个月，自动处理月底越界。
  *
  * 例：1月31日 + 1月 → 2月28/29日（不是3月3日）

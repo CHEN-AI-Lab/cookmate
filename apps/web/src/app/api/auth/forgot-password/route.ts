@@ -5,14 +5,8 @@ import { sendEmail } from "@cookmate/shared/utils/email"
 import { checkOtpRateLimit, recordOtpAttempt } from "@cookmate/shared/utils/otp-rate-limit"
 import crypto from "node:crypto"
 import bcrypt from "bcryptjs"
-
-function emailT(locale: string, zh: string, en: string): string {
-  return locale === "zh-CN" ? zh : en
-}
-
-function isEmail(val: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
-}
+import { pickLocaleText } from "@cookmate/shared/constants/locales"
+import { isEmail } from "@cookmate/shared/validators"
 
 /** POST: 发送忘记密码验证码（仅限已注册邮箱） */
 export async function POST(req: Request) {
@@ -52,9 +46,9 @@ export async function POST(req: Request) {
 
     const isDev = process.env.NODE_ENV === "development"
     if (!isDev) {
-      const subject = emailT(loc, "CookMate 密码重置", "CookMate password reset")
-      const desc = emailT(loc, "您正在重置密码，验证码是：", "You are resetting your password. Enter the code below:")
-      const expireWarning = emailT(loc, "验证码 5 分钟内有效，请勿泄露给他人。", "This code expires in 5 minutes. Do not share it with anyone.")
+      const subject = pickLocaleText(loc, "CookMate 密码重置", "CookMate password reset")
+      const desc = pickLocaleText(loc, "您正在重置密码，验证码是：", "You are resetting your password. Enter the code below:")
+      const expireWarning = pickLocaleText(loc, "验证码 5 分钟内有效，请勿泄露给他人。", "This code expires in 5 minutes. Do not share it with anyone.")
       const result = await sendEmail(email, subject, `<div style="font-family:sans-serif;padding:24px;max-width:400px">
         <h2 style="color:#FF6B35">🍳 CookMate</h2>
         <p style="color:#333">${desc}</p>

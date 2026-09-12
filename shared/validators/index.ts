@@ -113,6 +113,13 @@ export function isValidIngredient(name: string): boolean {
   return true;
 }
 
+// ─── 邮箱格式粗校验 ───
+// 「本地部分@域名.tld、且不含空白符」的宽松规则：够挡住明显错误，不追求 RFC 完备。
+// 后端（登录验证码、忘记密码）共用这一份，禁止在各自路由里再复制。
+export function isEmail(val: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+}
+
 export type RecipeGenerateInput = z.infer<typeof recipeGenerateSchema>;
 export type MealPlanCreateInput = z.infer<typeof mealPlanCreateSchema>;
 export type PantryItemInput = z.infer<typeof pantryItemSchema>;

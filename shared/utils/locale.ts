@@ -6,8 +6,12 @@ export function getLocaleFromCookie(req: Request): string {
 }
 
 // 双语错误消息（旧方式，逐步替换为 err()）
+// 口径统一走 pickLocaleText（中文语系取 zh，其余取 en）——
+// 原来写成 `locale === "en" || startsWith("en")`，ja 会掉回中文，与 locales.ts 的约定不符。
+import { pickLocaleText } from "@cookmate/shared/constants/locales"
+
 export function e(locale: string, zh: string, en: string): string {
-  return locale === "en" || locale.startsWith("en") ? en : zh
+  return pickLocaleText(locale, zh, en)
 }
 /** @deprecated Use e() instead */
 export const t = e

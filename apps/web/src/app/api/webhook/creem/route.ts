@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
-import { isPaidTier } from "@cookmate/shared/utils/subscription"
+import { isPaidTier, computeRenewalExpiry } from "@cookmate/shared/utils/subscription"
 import { trackEvent } from "@cookmate/shared/utils/track"
 
 // ── 辅助函数：从 webhook 事件中提取各种字段 ──
@@ -142,35 +142,6 @@ function extractOrderPayment(event: Record<string, unknown>): { amount?: number;
   return Object.keys(result).length > 0 ? result : null
 }
 
-// 续费累加：从 max(now, 现有到期日) 起算，再 + 周期
-// 首次购买（FREE→PRO）：base=now，行为不变
-// 续费（PRO→PRO）：base=现有到期日，正确累加
-function computeExpiryWithCarry(existingExpiry: Date | null, period: string): Date {
-  const now = new Date()
-  const base = existingExpiry && existingExpiry > now ? existingExpiry : now
-  const expiry = new Date(base)
-  if (period === "annual") {
-    expiry.setUTCFullYear(expiry.getUTCFullYear() + 1)
-  } else {
-    expiry.setUTCMonth(expiry.getUTCMonth() + 1)
-  }
-  return expiry
-}
-
-// 兜底计算到期日（当事件未携带官方 current_period_end_date 时）
-// 从 max(now, 现有到期日) 起算，不再从 now 起算
-function computeFallbackExpiry(period?: string, existingExpiry?: Date | null): Date {
-  const now = new Date()
-  const base = existingExpiry && existingExpiry > now ? existingExpiry : now
-  const expiry = new Date(base)
-  if (period === "annual") {
-    expiry.setUTCFullYear(expiry.getUTCFullYear() + 1)
-  } else {
-    expiry.setUTCMonth(expiry.getUTCMonth() + 1)
-  }
-  return expiry
-}
-
 // 通过 creemSubscriptionId 反查 userId（metadata 没带 userId 时的兜底）
 async function findUserIdBySubscriptionId(subscriptionId: string): Promise<string | null> {
   const user = await prisma.user.findFirst({
@@ -264,7 +235,7 @@ async function grantAccess(
   // 续费累加：从 max(now, 现有到期日) 起算，再 + 周期
   // 首次购买（FREE→PRO）：base=now
   // 续费（PRO→PRO）：base=现有到期日，正确累加
-  const expiryDate = computeExpiryWithCarry(user.subscriptionExpiryDate, period || "monthly")
+  const expiryDate = computeRenewalExpiry(user.subscriptionExpiryDate, period || "monthly")
 
   // 幂等：如果用户已经是付费档且新算的到期日 <= 现有到期日，说明已授权，跳过
   // （用 isPaidTier 而非硬比 PRO：家庭版等付费档同样适用）
@@ -500,7 +471,7 @@ export async function POST(req: Request) {
         const user = await prisma.user.findUnique({ where: { id: userId } })
         if (user) {
           // 续费累加：从 max(now, 现有到期日) 起算，再 + 周期
-          const expiryDate = computeFallbackExpiry(period, user.subscriptionExpiryDate)
+          const expiryDate = computeRenewalExpiry(user.subscriptionExpiryDate, period || "monthly")
           // 幂等：新算的到期日 <= 现有到期日 → 已授权，跳过
           // （用 isPaidTier 而非硬比 PRO：家庭版等付费档同样适用）
           const needsUpgrade = !isPaidTier(user.subscriptionTier)
