@@ -63,6 +63,9 @@
     --foreground: #ededed;
     --color-card: #1a1a2e;
     --color-surface: #16213e;
+    /* bg-bg-brand 是全站的页面底色（app/layout、AppShell、公开页都在用），必须一起翻深，
+       否则会出现「米色底 + 浅色字」，整个应用都看不清 */
+    --color-bg-brand: #171310;
     --color-border: rgba(255,255,255,0.1);
     --color-overlay: rgba(0,0,0,0.7);
     /* 必须覆盖：否则 text-primary 仍是 #2D3436（深炭色），

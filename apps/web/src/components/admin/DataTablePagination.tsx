@@ -27,12 +27,12 @@ export function DataTablePagination({
   if (pages <= 1) return null
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2 border-t border-border px-4 py-3 text-[12px] text-text-secondary">
+    <div className="flex flex-wrap items-center justify-center gap-2 border-t border-gray-200 px-4 py-3 text-[12px] text-gray-500">
       <button
         type="button"
         onClick={() => go(page - 1)}
         disabled={page <= 1}
-        className="rounded-xl border border-border px-3 py-1.5 text-[12px] text-text-primary transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-30"
+        className="rounded-xl border border-gray-200 px-3 py-1.5 text-[12px] text-gray-700 transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-30"
       >
         ←
       </button>
@@ -43,7 +43,7 @@ export function DataTablePagination({
         type="button"
         onClick={() => go(page + 1)}
         disabled={page >= pages}
-        className="rounded-xl border border-border px-3 py-1.5 text-[12px] text-text-primary transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-30"
+        className="rounded-xl border border-gray-200 px-3 py-1.5 text-[12px] text-gray-700 transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-30"
       >
         →
       </button>
@@ -59,7 +59,7 @@ export function DataTablePagination({
           const n = Number.parseInt(e.currentTarget.value, 10)
           if (n >= 1 && n <= pages) go(n)
         }}
-        className="w-14 rounded-xl border border-border bg-white px-2 py-1.5 text-center text-[12px] text-text-primary outline-none focus:border-accent"
+        className="w-14 rounded-xl border border-gray-200 bg-white px-2 py-1.5 text-center text-[12px] text-gray-700 outline-none focus:border-accent"
       />
       <span>/ {pages} 页</span>
     </div>

@@ -323,7 +323,7 @@ function totalOf(data: unknown): number {
 function FilterStatus({ q, unit }: { q: TableQuery<unknown>; unit: string }) {
   return (
     <div className="flex min-h-6 flex-wrap items-center gap-2 text-xs leading-5">
-      <span className="text-text-secondary">
+      <span className="text-gray-500">
         共 {totalOf(q.data)} 条{unit}
       </span>
       {q.activeCount > 0 ? (
@@ -352,7 +352,7 @@ function EmptyRow({ q, text }: { q: TableQuery<unknown>; text: string }) {
     <tr>
       <td
         colSpan={99}
-        className={`px-4 py-12 text-center text-sm ${q.error ? "text-red-600" : "text-text-secondary"}`}
+        className={`px-4 py-12 text-center text-sm ${q.error ? "text-red-600" : "text-gray-500"}`}
       >
         {msg}
       </td>
@@ -384,7 +384,7 @@ export default function AdminPage() {
   }, [ordersQ, webhooksQ, cancelsQ, usersQ, cronsQ, configQ])
 
   if (pending) {
-    return <div className="text-center py-16 text-text-secondary">加载中…</div>
+    return <div className="text-center py-16 text-gray-500">加载中…</div>
   }
 
   if (firstError) {
@@ -392,7 +392,7 @@ export default function AdminPage() {
       <div className="max-w-3xl mx-auto py-16 px-4">
         <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
           <p className="text-red-600 font-semibold">{firstError.error}</p>
-          <p className="text-text-secondary text-sm mt-2">
+          <p className="text-gray-500 text-sm mt-2">
             无权限访问此页面，仅限管理员使用。
           </p>
         </div>
@@ -420,15 +420,15 @@ export default function AdminPage() {
     <div className="max-w-6xl mx-auto py-10 px-4 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary tracking-tight">支付后台</h1>
-          <p className="text-text-secondary text-sm mt-1">
+          <h1 className="text-2xl font-bold text-gray-700 tracking-tight">支付后台</h1>
+          <p className="text-gray-500 text-sm mt-1">
             订单 / 回调流水 / 取消审计 / 用户 / Cron 日志 / 系统配置 —— 统一查看。每页 50 条，点列头漏斗即可筛选。
           </p>
         </div>
         <button
           onClick={refresh}
           disabled={anyLoading}
-          className="px-4 py-2 rounded-xl border border-gray-200 text-text-secondary text-sm hover:bg-gray-50 disabled:opacity-50 shrink-0"
+          className="px-4 py-2 rounded-xl border border-gray-200 text-gray-500 text-sm hover:bg-gray-50 disabled:opacity-50 shrink-0"
         >
           {anyLoading ? "刷新中…" : "刷新"}
         </button>
@@ -442,15 +442,15 @@ export default function AdminPage() {
             onClick={() => setTab(t.key)}
             className={`px-4 py-2.5 text-sm font-medium rounded-t-xl transition-colors flex items-center gap-2 ${
               tab === t.key
-                ? "bg-card text-text-primary border border-b-0 border-gray-200"
-                : "text-text-secondary hover:text-text-primary"
+                ? "bg-white text-gray-700 border border-b-0 border-gray-200"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             {t.label}
             {t.n !== undefined && t.n > 0 && (
               <span
                 className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                  t.red ? "bg-red-100 text-red-600" : "bg-surface text-text-secondary"
+                  t.red ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"
                 }`}
               >
                 {t.n}
@@ -503,7 +503,7 @@ function OrdersTab({ q }: { q: TableQuery<OrdersResponse> }) {
       <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-text-secondary">
+            <thead className="bg-gray-50 text-gray-500">
               <tr>
                 <Th
                   label="时间"
@@ -617,7 +617,7 @@ function WebhooksTab({ q }: { q: TableQuery<WebhookLogsResponse> }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-text-secondary text-sm">
+      <p className="text-gray-500 text-sm">
         记录支付渠道（Creem / 支付宝）推送的每一次 webhook 通知。状态「失败」= 已收到但未处理成功，
         可能导致用户付款后未升级，需人工核对。
       </p>
@@ -636,7 +636,7 @@ function WebhooksTab({ q }: { q: TableQuery<WebhookLogsResponse> }) {
       <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-text-secondary">
+            <thead className="bg-gray-50 text-gray-500">
               <tr>
                 <Th
                   label="时间"
@@ -769,7 +769,7 @@ function CancelsTab({ q }: { q: TableQuery<CancelLogsResponse> }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-text-secondary text-sm">
+      <p className="text-gray-500 text-sm">
         记录每一次「取消订阅」尝试。状态为「失败」= 上游（Creem）没取消成功，
         需去 Creem 后台补刀，或让用户重新点一次「取消」。
       </p>
@@ -789,7 +789,7 @@ function CancelsTab({ q }: { q: TableQuery<CancelLogsResponse> }) {
       <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-text-secondary">
+            <thead className="bg-gray-50 text-gray-500">
               <tr>
                 <Th
                   label="时间"
@@ -894,7 +894,7 @@ function UsersTab({ q }: { q: TableQuery<UsersResponse> }) {
       <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-text-secondary">
+            <thead className="bg-gray-50 text-gray-500">
               <tr>
                 <Th
                   label="注册时间"
@@ -984,7 +984,7 @@ function CronsTab({ q }: { q: TableQuery<CronLogsResponse> }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-text-secondary text-sm">
+      <p className="text-gray-500 text-sm">
         Vercel Cron 定时任务执行记录（每日 00:00 过期降级 / 01:00 取消对账，UTC 时间；对应北京时间 08:00 / 09:00）。
         状态为「失败」= 定时任务执行出错，需检查服务端日志。
       </p>
@@ -1003,7 +1003,7 @@ function CronsTab({ q }: { q: TableQuery<CronLogsResponse> }) {
       <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-text-secondary">
+            <thead className="bg-gray-50 text-gray-500">
               <tr>
                 <Th
                   label="执行时间"
@@ -1077,10 +1077,10 @@ function StatCard({ label, value, tone }: { label: string; value: number | strin
         ? "text-green-600"
         : tone === "amber"
           ? "text-amber-600"
-          : "text-text-primary"
+          : "text-gray-700"
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-5">
-      <p className="text-text-secondary text-sm">{label}</p>
+      <p className="text-gray-500 text-sm">{label}</p>
       <p className={`text-3xl font-bold mt-1 tabular-nums ${toneClass}`}>{value}</p>
     </div>
   )
@@ -1247,7 +1247,7 @@ function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc, env
 }) {
   const inferred: AiTone | null = tone ?? (value === "已配置" ? "ok" : value === "未配置" ? "error" : null)
   const isMissing = inferred === "error"
-  const muted = tag ? "text-text-secondary" : ""
+  const muted = tag ? "text-gray-500" : ""
   // 说明气泡：鼠标停在标题上 0.5 秒才显示（避免鼠标扫过就闪），移开立即消失。
   // 点按同样支持（触屏）。用 fixed 定位，避免被卡片 overflow-hidden 裁切。
   const [tip, setTip] = useState<{ top: number; left: number } | null>(null)
@@ -1343,7 +1343,7 @@ function ConfigHelpDrawer({ sections, open, onClose }: {
       >
         <div className="border-b border-gray-100 px-4 py-3">
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-text-primary">字段说明</span>
+            <span className="font-semibold text-gray-700">字段说明</span>
             <button type="button" onClick={onClose} className="text-lg leading-none text-gray-400">×</button>
           </div>
           <p className="mt-1 text-[12px] text-gray-500">共 {total} 个字段，可按标签 / 变量名 / 说明搜索</p>
@@ -1360,7 +1360,7 @@ function ConfigHelpDrawer({ sections, open, onClose }: {
               <p className="mt-4 mb-1 text-[12px] text-gray-400">{s.title}</p>
               {s.rows.map((r) => (
                 <div key={r.label + (r.env ?? "")} className="border-t border-gray-100 py-2">
-                  <p className="text-[13px] font-medium text-text-primary">{r.label}</p>
+                  <p className="text-[13px] font-medium text-gray-700">{r.label}</p>
                   {r.env ? <p className="font-mono text-[11px] text-gray-500">{r.env}</p> : null}
                   {r.desc ? <p className="mt-1 text-[12px] text-gray-500">{r.desc}</p> : null}
                 </div>
@@ -1400,7 +1400,7 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
 
   const c = data?.config
   if (!c) {
-    return <div className="text-center py-16 text-text-secondary">无法加载配置</div>
+    return <div className="text-center py-16 text-gray-500">无法加载配置</div>
   }
 
   const sections: { title: string; note?: string; rows: ConfigRowSpec[] }[] = [
@@ -1626,7 +1626,7 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-text-secondary text-sm">
+        <p className="text-gray-500 text-sm">
           生产环境配置核对（只显示是否已配置，不暴露密钥原文）。带 * 为必填项，标红「未配置」会导致对应功能不可用。
         </p>
         <div className="flex flex-wrap items-center gap-2">
@@ -1659,7 +1659,7 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
         {sections.map((s) => (
           <div key={s.title} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
             <div className="flex items-center justify-between gap-2 bg-gray-50 px-4 py-3 border-b border-gray-100">
-              <h3 className="font-semibold text-text-primary">
+              <h3 className="font-semibold text-gray-700">
                 {s.title}
                 {s.note ? <span className="ml-2 text-[12px] font-normal text-gray-400">{s.note}</span> : null}
               </h3>
