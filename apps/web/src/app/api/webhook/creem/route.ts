@@ -329,26 +329,31 @@ async function syncSubscription(userId: string, subscriptionId: string, periodEn
 // 后台「订阅状态」列就能直接用官方状态，不用只靠本地字段反推。
 // userId 优先取 metadata；取不到时用订阅ID反查 —— subscription.paid 可能早于
 // checkout.completed 到达，那时 metadata 里还没有本地用户信息。
+//
+// ⚠️ 整个函数必须自己吞掉所有异常：这是「附加信息」，跑在真正的授权/撤销分支之前，
+// 一旦因 DB 抖动抛出去会让整个 webhook 返回 500，害得 Creem 反复重投本该成功的事件。
 async function recordCreemStatus(event: Record<string, unknown>): Promise<void> {
-  const status = extractStatus(event)
-  if (!status) return
-  let userId = await resolveUserId(event)
-  if (!userId) {
-    const subscriptionId = extractSubscriptionId(event)
-    if (!subscriptionId) return
-    const matched = await prisma.user.findFirst({
-      where: { creemSubscriptionId: subscriptionId },
-      select: { id: true },
+  try {
+    const status = extractStatus(event)
+    if (!status) return
+    let userId = await resolveUserId(event)
+    if (!userId) {
+      const subscriptionId = extractSubscriptionId(event)
+      if (!subscriptionId) return
+      const matched = await prisma.user.findFirst({
+        where: { creemSubscriptionId: subscriptionId },
+        select: { id: true },
+      })
+      userId = matched?.id ?? null
+    }
+    if (!userId) return
+    await prisma.user.update({
+      where: { id: userId },
+      data: { creemSubscriptionStatus: status },
     })
-    userId = matched?.id ?? null
+  } catch (err) {
+    console.error("[creem-webhook] recordCreemStatus failed:", err)
   }
-  if (!userId) return
-  await prisma.user.update({
-    where: { id: userId },
-    data: { creemSubscriptionStatus: status },
-  }).catch(() => {
-    // 用户可能已删除，忽略
-  })
 }
 
 // ── 事件ID去重 ──

@@ -22,18 +22,21 @@ export function isExpired(expiryDate: Date): boolean {
  * 两边不一致就会出现「页面说免费、功能照给 PRO」——以前正是这个原因产生过一个线上 bug。
  *
  * 规则：
- *   - 非 PRO → FREE
- *   - PRO 但没有到期日 → PRO（无到期日视为永久）
- *   - PRO 且到期日已过 → FREE
- *   - 其余 → PRO
+ *   - FREE（含空值）→ FREE
+ *   - 其它付费档（PRO / **FAMILY** / 以后新增的档）：没有到期日视为永久；
+ *     有到期日且已过 → FREE；否则**原样返回该档**
+ *
+ * ⚠️ 绝对不要写成「非 PRO 一律返回 FREE」：openai.ts 的 normalizeTier 明确写着
+ * 「PRO / FAMILY 走付费端」，把 FAMILY 当 FREE 会让家庭版用户白丢付费额度。
  */
 export function effectiveTier(
   subscriptionTier: string | null | undefined,
   subscriptionExpiryDate: Date | string | null | undefined,
 ): string {
-  if (subscriptionTier?.toUpperCase() !== SUBSCRIPTION_TIER.PRO) return SUBSCRIPTION_TIER.FREE
-  if (!subscriptionExpiryDate) return SUBSCRIPTION_TIER.PRO
-  return isExpired(new Date(subscriptionExpiryDate)) ? SUBSCRIPTION_TIER.FREE : SUBSCRIPTION_TIER.PRO
+  const upper = (subscriptionTier ?? "").toUpperCase()
+  if (!upper || upper === SUBSCRIPTION_TIER.FREE) return SUBSCRIPTION_TIER.FREE
+  if (!subscriptionExpiryDate) return upper
+  return isExpired(new Date(subscriptionExpiryDate)) ? SUBSCRIPTION_TIER.FREE : upper
 }
 
 /**

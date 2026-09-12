@@ -60,6 +60,16 @@ describe('deriveSubscriptionStatus — Creem 官方状态优先', () => {
   it('官方状态优先于本地反推（有订阅ID也不会被当成 active）', () => {
     expect(derive({ creemSubscriptionStatus: 'paused', creemSubscriptionId: 'sub_1' })).toBe('paused')
   })
+
+  it('陈旧官方状态不能压过之后的支付宝买断（取消 Creem 后又用支付宝买断一期）', () => {
+    // creemSubscriptionId 已被取消时清空，最近一笔已支付是支付宝 → 应以「一次性」为准
+    expect(derive({ creemSubscriptionStatus: 'canceled', lastPaidChannel: 'alipay' })).toBe('onetime')
+    expect(derive({ creemSubscriptionStatus: 'expired', lastPaidChannel: 'alipay' })).toBe('onetime')
+  })
+
+  it('没有支付记录时仍以官方状态为准', () => {
+    expect(derive({ creemSubscriptionStatus: 'canceled', lastPaidChannel: null })).toBe('canceled')
+  })
 })
 
 describe('deriveSubscriptionStatus — 没有官方状态时的本地兜底', () => {
@@ -105,5 +115,16 @@ describe('effectiveTier — 到期感知的有效套餐', () => {
   it('大小写不敏感（pro / Pro 都认）', () => {
     expect(effectiveTier('pro', null)).toBe(SUBSCRIPTION_TIER.PRO)
     expect(effectiveTier('Pro', null)).toBe(SUBSCRIPTION_TIER.PRO)
+  })
+
+  it('FAMILY 等其它付费档必须原样保留，绝不能被当成 FREE', () => {
+    // openai.ts 的 normalizeTier 明确写着「PRO / FAMILY 走付费端」；
+    // 早期版本把「非 PRO 一律返回 FREE」，会让家庭版用户白丢付费额度。
+    expect(effectiveTier(SUBSCRIPTION_TIER.FAMILY, null)).toBe(SUBSCRIPTION_TIER.FAMILY)
+    const future = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+    expect(effectiveTier(SUBSCRIPTION_TIER.FAMILY, future)).toBe(SUBSCRIPTION_TIER.FAMILY)
+    // 到期了才降级（与 PRO 同一口径）
+    const past = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+    expect(effectiveTier(SUBSCRIPTION_TIER.FAMILY, past)).toBe(SUBSCRIPTION_TIER.FREE)
   })
 })

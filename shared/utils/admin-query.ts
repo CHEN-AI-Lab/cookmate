@@ -91,8 +91,10 @@ const CREEM_STATUS_MAP: Record<string, SubscriptionStatus> = {
  *     定时任务（正式环境每天一次）才把数据库降级，中间这段窗口里数据库的 tier 还是旧的、
  *     Creem 订阅ID也可能还在 —— 这时若先看订阅ID会误判成「订阅中」。
  *     管理后台必须按到期日说话，和「到期时间」列保持一致。
- *  3. **有 Creem 官方状态就用它**（webhook 落库的权威来源，见 User.creemSubscriptionStatus）
- *  4. 没有官方状态（支付宝用户 / 落库之前的历史数据）→ 退回下面几条本地反推：
+ *  3. **有 Creem 官方状态、且该状态仍然成立 → 用它**（webhook 落库的权威来源，见 User.creemSubscriptionStatus）。
+ *     「仍然成立」= 本地还有订阅ID，或最近一笔已支付订单是 Creem，或压根没有支付记录。
+ *     加这个前提是为了避免陈旧状态压过更新的支付宝买断（见函数内注释）。
+ *  4. 没有官方状态（支付宝用户 / 落库之前的历史数据），或官方状态已失效 → 退回下面几条本地反推：
  *     有 Creem 订阅ID → active；最后一笔已支付是支付宝 → onetime；是 Creem → canceled
  *  5. 什么都查不到 → unknown（历史脏数据，不硬猜）
  *
@@ -115,7 +117,13 @@ export function deriveSubscriptionStatus(input: {
     return "expired"
   }
   const official = CREEM_STATUS_MAP[input.creemSubscriptionStatus ?? ""]
-  if (official) return official
+  if (official) {
+    // 防「陈旧官方状态」压过更新的支付宝买断：
+    // 用户先订 Creem 后取消（状态被写成 canceled），之后又用支付宝买断一期 ——
+    // 此时 creemSubscriptionId 已清空、最近一笔已支付订单是支付宝，应以「一次性」为准。
+    const creemIsCurrent = !!input.creemSubscriptionId || input.lastPaidChannel === "creem"
+    if (creemIsCurrent || !input.lastPaidChannel) return official
+  }
   if (input.creemSubscriptionId) return "active"
   if (input.lastPaidChannel === "alipay") return "onetime"
   if (input.lastPaidChannel === "creem") return "canceled"
