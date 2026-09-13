@@ -52,7 +52,8 @@
     "themeDark": "ダーク",
     "themeToggle": "テーマを切り替え",
     "themeLight": "ライト",
-    "themeSystem": "システム"
+    "themeSystem": "システム",
+    "themeTitle": "テーマ"
   },
   "hero": {
     "title": "何を作るか、もう迷わない",

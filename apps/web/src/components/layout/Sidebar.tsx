@@ -80,11 +80,8 @@ export function Sidebar({
         )}
       </nav>
 
-      {/* Bottom: theme toggle + user menu dropdown */}
+      {/* Bottom: user menu dropdown（主题切换在下拉菜单里） */}
       <div className="px-3 py-3 border-t border-border">
-        <div className="mb-1">
-          <ThemeToggle />
-        </div>
         {name ? (
           <UserMenu name={name} initial={initial} t={t} isDemoUser={isDemoUser} />
         ) : (
@@ -211,6 +208,8 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             <span>{t("settings")}</span>
           </Link>
           <div className="border-t border-border my-1" />
+          {/* Theme（浅色 / 深色 / 跟随系统） */}
+          <ThemeToggle variant="menu" />
           {/* Language sub-menu */}
           <div className="relative">
             <button

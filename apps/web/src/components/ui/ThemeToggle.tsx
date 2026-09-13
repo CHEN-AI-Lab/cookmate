@@ -23,7 +23,7 @@ function applyPref(pref: ThemePref) {
   document.cookie = "theme=" + pref + "; path=/; max-age=31536000; samesite=lax"
 }
 
-/** 订阅 <html> 的 class 变化 + 系统配色变化（下拉里的「当前项」勾选状态用） */
+/** 订阅 <html> 的 class 变化 + 系统配色变化（用于判断当前选中项） */
 function subscribe(cb: () => void) {
   const observer = new MutationObserver(cb)
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] })
@@ -78,22 +78,22 @@ function ChevronIcon() {
 }
 
 /**
- * 主题切换：图标按钮 + 三选一下拉（浅色 / 深色 / 跟随系统）。
- * - variant="full"：侧边栏用的整行触发器（图标 + 当前模式 + 箭头）
- * - variant="icon"：公开页导航栏 / 移动端顶栏用的方图标按钮
+ * 主题切换（浅色 / 深色 / 跟随系统）。
+ * - variant="menu"：放在头像下拉菜单里的可展开一行（点「主题」展开三个选项）。**默认用这个。**
+ * - variant="icon"：独立方图标按钮，公开页导航栏 / 移动端顶栏用。
  *
- * ⚠️ 触发按钮上的图标与文字**全部由 CSS 的 light:/dark: 变体驱动**（跟着 <html class> 走），
- * 不用 JS 状态决定外观 —— 否则服务端不知道用户偏好、只能给默认值，水合后跳一下。
- * JS 状态（pref）只用于下拉里「当前项」的勾选高亮，下拉是点开后才渲染的，不存在首屏跳动。
+ * ⚠️ icon 形态的图标由 CSS 的 .theme-opt-* 类驱动（跟着 <html class> 走），
+ * 不用 JS 状态决定外观 —— 否则服务端不知道用户偏好、只能给默认值，水合后会跳一下。
+ * menu 形态在点开的下拉里，首屏不可见，所以直接用 JS 的当前值即可。
  */
-export default function ThemeToggle({ variant = "full" }: { variant?: "full" | "icon" }) {
+export default function ThemeToggle({ variant = "menu" }: { variant?: "menu" | "icon" }) {
   const t = useTranslations("nav")
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const pref = useSyncExternalStore(subscribe, currentPref, (): ThemePref => "system")
 
   useEffect(() => {
-    if (!open) return
+    if (!open || variant !== "icon") return
     function onDown(e: MouseEvent) {
       if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false)
     }
@@ -106,72 +106,57 @@ export default function ThemeToggle({ variant = "full" }: { variant?: "full" | "
       document.removeEventListener("mousedown", onDown)
       document.removeEventListener("keydown", onKey)
     }
-  }, [open])
+  }, [open, variant])
 
   const options: { value: ThemePref; label: string; icon: ReactNode }[] = [
     { value: "light", label: t("themeLight"), icon: <SunIcon /> },
     { value: "dark", label: t("themeDark"), icon: <MoonIcon /> },
     { value: "system", label: t("themeSystem"), icon: <MonitorIcon /> },
   ]
+  const current = options.find((o) => o.value === pref) ?? options[2]
 
-  const menu = open ? (
-    <div
-      role="menu"
-      className={
-        "absolute z-50 min-w-[150px] bg-card border border-border rounded-xl shadow-lg py-1.5 text-sm " +
-        (variant === "icon" ? "right-0 top-full mt-2" : "bottom-full left-0 mb-1 w-full")
-      }
-    >
-      {options.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          role="menuitemradio"
-          aria-checked={pref === o.value}
-          onClick={() => {
-            applyPref(o.value)
-            setOpen(false)
-          }}
-          className={
-            "flex items-center gap-2.5 w-full px-3.5 py-2 text-left transition-colors " +
-            (pref === o.value ? "text-accent bg-accent/10 font-medium" : "text-text-secondary hover:bg-surface hover:text-accent")
-          }
-        >
-          <span className="shrink-0">{o.icon}</span>
-          <span className="flex-1 truncate">{o.label}</span>
-          {pref === o.value && (
-            <span className="shrink-0">
-              <CheckIcon />
-            </span>
-          )}
-        </button>
-      ))}
-    </div>
-  ) : null
-
-  if (variant === "icon") {
+  if (variant === "menu") {
     return (
-      <div ref={rootRef} className="relative">
+      <div>
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          aria-label={t("themeToggle")}
-          aria-haspopup="menu"
           aria-expanded={open}
-          title={t("themeToggle")}
-          className="flex items-center justify-center w-9 h-9 rounded-lg border border-border bg-surface text-text-secondary hover:text-accent transition-colors"
+          aria-label={t("themeToggle")}
+          className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-text-secondary hover:bg-surface hover:text-accent transition-colors"
         >
-          <span className="theme-opt theme-opt-icon theme-opt-system">
-            <MonitorIcon />
-          </span>
-          <span className="theme-opt theme-opt-icon theme-opt-light">
-            <SunIcon />
-          </span>
-          <span className="theme-opt theme-opt-icon theme-opt-dark">
-            <MoonIcon />
+          <span className="inline-flex shrink-0">{current.icon}</span>
+          <span className="flex-1 text-left">{t("themeTitle")}</span>
+          <span className="shrink-0 text-text-secondary">{current.label}</span>
+          <span className={"shrink-0 transition-transform " + (open ? "rotate-180" : "")}>
+            <ChevronIcon />
           </span>
         </button>
-        {menu}
+        {open && (
+          <div className="pb-1">
+            {options.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                role="menuitemradio"
+                aria-checked={pref === o.value}
+                onClick={() => applyPref(o.value)}
+                className={
+                  "flex items-center gap-2.5 w-full pl-9 pr-4 py-2 text-left text-sm transition-colors " +
+                  (pref === o.value ? "text-accent bg-accent/10 font-medium" : "text-text-secondary hover:bg-surface hover:text-accent")
+                }
+              >
+                <span className="shrink-0">{o.icon}</span>
+                <span className="flex-1 truncate">{o.label}</span>
+                {pref === o.value && (
+                  <span className="shrink-0">
+                    <CheckIcon />
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     )
   }
@@ -185,27 +170,46 @@ export default function ThemeToggle({ variant = "full" }: { variant?: "full" | "
         aria-haspopup="menu"
         aria-expanded={open}
         title={t("themeToggle")}
-        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary hover:text-accent hover:bg-accent/10 transition-colors w-full text-left"
+        className="flex items-center justify-center w-9 h-9 rounded-lg border border-border bg-surface text-text-secondary hover:text-accent transition-colors"
       >
-        <span className="theme-opt theme-opt-icon theme-opt-system shrink-0">
+        <span className="theme-opt theme-opt-icon theme-opt-system">
           <MonitorIcon />
         </span>
-        <span className="theme-opt theme-opt-icon theme-opt-light shrink-0">
+        <span className="theme-opt theme-opt-icon theme-opt-light">
           <SunIcon />
         </span>
-        <span className="theme-opt theme-opt-icon theme-opt-dark shrink-0">
+        <span className="theme-opt theme-opt-icon theme-opt-dark">
           <MoonIcon />
         </span>
-        <span className="flex-1 truncate">
-          <span className="theme-opt theme-opt-system">{t("themeSystem")}</span>
-          <span className="theme-opt theme-opt-light">{t("themeLight")}</span>
-          <span className="theme-opt theme-opt-dark">{t("themeDark")}</span>
-        </span>
-        <span className={"shrink-0 transition-transform " + (open ? "rotate-180" : "")}>
-          <ChevronIcon />
-        </span>
       </button>
-      {menu}
+      {open && (
+        <div role="menu" className="absolute right-0 top-full mt-2 z-50 min-w-[150px] bg-card border border-border rounded-xl shadow-lg py-1.5 text-sm">
+          {options.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              role="menuitemradio"
+              aria-checked={pref === o.value}
+              onClick={() => {
+                applyPref(o.value)
+                setOpen(false)
+              }}
+              className={
+                "flex items-center gap-2.5 w-full px-3.5 py-2 text-left transition-colors " +
+                (pref === o.value ? "text-accent bg-accent/10 font-medium" : "text-text-secondary hover:bg-surface hover:text-accent")
+              }
+            >
+              <span className="shrink-0">{o.icon}</span>
+              <span className="flex-1 truncate">{o.label}</span>
+              {pref === o.value && (
+                <span className="shrink-0">
+                  <CheckIcon />
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

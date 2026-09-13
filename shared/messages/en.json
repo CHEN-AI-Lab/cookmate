@@ -52,7 +52,8 @@
     "themeDark": "Dark",
     "themeToggle": "Toggle theme",
     "themeLight": "Light",
-    "themeSystem": "System"
+    "themeSystem": "System",
+    "themeTitle": "Theme"
   },
   "hero": {
     "title": "What's for dinner?",

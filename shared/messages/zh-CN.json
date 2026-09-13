@@ -52,7 +52,8 @@
     "themeDark": "深色",
     "themeToggle": "切换主题",
     "themeLight": "浅色",
-    "themeSystem": "跟随系统"
+    "themeSystem": "跟随系统",
+    "themeTitle": "主题"
   },
   "hero": {
     "title": "今天吃什么？",
