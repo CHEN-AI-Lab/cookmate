@@ -46,6 +46,7 @@
     "settings": "設置",
     "billing": "賬單",
     "support": "聯絡支援",
+    "supportCopied": "已複製信箱：{email}",
     "demoLangToast": "體驗用戶只能在中文和英文間切換",
     "language": "語言",
     "logout": "退出登錄",
@@ -247,6 +248,7 @@
     "loading": "加載中...",
     "pantryCount": "食材數",
     "starredCount": "收藏菜譜",
+    "mealPlanCount": "週計劃數",
     "pantryDesc": "看看冰箱裡還有什麼",
     "mealPlanTitle": "周計劃",
     "mealPlanDesc": "規劃這一週吃什麼",
@@ -259,6 +261,8 @@
     "subtextPantry": "冰箱裡的食材",
     "subtextPantryDemo": "示例數據",
     "subtextStarred": "你的私房菜單",
+    "subtextMealPlan": "規劃好的一週三餐",
+    "subtextMealPlanDemo": "範例資料",
     "subtextStarredDemo": "示例數據",
     "aiGenerate": "AI 生成",
     "quickAccess": "快捷入口",
@@ -926,7 +930,6 @@
     "attemptsRemaining": "（還剩 {count} 次機會）"
   },
   "settings": {
-    "supportLabel": "如有問題，請聯絡支援團隊：",
     "title": "設置",
     "subtitle": "管理您的賬號信息和偏好設置",
     "profile": "賬號信息",

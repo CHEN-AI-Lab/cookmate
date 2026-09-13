@@ -41,6 +41,7 @@
     "pantry": "食材庫",
     "billing": "課金管理",
     "support": "サポートに連絡",
+    "supportCopied": "メールアドレスをコピーしました：{email}",
     "settings": "設定",
     "logout": "ログアウト",
     "about": "について",
@@ -254,6 +255,7 @@
     "quickAccess": "クイックアクセス",
     "recommendDesc": "食材を入力するか、AIにおすすめを依頼して3秒で夕食を決める",
     "starredCount": "お気に入りレシピ",
+    "mealPlanCount": "週間プラン数",
     "subtextAiGenerateDemo": "サンプルデータ · 登録後は1日1回のAI生成",
     "subtextAiGenerateFree": "無料：1日1回",
     "subtextAiGeneratePro": "無制限",
@@ -261,6 +263,8 @@
     "subtextPantry": "冷蔵庫の食材",
     "subtextPantryDemo": "サンプルデータ",
     "subtextStarred": "お気に入りレシピ",
+    "subtextMealPlan": "計画した一週間の食事",
+    "subtextMealPlanDemo": "サンプルデータ",
     "subtextStarredDemo": "サンプルデータ",
     "todayRecommend": "今日のおすすめ",
     "welcomeDesc": "良い一日は、何を食べるか決めることから始まる"
@@ -926,7 +930,6 @@
     "attemptsRemaining": "（残り{count}回）"
   },
   "settings": {
-    "supportLabel": "ご質問はサポートまで：",
     "title": "設定",
     "subtitle": "アカウント設定とプロフィール管理",
     "profile": "プロフィール",

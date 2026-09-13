@@ -47,6 +47,7 @@
     "settings": "Settings",
     "billing": "Billing",
     "support": "Contact Support",
+    "supportCopied": "Email copied: {email}",
     "demoLangToast": "Demo users can only switch between Chinese and English",
     "language": "Language",
     "logout": "Log Out",
@@ -248,6 +249,7 @@
     "aiGenerate": "AI Generated",
     "pantryCount": "Pantry Items",
     "starredCount": "Starred Recipes",
+    "mealPlanCount": "Meal Plans",
     "quickAccess": "Quick Access",
     "managePantry": "Manage Pantry",
     "pantryDesc": "See what's in your fridge",
@@ -263,6 +265,8 @@
     "subtextPantry": "Ingredients in fridge",
     "subtextPantryDemo": "Sample data",
     "subtextStarred": "Your favorite recipes",
+    "subtextMealPlan": "Your planned weekly meals",
+    "subtextMealPlanDemo": "Sample data",
     "subtextStarredDemo": "Sample data"
   },
   "mealPlan": {
@@ -926,7 +930,6 @@
     "attemptsRemaining": "({count} attempt(s) remaining)"
   },
   "settings": {
-    "supportLabel": "Questions? Contact support:",
     "title": "Settings",
     "subtitle": "Manage your account info and preferences",
     "profile": "Profile",

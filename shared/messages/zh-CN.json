@@ -47,6 +47,7 @@
     "settings": "设置",
     "billing": "账单",
     "support": "联系支持",
+    "supportCopied": "邮箱已复制：{email}",
     "demoLangToast": "体验用户只能在中文和英文间切换",
     "language": "语言",
     "logout": "退出登录",
@@ -248,6 +249,7 @@
     "aiGenerate": "AI 生成",
     "pantryCount": "食材数",
     "starredCount": "收藏菜谱",
+    "mealPlanCount": "周计划数",
     "quickAccess": "快捷入口",
     "managePantry": "管理食材",
     "pantryDesc": "看看冰箱里还有什么",
@@ -263,6 +265,8 @@
     "subtextPantry": "冰箱里的食材",
     "subtextPantryDemo": "示例数据",
     "subtextStarred": "你的私房菜单",
+    "subtextMealPlan": "规划好的一周三餐",
+    "subtextMealPlanDemo": "示例数据",
     "subtextStarredDemo": "示例数据"
   },
   "mealPlan": {
@@ -926,7 +930,6 @@
     "attemptsRemaining": "（还剩 {count} 次机会）"
   },
   "settings": {
-    "supportLabel": "如有问题，请联系支持团队：",
     "title": "设置",
     "subtitle": "管理您的账号信息和偏好设置",
     "profile": "账号信息",

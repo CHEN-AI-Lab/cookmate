@@ -99,6 +99,9 @@ export default function DashboardPage() {
 
           {/* 收藏菜谱 */}
           <StatsCard label={td("starredCount")} value={isDemoUser ? 3 : stats?.starredCount ?? 0} subtext={isDemoUser ? td("subtextStarredDemo") : td("subtextStarred")} />
+
+          {/* 周计划数 */}
+          <StatsCard label={td("mealPlanCount")} value={isDemoUser ? 3 : stats?.mealPlanCount ?? 0} subtext={isDemoUser ? td("subtextMealPlanDemo") : td("subtextMealPlan")} />
         </div>
 
         {/* ===== Quick access — 3 cards ===== */}
