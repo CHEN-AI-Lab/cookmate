@@ -161,13 +161,13 @@ export default function ThemeToggle({ variant = "full" }: { variant?: "full" | "
           title={t("themeToggle")}
           className="flex items-center justify-center w-9 h-9 rounded-lg border border-border bg-surface text-text-secondary hover:text-accent transition-colors"
         >
-          <span className="inline-flex light:hidden dark:hidden">
+          <span className="theme-opt theme-opt-icon theme-opt-system">
             <MonitorIcon />
           </span>
-          <span className="hidden light:inline-flex">
+          <span className="theme-opt theme-opt-icon theme-opt-light">
             <SunIcon />
           </span>
-          <span className="hidden dark:inline-flex">
+          <span className="theme-opt theme-opt-icon theme-opt-dark">
             <MoonIcon />
           </span>
         </button>
@@ -187,19 +187,19 @@ export default function ThemeToggle({ variant = "full" }: { variant?: "full" | "
         title={t("themeToggle")}
         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary hover:text-accent hover:bg-accent/10 transition-colors w-full text-left"
       >
-        <span className="inline-flex shrink-0 light:hidden dark:hidden">
+        <span className="theme-opt theme-opt-icon theme-opt-system shrink-0">
           <MonitorIcon />
         </span>
-        <span className="hidden shrink-0 light:inline-flex">
+        <span className="theme-opt theme-opt-icon theme-opt-light shrink-0">
           <SunIcon />
         </span>
-        <span className="hidden shrink-0 dark:inline-flex">
+        <span className="theme-opt theme-opt-icon theme-opt-dark shrink-0">
           <MoonIcon />
         </span>
         <span className="flex-1 truncate">
-          <span className="light:hidden dark:hidden">{t("themeSystem")}</span>
-          <span className="hidden light:inline">{t("themeLight")}</span>
-          <span className="hidden dark:inline">{t("themeDark")}</span>
+          <span className="theme-opt theme-opt-system">{t("themeSystem")}</span>
+          <span className="theme-opt theme-opt-light">{t("themeLight")}</span>
+          <span className="theme-opt theme-opt-dark">{t("themeDark")}</span>
         </span>
         <span className={"shrink-0 transition-transform " + (open ? "rotate-180" : "")}>
           <ChevronIcon />
