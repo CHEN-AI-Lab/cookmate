@@ -380,7 +380,7 @@ export default function BillingPage() {
               {isFree ? t("checkoutTitle") : t("extendTitle")}
             </h3>
 
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border border-amber-500/30/50 rounded-xl p-4 mb-4 text-center">
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border border-amber-500/30 rounded-xl p-4 mb-4 text-center">
               <p className="text-sm text-amber-500 dark:text-amber-300">{t("proPlan")}</p>
               <p className="text-2xl font-bold mt-1 text-text-primary">
                 {currency === "CNY" ? "¥" : "$"}{PRICING.get(selectedPeriod, currency).display}{checkoutPeriodLabel}

@@ -357,7 +357,7 @@ export default function RecipesPage() {
         />
       )}
 
-      <div className="bg-card rounded-2xl shadow-sm border border-green-50 p-6 mb-6">
+      <div className="bg-card rounded-2xl shadow-sm border border-border p-6 mb-6">
         {pantryLoaded && pantryItems.length > 0 && (
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">

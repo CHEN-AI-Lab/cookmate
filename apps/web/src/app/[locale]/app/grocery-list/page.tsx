@@ -363,7 +363,7 @@ export default function GroceryListPage() {
                 <div className="flex flex-wrap gap-x-6 gap-y-1">
                   {cat.items.map((item, i) => (
                     <label key={i} className="text-sm flex items-center gap-1.5 cursor-pointer hover:text-accent transition-colors group">
-                      <input type="checkbox" checked={checked.has(item.name)} onChange={() => toggleCheck(item.name)} className="rounded accent-accent w-3.5 h-3.5 shrink-0" />
+                      <input type="checkbox" checked={checked.has(item.name)} onChange={() => toggleCheck(item.name)} className="rounded accent-accent w-3.5 h-3.5 shrink-0 bg-surface border border-border" />
                       <span
                         className={`${
                           item.inPantry ? "text-success" : checked.has(item.name) ? "text-text-secondary line-through" : "text-text-secondary"
@@ -396,7 +396,7 @@ export default function GroceryListPage() {
                 <div className="flex flex-wrap gap-x-6 gap-y-1">
                   {manualItems.map((name, i) => (
                     <label key={i} className="text-sm flex items-center gap-1.5 cursor-pointer hover:text-accent transition-colors">
-                      <input type="checkbox" checked={checked.has(name)} onChange={() => toggleCheck(name)} className="rounded accent-accent w-3.5 h-3.5" />
+                      <input type="checkbox" checked={checked.has(name)} onChange={() => toggleCheck(name)} className="rounded accent-accent w-3.5 h-3.5 bg-surface border border-border" />
                       <span className={`${checked.has(name) ? "text-text-secondary line-through" : "text-text-secondary"}`}>
                         {displayIngredient(name, locale)}
                       </span>
