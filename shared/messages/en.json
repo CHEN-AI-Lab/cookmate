@@ -248,7 +248,9 @@
     "aiGenerate": "AI Generated",
     "pantryCount": "Pantry Items",
     "starredCount": "Starred Recipes",
-    "mealPlanCount": "Meal Plans",
+    "plannedDays": "Planned This Week",
+    "subtextPlannedDays": "Days with meals planned (of 7)",
+    "subtextPlannedDaysDemo": "Sample data",
     "quickAccess": "Quick Access",
     "managePantry": "Manage Pantry",
     "pantryDesc": "See what's in your fridge",
@@ -264,8 +266,6 @@
     "subtextPantry": "Ingredients in fridge",
     "subtextPantryDemo": "Sample data",
     "subtextStarred": "Your favorite recipes",
-    "subtextMealPlan": "Your planned weekly meals",
-    "subtextMealPlanDemo": "Sample data",
     "subtextStarredDemo": "Sample data"
   },
   "mealPlan": {

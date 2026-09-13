@@ -23,10 +23,21 @@ export async function GET(req: Request) {
 
     const userId = session.user.id
 
-    const [pantryCount, starredCount, mealPlanCount, usage] = await Promise.all([
+    // 本周（周一 ~ 周日）起止，与 meal-plan API 的周一起点算法一致
+    const now = new Date()
+    const monday = new Date(now)
+    monday.setDate(now.getDate() - ((now.getDay() + 6) % 7))
+    monday.setHours(0, 0, 0, 0)
+    const sunday = new Date(monday)
+    sunday.setDate(monday.getDate() + 6)
+
+    const [pantryCount, starredCount, currentWeekPlan, usage] = await Promise.all([
       prisma.pantryItem.count({ where: { userId } }).catch((err: unknown) => { console.error("count pantry items error:", err); return 0 }),
       prisma.recipe.count({ where: { userId, starred: true } }).catch((err: unknown) => { console.error("count starred recipes error:", err); return 0 }),
-      prisma.mealPlan.count({ where: { userId } }).catch((err: unknown) => { console.error("count meal plans error:", err); return 0 }),
+      prisma.mealPlan.findFirst({
+        where: { userId, weekStart: { gte: monday, lte: sunday } },
+        include: { slots: { select: { dayOfWeek: true, recipeId: true } } },
+      }).catch((err: unknown) => { console.error("find current week plan error:", err); return null }),
       prisma.usageDaily.findUnique({
         where: {
           userId_date: {
@@ -36,6 +47,11 @@ export async function GET(req: Request) {
         },
       }).catch((err: unknown) => { console.error("findUnique usage error:", err); return null }),
     ])
+
+    // 本周已规划天数：slots 去重 dayOfWeek（有菜谱的才算已规划）
+    const plannedDays = currentWeekPlan
+      ? new Set(currentWeekPlan.slots.filter((s) => s.recipeId).map((s) => s.dayOfWeek)).size
+      : 0
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -69,7 +85,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       pantryCount,
       starredCount,
-      mealPlanCount,
+      plannedDays,
       todayUsage: usage?.recipeCount ?? 0,
       subscriptionTier: tier,
       canceled,

@@ -248,7 +248,9 @@
     "aiGenerate": "AI 生成",
     "pantryCount": "食材数",
     "starredCount": "收藏菜谱",
-    "mealPlanCount": "周计划数",
+    "plannedDays": "本周规划",
+    "subtextPlannedDays": "已规划餐食的天数（共 7 天）",
+    "subtextPlannedDaysDemo": "示例数据",
     "quickAccess": "快捷入口",
     "managePantry": "管理食材",
     "pantryDesc": "看看冰箱里还有什么",
@@ -264,8 +266,6 @@
     "subtextPantry": "冰箱里的食材",
     "subtextPantryDemo": "示例数据",
     "subtextStarred": "你的私房菜单",
-    "subtextMealPlan": "规划好的一周三餐",
-    "subtextMealPlanDemo": "示例数据",
     "subtextStarredDemo": "示例数据"
   },
   "mealPlan": {

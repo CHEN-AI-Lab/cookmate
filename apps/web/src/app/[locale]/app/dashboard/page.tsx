@@ -12,7 +12,7 @@ import { isPaidTier } from "@cookmate/shared/utils/subscription"
 interface DashboardStats {
   pantryCount: number
   starredCount: number
-  mealPlanCount: number
+  plannedDays: number
   todayUsage: number
   subscriptionTier: string
 }
@@ -101,7 +101,7 @@ export default function DashboardPage() {
           <StatsCard label={td("starredCount")} value={isDemoUser ? 3 : stats?.starredCount ?? 0} subtext={isDemoUser ? td("subtextStarredDemo") : td("subtextStarred")} />
 
           {/* 周计划数 */}
-          <StatsCard label={td("mealPlanCount")} value={isDemoUser ? 3 : stats?.mealPlanCount ?? 0} subtext={isDemoUser ? td("subtextMealPlanDemo") : td("subtextMealPlan")} />
+          <StatsCard label={td("plannedDays")} value={isDemoUser ? 3 : `${stats?.plannedDays ?? 0}/7`} subtext={isDemoUser ? td("subtextPlannedDaysDemo") : td("subtextPlannedDays")} />
         </div>
 
         {/* ===== Quick access — 3 cards ===== */}
