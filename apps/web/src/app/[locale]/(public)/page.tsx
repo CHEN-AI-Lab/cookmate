@@ -2,7 +2,6 @@ import { auth } from "@/lib/auth"
 import Link from "next/link"
 import PublicNavbar from "@/components/layout/PublicNavbar"
 import PublicFooter from "@/components/layout/PublicFooter"
-import DemoLoginButton from "@/components/ui/DemoLoginButton"
 import { getTranslations } from "next-intl/server"
 
 export default async function HomePage() {
@@ -36,11 +35,6 @@ export default async function HomePage() {
           >
             {thero("cta")}
           </Link>
-          <DemoLoginButton
-            className="bg-card text-accent px-8 py-3 rounded-full text-lg font-medium border-2 border-accent hover:bg-surface transition-colors cursor-pointer"
-          >
-            🚀 {thero("tryDemo")}
-          </DemoLoginButton>
           <a
             href="#how"
             className='text-text-secondary px-8 py-3 rounded-full text-lg border border-border hover:border-accent hover:text-accent transition-colors'
