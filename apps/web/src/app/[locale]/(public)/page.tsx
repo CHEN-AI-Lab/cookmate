@@ -11,7 +11,6 @@ export default async function HomePage() {
   const thero = await getTranslations("hero")
   const thow = await getTranslations("howItWorks")
   const tfeatures = await getTranslations("features")
-  const tstats = await getTranslations("stats")
   const tcta = await getTranslations("ctaBanner")
 
   return (
@@ -119,20 +118,6 @@ export default async function HomePage() {
               )
             })}
           </div>
-        </div>
-      </section>
-
-      {/* Pricing CTA */}
-      <section className="py-16 bg-card">
-        <div className="max-w-[1400px] mx-auto px-8 text-center">
-          <h2 className="text-3xl font-bold text-text-primary">{tstats("title")}</h2>
-          <p className="mt-3 text-lg text-text-secondary">{tstats("subtitle")}</p>
-          <Link
-            href="/pricing"
-            className="inline-block mt-8 bg-accent text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-orange-600 transition-colors shadow-lg shadow-accent/20"
-          >
-            {tstats("cta")} →
-          </Link>
         </div>
       </section>
 
