@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 :root {
+  /* 关键：声明支持亮/暗两套，浏览器按系统主题首屏即渲染深色画布与原生控件，
+     否则暗色模式刷新会先闪一下浅色（FOUC） */
+  color-scheme: light dark;
   --background: #ffffff;
   --foreground: #171717;
   --color-bg-brand: #FFF8F0;
@@ -76,6 +79,10 @@
     --color-green: #4ade80;
     --color-blue: #60a5fa;
   }
+}
+
+html {
+  background-color: var(--background);
 }
 
 body {
