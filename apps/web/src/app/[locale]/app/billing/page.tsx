@@ -306,8 +306,6 @@ export default function BillingPage() {
 
           {/* 退款声明（套餐区底部，小字融入卡片，与结算弹窗文案一致） */}
           <p className="mt-4 text-center text-[11px] leading-relaxed text-text-secondary">{t("checkoutRefundNotice")}</p>
-          {/* 月底扣款规则说明：1/31 订阅将于 2/28 到期 —— 与 Netflix/Spotify/Stripe 一致 */}
-          <p className="mt-2 text-center text-[11px] leading-relaxed text-text-secondary">{t("monthEndHint")}</p>
         </div>
       )}
 

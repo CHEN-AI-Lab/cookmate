@@ -558,7 +558,6 @@
     "yearlyPro": "Pro Yearly",
     "monthlyPro": "Pro Monthly",
     "monthlyPeriod": "Cancel anytime",
-    "monthEndHint": "Note: Jan 31 subscription expires on Feb 28. Billing follows the calendar month.",
     "checkoutMonthEndNotice": "Your billing cycle is calculated by calendar month: charges occur on the same date each month. If you subscribed on a month-end date (29th/30th/31st) and the next month has fewer days, your next charge will be on the last day of that month. For example, a Jan 31 subscription renews on Feb 28.",
     "demoBillingTitle": "🔒 Demo Mode",
     "demoBillingDesc": "Demo users cannot use payment features. Sign up to upgrade to Pro for unlimited AI generation and meal plans.",

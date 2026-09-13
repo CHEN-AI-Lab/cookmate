@@ -558,7 +558,6 @@
     "yearlyPro": "Pro 年付",
     "monthlyPro": "Pro 月付",
     "monthlyPeriod": "随时取消",
-    "monthEndHint": "提示：1/31 订阅将于 2/28 到期；按自然月计算扣款日。",
     "checkoutMonthEndNotice": "您的订阅周期按自然月计算：购买日对应每月同日扣款；若购买日为月底（29/30/31 日），则对应月份只有该月最后一天时扣款日提前到当月最后一天。例如 1/31 订阅将在 2/28 扣款。",
     "demoBillingTitle": "🔒 体验模式",
     "demoBillingDesc": "体验用户无法使用支付功能。注册账号后可升级到 Pro，解锁无限 AI 生成和周计划功能。",
