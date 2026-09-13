@@ -34,6 +34,8 @@ export default function GroceryListPage() {
 
   // useRef 同步跟踪已同步到食材库的物品，防止 React StrictMode 双重调用导致重复创建
   const syncedRef = useRef<Set<string>>(new Set())
+  // 同一食材正在处理中时忽略后续 toggle：防 label 隐式关联 + 移动端 300ms 点按延迟导致的"双击"
+  const togglingRef = useRef<Set<string>>(new Set())
   // 记录每个物品是"新增"还是"原来就有的"：true=本次新增, false=原来就有
   const newlyAddedRef = useRef<Map<string, boolean>>(new Map())
 
@@ -135,6 +137,9 @@ export default function GroceryListPage() {
   }
 
   const toggleCheck = (name: string) => {
+    if (togglingRef.current.has(name)) return
+    togglingRef.current.add(name)
+    setTimeout(() => togglingRef.current.delete(name), 400)
     if (isDemoUser) {
       setDemoToast(tg("demoLockedAction"))
       setTimeout(() => setDemoToast(""), 3000)

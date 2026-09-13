@@ -75,6 +75,8 @@
        在 #0a0a0a 背景 / #1a1a2e 卡片上变成「深色字 + 深色底」，直接看不清 */
     --color-text-primary: #ededed;
     --color-text-secondary: #9ca3af;
+    /* 深色模式下把 accent 提亮一些，避免 bg-accent/10 + text-accent 看起来像暗红 */
+    --color-accent: #FF8C42;
     --color-info: #60a5fa;
     --color-green: #4ade80;
     --color-blue: #60a5fa;

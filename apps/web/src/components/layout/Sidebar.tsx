@@ -13,8 +13,8 @@ import { isChineseLocale } from "@cookmate/shared/constants/locales"
 
 const navItems = [
   { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
-  { href: "/app/recipes", icon: "🍳", labelKey: "aiRecipes" },
   { href: "/app/my-recipes", icon: "📚", labelKey: "myRecipes" },
+  { href: "/app/recipes", icon: "🍳", labelKey: "aiRecipes" },
   { href: "/app/meal-plan", icon: "📅", labelKey: "mealPlan" },
   { href: "/app/grocery-list", icon: "🛒", labelKey: "groceryList" },
   { href: "/app/pantry", icon: "🥦", labelKey: "pantry" },

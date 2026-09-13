@@ -20,6 +20,7 @@ interface DashboardStats {
 export default function DashboardPage() {
   const td = useTranslations("dashboard")
   const tc = useTranslations("common")
+  const tn = useTranslations("nutrition")
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [showOnboarding, setShowOnboarding] = useState(false)
@@ -85,7 +86,7 @@ export default function DashboardPage() {
         <HeroCTA />
 
         {/* ===== Stats section — 3 cards ===== */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {/* AI生成次数 */}
           <StatsCard
             label={td("aiGenerate")}
@@ -107,10 +108,11 @@ export default function DashboardPage() {
                         <span className='text-xs font-semibold text-text-secondary tracking-wider uppercase shrink-0'>{td("quickAccess")}</span>
                         <span className='h-px flex-1 bg-surface' />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <QuickActionCard href="/app/pantry" title={td("managePantry")} desc={td("pantryDesc")} emoji="🥦" hoverBorder="hover:border-success/30" hoverShadow="hover:shadow-success/20" />
             <QuickActionCard href="/app/meal-plan" title={td("mealPlanTitle")} desc={td("mealPlanDesc")} emoji="📅" hoverBorder="hover:border-amber-500/30" hoverShadow="hover:shadow-amber-500/20" />
             <QuickActionCard href="/app/grocery-list" title={td("groceryTitle")} desc={td("groceryDesc")} emoji="🛒" hoverBorder="hover:border-border" hoverShadow="hover:shadow-accent/20" />
+            <QuickActionCard href="/app/nutrition" title={tn("title")} desc={tn("placeholder_desc")} emoji="🥗" hoverBorder="hover:border-accent/30" hoverShadow="hover:shadow-accent/20" />
           </div>
         </div>
       </div>
