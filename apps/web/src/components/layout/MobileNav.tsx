@@ -67,7 +67,7 @@ export function MobileNav({
             <span className="text-[10px] font-medium leading-tight">管理员</span>
           </Link>
         )}
-        <ThemeToggle variant="icon" />
+        <ThemeToggle />
         <LanguageSwitcher isDemoUser={isDemoUser} />
       </nav>
     </header>

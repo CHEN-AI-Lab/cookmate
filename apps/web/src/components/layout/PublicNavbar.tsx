@@ -32,7 +32,7 @@ export default function PublicNavbar() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <ThemeToggle variant="icon" />
+          <ThemeToggle />
           <LanguageSwitcher />
           <Link
             href="/login"

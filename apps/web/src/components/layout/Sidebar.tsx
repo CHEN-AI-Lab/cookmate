@@ -6,11 +6,20 @@ import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { useTranslations } from "next-intl"
 import { useLocale } from "next-intl"
-import { useState, useRef, useEffect, useLayoutEffect } from "react"
+import { useState, useRef, useEffect, useLayoutEffect, useSyncExternalStore, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { locales, localeNames } from "@cookmate/shared/constants"
 import { isChineseLocale } from "@cookmate/shared/constants/locales"
-import ThemeToggle from "@/components/ui/ThemeToggle"
+import {
+  applyPref,
+  CheckIcon,
+  currentPref,
+  MonitorIcon,
+  MoonIcon,
+  subscribeTheme,
+  SunIcon,
+  type ThemePref,
+} from "@/components/ui/theme"
 
 const navItems = [
   { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
@@ -104,9 +113,31 @@ export function Sidebar({
   )
 }
 
+/** 设置（齿轮）——单色线性 SVG，与主题的日/月/显示器图标同一风格 */
+function GearIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  )
+}
+
+/** 语言（地球）——同上 */
+function GlobeIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+      <path d="M2 12h20" />
+    </svg>
+  )
+}
+
 function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: string; t: (key: string) => string; isDemoUser?: boolean }) {
   const [open, setOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
+  const [themeOpen, setThemeOpen] = useState(false)
   const [demoLangToast, setDemoLangToast] = useState(() => {
     if (typeof window === "undefined") return ""
     const saved = sessionStorage.getItem("demoLangToast")
@@ -122,6 +153,11 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
   const langBtnRef = useRef<HTMLButtonElement>(null)
   const submenuRef = useRef<HTMLDivElement>(null)
   const [langPos, setLangPos] = useState<{ top: number; left: number } | null>(null)
+  // 主题子菜单与语言同样 portal 到 body（按钮 ref 测量位置，子菜单 ref 参与点击外部判定）
+  const themeBtnRef = useRef<HTMLButtonElement>(null)
+  const themeSubmenuRef = useRef<HTMLDivElement>(null)
+  const [themePos, setThemePos] = useState<{ top: number; left: number } | null>(null)
+  const pref = useSyncExternalStore(subscribeTheme, currentPref, (): ThemePref => "system")
   const locale = useLocale()
 
   // Auto-dismiss toast after 2.5s
@@ -154,21 +190,52 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
     }
   }, [langOpen])
 
+  // 主题子菜单：与语言完全相同的展开方式（测量按钮位置 → portal 到 body 右侧）
+  useLayoutEffect(() => {
+    if (themeOpen && themeBtnRef.current) {
+      const r = themeBtnRef.current.getBoundingClientRect()
+      setThemePos({ top: r.top, left: r.right + 8 })
+    } else {
+      setThemePos(null)
+    }
+  }, [themeOpen])
+
+  useEffect(() => {
+    if (!themeOpen) return
+    const close = () => { setThemeOpen(false); setThemePos(null) }
+    window.addEventListener("scroll", close, true)
+    window.addEventListener("resize", close)
+    return () => {
+      window.removeEventListener("scroll", close, true)
+      window.removeEventListener("resize", close)
+    }
+  }, [themeOpen])
+
   // Close on click outside — also close lang sub-menu.
   // 需把 portal 出去的子菜单也算「内部」，否则点子菜单的选项会被先当作「外部」关掉。
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       const inMenu = menuRef.current && menuRef.current.contains(e.target as Node)
       const inSubmenu = submenuRef.current && submenuRef.current.contains(e.target as Node)
-      if (!inMenu && !inSubmenu) {
+      const inThemeSubmenu = themeSubmenuRef.current && themeSubmenuRef.current.contains(e.target as Node)
+      if (!inMenu && !inSubmenu && !inThemeSubmenu) {
         setOpen(false)
         setLangOpen(false)
         setLangPos(null)
+        setThemeOpen(false)
+        setThemePos(null)
       }
     }
     document.addEventListener("mousedown", handleClick)
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
+
+  const themeOptions: { value: ThemePref; label: string; icon: ReactNode }[] = [
+    { value: "light", label: t("themeLight"), icon: <SunIcon /> },
+    { value: "dark", label: t("themeDark"), icon: <MoonIcon /> },
+    { value: "system", label: t("themeSystem"), icon: <MonitorIcon /> },
+  ]
+  const themeCurrent = themeOptions.find((o) => o.value === pref) ?? themeOptions[2]
 
   return (
     <>
@@ -204,20 +271,58 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             onClick={() => { setOpen(false); setLangOpen(false) }}
             className="flex items-center gap-2.5 px-4 py-2 text-text-secondary hover:bg-surface hover:text-accent transition-colors"
           >
-            <span className="text-base">⚙️</span>
+            <span className="inline-flex shrink-0 text-text-secondary">
+              <GearIcon />
+            </span>
             <span>{t("settings")}</span>
           </Link>
           <div className="border-t border-border my-1" />
-          {/* Theme（浅色 / 深色 / 跟随系统） */}
-          <ThemeToggle variant="menu" />
-          {/* Language sub-menu */}
+          {/* Theme sub-menu（与语言同样的二级展开方式） */}
           <div className="relative">
+            <button
+              ref={themeBtnRef}
+              onClick={(e) => { e.stopPropagation(); setThemeOpen(!themeOpen) }}
+              className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-text-secondary hover:bg-surface hover:text-accent transition-colors"
+            >
+              <span className="inline-flex shrink-0">{themeCurrent.icon}</span>
+              <span className="flex-1 text-left">{t("themeTitle")}</span>
+              <span className="shrink-0 text-text-secondary">{themeCurrent.label}</span>
+              <svg className={`w-3 h-3 text-text-secondary transition-transform ${themeOpen ? "rotate-90" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+            </button>
+            {themeOpen && themePos && typeof document !== "undefined" && createPortal(
+              <div
+                ref={themeSubmenuRef}
+                style={{ position: "fixed", top: themePos.top, left: themePos.left, zIndex: 50 }}
+                className="bg-card border border-border rounded-lg shadow-lg py-1 w-[170px]"
+              >
+                {themeOptions.map((o) => (
+                  <button
+                    key={o.value}
+                    onClick={() => applyPref(o.value)}
+                    className={"flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors " + (pref === o.value ? "text-accent bg-accent/10 font-medium" : "text-text-secondary hover:bg-accent/10 hover:text-accent")}
+                  >
+                    <span className="inline-flex shrink-0">{o.icon}</span>
+                    <span className="flex-1 text-left">{o.label}</span>
+                    {pref === o.value && (
+                      <span className="inline-flex shrink-0">
+                        <CheckIcon />
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>,
+              document.body
+            )}
+          </div>
+          {/* Language sub-menu */}          <div className="relative">
             <button
               ref={langBtnRef}
               onClick={(e) => { e.stopPropagation(); setLangOpen(!langOpen) }}
               className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-text-secondary hover:bg-surface hover:text-accent transition-colors"
             >
-              <span className="text-base">🌐</span>
+              <span className="inline-flex shrink-0 text-text-secondary">
+                <GlobeIcon />
+              </span>
               <span className="flex-1 text-left">{t("language")}</span>
               <svg className={`w-3 h-3 text-text-secondary transition-transform ${langOpen ? "rotate-90" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
