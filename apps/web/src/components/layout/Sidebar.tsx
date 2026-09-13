@@ -255,7 +255,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
       {demoLangToast && typeof document !== "undefined" && createPortal(
         /* Centered toast — floats in middle of screen, auto-dismisses 2.5s */
         <div className="fixed inset-0 flex items-start justify-center pt-[33vh] pointer-events-none z-[99999]">
-          <div className="bg-amber-500/10 border-amber-500/30 text-amber-500 px-5 py-3 rounded-xl text-sm shadow-lg">
+          <div role="status" className="bg-bg-inverse text-white border border-border shadow-lg px-5 py-3 rounded-xl text-sm max-w-[90vw] text-center">
             {demoLangToast}
           </div>
         </div>,
