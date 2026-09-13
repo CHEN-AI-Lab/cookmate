@@ -55,9 +55,10 @@ export default function ThemeToggle({ variant = "full" }: { variant?: "full" | "
         onClick={toggle}
         aria-label={t("themeToggle")}
         aria-pressed={isDark}
+        title={t("themeToggle")}
         className="flex items-center justify-center w-9 h-9 rounded-lg border border-border bg-surface text-text-secondary hover:text-accent transition-colors"
       >
-        <span className="text-base leading-none">{isDark ? "☀️" : "🌙"}</span>
+        <span className="text-base leading-none">{isDark ? "🌙" : "☀️"}</span>
       </button>
     )
   }
@@ -68,6 +69,7 @@ export default function ThemeToggle({ variant = "full" }: { variant?: "full" | "
       onClick={toggle}
       aria-label={t("themeToggle")}
       aria-pressed={isDark}
+      title={t("themeToggle")}
       className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary hover:text-accent hover:bg-accent/10 transition-colors w-full text-left"
     >
       <span className="text-lg leading-none">{isDark ? "🌙" : "☀️"}</span>
