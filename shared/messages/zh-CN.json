@@ -49,8 +49,10 @@
     "demoLangToast": "体验用户只能在中文和英文间切换",
     "language": "语言",
     "logout": "退出登录",
-    "themeDark": "深色模式",
-    "themeToggle": "切换主题"
+    "themeDark": "深色",
+    "themeToggle": "切换主题",
+    "themeLight": "浅色",
+    "themeSystem": "跟随系统"
   },
   "hero": {
     "title": "今天吃什么？",
@@ -922,6 +924,7 @@
     "attemptsRemaining": "（还剩 {count} 次机会）"
   },
   "settings": {
+    "supportLabel": "如有问题，请联系支持团队：",
     "title": "设置",
     "subtitle": "管理您的账号信息和偏好设置",
     "profile": "账号信息",

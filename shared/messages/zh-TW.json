@@ -49,8 +49,10 @@
     "language": "語言",
     "logout": "退出登錄",
     "howToUse": "使用流程",
-    "themeDark": "深色模式",
-    "themeToggle": "切換主題"
+    "themeDark": "深色",
+    "themeToggle": "切換主題",
+    "themeLight": "淺色",
+    "themeSystem": "跟隨系統"
   },
   "hero": {
     "title": "今天吃什麼？",
@@ -922,6 +924,7 @@
     "attemptsRemaining": "（還剩 {count} 次機會）"
   },
   "settings": {
+    "supportLabel": "如有問題，請聯絡支援團隊：",
     "title": "設置",
     "subtitle": "管理您的賬號信息和偏好設置",
     "profile": "賬號信息",

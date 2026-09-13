@@ -49,8 +49,10 @@
     "howToUse": "使い方",
     "login": "ログイン",
     "pricing": "料金",
-    "themeDark": "ダークモード",
-    "themeToggle": "テーマを切り替え"
+    "themeDark": "ダーク",
+    "themeToggle": "テーマを切り替え",
+    "themeLight": "ライト",
+    "themeSystem": "システム"
   },
   "hero": {
     "title": "何を作るか、もう迷わない",
@@ -922,6 +924,7 @@
     "attemptsRemaining": "（残り{count}回）"
   },
   "settings": {
+    "supportLabel": "ご質問はサポートまで：",
     "title": "設定",
     "subtitle": "アカウント設定とプロフィール管理",
     "profile": "プロフィール",

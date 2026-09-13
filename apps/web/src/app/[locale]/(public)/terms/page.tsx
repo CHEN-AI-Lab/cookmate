@@ -2,6 +2,7 @@ import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import PublicNavbar from "@/components/layout/PublicNavbar"
 import PublicFooter from "@/components/layout/PublicFooter"
+import { SUPPORT_EMAIL } from "@cookmate/shared/constants/support-email"
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: "terms" })
@@ -59,8 +60,8 @@ export default async function TermsPage() {
             <h2 className="text-xl font-bold text-text-primary mb-3">{t("contactTitle")}</h2>
             <p>
               {t("contactDesc")}{" "}
-              <a href="mailto:CookMate@aaigc.online" className="text-accent hover:underline">
-                CookMate@aaigc.online
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="text-accent hover:underline">
+                {SUPPORT_EMAIL}
               </a>
             </p>
           </section>

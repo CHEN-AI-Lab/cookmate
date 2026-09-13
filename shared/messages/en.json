@@ -49,8 +49,10 @@
     "demoLangToast": "Demo users can only switch between Chinese and English",
     "language": "Language",
     "logout": "Log Out",
-    "themeDark": "Dark Mode",
-    "themeToggle": "Toggle theme"
+    "themeDark": "Dark",
+    "themeToggle": "Toggle theme",
+    "themeLight": "Light",
+    "themeSystem": "System"
   },
   "hero": {
     "title": "What's for dinner?",
@@ -922,6 +924,7 @@
     "attemptsRemaining": "({count} attempt(s) remaining)"
   },
   "settings": {
+    "supportLabel": "Questions? Contact support:",
     "title": "Settings",
     "subtitle": "Manage your account info and preferences",
     "profile": "Profile",
