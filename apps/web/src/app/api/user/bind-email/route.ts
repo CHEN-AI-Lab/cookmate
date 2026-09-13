@@ -59,9 +59,9 @@ export async function POST(req: Request) {
             to: email,
             subject: pickLocaleText(l, "CookMate 邮箱绑定验证码", "CookMate email verification code"),
             html: `<div style="font-family:sans-serif;padding:24px;max-width:400px">
-              <h2 style="color:#FF6B35">🍳 CookMate</h2>
+              <h2 style="color:#FF8C42">🍳 CookMate</h2>
               <p style="color:#333">${pickLocaleText(l, "绑定邮箱的验证码是：", "Enter the code below to verify your email:")}</p>
-              <div style="font-size:32px;font-weight:bold;color:#FF6B35;letter-spacing:8px;text-align:center;padding:16px;background:#FFF8F0;border-radius:12px;margin:16px 0">${code}</div>
+              <div style="font-size:32px;font-weight:bold;color:#FF8C42;letter-spacing:8px;text-align:center;padding:16px;background:#FFF8F0;border-radius:12px;margin:16px 0">${code}</div>
               <p style="color:#999;font-size:12px">${pickLocaleText(l, "验证码 5 分钟内有效。", "This code expires in 5 minutes.")}</p>
             </div>`,
           }),

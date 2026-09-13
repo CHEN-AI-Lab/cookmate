@@ -50,7 +50,7 @@ export async function POST(req: Request) {
       email,
       subject,
       `<div style="font-family:sans-serif;padding:24px;max-width:400px">
-      <h2 style="color:#FF6B35">🍳 CookMate</h2>
+      <h2 style="color:#FF8C42">🍳 CookMate</h2>
       <p style="color:#333">${desc}</p>
       <div style="font-size:32px;font-weight:bold;color:red;letter-spacing:8px;text-align:center;padding:16px;background:#FFF0F0;border-radius:12px;margin:16px 0">
         ${code}

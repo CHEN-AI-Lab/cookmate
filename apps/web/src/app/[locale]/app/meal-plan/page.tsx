@@ -502,7 +502,7 @@ export default function MealPlanPage() {
 
                 let style: React.CSSProperties = {
                   borderRadius: 10,
-                  border: "1.5px dashed rgba(255,107,53,0.4)",
+                  border: "1.5px dashed rgba(255,140,66,0.4)",
                   padding: "10px 0",
                   textAlign: "center",
                   fontSize: 13,
@@ -521,7 +521,7 @@ export default function MealPlanPage() {
                   style = { ...style, animation: "pickerPulse 1.2s infinite" }
                 }
                 if (isRangeMid) {
-                  style = { ...style, borderStyle: "solid", borderColor: "var(--color-accent)", background: "rgba(255,107,53,0.12)", color: "var(--color-accent)", fontWeight: 600 }
+                  style = { ...style, borderStyle: "solid", borderColor: "var(--color-accent)", background: "rgba(255,140,66,0.12)", color: "var(--color-accent)", fontWeight: 600 }
                 }
                 if (isRangeEnd) {
                   style = { ...style, borderStyle: "solid", borderColor: "var(--color-accent)", background: "var(--color-accent)", color: "#fff", fontWeight: 700 }
@@ -537,7 +537,7 @@ export default function MealPlanPage() {
             {/* 图例 */}
             <div className="flex gap-4 text-[12px] text-text-secondary mt-1.5 mb-3 flex-wrap">
               <span className="flex items-center gap-1.5">
-                <span style={{ width: 12, height: 12, borderRadius: 4, background: "#FF6B35", display: "inline-block" }} />
+                <span style={{ width: 12, height: 12, borderRadius: 4, background: "#FF8C42", display: "inline-block" }} />
                 {t("pickerLegendGenerate")}
               </span>
               <span className="flex items-center gap-1.5">
@@ -557,8 +557,8 @@ export default function MealPlanPage() {
             <div
               className="text-[13px] mb-4 leading-relaxed"
               style={{
-                background: "rgba(255,107,53,0.08)",
-                border: "1px solid rgba(255,107,53,0.35)",
+                background: "rgba(255,140,66,0.08)",
+                border: "1px solid rgba(255,140,66,0.35)",
                 borderRadius: 12,
                 padding: "12px 16px",
                 minHeight: 48,
@@ -572,7 +572,7 @@ export default function MealPlanPage() {
                         const lo = Math.min(pickStart!, pickEnd!)
                         const hi = Math.max(pickStart!, pickEnd!)
                         const n = hi - lo + 1
-                        const range = `从 <b style="color:#FF6B35">${t(DAYS[lo])}</b> 到 <b style="color:#FF6B35">${t(DAYS[hi])}</b>，共 <b style="color:#FF6B35">${n} 天 ${n * 3} 餐</b>`
+                        const range = `从 <b style="color:#FF8C42">${t(DAYS[lo])}</b> 到 <b style="color:#FF8C42">${t(DAYS[hi])}</b>，共 <b style="color:#FF8C42">${n} 天 ${n * 3} 餐</b>`
                         const tip = n >= 6 ? `<br><span style="color:var(--color-text-secondary);font-size:12px">💡 ${t("pickerTip")}</span>` : ""
                         return `${range}${tip}`
                       })(),

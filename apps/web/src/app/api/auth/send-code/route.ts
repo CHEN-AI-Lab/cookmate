@@ -64,9 +64,9 @@ export async function POST(req: Request) {
       const desc = pickLocaleText(loc, "请输入以下验证码完成登录：", "Enter the code below to log in:")
       const expireWarning = pickLocaleText(loc, "验证码 5 分钟内有效，请勿泄露给他人。", "This code expires in 5 minutes. Do not share it with anyone.")
       const result = await sendEmail(email, subject, `<div style="font-family:sans-serif;padding:24px;max-width:400px">
-        <h2 style="color:#FF6B35">🍳 CookMate</h2>
+        <h2 style="color:#FF8C42">🍳 CookMate</h2>
         <p style="color:#333">${desc}</p>
-        <div style="font-size:32px;font-weight:bold;color:#FF6B35;letter-spacing:8px;text-align:center;padding:16px;background:#FFF8F0;border-radius:12px;margin:16px 0">
+        <div style="font-size:32px;font-weight:bold;color:#FF8C42;letter-spacing:8px;text-align:center;padding:16px;background:#FFF8F0;border-radius:12px;margin:16px 0">
           ${code}
         </div>
         <p style="color:#999;font-size:12px">${expireWarning}</p>
