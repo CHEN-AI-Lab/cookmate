@@ -9,7 +9,9 @@
   --color-bg-brand: #FFF8F0;
   --color-bg-inverse: #2D3436;
   --color-text-primary: #2D3436;
-  --color-accent: #FF6B35;
+  /* 亮色模式主色：原 #FF6B35 色相偏红（约 18°），在米白底上呈暗红感；
+     改用 #FF8C42（色相约 24°）降低红味，保留暖橙食欲感。暗色模式维持原值不变。 */
+  --color-accent: #FF8C42;
   --color-card: #ffffff;
   --color-surface: #f5f5f5;
   --color-border: #e5e7eb;
@@ -75,8 +77,8 @@
        在 #0a0a0a 背景 / #1a1a2e 卡片上变成「深色字 + 深色底」，直接看不清 */
     --color-text-primary: #ededed;
     --color-text-secondary: #9ca3af;
-    /* 深色模式下把 accent 提亮一些，避免 bg-accent/10 + text-accent 看起来像暗红 */
-    --color-accent: #FF8C42;
+    /* 暗色模式沿用原主色（用户确认暗色下观感正常，不做改动） */
+    --color-accent: #FF6B35;
     --color-info: #60a5fa;
     --color-green: #4ade80;
     --color-blue: #60a5fa;
