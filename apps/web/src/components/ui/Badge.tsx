@@ -4,7 +4,7 @@ import { cn } from "@cookmate/shared/utils"
 const variantStyles = {
   default: "bg-surface text-text-primary",
   success: "bg-success/10 text-success",
-  warning: "bg-surface0/10 text-amber-500",
+  warning: "bg-amber-500/10 text-amber-500",
   danger: "bg-error/10 text-error",
   brand: "bg-accent/10 text-accent",
 } as const

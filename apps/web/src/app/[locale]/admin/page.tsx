@@ -943,7 +943,7 @@ function UsersTab({ q }: { q: TableQuery<UsersResponse> }) {
                         {/* 付费档（PRO / FAMILY …）统一走付费样式并显示真实档位名 ——
                             硬比 PRO 会把家庭版显示成 Free */}
                         {isPaidTier(u.subscriptionTier) ? (
-                          <span className="inline-flex px-2 py-0.5 rounded-full bg-surface0/10 text-amber-500 text-xs font-semibold">
+                          <span className="inline-flex px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-xs font-semibold">
                             {u.subscriptionTier === SUBSCRIPTION_TIER.PRO ? "Pro" : u.subscriptionTier}
                           </span>
                         ) : (
@@ -1105,7 +1105,7 @@ function StatusBadge({ status }: { status: string }) {
     return <span className="inline-flex px-2 py-0.5 rounded-full bg-success/10 text-success text-xs font-semibold">已支付</span>
   }
   if (status === "PENDING") {
-    return <span className="inline-flex px-2 py-0.5 rounded-full bg-surface0/10 text-amber-500 text-xs font-semibold">待支付</span>
+    return <span className="inline-flex px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-xs font-semibold">待支付</span>
   }
   if (status === "CANCELED") {
     return <span className="inline-flex px-2 py-0.5 rounded-full bg-surface text-text-secondary text-xs font-semibold">已取消</span>
@@ -1139,9 +1139,9 @@ function WebhookStatusBadge({ status }: { status: string }) {
     "failed:appid": "应用ID不符",
   }
   const tone: Record<string, string> = {
-    received: "bg-surface0/10 text-amber-500",
+    received: "bg-amber-500/10 text-amber-500",
     processed: "bg-success/10 text-success",
-    duplicate: "bg-surface0/10 text-amber-500",
+    duplicate: "bg-amber-500/10 text-amber-500",
     ignored: "bg-surface text-text-secondary",
     // 金额不一致虽属"已处理"，但必须用警示色（否则红/灰难辨，告警会被漏看）
     "processed:amount-mismatch": "bg-error/10 text-error",

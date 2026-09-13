@@ -129,7 +129,7 @@ export function PricingCard({
                   className={cn(
                     "mt-6 w-full py-2.5 rounded-xl text-sm font-semibold transition-all",
                     highlighted
-                      ? "bg-surface0 text-white hover:bg-amber-600 active:scale-[0.98]"
+                      ? "bg-accent text-white hover:bg-amber-600 active:scale-[0.98]"
                       : "bg-surface text-text-primary border border-border hover:bg-surface active:scale-[0.98]",
                     (disabled || loading) && "opacity-50 cursor-not-allowed active:scale-100"
                   )}
