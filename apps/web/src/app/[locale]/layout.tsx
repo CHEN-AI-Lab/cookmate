@@ -8,7 +8,17 @@ import VisitTracker from "@/components/VisitTracker"
 
 const inter = Inter({ subsets: ["latin"] })
 
+// 内联首屏暗色样式随 HTML 到达即套用，匹配 viewport meta 之后的精确底色（#0a0a0a），
+// 即使在颜色切换过程中也能保持一致（与 viewport.colorScheme 互补，非互斥）。
+const CRITICAL_CSS = ":root{color-scheme:light dark}" + "@media (prefers-color-scheme:dark){html{background-color:#0a0a0a;color:#ededed}}" + "@media (prefers-color-scheme:light){html{background-color:#ffffff}}"
+
 const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN
+
+// Next 16：viewport.colorScheme 会在 SSR <head> 内联 <meta name="color-scheme" content="light dark">，
+// 浏览器首屏解析 HTML 即生效，深色模式刷新不再闪白（FOUC）。这是 GitHub 等站点的标准做法。
+export const viewport = {
+  colorScheme: "light dark",
+}
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -42,6 +52,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale}>
       <body className={inter.className}>
+        <style dangerouslySetInnerHTML={{ __html: CRITICAL_CSS }} />
         {plausibleDomain && (
           <script
             defer
