@@ -67,6 +67,13 @@ export function MobileNav({
             <span className="text-[10px] font-medium leading-tight">管理员</span>
           </Link>
         )}
+        <a
+          href="mailto:CookMate@aaigc.online"
+          className="flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg transition-colors text-text-secondary hover:text-accent"
+        >
+          <span className="text-lg">✉️</span>
+          <span className="text-[10px] font-medium leading-tight">{t("support")}</span>
+        </a>
         <ThemeToggle />
         <LanguageSwitcher isDemoUser={isDemoUser} />
       </nav>

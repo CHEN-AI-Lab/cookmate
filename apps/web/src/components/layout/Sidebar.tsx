@@ -91,6 +91,19 @@ export function Sidebar({
 
       {/* Bottom: user menu dropdown（主题切换在下拉菜单里） */}
       <div className="px-3 py-3 border-t border-border">
+        {/* 支持邮箱（Creem 要求应用内可见） */}
+        <a
+          href="mailto:CookMate@aaigc.online"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-text-secondary hover:bg-accent/10 hover:text-accent transition-colors font-medium"
+        >
+          <span className="flex items-center justify-center w-7 h-7 shrink-0">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="m22 7-10 5L2 7" />
+            </svg>
+          </span>
+          <span>{t("support")}</span>
+        </a>
         {name ? (
           <UserMenu name={name} initial={initial} t={t} isDemoUser={isDemoUser} />
         ) : (
