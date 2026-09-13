@@ -317,7 +317,7 @@ const save = async () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {/* Left column: Account info + Plan */}
         <div className="h-full">
-          <div className="bg-card rounded-2xl shadow-sm border border-orange-50 overflow-hidden h-full">
+          <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden h-full">
             <div className="h-1 bg-gradient-to-r from-accent to-orange-300" />
             <div className="p-5 sm:p-6">
             <div className="flex items-center gap-2 mb-5">
@@ -566,7 +566,7 @@ const save = async () => {
         </div>
 
         {/* Right column: Diet preferences */}
-        <div className="bg-card rounded-2xl shadow-sm border border-orange-50 overflow-hidden h-full">
+        <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden h-full">
                     <div className="h-1 bg-gradient-to-r from-green-400 to-green-200" />
                     <div className="p-5 sm:p-6">
                     <div className="flex items-center gap-2 mb-5">

@@ -8,8 +8,9 @@ import VisitTracker from "@/components/VisitTracker"
 
 const inter = Inter({ subsets: ["latin"] })
 
-// 内联首屏暗色样式随 HTML 到达即套用，匹配 viewport meta 之后的精确底色（#0a0a0a），
-// 即使在颜色切换过程中也能保持一致（与 viewport.colorScheme 互补，非互斥）。
+// 关键：内联首屏暗色样式。配合下方 <style href+precedence> 用，
+// React 19 会把它 hoist 进 <head>（不再只是留在 body），随 HTML 首字节即可套用，
+// 与 viewport.colorScheme 的 meta 形成「双保险」，彻底消除刷新时的白底闪烁（FOUC）。
 const CRITICAL_CSS = ":root{color-scheme:light dark}" + "@media (prefers-color-scheme:dark){html{background-color:#0a0a0a;color:#ededed}}" + "@media (prefers-color-scheme:light){html{background-color:#ffffff}}"
 
 const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN
@@ -52,7 +53,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale}>
       <body className={inter.className}>
-        <style dangerouslySetInnerHTML={{ __html: CRITICAL_CSS }} />
+        <style href="cookmate-critical-css" precedence="critical">{CRITICAL_CSS}</style>
         {plausibleDomain && (
           <script
             defer

@@ -66,7 +66,7 @@ export default function DashboardPage() {
 
         {/* ===== Demo banner ===== */}
         {isDemoUser && (
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-500/30 rounded-2xl p-5">
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border border-amber-500/30 rounded-2xl p-5">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
                 <p className="font-bold text-amber-500 text-sm">{tc("demoMode")}</p>
