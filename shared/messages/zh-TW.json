@@ -75,8 +75,7 @@
     "demoRecipe": "推薦菜譜：",
     "demoRecipeName": "🍗 照燒雞腿飯",
     "demoRecipeMeta": "⏱ 30分鐘 · 🔥 450卡 · 難度：簡單",
-    "demoRecipeDesc": "雞肉用醬油和蒜醃製後煎至金黃，搭配焯水的西蘭花和米飯...",
-    "tryDemo": "體驗演示版"
+    "demoRecipeDesc": "雞肉用醬油和蒜醃製後煎至金黃，搭配焯水的西蘭花和米飯..."
   },
   "howItWorks": {
     "step1Title": "1. 告訴 AI 你的食材",
