@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
 import ThemeToggle from "@/components/ui/ThemeToggle"
+import { useToast } from "@/components/ui/Toast"
+import { SUPPORT_EMAIL } from "@cookmate/shared/constants/support-email"
 
 const navItems = [
   { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
@@ -26,6 +28,15 @@ export function MobileNav({
 }) {
   const pathname = usePathname()
   const t = useTranslations("nav")
+  const { showToast } = useToast()
+  const copySupportEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(SUPPORT_EMAIL)
+      showToast(t("supportCopied", { email: SUPPORT_EMAIL }), "success")
+    } catch {
+      showToast(t("supportCopied", { email: SUPPORT_EMAIL }))
+    }
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 md:hidden bg-card border-b border-border h-16 z-50 flex items-center justify-between px-4">
@@ -67,13 +78,15 @@ export function MobileNav({
             <span className="text-[10px] font-medium leading-tight">管理员</span>
           </Link>
         )}
-        <a
-          href="mailto:CookMate@aaigc.online"
-          className="flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg transition-colors text-text-secondary hover:text-accent"
+        <button
+          type="button"
+          onClick={copySupportEmail}
+          title={SUPPORT_EMAIL}
+          className="flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg transition-colors text-text-secondary hover:text-accent cursor-pointer"
         >
           <span className="text-lg">✉️</span>
           <span className="text-[10px] font-medium leading-tight">{t("support")}</span>
-        </a>
+        </button>
         <ThemeToggle />
         <LanguageSwitcher isDemoUser={isDemoUser} />
       </nav>

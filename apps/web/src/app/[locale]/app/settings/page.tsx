@@ -9,7 +9,6 @@ import PasswordInput from "@/components/ui/PasswordInput"
 import { DIET_OPTIONS, CUISINE_OPTIONS, SERVING_SIZE_OPTIONS, SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
 import { isPaidTier } from "@cookmate/shared/utils/subscription"
 import { isChineseLocale } from "@cookmate/shared/constants/locales"
-import { SUPPORT_EMAIL } from "@cookmate/shared/constants/support-email"
 
 export default function SettingsPage() {
   const ts = useTranslations("settings")
@@ -791,14 +790,6 @@ const save = async () => {
         </div>
         </div>
       )}
-
-      {/* ── Support Contact ── */}
-      <div className="mt-8 text-center text-sm text-text-secondary">
-        {ts("supportLabel")}{" "}
-        <a href={`mailto:${SUPPORT_EMAIL}`} className="text-accent hover:underline">
-          {SUPPORT_EMAIL}
-        </a>
-      </div>
 
       {/* Delete confirmation modal */}
       {showDeleteModal && (

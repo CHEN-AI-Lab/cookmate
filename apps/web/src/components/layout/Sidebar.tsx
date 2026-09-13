@@ -10,6 +10,8 @@ import { useState, useRef, useEffect, useLayoutEffect, useSyncExternalStore, typ
 import { createPortal } from "react-dom"
 import { locales, localeNames } from "@cookmate/shared/constants"
 import { isChineseLocale } from "@cookmate/shared/constants/locales"
+import { useToast } from "@/components/ui/Toast"
+import { SUPPORT_EMAIL } from "@cookmate/shared/constants/support-email"
 import {
   applyPref,
   CheckIcon,
@@ -43,6 +45,15 @@ export function Sidebar({
   const pathname = usePathname()
   const t = useTranslations("nav")
   const initial = name?.charAt(0)?.toUpperCase() || "?"
+  const { showToast } = useToast()
+  const copySupportEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(SUPPORT_EMAIL)
+      showToast(t("supportCopied", { email: SUPPORT_EMAIL }), "success")
+    } catch {
+      showToast(t("supportCopied", { email: SUPPORT_EMAIL }))
+    }
+  }
 
   return (
     <aside className="hidden md:flex md:flex-col w-64 bg-card border-r border-border h-screen sticky top-0">
@@ -92,9 +103,11 @@ export function Sidebar({
       {/* Bottom: user menu dropdown（主题切换在下拉菜单里） */}
       <div className="px-3 py-3 border-t border-border">
         {/* 支持邮箱（Creem 要求应用内可见） */}
-        <a
-          href="mailto:CookMate@aaigc.online"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-text-secondary hover:bg-accent/10 hover:text-accent transition-colors font-medium"
+        <button
+          type="button"
+          onClick={copySupportEmail}
+          title={SUPPORT_EMAIL}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-text-secondary hover:bg-accent/10 hover:text-accent transition-colors font-medium cursor-pointer w-full text-left"
         >
           <span className="flex items-center justify-center w-7 h-7 shrink-0">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -103,7 +116,7 @@ export function Sidebar({
             </svg>
           </span>
           <span>{t("support")}</span>
-        </a>
+        </button>
         {name ? (
           <UserMenu name={name} initial={initial} t={t} isDemoUser={isDemoUser} />
         ) : (
