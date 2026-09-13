@@ -3,6 +3,8 @@
 /* 深色变体改为挂 class（.dark）：脚本会在 <html> 上挂 .dark/.light，
    这样「手动切深色 + 刷新」也能在首屏就命中，不依赖系统偏好 */
 @custom-variant dark (&:where(.dark, .dark *));
+/* light: 变体用于「显式选了浅色」的场景（如主题按钮要区分 浅/深/跟随系统 三态图标） */
+@custom-variant light (&:where(.light, .light *));
 
 :root {
   /* 默认浅色。暗色由下面的 @media(prefers-color-scheme:dark) 或手动 .dark 覆盖；
