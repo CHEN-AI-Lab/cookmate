@@ -32,7 +32,7 @@ function diffColor(d: string) {
     case "easy":
       return "text-success bg-success/10"
     case "medium":
-      return "text-amber-500 bg-amber-500/100/10"
+      return "text-amber-500 bg-amber-500/10"
     case "hard":
       return "text-error bg-error/10"
     default:

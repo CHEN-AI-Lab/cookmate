@@ -1094,7 +1094,7 @@ function ChannelCell({ channel }: { channel: string | null | undefined }) {
   const label = CHANNEL_LABELS[channel] ?? channel
   return (
     <span className="inline-flex items-center gap-1.5 text-text-primary" title={label}>
-      {icon ? <span className="w-4 h-4 shrink-0" dangerouslySetInnerHTML={{ __html: icon }} /> : null}
+      {icon ? <span className="w-4 h-4 shrink-0 text-text-primary" dangerouslySetInnerHTML={{ __html: icon }} /> : null}
       <span className="whitespace-nowrap">{label}</span>
     </span>
   )

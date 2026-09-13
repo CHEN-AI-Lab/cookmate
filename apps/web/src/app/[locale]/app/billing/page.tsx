@@ -436,7 +436,7 @@ export default function BillingPage() {
                   disabled={actionLoading !== null}
                   className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-border hover:border-accent hover:bg-surface/30 transition-all disabled:opacity-40 group"
                 >
-                  <span className="w-7 h-7 shrink-0" dangerouslySetInnerHTML={{ __html: CHANNEL_ICONS["creem"] || "" }} />
+                  <span className="w-7 h-7 shrink-0 text-text-primary" dangerouslySetInnerHTML={{ __html: CHANNEL_ICONS["creem"] || "" }} />
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-text-primary text-sm">{t("creem")}</p>
                     <p className="text-xs text-text-secondary">{t("creemDesc")}</p>

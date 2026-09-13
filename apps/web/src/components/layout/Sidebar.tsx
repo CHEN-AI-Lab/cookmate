@@ -55,7 +55,7 @@ export function Sidebar({
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-orange-100 text-accent"
+                  ? "bg-accent/10 text-accent"
                   : "text-text-secondary hover:bg-accent/10 hover:text-accent"
               }`}
             >
@@ -69,7 +69,7 @@ export function Sidebar({
             href="/admin"
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
               pathname === "/admin" || pathname.endsWith("/admin")
-                ? "bg-orange-100 text-accent"
+                ? "bg-accent/10 text-accent"
                 : "text-text-secondary hover:bg-accent/10 hover:text-accent"
             }`}
           >
@@ -174,7 +174,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
       {demoLangToast && typeof document !== "undefined" && createPortal(
         /* Centered toast — floats in middle of screen, auto-dismisses 2.5s */
         <div className="fixed inset-0 flex items-start justify-center pt-[33vh] pointer-events-none z-[99999]">
-          <div className="bg-amber-500/100/10 border-amber-500/30 text-amber-500 px-5 py-3 rounded-xl text-sm shadow-lg">
+          <div className="bg-amber-500/10 border-amber-500/30 text-amber-500 px-5 py-3 rounded-xl text-sm shadow-lg">
             {demoLangToast}
           </div>
         </div>,
@@ -186,7 +186,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
         onClick={() => { if (open) setLangOpen(false); setOpen(!open) }}
         className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-primary hover:bg-surface w-full text-left transition-colors"
       >
-        <span className="flex items-center justify-center w-7 h-7 rounded-full bg-orange-100 text-accent text-xs font-bold shrink-0">
+        <span className="flex items-center justify-center w-7 h-7 rounded-full bg-accent/10 text-accent text-xs font-bold shrink-0">
           {initial}
         </span>
         <span className="truncate flex-1">{isDemoUser && !isChineseLocale(locale) ? "Demo User" : name}</span>

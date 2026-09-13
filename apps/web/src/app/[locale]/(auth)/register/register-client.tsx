@@ -219,7 +219,7 @@ export default function RegisterClient({ isLoggedIn, userName, isDemo }: { isLog
         {error && (
           <div className={`mb-4 p-3 rounded-xl text-sm text-center ${
             errorType === 'success' ? "bg-success/10 border-success/30 text-success"
-            : errorType === 'info' ? "bg-amber-500/100/10 border-amber-500/30 text-amber-500"
+            : errorType === 'info' ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
             : "bg-error/10 border-error/30 text-error"
           }`}>
             {error}

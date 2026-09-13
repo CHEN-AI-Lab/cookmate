@@ -488,7 +488,7 @@ export default function LoginClient({ isLoggedIn, userName, isDemo }: { isLogged
                 {error && tab === "email" && (
                   <div className={`text-xs rounded-xl px-3 py-2 ${
                     error.includes("dev") ? "bg-success/10 border-success/30 text-success"
-                    : error.includes("sent") ? "bg-amber-500/100/10 border-amber-500/30 text-amber-500"
+                    : error.includes("sent") ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
                     : "bg-error/10 border-error/30 text-error"
                   }`}>
                     {error}

@@ -28,7 +28,7 @@ export default function DemoLoginButton({ children, className }: { children: Rea
     <>
       {failed && (
         <div className="fixed left-1/2 top-[33vh] -translate-x-1/2 z-[100]">
-          <div className="bg-amber-500/100/10 border-amber-500/30 text-amber-500 px-5 py-3.5 rounded-xl shadow-xl text-sm whitespace-nowrap">
+          <div className="bg-amber-500/10 border-amber-500/30 text-amber-500 px-5 py-3.5 rounded-xl shadow-xl text-sm whitespace-nowrap">
             {t("requestFailed")}
           </div>
         </div>

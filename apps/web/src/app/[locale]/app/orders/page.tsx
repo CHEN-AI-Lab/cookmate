@@ -119,7 +119,7 @@ export default function OrdersPage() {
                   className="w-full flex items-center justify-between px-4 sm:px-5 py-3 hover:bg-surface/50 transition-colors text-left"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="w-6 h-6 shrink-0" dangerouslySetInnerHTML={{ __html: CHANNEL_ICONS[order.channel] || "" }} />
+                    <span className="w-6 h-6 shrink-0 text-text-primary" dangerouslySetInnerHTML={{ __html: CHANNEL_ICONS[order.channel] || "" }} />
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-text-primary">{channelLabel[order.channel] || order.channel}</p>
                       <p className="text-xs text-text-secondary">
