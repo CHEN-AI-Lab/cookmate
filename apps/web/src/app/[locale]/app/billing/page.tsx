@@ -48,9 +48,6 @@ export default function BillingPage() {
   const [topBanner, setTopBanner] = useState("")
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showCheckoutModal, setShowCheckoutModal] = useState(false)
-  // 扣款规则确认弹框：必须勾选「我已了解」才能继续（避免月底用户冲动订阅后投诉）
-  const [showRenewalNotice, setShowRenewalNotice] = useState(false)
-  const [renewalNoticeAgreed, setRenewalNoticeAgreed] = useState(false)
   const [selectedPeriod, setSelectedPeriod] = useState<"monthly" | "annual">("annual")
 
   useEffect(() => {
@@ -283,7 +280,7 @@ export default function BillingPage() {
               highlighted={false}
               isCurrent={isCurrentProPlan("monthly")}
               ctaLabel={getProCtaLabel("monthly")}
-              onCta={() => { setSelectedPeriod("monthly"); setShowRenewalNotice(true) }}
+              onCta={() => { setSelectedPeriod("monthly"); setShowCheckoutModal(true) }}
               disabled={isCreemActive || isCurrentProPlan("monthly")}
               loading={false}
               ctaHint={isCreemActive && !isCurrentProPlan("monthly") ? t("creemActiveCtaHint") : undefined}
@@ -300,7 +297,7 @@ export default function BillingPage() {
               highlighted={true}
               isCurrent={isCurrentProPlan("annual")}
               ctaLabel={getProCtaLabel("annual")}
-              onCta={() => { setSelectedPeriod("annual"); setShowRenewalNotice(true) }}
+              onCta={() => { setSelectedPeriod("annual"); setShowCheckoutModal(true) }}
               disabled={isCreemActive || isCurrentProPlan("annual")}
               loading={false}
               ctaHint={isCreemActive && !isCurrentProPlan("annual") ? t("creemActiveCtaHint") : undefined}
@@ -374,54 +371,6 @@ export default function BillingPage() {
           >
             {t("orderHistory")}
           </Link>
-        </div>
-      )}
-
-      {/* ── Renewal Rule Confirmation Modal ── */}
-      {/* 扣款规则确认：必须勾选「我已了解」才能继续（避免月底用户冲动订阅后投诉） */}
-      {showRenewalNotice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => { setShowRenewalNotice(false); setRenewalNoticeAgreed(false) }}>
-          <div className="bg-card rounded-2xl shadow-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-bold text-lg text-text-primary mb-4 text-center">
-              {t("renewalNoticeTitle")}
-            </h3>
-
-            {/* 扣款规则说明（与 Creem checkout 弹框一致） */}
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
-              <p className="text-sm text-amber-800 leading-relaxed">
-                {t("checkoutMonthEndNotice")}
-              </p>
-            </div>
-
-            {/* 勾选确认 */}
-            <label className="flex items-start gap-2.5 mb-5 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={renewalNoticeAgreed}
-                onChange={(e) => setRenewalNoticeAgreed(e.target.checked)}
-                className="mt-0.5 w-4 h-4 accent-amber-500 cursor-pointer shrink-0"
-              />
-              <span className="text-sm text-text-primary leading-relaxed">
-                {t("renewalNoticeAgree")}
-              </span>
-            </label>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => { setShowRenewalNotice(false); setRenewalNoticeAgreed(false) }}
-                className="flex-1 py-2.5 text-sm text-text-secondary border border-gray-200 rounded-xl hover:bg-surface transition-colors"
-              >
-                {t("checkoutCancel")}
-              </button>
-              <button
-                onClick={() => { setShowRenewalNotice(false); setShowCheckoutModal(true) }}
-                disabled={!renewalNoticeAgreed}
-                className="flex-1 py-2.5 text-sm font-semibold text-white bg-amber-500 rounded-xl hover:bg-amber-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {t("renewalNoticeContinue")}
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
