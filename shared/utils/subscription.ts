@@ -60,21 +60,16 @@ export function isPaidTier(subscriptionTier: string | null | undefined): boolean
  * - 首次购买（无到期日 / 已过期）：base = now
  * - 续费（未到期）：base = 现有到期日 → 正确累加，权益不缩水
  *
- * ⚠️ 注意：这里用的是 setUTCMonth(+1) 的朴素写法，月末（29/30/31 日）购买会落到下下月
- *   （例如 1/31 → 3/2），与同文件处理月末的 addMonths() 行为不同。
- *   这是既有线上行为 —— 存量用户的到期日都是这么算出来的，改用 addMonths 会改变他们的到期日，
- *   必须单独评估后再动，不要顺手替换。
+ * 月底钳制：1/31 + 1 月 = 2/28（不是 3/2/3），与行业惯例一致（Netflix / Spotify / Stripe）。
+ * 实现复用同文件的 addMonths / addYears，已处理月底越界与闰年。
+ *
+ * ⚠️ 不要换回 setUTCMonth(+1) 的朴素写法 —— 1/31 购买会落到 3/2/3，每次月底续费多送 1~3 天，
+ *    累积一年多送 7~15 天服务，且跟行业不一致。
  */
 export function computeRenewalExpiry(existingExpiry: Date | null, period: string): Date {
   const now = new Date()
   const base = existingExpiry && existingExpiry > now ? existingExpiry : now
-  const expiry = new Date(base)
-  if (period === "annual") {
-    expiry.setUTCFullYear(expiry.getUTCFullYear() + 1)
-  } else {
-    expiry.setUTCMonth(expiry.getUTCMonth() + 1)
-  }
-  return expiry
+  return period === "annual" ? addYears(base, 1) : addMonths(base, 1)
 }
 
 /**

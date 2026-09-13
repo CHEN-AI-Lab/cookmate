@@ -11,8 +11,8 @@
  * validates the actual production code, not a replica.
  */
 
-import { describe, it, expect } from 'vitest'
-import { isExpired, addMonths, addYears } from '@cookmate/shared/utils/subscription'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { isExpired, addMonths, addYears, computeRenewalExpiry } from '@cookmate/shared/utils/subscription'
 
 // ---------------------------------------------------------------------------
 // Helpers — reproduce the exact logic from dashboard/route.ts
@@ -108,6 +108,67 @@ describe("addYears (复用 addMonths，处理闰年越界)", () => {
   it("闰年越界：2024-02-29 + 1年 → 2025-02-28（不是 2025-03-01）", () => {
     const d = new Date(Date.UTC(2024, 1, 29))
     expect(addYears(d, 1).toISOString().slice(0, 10)).toBe("2025-02-28")
+  })
+})
+
+describe("computeRenewalExpiry (续费到期日 — 月底钳制，与行业惯例一致)", () => {
+  // 冻结时间为 2026-01-31 12:00:00 UTC，让 computeRenewalExpiry 内部的 `new Date()` 落到这个日期
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(Date.UTC(2026, 0, 31, 12, 0, 0)))
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  // ── monthly：base = now（first purchase）──
+  it("first purchase：now = 2026-01-31 → monthly → 2026-02-28（非 2026-03-02）", () => {
+    expect(computeRenewalExpiry(null, "monthly").toISOString().slice(0, 10)).toBe("2026-02-28")
+  })
+
+  it("first purchase：now = 2026-05-15 → monthly → 2026-06-15", () => {
+    // 改冻时间为 2026-05-15
+    vi.setSystemTime(new Date(Date.UTC(2026, 4, 15, 12, 0, 0)))
+    expect(computeRenewalExpiry(null, "monthly").toISOString().slice(0, 10)).toBe("2026-06-15")
+  })
+
+  it("first purchase：now = 2024-01-31（闰年）→ monthly → 2024-02-29", () => {
+    vi.setSystemTime(new Date(Date.UTC(2024, 0, 31, 12, 0, 0)))
+    expect(computeRenewalExpiry(null, "monthly").toISOString().slice(0, 10)).toBe("2024-02-29")
+  })
+
+  // ── annual ──
+  it("first purchase：now = 2024-02-29（闰年）→ annual → 2025-02-28", () => {
+    vi.setSystemTime(new Date(Date.UTC(2024, 1, 29, 12, 0, 0)))
+    expect(computeRenewalExpiry(null, "annual").toISOString().slice(0, 10)).toBe("2025-02-28")
+  })
+
+  it("first purchase：now = 2026-01-31 → annual → 2027-01-31", () => {
+    expect(computeRenewalExpiry(null, "annual").toISOString().slice(0, 10)).toBe("2027-01-31")
+  })
+
+  // ── 续费累加：existingExpiry > now → base = existingExpiry ──
+  it("续费：existingExpiry=2026-03-15（未到期）+ monthly → 2026-04-15", () => {
+    const existing = new Date(Date.UTC(2026, 2, 15))
+    expect(computeRenewalExpiry(existing, "monthly").toISOString().slice(0, 10)).toBe("2026-04-15")
+  })
+
+  it("续费：existingExpiry=2026-01-31（未到期）+ monthly → 2026-02-28（月底钳制）", () => {
+    const existing = new Date(Date.UTC(2026, 0, 31))
+    expect(computeRenewalExpiry(existing, "monthly").toISOString().slice(0, 10)).toBe("2026-02-28")
+  })
+
+  // ── 边界：existingExpiry 已过期 → base = now（不再用 existingExpiry）──
+  it("过期后重订：existingExpiry=2020-01-01（已过期）+ monthly → 与 null 作 base 结果一致", () => {
+    const existing = new Date(Date.UTC(2020, 0, 1))
+    const withExisting = computeRenewalExpiry(existing, "monthly").toISOString().slice(0, 10)
+    const withNull = computeRenewalExpiry(null, "monthly").toISOString().slice(0, 10)
+    expect(withExisting).toBe(withNull)
+  })
+
+  // ── period 兜底：未知 period 走 monthly ──
+  it("未知 period：落到 monthly 分支（保留原行为）", () => {
+    expect(computeRenewalExpiry(null, "unknown-period").toISOString().slice(0, 10)).toBe("2026-02-28")
   })
 })
 
