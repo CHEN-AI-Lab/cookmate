@@ -133,7 +133,7 @@ export function Th({
             aria-label={`筛选：${label}`}
             onClick={() => setOpen((v) => !v)}
             className={cn(
-              "inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border border-transparent text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600",
+              "inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border border-transparent text-text-secondary/60 transition-colors hover:bg-surface hover:text-text-secondary",
               on && "text-accent",
             )}
           >
@@ -150,7 +150,7 @@ export function Th({
               ref={panelRef}
               style={{ position: "fixed", left: pos.left, top: pos.top }}
               className={cn(
-                "z-[100] max-h-[calc(100vh-24px)] overflow-y-auto rounded-xl border border-gray-200 bg-white p-3 shadow-lg",
+                "z-[100] max-h-[calc(100vh-24px)] overflow-y-auto rounded-xl border border-border bg-card p-3 shadow-lg",
                 // 复选面板宽度随内容收缩：选项常常就两三个字（Creem / 月付），
                 // 固定 240px 会在右边留一大块空白，看着很空。
                 // 文本 / 日期面板保持固定宽 —— 输入框和日历需要稳定宽度，且内部有 w-full 子元素，
@@ -158,7 +158,7 @@ export function Th({
                 filter.type === "select" ? "w-auto min-w-[140px]" : "w-[240px]",
               )}
             >
-              <p className="mb-2 text-[12px] font-semibold text-gray-700">{label}</p>
+              <p className="mb-2 text-[12px] font-semibold text-text-primary">{label}</p>
               {filter.type === "text" && (
               <TextBody key={resetKey} value={value} placeholder={filter.placeholder} onChange={onChange} />
               )}
@@ -166,21 +166,21 @@ export function Th({
                 <SelectBody key={resetKey} options={filter.options} value={value} onChange={onChange} />
               )}
               {filter.type === "date" && <DateBody key={resetKey} value={value} onChange={onChange} />}
-              <div className="mt-2.5 flex items-center justify-between border-t border-gray-200 pt-2">
+              <div className="mt-2.5 flex items-center justify-between border-t border-border pt-2">
                 <button
                   type="button"
                   onClick={() => {
                     onChange(undefined)
                     setResetKey((k) => k + 1)
                   }}
-                  className="text-[12px] text-gray-500 hover:text-gray-700"
+                  className="text-[12px] text-text-secondary hover:text-text-primary"
                 >
                   重置
                 </button>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="rounded-lg border border-gray-200 px-2.5 py-1 text-[12px] text-gray-700 hover:bg-gray-100"
+                  className="rounded-lg border border-border px-2.5 py-1 text-[12px] text-text-primary hover:bg-surface"
                 >
                   关闭
                 </button>
@@ -245,9 +245,9 @@ function TextBody({
           if (e.key !== "Enter" || e.nativeEvent.isComposing || composing.current) return
           if (local !== external) cb.current(local)
         }}
-        className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[12.5px] text-gray-700 outline-none focus:border-accent"
+        className="w-full rounded-lg border border-border bg-card px-2.5 py-1.5 text-[12.5px] text-text-primary outline-none focus:border-accent"
       />
-      <p className="mt-1.5 text-[11px] text-gray-500">
+      <p className="mt-1.5 text-[11px] text-text-secondary">
         模糊匹配 · 不区分大小写 · 输入完自动生效
       </p>
     </>
@@ -271,7 +271,7 @@ function SelectBody({
     <>
       <div className="flex flex-col gap-1.5">
         {options.map((o) => (
-          <label key={o.value} className="flex cursor-pointer items-center gap-2 text-[12.5px] text-gray-700">
+          <label key={o.value} className="flex cursor-pointer items-center gap-2 text-[12.5px] text-text-primary">
             <input type="checkbox" checked={arr.includes(o.value)} onChange={() => toggle(o.value)} />
             {o.label}
           </label>
@@ -357,7 +357,7 @@ function DateBody({ value, onChange }: { value?: FilterValue; onChange: (v: Filt
               "rounded-full border px-2.5 py-1 text-[12px] transition-colors",
               preset === p
                 ? "border-accent bg-accent text-white"
-                : "border-gray-200 bg-white text-gray-700 hover:border-accent hover:text-accent",
+                : "border-border bg-card text-text-primary hover:border-accent hover:text-accent",
             )}
           >
             {PRESET_LABELS[p]}
@@ -371,7 +371,7 @@ function DateBody({ value, onChange }: { value?: FilterValue; onChange: (v: Filt
             <button
               type="button"
               onClick={() => shift(-1)}
-              className="rounded-md border border-gray-200 bg-white px-2 py-0.5 text-[13px] leading-none text-gray-700 hover:bg-gray-100"
+              className="rounded-md border border-border bg-card px-2 py-0.5 text-[13px] leading-none text-text-primary hover:bg-surface"
             >
               ‹
             </button>
@@ -379,7 +379,7 @@ function DateBody({ value, onChange }: { value?: FilterValue; onChange: (v: Filt
               <select
                 value={y}
                 onChange={(e) => setCal({ y: Number(e.target.value), m })}
-                className="rounded-md border border-gray-200 bg-white px-1 py-0.5 text-[12px] text-gray-700"
+                className="rounded-md border border-border bg-card px-1 py-0.5 text-[12px] text-text-primary"
               >
                 {years.map((yy) => (
                   <option key={yy} value={yy}>
@@ -387,11 +387,11 @@ function DateBody({ value, onChange }: { value?: FilterValue; onChange: (v: Filt
                   </option>
                 ))}
               </select>
-              <span className="text-[12px] text-gray-500">年</span>
+              <span className="text-[12px] text-text-secondary">年</span>
               <select
                 value={m}
                 onChange={(e) => setCal({ y, m: Number(e.target.value) })}
-                className="rounded-md border border-gray-200 bg-white px-1 py-0.5 text-[12px] text-gray-700"
+                className="rounded-md border border-border bg-card px-1 py-0.5 text-[12px] text-text-primary"
               >
                 {Array.from({ length: 12 }, (_, i) => (
                   <option key={i} value={i}>
@@ -399,18 +399,18 @@ function DateBody({ value, onChange }: { value?: FilterValue; onChange: (v: Filt
                   </option>
                 ))}
               </select>
-              <span className="text-[12px] text-gray-500">月</span>
+              <span className="text-[12px] text-text-secondary">月</span>
             </div>
             <button
               type="button"
               onClick={() => shift(1)}
-              className="rounded-md border border-gray-200 bg-white px-2 py-0.5 text-[13px] leading-none text-gray-700 hover:bg-gray-100"
+              className="rounded-md border border-border bg-card px-2 py-0.5 text-[13px] leading-none text-text-primary hover:bg-surface"
             >
               ›
             </button>
           </div>
 
-          <div className="grid grid-cols-7 gap-0.5 text-center text-[11px] text-gray-500">
+          <div className="grid grid-cols-7 gap-0.5 text-center text-[11px] text-text-secondary">
             {WEEKDAYS.map((w) => (
               <div key={w}>{w}</div>
             ))}
@@ -434,10 +434,10 @@ function DateBody({ value, onChange }: { value?: FilterValue; onChange: (v: Filt
                     edge
                       ? "bg-accent font-semibold text-white"
                       : inRange
-                        ? "bg-accent/10 text-gray-700"
+                        ? "bg-accent/10 text-text-primary"
                         : ds === todayStr
-                          ? "font-semibold text-accent hover:bg-gray-100"
-                          : "text-gray-700 hover:bg-gray-100",
+                          ? "font-semibold text-accent hover:bg-surface"
+                          : "text-text-primary hover:bg-surface",
                   )}
                 >
                   {day}
@@ -448,7 +448,7 @@ function DateBody({ value, onChange }: { value?: FilterValue; onChange: (v: Filt
         </div>
       )}
 
-      <p className="mt-1.5 text-[11px] text-gray-500">
+      <p className="mt-1.5 text-[11px] text-text-secondary">
         {summary
           ? `当前：${summary}`
           : preset === "custom"

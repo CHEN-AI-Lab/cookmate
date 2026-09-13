@@ -222,9 +222,9 @@ const EVENT_CN: Record<string, string> = {
 }
 
 function WebhookEventCell({ eventType }: { eventType: string | null }) {
-  if (!eventType) return <span className="text-gray-400">-</span>
+  if (!eventType) return <span className="text-text-secondary/60">-</span>
   return (
-    <span className="font-mono text-xs text-gray-700" title={eventType}>
+    <span className="font-mono text-xs text-text-primary" title={eventType}>
       {EVENT_CN[eventType] ?? eventType}
     </span>
   )
@@ -275,21 +275,21 @@ const TIER_OPTIONS = [
 // 用户订阅状态（口径对齐 Stripe / Chargebee：active / canceled / expired；一次性买断单列，不算取消）。
 // issue / paused 是 Creem 官方就有的状态（欠费重试、暂停），落库后直接映射过来。
 const SUB_STATUS: Record<SubscriptionStatus, { label: string; cls: string }> = {
-  active: { label: "订阅中（自动续费）", cls: "bg-green-100 text-green-600" },
-  canceled: { label: "已取消（到期降级）", cls: "bg-orange-100 text-orange-600" },
+  active: { label: "订阅中（自动续费）", cls: "bg-success/10 text-success" },
+  canceled: { label: "已取消（到期降级）", cls: "bg-accent/10 text-accent" },
   onetime: { label: "一次性（支付宝）", cls: "bg-blue-100 text-blue-600" },
-  expired: { label: "已过期", cls: "bg-gray-100 text-gray-500" },
-  issue: { label: "欠费待处理", cls: "bg-red-100 text-red-600" },
-  paused: { label: "已暂停", cls: "bg-gray-100 text-gray-500" },
-  unknown: { label: "状态未知", cls: "bg-gray-100 text-gray-500" },
-  free: { label: "免费版", cls: "bg-gray-100 text-gray-500" },
+  expired: { label: "已过期", cls: "bg-surface text-text-secondary" },
+  issue: { label: "欠费待处理", cls: "bg-error/10 text-error" },
+  paused: { label: "已暂停", cls: "bg-surface text-text-secondary" },
+  unknown: { label: "状态未知", cls: "bg-surface text-text-secondary" },
+  free: { label: "免费版", cls: "bg-surface text-text-secondary" },
 }
 
 function SubStatusBadge({ status }: { status: SubscriptionStatus | null | undefined }) {
   // 免费用户没有订阅状态，显示「-」避免和左边「套餐」列重复
-  if (!status || status === "free") return <span className="text-gray-400">-</span>
+  if (!status || status === "free") return <span className="text-text-secondary/60">-</span>
   const s = SUB_STATUS[status]
-  if (!s) return <span className="text-gray-400">-</span>
+  if (!s) return <span className="text-text-secondary/60">-</span>
   return <span className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${s.cls}`}>{s.label}</span>
 }
 
@@ -323,7 +323,7 @@ function totalOf(data: unknown): number {
 function FilterStatus({ q, unit }: { q: TableQuery<unknown>; unit: string }) {
   return (
     <div className="flex min-h-6 flex-wrap items-center gap-2 text-xs leading-5">
-      <span className="text-gray-500">
+      <span className="text-text-secondary">
         共 {totalOf(q.data)} 条{unit}
       </span>
       {q.activeCount > 0 ? (
@@ -331,7 +331,7 @@ function FilterStatus({ q, unit }: { q: TableQuery<unknown>; unit: string }) {
           <span className="rounded-full bg-accent/10 px-2 font-semibold leading-5 text-accent">
             已筛选 {q.activeCount} 项
           </span>
-          <button type="button" onClick={q.clearFilters} className="leading-5 text-red-600 underline">
+          <button type="button" onClick={q.clearFilters} className="leading-5 text-error underline">
             清除全部
           </button>
         </>
@@ -352,7 +352,7 @@ function EmptyRow({ q, text }: { q: TableQuery<unknown>; text: string }) {
     <tr>
       <td
         colSpan={99}
-        className={`px-4 py-12 text-center text-sm ${q.error ? "text-red-600" : "text-gray-500"}`}
+        className={`px-4 py-12 text-center text-sm ${q.error ? "text-error" : "text-text-secondary"}`}
       >
         {msg}
       </td>
@@ -384,15 +384,15 @@ export default function AdminPage() {
   }, [ordersQ, webhooksQ, cancelsQ, usersQ, cronsQ, configQ])
 
   if (pending) {
-    return <div className="text-center py-16 text-gray-500">加载中…</div>
+    return <div className="text-center py-16 text-text-secondary">加载中…</div>
   }
 
   if (firstError) {
     return (
       <div className="max-w-3xl mx-auto py-16 px-4">
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
-          <p className="text-red-600 font-semibold">{firstError.error}</p>
-          <p className="text-gray-500 text-sm mt-2">
+        <div className="bg-error/10 border border-error/30 rounded-2xl p-6 text-center">
+          <p className="text-error font-semibold">{firstError.error}</p>
+          <p className="text-text-secondary text-sm mt-2">
             无权限访问此页面，仅限管理员使用。
           </p>
         </div>
@@ -420,37 +420,37 @@ export default function AdminPage() {
     <div className="max-w-6xl mx-auto py-10 px-4 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-700 tracking-tight">支付后台</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-text-primary tracking-tight">支付后台</h1>
+          <p className="text-text-secondary text-sm mt-1">
             订单 / 回调流水 / 取消审计 / 用户 / Cron 日志 / 系统配置 —— 统一查看。每页 50 条，点列头漏斗即可筛选。
           </p>
         </div>
         <button
           onClick={refresh}
           disabled={anyLoading}
-          className="px-4 py-2 rounded-xl border border-gray-200 text-gray-500 text-sm hover:bg-gray-50 disabled:opacity-50 shrink-0"
+          className="px-4 py-2 rounded-xl border border-border text-text-secondary text-sm hover:bg-surface disabled:opacity-50 shrink-0"
         >
           {anyLoading ? "刷新中…" : "刷新"}
         </button>
       </div>
 
       {/* Tab 栏 */}
-      <div className="flex gap-2 border-b border-gray-200">
+      <div className="flex gap-2 border-b border-border">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-4 py-2.5 text-sm font-medium rounded-t-xl transition-colors flex items-center gap-2 ${
               tab === t.key
-                ? "bg-white text-gray-700 border border-b-0 border-gray-200"
-                : "text-gray-500 hover:text-gray-700"
+                ? "bg-card text-text-primary border border-b-0 border-border"
+                : "text-text-secondary hover:text-text-primary"
             }`}
           >
             {t.label}
             {t.n !== undefined && t.n > 0 && (
               <span
                 className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                  t.red ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"
+                  t.red ? "bg-error/10 text-error" : "bg-surface text-text-secondary"
                 }`}
               >
                 {t.n}
@@ -490,9 +490,9 @@ function OrdersTab({ q }: { q: TableQuery<OrdersResponse> }) {
       </div>
 
       {mismatch > 0 && (
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 py-3 rounded-xl bg-error/10 border border-error/30 text-error text-sm">
           <span className="font-semibold">⚠ 金额异常 {mismatch} 笔</span>
-          <span className="text-red-600">
+          <span className="text-error">
             实付金额与应收金额不一致，已在下方表格标红。请核对支付渠道后台价格与代码定价常量。
           </span>
         </div>
@@ -500,10 +500,10 @@ function OrdersTab({ q }: { q: TableQuery<OrdersResponse> }) {
 
       <FilterStatus q={q} unit="订单" />
 
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-500">
+            <thead className="bg-surface text-text-secondary">
               <tr>
                 <Th
                   label="时间"
@@ -559,32 +559,32 @@ function OrdersTab({ q }: { q: TableQuery<OrdersResponse> }) {
                 />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border">
               {orders.map((o) => (
                 <tr key={o.id} className={o.status === "PAID" ? "" : "opacity-60"}>
-                  <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(o.createdAt)}</td>
-                  <td className="px-4 py-3 text-gray-700 text-xs">{o.userEmail ?? "-"}</td>
-                  <td className="px-4 py-3 text-gray-700 font-mono text-xs">{o.orderId}</td>
+                  <td className="px-4 py-3 text-text-primary whitespace-nowrap">{fmtTime(o.createdAt)}</td>
+                  <td className="px-4 py-3 text-text-primary text-xs">{o.userEmail ?? "-"}</td>
+                  <td className="px-4 py-3 text-text-primary font-mono text-xs">{o.orderId}</td>
                   <td className="px-4 py-3">
                     <ChannelCell channel={o.channel} />
                   </td>
-                  <td className="px-4 py-3 text-gray-700">{fmtPeriod(o.period)}</td>
-                  <td className="px-4 py-3 text-gray-700 font-medium text-right tabular-nums">
+                  <td className="px-4 py-3 text-text-primary">{fmtPeriod(o.period)}</td>
+                  <td className="px-4 py-3 text-text-primary font-medium text-right tabular-nums">
                     {fmtAmount(o.amount, o.currency)}
                   </td>
                   <td className="px-4 py-3 font-medium whitespace-nowrap text-right tabular-nums">
                     {o.paidAmount == null ? (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-text-secondary/60">-</span>
                     ) : isAmountMismatch(o) ? (
                       <span
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold tabular-nums"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-error/10 text-error text-xs font-semibold tabular-nums"
                         title={`实付与应收不一致 —— 应收 ${fmtAmount(o.amount, o.currency)} / 实付 ${fmtAmount(o.paidAmount, o.paidCurrency ?? o.currency)}`}
                       >
                         <span aria-hidden>⚠</span>
                         {fmtAmount(o.paidAmount, o.paidCurrency ?? o.currency)}
                       </span>
                     ) : (
-                      <span className="text-gray-700">
+                      <span className="text-text-primary">
                         {fmtAmount(o.paidAmount, o.paidCurrency ?? o.currency)}
                       </span>
                     )}
@@ -617,7 +617,7 @@ function WebhooksTab({ q }: { q: TableQuery<WebhookLogsResponse> }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-gray-500 text-sm">
+      <p className="text-text-secondary text-sm">
         记录支付渠道（Creem / 支付宝）推送的每一次 webhook 通知。状态「失败」= 已收到但未处理成功，
         可能导致用户付款后未升级，需人工核对。
       </p>
@@ -633,10 +633,10 @@ function WebhooksTab({ q }: { q: TableQuery<WebhookLogsResponse> }) {
 
       <FilterStatus q={q} unit="回调" />
 
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-500">
+            <thead className="bg-surface text-text-secondary">
               <tr>
                 <Th
                   label="时间"
@@ -692,17 +692,17 @@ function WebhooksTab({ q }: { q: TableQuery<WebhookLogsResponse> }) {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border">
               {logs.map((l) => (
                 <tr
                   key={l.id}
                   className={
                     l.status.startsWith("failed") || l.status === "processed:amount-mismatch"
-                      ? "bg-red-50/50"
+                      ? "bg-error/10/50"
                       : ""
                   }
                 >
-                  <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
+                  <td className="px-4 py-3 text-text-primary whitespace-nowrap">{fmtTime(l.createdAt)}</td>
                   <td className="px-4 py-3">
                     <ChannelCell channel={l.source} />
                   </td>
@@ -712,17 +712,17 @@ function WebhooksTab({ q }: { q: TableQuery<WebhookLogsResponse> }) {
                   <td className="px-4 py-3">
                     <WebhookStatusBadge status={l.status} />
                   </td>
-                  <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
+                  <td className="px-4 py-3 text-text-primary text-xs whitespace-nowrap">
                     {l.userEmail ?? (l.userId ? l.userId.slice(0, 8) + "…" : "-")}
                   </td>
                   <td
-                    className="px-4 py-3 text-gray-700 font-mono text-xs max-w-[120px] truncate"
+                    className="px-4 py-3 text-text-primary font-mono text-xs max-w-[120px] truncate"
                     title={l.subscriptionId ?? ""}
                   >
                     {l.subscriptionId ?? "-"}
                   </td>
                   <td
-                    className="px-4 py-3 text-gray-700 font-mono text-xs max-w-[160px] truncate"
+                    className="px-4 py-3 text-text-primary font-mono text-xs max-w-[160px] truncate"
                     title={l.eventId ?? ""}
                   >
                     {l.eventId ?? "-"}
@@ -740,7 +740,7 @@ function WebhooksTab({ q }: { q: TableQuery<WebhookLogsResponse> }) {
                       "-"
                     )}
                     {expandedId === l.id && (
-                      <pre className="mt-2 p-2 bg-gray-50 rounded-lg text-xs max-w-md max-h-48 overflow-auto whitespace-pre-wrap break-all">
+                      <pre className="mt-2 p-2 bg-surface rounded-lg text-xs max-w-md max-h-48 overflow-auto whitespace-pre-wrap break-all">
                         {l.rawPreview}
                       </pre>
                     )}
@@ -769,7 +769,7 @@ function CancelsTab({ q }: { q: TableQuery<CancelLogsResponse> }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-gray-500 text-sm">
+      <p className="text-text-secondary text-sm">
         记录每一次「取消订阅」尝试。状态为「失败」= 上游（Creem）没取消成功，
         需去 Creem 后台补刀，或让用户重新点一次「取消」。
       </p>
@@ -786,10 +786,10 @@ function CancelsTab({ q }: { q: TableQuery<CancelLogsResponse> }) {
 
       <FilterStatus q={q} unit="记录" />
 
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-500">
+            <thead className="bg-surface text-text-secondary">
               <tr>
                 <Th
                   label="时间"
@@ -832,31 +832,31 @@ function CancelsTab({ q }: { q: TableQuery<CancelLogsResponse> }) {
                 />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border">
               {logs.map((l) => (
-                <tr key={l.id} className={l.status === "failed" ? "bg-red-50/50" : ""}>
-                  <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
+                <tr key={l.id} className={l.status === "failed" ? "bg-error/10/50" : ""}>
+                  <td className="px-4 py-3 text-text-primary whitespace-nowrap">{fmtTime(l.createdAt)}</td>
                   <td className="px-4 py-3">
                     <ChannelCell channel={l.channel} />
                   </td>
                   <td className="px-4 py-3">
                     {l.status === "failed" ? (
-                      <span className="inline-flex px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold">
+                      <span className="inline-flex px-2 py-0.5 rounded-full bg-error/10 text-error text-xs font-semibold">
                         失败
                       </span>
                     ) : (
-                      <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">
+                      <span className="inline-flex px-2 py-0.5 rounded-full bg-success/10 text-success text-xs font-semibold">
                         成功
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
+                  <td className="px-4 py-3 text-text-primary text-xs whitespace-nowrap">
                     <span title={l.userId ?? ""}>{l.userEmail ?? "-"}</span>
                   </td>
-                  <td className="px-4 py-3 text-gray-700 font-mono text-xs">
+                  <td className="px-4 py-3 text-text-primary font-mono text-xs">
                     {l.subscriptionId ?? "-"}
                   </td>
-                  <td className="px-4 py-3 text-red-600 text-xs max-w-xs break-words">
+                  <td className="px-4 py-3 text-error text-xs max-w-xs break-words">
                     {l.error || "-"}
                   </td>
                 </tr>
@@ -891,10 +891,10 @@ function UsersTab({ q }: { q: TableQuery<UsersResponse> }) {
 
       <FilterStatus q={q} unit="用户" />
 
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-500">
+            <thead className="bg-surface text-text-secondary">
               <tr>
                 <Th
                   label="注册时间"
@@ -933,21 +933,21 @@ function UsersTab({ q }: { q: TableQuery<UsersResponse> }) {
                 <Th label="引导完成" hint="新用户引导是否完成" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border">
               {users.map((u) => (
                 <tr key={u.id}>
-                  <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(u.createdAt)}</td>
-                  <td className="px-4 py-3 text-gray-700 text-xs">{u.email ?? u.phone ?? "-"}</td>
-                  <td className="px-4 py-3 text-gray-700">{u.name ?? "-"}</td>
+                  <td className="px-4 py-3 text-text-primary whitespace-nowrap">{fmtTime(u.createdAt)}</td>
+                  <td className="px-4 py-3 text-text-primary text-xs">{u.email ?? u.phone ?? "-"}</td>
+                  <td className="px-4 py-3 text-text-primary">{u.name ?? "-"}</td>
                       <td className="px-4 py-3">
                         {/* 付费档（PRO / FAMILY …）统一走付费样式并显示真实档位名 ——
                             硬比 PRO 会把家庭版显示成 Free */}
                         {isPaidTier(u.subscriptionTier) ? (
-                          <span className="inline-flex px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-xs font-semibold">
+                          <span className="inline-flex px-2 py-0.5 rounded-full bg-surface0/10 text-amber-500 text-xs font-semibold">
                             {u.subscriptionTier === SUBSCRIPTION_TIER.PRO ? "Pro" : u.subscriptionTier}
                           </span>
                         ) : (
-                          <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">
+                          <span className="inline-flex px-2 py-0.5 rounded-full bg-surface text-text-secondary text-xs font-semibold">
                             Free
                           </span>
                         )}
@@ -955,11 +955,11 @@ function UsersTab({ q }: { q: TableQuery<UsersResponse> }) {
                       <td className="px-4 py-3">
                         <SubStatusBadge status={u.subStatus} />
                       </td>
-                  <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">
+                  <td className="px-4 py-3 text-text-primary text-xs whitespace-nowrap">
                     {u.subscriptionExpiryDate ? fmtTime(u.subscriptionExpiryDate) : "-"}
                   </td>
-                  <td className="px-4 py-3 text-gray-700 text-right tabular-nums">{u.orderCount}</td>
-                  <td className="px-4 py-3 text-gray-700">{u.onboardingCompleted ? "✅" : "—"}</td>
+                  <td className="px-4 py-3 text-text-primary text-right tabular-nums">{u.orderCount}</td>
+                  <td className="px-4 py-3 text-text-primary">{u.onboardingCompleted ? "✅" : "—"}</td>
                 </tr>
               ))}
               {users.length === 0 && <EmptyRow q={q} text="暂无用户" />}
@@ -984,7 +984,7 @@ function CronsTab({ q }: { q: TableQuery<CronLogsResponse> }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-gray-500 text-sm">
+      <p className="text-text-secondary text-sm">
         Vercel Cron 定时任务执行记录（每日 00:00 过期降级 / 01:00 取消对账，UTC 时间；对应北京时间 08:00 / 09:00）。
         状态为「失败」= 定时任务执行出错，需检查服务端日志。
       </p>
@@ -1000,10 +1000,10 @@ function CronsTab({ q }: { q: TableQuery<CronLogsResponse> }) {
 
       <FilterStatus q={q} unit="记录" />
 
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-500">
+            <thead className="bg-surface text-text-secondary">
               <tr>
                 <Th
                   label="执行时间"
@@ -1029,23 +1029,23 @@ function CronsTab({ q }: { q: TableQuery<CronLogsResponse> }) {
                 <Th label="详情" hint="处理详情：受影响的用户数、失败数等" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border">
               {logs.map((l) => (
-                <tr key={l.id} className={l.status === "failed" ? "bg-red-50/50" : ""}>
-                  <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{fmtTime(l.createdAt)}</td>
-                  <td className="px-4 py-3 text-gray-700 font-mono text-xs">{l.eventType ?? "-"}</td>
+                <tr key={l.id} className={l.status === "failed" ? "bg-error/10/50" : ""}>
+                  <td className="px-4 py-3 text-text-primary whitespace-nowrap">{fmtTime(l.createdAt)}</td>
+                  <td className="px-4 py-3 text-text-primary font-mono text-xs">{l.eventType ?? "-"}</td>
                   <td className="px-4 py-3">
                     {l.status === "failed" ? (
-                      <span className="inline-flex px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold">
+                      <span className="inline-flex px-2 py-0.5 rounded-full bg-error/10 text-error text-xs font-semibold">
                         失败
                       </span>
                     ) : (
-                      <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">
+                      <span className="inline-flex px-2 py-0.5 rounded-full bg-success/10 text-success text-xs font-semibold">
                         成功
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-700 text-xs max-w-md break-words">
+                  <td className="px-4 py-3 text-text-primary text-xs max-w-md break-words">
                     <pre className="whitespace-pre-wrap break-all font-mono text-xs">
                       {JSON.stringify(l.detail)}
                     </pre>
@@ -1072,15 +1072,15 @@ function CronsTab({ q }: { q: TableQuery<CronLogsResponse> }) {
 function StatCard({ label, value, tone }: { label: string; value: number | string; tone: "red" | "green" | "gray" | "amber" }) {
   const toneClass =
     tone === "red"
-      ? "text-red-600"
+      ? "text-error"
       : tone === "green"
-        ? "text-green-600"
+        ? "text-success"
         : tone === "amber"
-          ? "text-amber-600"
-          : "text-gray-700"
+          ? "text-amber-500"
+          : "text-text-primary"
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-5">
-      <p className="text-gray-500 text-sm">{label}</p>
+    <div className="bg-card border border-border rounded-2xl p-5">
+      <p className="text-text-secondary text-sm">{label}</p>
       <p className={`text-3xl font-bold mt-1 tabular-nums ${toneClass}`}>{value}</p>
     </div>
   )
@@ -1089,11 +1089,11 @@ function StatCard({ label, value, tone }: { label: string; value: number | strin
 // 渠道/来源单元格：官方 logo + 中文名（图标与名称统一取自 shared/constants/payment-channels，
 // 本文件不重新定义渠道图标）。未收录的渠道回退显示原始英文名。
 function ChannelCell({ channel }: { channel: string | null | undefined }) {
-  if (!channel) return <span className="text-gray-400">-</span>
+  if (!channel) return <span className="text-text-secondary/60">-</span>
   const icon = CHANNEL_ICONS[channel]
   const label = CHANNEL_LABELS[channel] ?? channel
   return (
-    <span className="inline-flex items-center gap-1.5 text-gray-700" title={label}>
+    <span className="inline-flex items-center gap-1.5 text-text-primary" title={label}>
       {icon ? <span className="w-4 h-4 shrink-0" dangerouslySetInnerHTML={{ __html: icon }} /> : null}
       <span className="whitespace-nowrap">{label}</span>
     </span>
@@ -1102,21 +1102,21 @@ function ChannelCell({ channel }: { channel: string | null | undefined }) {
 
 function StatusBadge({ status }: { status: string }) {
   if (status === "PAID") {
-    return <span className="inline-flex px-2 py-0.5 rounded-full bg-green-100 text-green-600 text-xs font-semibold">已支付</span>
+    return <span className="inline-flex px-2 py-0.5 rounded-full bg-success/10 text-success text-xs font-semibold">已支付</span>
   }
   if (status === "PENDING") {
-    return <span className="inline-flex px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-xs font-semibold">待支付</span>
+    return <span className="inline-flex px-2 py-0.5 rounded-full bg-surface0/10 text-amber-500 text-xs font-semibold">待支付</span>
   }
   if (status === "CANCELED") {
-    return <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">已取消</span>
+    return <span className="inline-flex px-2 py-0.5 rounded-full bg-surface text-text-secondary text-xs font-semibold">已取消</span>
   }
   if (status === "EXPIRED") {
-    return <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">已过期</span>
+    return <span className="inline-flex px-2 py-0.5 rounded-full bg-surface text-text-secondary text-xs font-semibold">已过期</span>
   }
   if (status === "REFUNDED") {
-    return <span className="inline-flex px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-semibold">已退款</span>
+    return <span className="inline-flex px-2 py-0.5 rounded-full bg-error/10 text-error text-xs font-semibold">已退款</span>
   }
-  return <span className="inline-flex px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold">{status}</span>
+  return <span className="inline-flex px-2 py-0.5 rounded-full bg-surface text-text-secondary text-xs font-semibold">{status}</span>
 }
 
 function WebhookStatusBadge({ status }: { status: string }) {
@@ -1139,20 +1139,20 @@ function WebhookStatusBadge({ status }: { status: string }) {
     "failed:appid": "应用ID不符",
   }
   const tone: Record<string, string> = {
-    received: "bg-amber-100 text-amber-600",
-    processed: "bg-green-100 text-green-600",
-    duplicate: "bg-amber-100 text-amber-700",
-    ignored: "bg-gray-100 text-gray-500",
+    received: "bg-surface0/10 text-amber-500",
+    processed: "bg-success/10 text-success",
+    duplicate: "bg-surface0/10 text-amber-500",
+    ignored: "bg-surface text-text-secondary",
     // 金额不一致虽属"已处理"，但必须用警示色（否则红/灰难辨，告警会被漏看）
-    "processed:amount-mismatch": "bg-red-100 text-red-600",
+    "processed:amount-mismatch": "bg-error/10 text-error",
   }
   const failed = status.startsWith("failed")
   const ignored = status.startsWith("ignored")
   const cls = failed
-    ? "bg-red-100 text-red-600"
+    ? "bg-error/10 text-error"
     : ignored
-      ? "bg-gray-100 text-gray-500"
-      : tone[status] || "bg-gray-100 text-gray-500"
+      ? "bg-surface text-text-secondary"
+      : tone[status] || "bg-surface text-text-secondary"
   // 显示中文，悬浮显示英文原文
   const cnText = cnLabel[status] || status
   return (
@@ -1168,10 +1168,10 @@ function WebhookStatusBadge({ status }: { status: string }) {
 // ── Tab 6：系统配置 ──
 
 const TONE_STYLE: Record<AiTone, string> = {
-  ok: "bg-green-100 text-green-700",
-  warn: "bg-amber-100 text-amber-800",
-  error: "bg-red-100 text-red-700",
-  plain: "bg-gray-100 text-gray-700",
+  ok: "bg-success/10 text-success",
+  warn: "bg-amber-100 text-amber-500",
+  error: "bg-error/10 text-error",
+  plain: "bg-surface text-text-primary",
 }
 
 const TONE_ICON: Record<AiTone, string> = {
@@ -1210,7 +1210,7 @@ function EnvName({ env, href }: { env: string; href?: string | null }) {
       <button
         type="button"
         onClick={copy}
-        className="px-1 rounded font-mono text-[11px] text-gray-400 whitespace-nowrap hover:bg-gray-200 hover:text-gray-600"
+        className="px-1 rounded font-mono text-[11px] text-text-secondary/60 whitespace-nowrap hover:bg-surface hover:text-text-secondary"
       >
         {env}
       </button>
@@ -1226,7 +1226,7 @@ function EnvName({ env, href }: { env: string; href?: string | null }) {
         </a>
       ) : null}
       {copied ? (
-        <span className="absolute left-full top-1/2 ml-1.5 -translate-y-1/2 whitespace-nowrap text-[11px] text-green-600">
+        <span className="absolute left-full top-1/2 ml-1.5 -translate-y-1/2 whitespace-nowrap text-[11px] text-success">
           已复制
         </span>
       ) : null}
@@ -1247,7 +1247,7 @@ function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc, env
 }) {
   const inferred: AiTone | null = tone ?? (value === "已配置" ? "ok" : value === "未配置" ? "error" : null)
   const isMissing = inferred === "error"
-  const muted = tag ? "text-gray-500" : ""
+  const muted = tag ? "text-text-secondary" : ""
   // 说明气泡：鼠标停在标题上 0.5 秒才显示（避免鼠标扫过就闪），移开立即消失。
   // 点按同样支持（触屏）。用 fixed 定位，避免被卡片 overflow-hidden 裁切。
   const [tip, setTip] = useState<{ top: number; left: number } | null>(null)
@@ -1270,10 +1270,10 @@ function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc, env
   }
   const toggleTip = (r: DOMRect) => (tip ? hideTip() : showTip(r))
   return (
-    <div className={`flex items-center px-4 py-2.5 border-t border-gray-100 ${isMissing && required ? "bg-red-50/50" : ""}`}>
+    <div className={`flex items-center px-4 py-2.5 border-t border-border ${isMissing && required ? "bg-error/10/50" : ""}`}>
       <div className="w-[210px] shrink-0 pr-3">
         <div
-          className="text-gray-700 font-medium text-sm whitespace-nowrap"
+          className="text-text-primary font-medium text-sm whitespace-nowrap"
           onMouseEnter={(e) => (desc ? showTip(e.currentTarget.getBoundingClientRect()) : undefined)}
           onMouseLeave={hideTip}
           onClick={(e) => (desc ? toggleTip(e.currentTarget.getBoundingClientRect()) : undefined)}
@@ -1286,7 +1286,7 @@ function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc, env
             href={envBaseUrl ? `${envBaseUrl}?q=${encodeURIComponent(env)}` : null}
           />
         ) : null}
-        {desc && showDesc ? <div className="mt-1 text-[12px] leading-snug text-gray-500">{desc}</div> : null}
+        {desc && showDesc ? <div className="mt-1 text-[12px] leading-snug text-text-secondary">{desc}</div> : null}
       </div>
       <div className="flex-1 min-w-0 text-sm">
         {inferred ? (
@@ -1296,7 +1296,7 @@ function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc, env
         ) : (
           <span className="inline-flex items-center gap-2 flex-wrap">
             <span className={`font-mono text-xs break-all ${muted}`}>{value}</span>
-            {tag ? <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-[11px] shrink-0">{tag}</span> : null}
+            {tag ? <span className="px-1.5 py-0.5 rounded bg-surface text-text-secondary text-[11px] shrink-0">{tag}</span> : null}
           </span>
         )}
       </div>
@@ -1338,36 +1338,36 @@ function ConfigHelpDrawer({ sections, open, onClose }: {
     <div className="fixed inset-0 z-50" onClick={onClose}>
       <div className="absolute inset-0 bg-black/30" />
       <div
-        className="absolute right-0 top-0 bottom-0 flex w-[400px] max-w-[92vw] flex-col border-l border-gray-200 bg-white"
+        className="absolute right-0 top-0 bottom-0 flex w-[400px] max-w-[92vw] flex-col border-l border-border bg-card"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="border-b border-gray-100 px-4 py-3">
+        <div className="border-b border-border px-4 py-3">
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-gray-700">字段说明</span>
-            <button type="button" onClick={onClose} className="text-lg leading-none text-gray-400">×</button>
+            <span className="font-semibold text-text-primary">字段说明</span>
+            <button type="button" onClick={onClose} className="text-lg leading-none text-text-secondary/60">×</button>
           </div>
-          <p className="mt-1 text-[12px] text-gray-500">共 {total} 个字段，可按标签 / 变量名 / 说明搜索</p>
+          <p className="mt-1 text-[12px] text-text-secondary">共 {total} 个字段，可按标签 / 变量名 / 说明搜索</p>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="搜索，例如：域名 / CREEM / 对账"
-            className="mt-2 w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm outline-none focus:border-accent"
+            className="mt-2 w-full rounded-lg border border-border px-2.5 py-1.5 text-sm outline-none focus:border-accent"
           />
         </div>
         <div className="flex-1 overflow-y-auto px-4 pb-6">
           {filtered.map((s) => (
             <div key={s.title}>
-              <p className="mt-4 mb-1 text-[12px] text-gray-400">{s.title}</p>
+              <p className="mt-4 mb-1 text-[12px] text-text-secondary/60">{s.title}</p>
               {s.rows.map((r) => (
-                <div key={r.label + (r.env ?? "")} className="border-t border-gray-100 py-2">
-                  <p className="text-[13px] font-medium text-gray-700">{r.label}</p>
-                  {r.env ? <p className="font-mono text-[11px] text-gray-500">{r.env}</p> : null}
-                  {r.desc ? <p className="mt-1 text-[12px] text-gray-500">{r.desc}</p> : null}
+                <div key={r.label + (r.env ?? "")} className="border-t border-border py-2">
+                  <p className="text-[13px] font-medium text-text-primary">{r.label}</p>
+                  {r.env ? <p className="font-mono text-[11px] text-text-secondary">{r.env}</p> : null}
+                  {r.desc ? <p className="mt-1 text-[12px] text-text-secondary">{r.desc}</p> : null}
                 </div>
               ))}
             </div>
           ))}
-          {total === 0 ? <p className="py-6 text-center text-[13px] text-gray-400">没有匹配的字段</p> : null}
+          {total === 0 ? <p className="py-6 text-center text-[13px] text-text-secondary/60">没有匹配的字段</p> : null}
         </div>
       </div>
     </div>
@@ -1400,7 +1400,7 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
 
   const c = data?.config
   if (!c) {
-    return <div className="text-center py-16 text-gray-500">无法加载配置</div>
+    return <div className="text-center py-16 text-text-secondary">无法加载配置</div>
   }
 
   const sections: { title: string; note?: string; rows: ConfigRowSpec[] }[] = [
@@ -1626,42 +1626,42 @@ function ConfigTab({ data }: { data: ConfigResponse | null }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-gray-500 text-sm">
+        <p className="text-text-secondary text-sm">
           生产环境配置核对（只显示是否已配置，不暴露密钥原文）。带 * 为必填项，标红「未配置」会导致对应功能不可用。
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={toggleDesc}
-          className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${showDesc ? "border-accent/60 bg-orange-50 text-accent" : "border-gray-300 text-gray-600"}`}
+          className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${showDesc ? "border-accent/60 bg-surface text-accent" : "border-border text-text-secondary"}`}
         >
-          <span className={`relative inline-flex h-[18px] w-[32px] items-center rounded-full ${showDesc ? "bg-accent" : "bg-gray-300"}`}>
-            <span className={`absolute h-[14px] w-[14px] rounded-full bg-white transition-transform ${showDesc ? "translate-x-[16px]" : "translate-x-[2px]"}`} />
+          <span className={`relative inline-flex h-[18px] w-[32px] items-center rounded-full ${showDesc ? "bg-accent" : "bg-border"}`}>
+            <span className={`absolute h-[14px] w-[14px] rounded-full bg-card transition-transform ${showDesc ? "translate-x-[16px]" : "translate-x-[2px]"}`} />
           </span>
           {showDesc ? "隐藏说明" : "显示说明"}
         </button>
           <button
             type="button"
             onClick={() => setHelpOpen(true)}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600"
+            className="rounded-lg border border-border px-3 py-1.5 text-sm text-text-secondary"
           >
             字段说明（可搜索）
           </button>
         </div>
       </div>
       {c.vercelSlugMissing ? (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-[12px] text-amber-800">
+        <p className="rounded-lg bg-surface px-3 py-2 text-[12px] text-amber-500">
           没取到项目 slug，跳转入口已隐藏：请在 Vercel 项目设置里开启 System Environment Variables，
           或手动配置环境变量 VERCEL_PROJECT_SLUG（值为项目 slug，如 cookmate）。
         </p>
       ) : null}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {sections.map((s) => (
-          <div key={s.title} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between gap-2 bg-gray-50 px-4 py-3 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-700">
+          <div key={s.title} className="bg-card border border-border rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between gap-2 bg-surface px-4 py-3 border-b border-border">
+              <h3 className="font-semibold text-text-primary">
                 {s.title}
-                {s.note ? <span className="ml-2 text-[12px] font-normal text-gray-400">{s.note}</span> : null}
+                {s.note ? <span className="ml-2 text-[12px] font-normal text-text-secondary/60">{s.note}</span> : null}
               </h3>
             </div>
             <div>

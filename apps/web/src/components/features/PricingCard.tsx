@@ -58,14 +58,14 @@ export function PricingCard({
       <div
               className={cn(
                 "rounded-2xl px-5 py-6 text-center flex flex-col h-full bg-card border",
-                highlighted ? "bg-bg-brand border-amber-200 ring-1 ring-amber-200" : "border-border"
+                highlighted ? "bg-bg-brand border-amber-500/30 ring-1 ring-amber-200" : "border-border"
               )}
             >
               {/* Plan name */}
               <h3
                 className={cn(
                   "text-sm font-semibold tracking-wide uppercase",
-                  highlighted ? "text-amber-600" : "text-text-secondary"
+                  highlighted ? "text-amber-500" : "text-text-secondary"
                 )}
               >
                 {name}
@@ -129,7 +129,7 @@ export function PricingCard({
                   className={cn(
                     "mt-6 w-full py-2.5 rounded-xl text-sm font-semibold transition-all",
                     highlighted
-                      ? "bg-amber-500 text-white hover:bg-amber-600 active:scale-[0.98]"
+                      ? "bg-surface0 text-white hover:bg-amber-600 active:scale-[0.98]"
                       : "bg-surface text-text-primary border border-border hover:bg-surface active:scale-[0.98]",
                     (disabled || loading) && "opacity-50 cursor-not-allowed active:scale-100"
                   )}

@@ -8,7 +8,7 @@ const variantStyles = {
   primary: "bg-accent text-white hover:bg-[#e55a2b] shadow-sm",
   outline: "border border-accent text-accent hover:bg-bg-brand",
   ghost: "text-text-secondary hover:bg-surface",
-  destructive: "bg-red-500 text-white hover:bg-red-600 shadow-sm",
+  destructive: "bg-error/100 text-white hover:bg-red-600 shadow-sm",
 } as const
 
 const sizeStyles = {

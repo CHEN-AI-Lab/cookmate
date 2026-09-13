@@ -58,18 +58,18 @@ export default function DashboardPage() {
             <h1 className='text-2xl font-bold text-text-primary tracking-tight'>{td("welcomeBack")}</h1>
                         <p className='text-text-secondary mt-1 text-sm'>{td("welcomeDesc")}</p>
           </div>
-          <span className='hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-accent text-xs font-semibold rounded-full'>
+          <span className='hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface text-accent text-xs font-semibold rounded-full'>
             {isPaidTier(stats?.subscriptionTier) ? td("proUser") : td("freeUser")}
           </span>
         </div>
 
         {/* ===== Demo banner ===== */}
         {isDemoUser && (
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5">
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-500/30 rounded-2xl p-5">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <p className="font-bold text-amber-800 text-sm">{tc("demoMode")}</p>
-                <p className="text-xs text-amber-600 mt-1">{tc("demoDesc")}</p>
+                <p className="font-bold text-amber-500 text-sm">{tc("demoMode")}</p>
+                <p className="text-xs text-amber-500 mt-1">{tc("demoDesc")}</p>
               </div>
               <Link
                 href="/register"
@@ -108,9 +108,9 @@ export default function DashboardPage() {
                         <span className='h-px flex-1 bg-surface' />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <QuickActionCard href="/app/pantry" title={td("managePantry")} desc={td("pantryDesc")} emoji="🥦" hoverBorder="hover:border-green-200" hoverShadow="hover:shadow-green-100/40" />
-            <QuickActionCard href="/app/meal-plan" title={td("mealPlanTitle")} desc={td("mealPlanDesc")} emoji="📅" hoverBorder="hover:border-amber-200" hoverShadow="hover:shadow-amber-100/40" />
-            <QuickActionCard href="/app/grocery-list" title={td("groceryTitle")} desc={td("groceryDesc")} emoji="🛒" hoverBorder="hover:border-orange-200" hoverShadow="hover:shadow-orange-100/40" />
+            <QuickActionCard href="/app/pantry" title={td("managePantry")} desc={td("pantryDesc")} emoji="🥦" hoverBorder="hover:border-success/30" hoverShadow="hover:shadow-success/20" />
+            <QuickActionCard href="/app/meal-plan" title={td("mealPlanTitle")} desc={td("mealPlanDesc")} emoji="📅" hoverBorder="hover:border-amber-500/30" hoverShadow="hover:shadow-amber-500/20" />
+            <QuickActionCard href="/app/grocery-list" title={td("groceryTitle")} desc={td("groceryDesc")} emoji="🛒" hoverBorder="hover:border-border" hoverShadow="hover:shadow-accent/20" />
           </div>
         </div>
       </div>

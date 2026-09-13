@@ -34,7 +34,7 @@ export default function PublicNavbar() {
           <LanguageSwitcher />
           <Link
             href="/login"
-            className="text-accent font-medium hover:text-orange-600 text-sm"
+            className="text-accent font-medium hover:text-accent text-sm"
           >
             {tnav("login")}
           </Link>

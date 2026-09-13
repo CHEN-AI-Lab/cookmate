@@ -34,7 +34,7 @@ export default async function HomePage() {
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             href={ctaHref}
-            className="bg-accent text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200"
+            className="bg-accent text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-orange-600 transition-colors shadow-lg shadow-accent/20"
           >
             {thero("cta")}
           </Link>
@@ -59,7 +59,7 @@ export default async function HomePage() {
               {thero.raw("demoIngredients").map((item: string) => (
                 <span
                   key={item}
-                  className="bg-orange-50 text-accent px-3 py-1 rounded-full text-sm border border-orange-200"
+                  className="bg-surface text-accent px-3 py-1 rounded-full text-sm border border-border"
                 >
                   {item}
                 </span>
@@ -73,7 +73,7 @@ export default async function HomePage() {
             </Link>
           </div>
           {/* Result preview */}
-          <div className='mt-6 p-4 bg-gray-50 rounded-xl text-left'>
+          <div className='mt-6 p-4 bg-surface rounded-xl text-left'>
             <p className="text-sm font-medium text-text-primary">{thero("demoRecipe")}</p>
             <p className="text-lg font-bold mt-1">{thero("demoRecipeName")}</p>
             <p className="text-sm text-text-secondary mt-1">{thero("demoRecipeMeta")}</p>
@@ -112,7 +112,7 @@ export default async function HomePage() {
             {["aiRecipe", "mealPlan", "grocery", "diet", "pantry", "recipes"].map((key) => {
               const feature = tfeatures.raw(key) as { emoji: string; title: string; desc: string }
               return (
-                <div key={key} className="bg-card rounded-2xl p-6 shadow-sm border border-orange-50">
+                <div key={key} className="bg-card rounded-2xl p-6 shadow-sm border border-border">
                   <span className="text-3xl">{feature.emoji}</span>
                   <h3 className="mt-3 font-bold text-text-primary">{feature.title}</h3>
                   <p className="mt-1 text-sm text-text-secondary">{feature.desc}</p>
@@ -152,10 +152,10 @@ export default async function HomePage() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="bg-card rounded-2xl p-6 shadow-sm border border-orange-50 flex flex-col"
+                className="bg-card rounded-2xl p-6 shadow-sm border border-border flex flex-col"
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-lg font-bold text-accent">
+                  <div className="w-10 h-10 rounded-full bg-surface flex items-center justify-center text-lg font-bold text-accent">
                     {ttestimonials(`item${i}Name`).charAt(0)}
                   </div>
                   <div>

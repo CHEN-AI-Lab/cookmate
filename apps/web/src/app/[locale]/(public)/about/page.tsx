@@ -39,7 +39,7 @@ export default async function AboutPage() {
               { emoji: "⚡", titleKey: "featureSpeedTitle", descKey: "featureSpeedDesc" },
               { emoji: "📋", titleKey: "featureFullTitle", descKey: "featureFullDesc" },
             ].map((v) => (
-              <div key={v.titleKey} className="text-center p-6 bg-bg-brand rounded-2xl border border-orange-50">
+              <div key={v.titleKey} className="text-center p-6 bg-bg-brand rounded-2xl border border-border">
                 <span className="text-4xl">{v.emoji}</span>
                 <h3 className="mt-3 font-bold text-text-primary">{t(v.titleKey)}</h3>
                 <p className='mt-1 text-sm text-text-secondary'>{t(v.descKey)}</p>
@@ -52,7 +52,7 @@ export default async function AboutPage() {
             <p className='text-text-secondary mb-6'>{t("ctaDesc")}</p>
             <Link
               href="/register"
-              className="inline-block bg-accent text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200"
+              className="inline-block bg-accent text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-orange-600 transition-colors shadow-lg shadow-accent/20"
             >
               {t("ctaButton")}
             </Link>

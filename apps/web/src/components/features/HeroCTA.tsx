@@ -18,7 +18,7 @@ export function HeroCTA() {
         </div>
         <Link
           href="/app/recipes"
-          className="inline-flex items-center gap-2 bg-accent text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-orange-600 hover:shadow-lg hover:shadow-orange-200/50 transition-all duration-200 shrink-0"
+          className="inline-flex items-center gap-2 bg-accent text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-orange-600 hover:shadow-lg hover:shadow-accent/20/50 transition-all duration-200 shrink-0"
         >
           🍳 {thero("cta")}
         </Link>

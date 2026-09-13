@@ -56,7 +56,7 @@ export function Sidebar({
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
                   ? "bg-orange-100 text-accent"
-                  : "text-text-secondary hover:bg-orange-50 hover:text-accent"
+                  : "text-text-secondary hover:bg-accent/10 hover:text-accent"
               }`}
             >
               <span className="text-lg">{item.icon}</span>
@@ -70,7 +70,7 @@ export function Sidebar({
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
               pathname === "/admin" || pathname.endsWith("/admin")
                 ? "bg-orange-100 text-accent"
-                : "text-text-secondary hover:bg-orange-50 hover:text-accent"
+                : "text-text-secondary hover:bg-accent/10 hover:text-accent"
             }`}
           >
             <span className="text-lg">🛡️</span>
@@ -174,7 +174,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
       {demoLangToast && typeof document !== "undefined" && createPortal(
         /* Centered toast — floats in middle of screen, auto-dismisses 2.5s */
         <div className="fixed inset-0 flex items-start justify-center pt-[33vh] pointer-events-none z-[99999]">
-          <div className="bg-amber-50 border border-amber-200 text-amber-700 px-5 py-3 rounded-xl text-sm shadow-lg">
+          <div className="bg-amber-500/100/10 border-amber-500/30 text-amber-500 px-5 py-3 rounded-xl text-sm shadow-lg">
             {demoLangToast}
           </div>
         </div>,
@@ -197,7 +197,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-gray-100 rounded-xl shadow-lg py-1.5 text-sm">
+        <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-xl shadow-lg py-1.5 text-sm">
           <Link
             href="/app/settings"
             onClick={() => { setOpen(false); setLangOpen(false) }}
@@ -222,7 +222,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
               <div
                 ref={submenuRef}
                 style={{ position: "fixed", top: langPos.top, left: langPos.left, zIndex: 50 }}
-                className="bg-card border border-gray-100 rounded-lg shadow-lg py-1 w-[110px]"
+                className="bg-card border border-border rounded-lg shadow-lg py-1 w-[110px]"
               >
                 {locales
                   .filter((l) => !isDemoUser || l === "zh-CN" || l === "en")
@@ -244,7 +244,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
                                               // replace 而非 push：切换语言不往历史栈加记录，返回按钮回到上一个界面
                                               router.replace(window.location.pathname.replace(new RegExp("^/(?:" + locales.join("|") + ")(/|$)"), "/") || "/", { locale: l })
                                             }}
-                      className={"w-full text-left px-4 py-2 text-sm transition-colors " + (active ? "text-accent bg-orange-50 font-medium" : "text-text-secondary hover:bg-orange-50 hover:text-accent")}
+                      className={"w-full text-left px-4 py-2 text-sm transition-colors " + (active ? "text-accent bg-accent/10 font-medium" : "text-text-secondary hover:bg-accent/10 hover:text-accent")}
                     >
                       {localeNames[l] || l}
                     </button>
@@ -257,7 +257,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
           <div className="border-t border-border my-1" />
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex items-center gap-2.5 px-4 py-2 text-text-secondary hover:bg-surface hover:text-red-600 w-full text-left transition-colors"
+            className="flex items-center gap-2.5 px-4 py-2 text-text-secondary hover:bg-surface hover:text-error w-full text-left transition-colors"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />

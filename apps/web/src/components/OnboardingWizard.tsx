@@ -170,11 +170,11 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
             <div key={s} className="flex items-center gap-1">
               <div
                 className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  i <= step ? "bg-accent" : "bg-gray-200"
+                  i <= step ? "bg-accent" : "bg-border"
                 }`}
               />
               {i < STEPS.length - 1 && (
-                <div className={`w-6 h-0.5 ${i < step ? "bg-accent" : "bg-gray-200"}`} />
+                <div className={`w-6 h-0.5 ${i < step ? "bg-accent" : "bg-border"}`} />
               )}
             </div>
           ))}
@@ -256,7 +256,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                   <p className="text-xs text-text-secondary mt-1.5">{t("selectedCuisines", { count: cuisinePref.length })}</p>
                 )}
                 {error && (
-                  <p className="text-xs text-red-600 mt-1.5">{error}</p>
+                  <p className="text-xs text-error mt-1.5">{error}</p>
                 )}
               </div>
 
@@ -297,7 +297,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
                           onClick={() => toggleIngredient(item)}
                           className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
                             selectedIngredients.has(item)
-                              ? "bg-orange-50 text-accent border border-orange-200"
+                              ? "bg-accent/10 border-accent/30 text-accent"
                               : "bg-surface text-text-secondary border border-border hover:bg-surface"
                           }`}
                         >
@@ -319,7 +319,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
               <div className="text-5xl mb-4">🤖</div>
               <h2 className="text-xl font-bold text-text-primary">{t("tryAiTitle")}</h2>
               <p className="text-text-secondary mt-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: t.raw("tryAiDesc") }} />
-              <div className="mt-6 inline-flex items-center gap-2 bg-orange-50 text-accent px-4 py-2 rounded-full text-sm font-medium">
+              <div className="mt-6 inline-flex items-center gap-2 bg-accent/10 text-accent px-4 py-2 rounded-full text-sm font-medium">
                 {t("tryAiButton")}
               </div>
             </div>
@@ -368,7 +368,7 @@ export default function OnboardingWizard({ onComplete }: { onComplete: () => voi
               disabled={!canNext() || saving}
               className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
                 !canNext() || saving
-                  ? "bg-gray-200 text-text-secondary cursor-not-allowed"
+                  ? "bg-border text-text-secondary cursor-not-allowed"
                   : "bg-accent text-white hover:bg-orange-600"
               }`}
             >

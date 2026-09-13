@@ -159,7 +159,7 @@ export default function PantryPage() {
               type="text" value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("searchPlaceholder")}
-              className="w-full bg-card border border-gray-100 rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent"
+              className="w-full bg-card border border-border rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent"
             />
           </div>
           <button
@@ -192,11 +192,11 @@ export default function PantryPage() {
                 className={`px-3 py-1 rounded-full text-sm border flex items-center gap-1 cursor-pointer transition-colors ${
                   selected.has(item.id)
                     ? "bg-gradient-to-r from-orange-400 to-amber-400 text-white border-transparent"
-                    : "bg-orange-50 text-accent border-orange-200 hover:bg-orange-100"
+                    : "bg-surface text-accent border-border hover:bg-surface"
                 }`}
               >
                 {displayIngredient(item.name, locale)}
-                <button onClick={(e) => { e.stopPropagation(); removeItem(item.id) }} className="ml-1 hover:text-red-600">{isDemoUser ? "" : "×"}</button>
+                <button onClick={(e) => { e.stopPropagation(); removeItem(item.id) }} className="ml-1 hover:text-error">{isDemoUser ? "" : "×"}</button>
               </span>
             ))}
           </div>
@@ -250,7 +250,7 @@ export default function PantryPage() {
               onChange={(e) => setInputName(e.target.value)}
               onKeyDown={async (e) => { if (e.key === "Enter") { await addItem(inputName); setShowAddDialog(false) } }}
               placeholder={t("addItemPlaceholder")}
-              className="w-full border border-gray-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent mb-4"
+              className="w-full border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent mb-4"
               autoFocus
             />
             <div className="flex gap-2">
@@ -274,7 +274,7 @@ export default function PantryPage() {
                     {/* 重复添加提示 */}
                     {dupDialog && (
                       <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setDupDialog(null)}>
-                        <div className="bg-amber-50 border border-amber-200 text-amber-700 px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="bg-surface border border-amber-500/30 text-amber-500 px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center" onClick={(e) => e.stopPropagation()}>
                           <span>{t("alreadyInPantry", { name: dupDialog })}</span>
                         </div>
                       </div>
@@ -283,7 +283,7 @@ export default function PantryPage() {
                     {/* 无效输入提示（纯数字/符号等） */}
                     {invalidToast && (
                       <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center pt-[33vh]">
-                        <div className="bg-amber-50 border border-amber-200 text-amber-700 px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center animate-in fade-in zoom-in-95 duration-200">
+                        <div className="bg-surface border border-amber-500/30 text-amber-500 px-6 py-4 rounded-xl shadow-xl text-sm max-w-xs text-center animate-in fade-in zoom-in-95 duration-200">
                           <span>{t("invalidIngredients")}</span>
                         </div>
                       </div>
@@ -291,7 +291,7 @@ export default function PantryPage() {
 
       {/* Demo user toast */}
       {demoToast && (
-        <div className="fixed left-1/2 top-[33vh] -translate-x-1/2 bg-amber-50 border border-amber-200 text-amber-800 px-6 py-3 rounded-xl text-sm shadow-lg z-[100]">
+        <div className="fixed left-1/2 top-[33vh] -translate-x-1/2 bg-surface border border-amber-500/30 text-amber-500 px-6 py-3 rounded-xl text-sm shadow-lg z-[100]">
           {demoToast}
         </div>
       )}

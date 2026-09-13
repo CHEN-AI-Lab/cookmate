@@ -33,11 +33,11 @@ export default async function FAQPage() {
           {items.map((item) => (
             <details
               key={item.q}
-              className="bg-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden group"
+              className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden group"
             >
               <summary className="px-6 py-4 cursor-pointer font-medium text-text-primary hover:text-accent transition-colors list-none flex items-center justify-between">
                 <span>{t(item.q)}</span>
-                <span className="text-gray-300 group-open:rotate-180 transition-transform text-lg">▼</span>
+                <span className="text-text-secondary/40 group-open:rotate-180 transition-transform text-lg">▼</span>
               </summary>
               <div className="px-6 pb-4 text-text-secondary leading-relaxed text-sm border-t border-border pt-3">
                 {t(item.a)}
