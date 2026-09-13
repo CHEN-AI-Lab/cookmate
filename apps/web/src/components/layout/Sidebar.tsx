@@ -10,6 +10,7 @@ import { useState, useRef, useEffect, useLayoutEffect } from "react"
 import { createPortal } from "react-dom"
 import { locales, localeNames } from "@cookmate/shared/constants"
 import { isChineseLocale } from "@cookmate/shared/constants/locales"
+import ThemeToggle from "@/components/ui/ThemeToggle"
 
 const navItems = [
   { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
@@ -79,8 +80,11 @@ export function Sidebar({
         )}
       </nav>
 
-      {/* Bottom: user menu dropdown */}
+      {/* Bottom: theme toggle + user menu dropdown */}
       <div className="px-3 py-3 border-t border-border">
+        <div className="mb-1">
+          <ThemeToggle />
+        </div>
         {name ? (
           <UserMenu name={name} initial={initial} t={t} isDemoUser={isDemoUser} />
         ) : (

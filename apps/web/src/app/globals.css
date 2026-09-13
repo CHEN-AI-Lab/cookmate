@@ -1,9 +1,13 @@
 @import "tailwindcss";
 
+/* 深色变体改为挂 class（.dark）：脚本会在 <html> 上挂 .dark/.light，
+   这样「手动切深色 + 刷新」也能在首屏就命中，不依赖系统偏好 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  /* 关键：声明支持亮/暗两套，浏览器按系统主题首屏即渲染深色画布与原生控件，
-     否则暗色模式刷新会先闪一下浅色（FOUC） */
-  color-scheme: light dark;
+  /* 默认浅色。暗色由下面的 @media(prefers-color-scheme:dark) 或手动 .dark 覆盖；
+     color-scheme 决定原生控件/画布配色，必须跟着一起切 */
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
   --color-bg-brand: #FFF8F0;
@@ -62,8 +66,10 @@
   50% { box-shadow: 0 0 0 6px rgba(255,140,66,0); }
 }
 
+/* 系统跟随（默认）：系统为暗色、且用户没有显式选浅色(.light)时生效 */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
+    color-scheme: dark;
     --background: #0a0a0a;
     --foreground: #ededed;
     --color-card: #1a1a2e;
@@ -83,6 +89,24 @@
     --color-green: #4ade80;
     --color-blue: #60a5fa;
   }
+}
+
+/* 用户显式选深色：不依赖系统偏好，刷新后由 <html class="dark"> 直接命中 */
+:root.dark {
+  color-scheme: dark;
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --color-card: #1a1a2e;
+  --color-surface: #16213e;
+  --color-bg-brand: #171310;
+  --color-border: rgba(255,255,255,0.1);
+  --color-overlay: rgba(0,0,0,0.7);
+  --color-text-primary: #ededed;
+  --color-text-secondary: #9ca3af;
+  --color-accent: #FF6B35;
+  --color-info: #60a5fa;
+  --color-green: #4ade80;
+  --color-blue: #60a5fa;
 }
 
 html {

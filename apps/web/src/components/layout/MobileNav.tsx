@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
+import ThemeToggle from "@/components/ui/ThemeToggle"
 
 const navItems = [
   { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
@@ -66,6 +67,7 @@ export function MobileNav({
             <span className="text-[10px] font-medium leading-tight">管理员</span>
           </Link>
         )}
+        <ThemeToggle variant="icon" />
         <LanguageSwitcher isDemoUser={isDemoUser} />
       </nav>
     </header>
