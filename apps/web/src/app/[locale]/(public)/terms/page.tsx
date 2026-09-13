@@ -36,6 +36,11 @@ export default async function TermsPage() {
           </section>
 
           <section>
+            <h2 className="text-xl font-bold text-text-primary mb-3">{t("subscriptionRenewalTitle")}</h2>
+            <p>{t("subscriptionRenewalDesc")}</p>
+          </section>
+
+          <section>
             <h2 className="text-xl font-bold text-text-primary mb-3">{t("aiTitle")}</h2>
             <p>{t("aiDesc")}</p>
           </section>
