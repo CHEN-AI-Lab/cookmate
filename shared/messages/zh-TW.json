@@ -48,7 +48,9 @@
     "demoLangToast": "體驗用戶只能在中文和英文間切換",
     "language": "語言",
     "logout": "退出登錄",
-    "howToUse": "使用流程"
+    "howToUse": "使用流程",
+    "themeDark": "深色模式",
+    "themeToggle": "切換主題"
   },
   "hero": {
     "title": "今天吃什麼？",
@@ -863,27 +865,9 @@
     "featureFullTitle": "全流程管理"
   },
   "stats": {
-    "title": "數據",
-    "usersLabel": "註冊用戶",
-    "recipesLabel": "菜譜生成",
-    "mealsLabel": "餐食規劃",
-    "satisfactionLabel": "用戶滿意度",
-    "users": "10,000+",
-    "recipes": "50,000+",
-    "meals": "200,000+",
-    "satisfaction": "98%"
-  },
-  "testimonials": {
-    "title": "用戶怎麼說",
-    "item1Content": "以前每天下班最煩的就是想吃什麼。現在打開 CookMate 輸入冰箱裡的食材，3 秒就有答案，太方便了！",
-    "item2Name": "張大力",
-    "item2Role": "健身教練 · 上海",
-    "item2Content": "減脂期需要精確控制卡路里和營養比例，CookMate 的 AI 推薦幫了大忙，每週計劃一鍵搞定。",
-    "item3Role": "家庭主婦 · 廣州",
-    "item3Content": "家裡人多口味雜，CookMate 的周計劃功能讓我們家再也不用為做飯吵架了，購物清單也省心。",
-    "item1Name": "王小美",
-    "item1Role": "上班族 · 北京",
-    "item3Name": "李阿姨"
+    "title": "今天就開始更聰明的烹飪",
+    "subtitle": "AI 食譜、每週膳食計畫和購物清單——年付低至 $3.33/月",
+    "cta": "查看定價"
   },
   "ctaBanner": {
     "title": "準備好告別選擇困難了嗎？",

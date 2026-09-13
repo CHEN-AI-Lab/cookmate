@@ -48,7 +48,9 @@
     "faq": "よくある質問",
     "howToUse": "使い方",
     "login": "ログイン",
-    "pricing": "料金"
+    "pricing": "料金",
+    "themeDark": "ダークモード",
+    "themeToggle": "テーマを切り替え"
   },
   "hero": {
     "title": "何を作るか、もう迷わない",
@@ -863,27 +865,9 @@
     "subtitle": "AIが毎日の「何を食べるか」問題を解決"
   },
   "stats": {
-    "usersLabel": "アクティブユーザー",
-    "recipesLabel": "生成されたレシピ",
-    "meals": "100,000+",
-    "mealsLabel": "計画された食事",
-    "satisfactionLabel": "ユーザー満足度",
-    "title": "数字で見る",
-    "users": "10,000+",
-    "recipes": "50,000+",
-    "satisfaction": "98%"
-  },
-  "testimonials": {
-    "title": "ユーザーの声",
-    "item1Name": "田中 花子",
-    "item1Role": "主婦",
-    "item1Content": "毎日の献立に悩むことがなくなりました。冷蔵庫の残り物を入れるだけで、美味しいレシピを提案してくれます。",
-    "item2Name": "鈴木 太郎",
-    "item2Role": "会社員",
-    "item2Content": "筋トレ中の食事管理に最適です。タンパク質を考慮したレシピを提案してくれて、週間献立も自動で組んでくれます。",
-    "item3Name": "佐藤 美咲",
-    "item3Role": "大学生",
-    "item3Content": "料理初心者でも簡単に使えます。材料を入れるだけで3秒でレシピが出てくるので、自炊のハードルがグッと下がりました。"
+    "title": "今日から、もっと賢いお料理を",
+    "subtitle": "AIレシピ・週間ミールプラン・買い物リスト — 年額プランで月額 $3.33 から",
+    "cta": "料金を見る"
   },
   "ctaBanner": {
     "title": "さあ、今日から始めよう",

@@ -12,7 +12,6 @@ export default async function HomePage() {
   const thow = await getTranslations("howItWorks")
   const tfeatures = await getTranslations("features")
   const tstats = await getTranslations("stats")
-  const ttestimonials = await getTranslations("testimonials")
   const tcta = await getTranslations("ctaBanner")
 
   return (
@@ -123,52 +122,17 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="py-14 bg-card">
-        <div className="max-w-[1400px] mx-auto px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              { value: "users", label: "usersLabel" },
-              { value: "recipes", label: "recipesLabel" },
-              { value: "meals", label: "mealsLabel" },
-              { value: "satisfaction", label: "satisfactionLabel" },
-            ].map((s) => (
-              <div key={s.label}>
-                <p className="text-3xl md:text-4xl font-bold text-accent">
-                  {tstats(s.value)}
-                </p>
-                <p className="mt-1 text-sm text-text-secondary">{tstats(s.label)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-16 bg-bg-brand">
-        <div className="max-w-[1400px] mx-auto px-8">
-          <h2 className="text-3xl font-bold text-center text-text-primary">{ttestimonials("title")}</h2>
-          <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="bg-card rounded-2xl p-6 shadow-sm border border-border flex flex-col"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-surface flex items-center justify-center text-lg font-bold text-accent">
-                    {ttestimonials(`item${i}Name`).charAt(0)}
-                  </div>
-                  <div>
-                    <p className="font-medium text-text-primary text-sm">{ttestimonials(`item${i}Name`)}</p>
-                    <p className='text-xs text-text-secondary'>{ttestimonials(`item${i}Role`)}</p>
-                  </div>
-                </div>
-                <p className="text-sm text-text-secondary leading-relaxed flex-1">
-                  &ldquo;{ttestimonials(`item${i}Content`)}&rdquo;
-                </p>
-              </div>
-            ))}
-          </div>
+      {/* Pricing CTA */}
+      <section className="py-16 bg-card">
+        <div className="max-w-[1400px] mx-auto px-8 text-center">
+          <h2 className="text-3xl font-bold text-text-primary">{tstats("title")}</h2>
+          <p className="mt-3 text-lg text-text-secondary">{tstats("subtitle")}</p>
+          <Link
+            href="/pricing"
+            className="inline-block mt-8 bg-accent text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-orange-600 transition-colors shadow-lg shadow-accent/20"
+          >
+            {tstats("cta")} →
+          </Link>
         </div>
       </section>
 
