@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useTranslations, useLocale } from "next-intl"
 import { CHANNEL_ICONS } from "@cookmate/shared/constants/payment-channels"
 import { PRICING, type BillingPeriod } from "@cookmate/shared/constants/pricing"
+import { cn } from "@cookmate/shared/utils"
 
 interface Order {
   id: string
@@ -113,7 +114,7 @@ export default function OrdersPage() {
             const date = new Date(order.createdAt)
             const isExpanded = expandedId === order.id
             return (
-              <div key={order.id} className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+              <div key={order.id} className={cn("bg-card rounded-2xl border border-border shadow-sm overflow-hidden", order.status === "PENDING" && "opacity-60")}>
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : order.id)}
                   className="w-full flex items-center justify-between px-4 sm:px-5 py-3 hover:bg-surface/50 transition-colors text-left"
