@@ -41,7 +41,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 ? "bg-green-800 text-white"
                 : t.type === "error"
                   ? "bg-red-800 text-white"
-                  : "bg-card text-text-primary border border-border"
+                  : "bg-bg-inverse text-white border-border"
             }`}
           >
             {t.message}
