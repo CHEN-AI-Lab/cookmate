@@ -48,7 +48,7 @@ export default function ThemeToggle() {
         aria-haspopup="menu"
         aria-expanded={open}
         title={t("themeToggle")}
-        className="flex items-center justify-center w-9 h-9 rounded-lg border border-border bg-surface text-text-secondary hover:text-accent transition-colors"
+        className="flex items-center justify-center w-8 h-8 rounded-lg text-text-secondary hover:text-accent hover:bg-surface transition-colors"
       >
         <span className="theme-opt theme-opt-icon theme-opt-system">
           <MonitorIcon />
