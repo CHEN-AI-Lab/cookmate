@@ -499,7 +499,8 @@
     "dinner": "晚餐",
     "aiThinking": "🤔 AI 正在思考...",
     "clearAll": "清空",
-    "duplicateIngredient": "「{name}」已在食材列表中"
+    "duplicateIngredient": "「{name}」已在食材列表中",
+    "delete": "刪除"
   },
   "billing": {
     "title": "💳 賬單與訂閱",

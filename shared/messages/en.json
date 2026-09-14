@@ -499,7 +499,8 @@
     "nextPage": "Next",
     "pageInfo": "Page {page} / {total}",
     "duplicateIngredient": "「{name}」is already in the ingredient list",
-    "demoToast": "Demo mode is read-only. Sign up to use all features."
+    "demoToast": "Demo mode is read-only. Sign up to use all features.",
+    "delete": "Delete"
   },
   "billing": {
     "title": "💳 Billing & Subscription",

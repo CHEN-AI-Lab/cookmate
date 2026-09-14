@@ -399,15 +399,25 @@ export default function MyRecipesPage() {
         <div className="space-y-3">
           {filtered.map((recipe) => {
             const isSelected = selectedIds.has(recipe.id)
+            // 展开 / 选择二合一动作。外层原来直接是 <button>，但卡内右侧还有「收藏」「删除」
+            // 两个 <button>，button 套 button 是非法 HTML，会触发 React hydration error
+            //（实测本页 44 处）。故外层改为 div[role=button]，并用 onKeyDown 补回键盘可达性。
+            const toggleExpandOrSelect = () =>
+              isSelectMode ? toggleSelect(recipe.id) : setExpandedId(expandedId === recipe.id ? null : recipe.id)
             return (
               <div key={recipe.id} className={`bg-card rounded-2xl shadow-sm border overflow-hidden ${
                 recipe.starred ? "border-amber-500/30" : "border-border"
               }`}>
-                <button
-                  onClick={() => isSelectMode ? toggleSelect(recipe.id) : setExpandedId(expandedId === recipe.id ? null : recipe.id)}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={toggleExpandOrSelect}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleExpandOrSelect() }
+                  }}
                   // min-w-0：卡内标题/描述是 truncate（white-space:nowrap），button 默认 min-width:auto
                   // 会被它撑到「一整行文字」的宽度，成为整页横向溢出的源头
-                  className="w-full min-w-0 text-left p-4 flex items-start justify-between hover:bg-surface/30 transition-colors"
+                  className="w-full min-w-0 text-left p-4 flex items-start justify-between hover:bg-surface/30 transition-colors cursor-pointer"
                 >
                   <div className="flex items-start gap-2 flex-1 min-w-0">
                     {isSelectMode && (
@@ -459,7 +469,7 @@ export default function MyRecipesPage() {
                     )}
                     <span className="text-text-secondary">{expandedId === recipe.id ? "▲" : "▼"}</span>
                   </div>
-                </button>
+                </div>
 
               {expandedId === recipe.id && (
                 <div className="px-4 pb-4 border-t border-border">

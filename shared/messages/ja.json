@@ -499,7 +499,8 @@
     "unstar": "お気に入り解除",
     "unstarToast": "お気に入り解除",
     "wednesday": "水",
-    "yourPantry": "あなたの食材庫"
+    "yourPantry": "あなたの食材庫",
+    "delete": "削除"
   },
   "billing": {
     "title": "課金管理",
