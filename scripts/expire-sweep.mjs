@@ -4,7 +4,7 @@
  * 背景：CookMate 原本在 /api/dashboard GET 端点里检测到用户 PRO 过期时直接 update
  * 降级为 FREE —— 违反 REST 语义（GET 写库），与未来缓存不兼容。
  *
- * 本脚本独立处理降级，由 Vercel Cron（建议每日 03:00 UTC）或运维手动触发：
+ * 本脚本独立处理降级，由 Vercel Cron（每日 00:00 UTC = 北京 08:00）或运维手动触发：
  *   - 扫描所有 subscriptionTier='PRO' 且 subscriptionExpiryDate < now() 的用户
  *   - 一次性 updateMany 降级为 FREE
  *   - 输出处理数量
@@ -17,7 +17,7 @@
  * 依赖：运行时能从环境变量拿到 DATABASE_URL（与 Next 运行时一致；Prisma Client 会自动读取 .env）。
  *
  * Vercel Cron 配置（apps/web/vercel.json）：
- *   { "crons": [{ "path": "/api/cron/expire-sweep", "schedule": "0 3 * * *" }] }
+ *   { "crons": [{ "path": "/api/cron/expire-sweep", "schedule": "0 0 * * *" }] }
  */
 import { PrismaClient } from "@prisma/client"
 

@@ -988,14 +988,24 @@ tar -czf cookmate-data-backup-$(date +%Y%m%d).tar.gz /opt/cookmate/data/
 
 ### E.5 Vercel Cron 配置（推荐）
 
-在 apps/web/vercel.json 中配置每日过期订阅扫描：
+在 apps/web/vercel.json 中配置两个每日定时任务：
 
 ```json
 {
   "crons": [
-    { "path": "/api/cron/expire-sweep", "schedule": "0 3 * * *" }
+    { "path": "/api/cron/expire-sweep", "schedule": "0 0 * * *" },
+    { "path": "/api/cron/reconcile-cancellations", "schedule": "0 1 * * *" }
   ]
 }
 ```
 
-对应路由 apps/web/src/app/api/cron/expire-sweep/route.ts 会调用 scripts/expire-sweep.mjs 逻辑，将所有过期的 PRO 用户降级为 FREE。
+- `expire-sweep`（UTC 00:00 = 北京 08:00）：把所有过期付费档用户降级为 FREE。
+- `reconcile-cancellations`（UTC 01:00 = 北京 09:00）：输出取消订阅失败清单，便于人工补刀。
+
+两个路由分别在 `apps/web/src/app/api/cron/expire-sweep/route.ts` 与
+`apps/web/src/app/api/cron/reconcile-cancellations/route.ts`，逻辑与 `scripts/expire-sweep.mjs`、
+`scripts/reconcile-cancellations.mjs` 一致。二者均要求 `Authorization: Bearer ${CRON_SECRET}`，
+并声明 `export const dynamic = "force-dynamic"`（避免响应被缓存而不写日志）。
+
+> 注意：Vercel **Hobby 计划**的 cron 每天只能运行一次，且实际触发时间在指定小时的 ±59 分钟内
+> （如 `0 0 * * *` 会在 00:00–00:59 UTC 之间触发）；**cron 只在生产部署上生效**。
