@@ -32,7 +32,7 @@ export function MobileNav({
   const copySupportEmail = async () => {
     try {
       await navigator.clipboard.writeText(SUPPORT_EMAIL)
-      showToast(t("supportCopied", { email: SUPPORT_EMAIL }), "success")
+      showToast(t("supportCopied", { email: SUPPORT_EMAIL }))
     } catch {
       showToast(t("supportCopied", { email: SUPPORT_EMAIL }))
     }
