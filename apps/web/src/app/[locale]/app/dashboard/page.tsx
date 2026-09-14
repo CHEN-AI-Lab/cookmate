@@ -101,7 +101,7 @@ export default function DashboardPage() {
           <StatsCard label={td("starredCount")} value={isDemoUser ? 3 : stats?.starredCount ?? 0} subtext={isDemoUser ? td("subtextStarredDemo") : td("subtextStarred")} />
 
           {/* 周计划数 */}
-          <StatsCard label={td("plannedDays")} value={isDemoUser ? 3 : `${stats?.plannedDays ?? 0}/7`} subtext={isDemoUser ? td("subtextPlannedDaysDemo") : td("subtextPlannedDays")} />
+          <StatsCard label={td("plannedDays")} value={isDemoUser ? 3 : `${stats?.plannedDays ?? 0}`} subtext={isDemoUser ? td("subtextPlannedDaysDemo") : td("subtextPlannedDays")} />
         </div>
 
         {/* ===== Quick access — 3 cards ===== */}
