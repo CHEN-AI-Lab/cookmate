@@ -12,6 +12,10 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
+// 每次都真实执行，禁止 Next 缓存响应。
+// Vercel 官方排查清单第 6 条：缓存的响应不会记入日志，出故障时无法排查。
+export const dynamic = "force-dynamic"
+
 async function logCron(eventType: string, status: string, detail: Record<string, unknown>) {
   await prisma.webhookLog.create({
     data: {
@@ -48,11 +52,27 @@ export async function GET(req: Request) {
   // Bearer token 校验
   const authHeader = req.headers.get("authorization")
   const expected = process.env.CRON_SECRET
+  // Vercel 触发 cron 时必定带这个头（官方文档：每个 cron 请求都含 x-vercel-cron-schedule）。
+  // 用它区分「Vercel 真实触发但鉴权失败」（要记账）与「外部扫描」（不记账，避免被刷日志）。
+  const isVercelCron = Boolean(req.headers.get("x-vercel-cron-schedule"))
   if (!expected) {
     console.error("[cron/reconcile-cancellations] CRON_SECRET 未配置，拒绝执行")
+    if (isVercelCron) {
+      await logCron("reconcile-cancellations", "failed", {
+        error: "CRON_SECRET 未配置",
+        executedAt: new Date().toISOString(),
+      })
+    }
     return NextResponse.json({ error: "服务端配置缺失：CRON_SECRET not configured" }, { status: 500 })
   }
   if (!authHeader || authHeader !== `Bearer ${expected}`) {
+    if (isVercelCron) {
+      await logCron("reconcile-cancellations", "failed", {
+        error: "未授权：Authorization 头与 CRON_SECRET 不匹配",
+        hasAuthHeader: Boolean(authHeader),
+        executedAt: new Date().toISOString(),
+      })
+    }
     return NextResponse.json({ error: "未授权" }, { status: 401 })
   }
 

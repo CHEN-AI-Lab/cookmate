@@ -221,11 +221,19 @@ const EVENT_CN: Record<string, string> = {
   "appid-mismatch": "应用ID不符",
 }
 
-function WebhookEventCell({ eventType }: { eventType: string | null }) {
-  if (!eventType) return <span className="text-text-secondary/60">-</span>
+// Cron 任务名中英映射：与 EVENT_CN 同一展示模式（列表显示中文，悬浮显示英文原文）
+const CRON_TASK_CN: Record<string, string> = {
+  "expire-sweep": "过期降级",
+  "reconcile-cancellations": "取消对账",
+}
+
+// 通用「事件 / 任务名」单元格：显示中文名，鼠标悬浮显示英文原文；未收录的值原样回退。
+// 回调流水与 Cron 日志共用，避免同一展示逻辑写两份。
+function EventCell({ value, dict }: { value: string | null; dict: Record<string, string> }) {
+  if (!value) return <span className="text-text-secondary/60">-</span>
   return (
-    <span className="font-mono text-xs text-text-primary" title={eventType}>
-      {EVENT_CN[eventType] ?? eventType}
+    <span className="font-mono text-xs text-text-primary" title={value}>
+      {dict[value] ?? value}
     </span>
   )
 }
@@ -707,7 +715,7 @@ function WebhooksTab({ q }: { q: TableQuery<WebhookLogsResponse> }) {
                     <ChannelCell channel={l.source} />
                   </td>
                   <td className="px-4 py-3">
-                    <WebhookEventCell eventType={l.eventType} />
+                    <EventCell value={l.eventType} dict={EVENT_CN} />
                   </td>
                   <td className="px-4 py-3">
                     <WebhookStatusBadge status={l.status} />
@@ -1033,7 +1041,9 @@ function CronsTab({ q }: { q: TableQuery<CronLogsResponse> }) {
               {logs.map((l) => (
                 <tr key={l.id} className={l.status === "failed" ? "bg-error/10/50" : ""}>
                   <td className="px-4 py-3 text-text-primary whitespace-nowrap">{fmtTime(l.createdAt)}</td>
-                  <td className="px-4 py-3 text-text-primary font-mono text-xs">{l.eventType ?? "-"}</td>
+                  <td className="px-4 py-3">
+                    <EventCell value={l.eventType} dict={CRON_TASK_CN} />
+                  </td>
                   <td className="px-4 py-3">
                     {l.status === "failed" ? (
                       <span className="inline-flex px-2 py-0.5 rounded-full bg-error/10 text-error text-xs font-semibold">
