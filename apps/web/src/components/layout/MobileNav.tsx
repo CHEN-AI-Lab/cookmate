@@ -221,7 +221,7 @@ export function MobileNav({
                     href={item.href}
                     className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
                       isNavActive(pathname, item.href)
-                        ? "bg-accent-soft text-accent dark:bg-accent/15 dark:text-accent"
+                        ? "bg-accent-soft text-accent"
                         : "text-text-secondary hover:bg-surface hover:text-accent"
                     }`}
                   >

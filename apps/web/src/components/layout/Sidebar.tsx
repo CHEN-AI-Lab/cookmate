@@ -79,7 +79,7 @@ export function Sidebar({
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-accent-soft text-accent dark:bg-accent/15 dark:text-accent"
+                  ? "bg-accent-soft text-accent"
                   : "text-text-secondary hover:bg-accent/10 hover:text-accent"
               }`}
             >
@@ -93,7 +93,7 @@ export function Sidebar({
             href={NAV_ADMIN_ITEM.href}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
               isNavActive(pathname, NAV_ADMIN_ITEM.href)
-                ? "bg-accent-soft text-accent dark:bg-accent/15 dark:text-accent"
+                ? "bg-accent-soft text-accent"
                 : "text-text-secondary hover:bg-accent/10 hover:text-accent"
             }`}
           >
