@@ -68,9 +68,9 @@ export function RecipeCard({
         onClick={onToggleExpand}
         className="w-full text-left p-6 flex items-start justify-between hover:bg-surface/30 transition-colors cursor-pointer"
       >
-        <div className="flex items-start gap-3 flex-1">
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
               <span className="text-xl">🍽️</span>
               <h3 className="text-lg font-bold text-text-primary">{recipe.title}</h3>
               <button

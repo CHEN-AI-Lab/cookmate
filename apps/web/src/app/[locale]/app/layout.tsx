@@ -30,8 +30,12 @@ export default async function AppLayout({ children, params }: { children: React.
       <Sidebar name={session.user.name} isDemoUser={demoUser} isAdmin={isAdmin} />
       <MobileNav name={session.user.name} isDemoUser={demoUser} isAdmin={isAdmin} />
       {demoUser && <DemoOnboarding />}
-      {/* pb-24：给移动端底部标签栏（62px）留位，否则正文最后一段会被底栏盖住；桌面端无底栏，恢复 pb-8 */}
-      <main className="flex-1 md:ml-0 pt-16 md:pt-4 px-4 md:px-8 pb-24 md:pb-8">
+      {/* pb-24：给移动端底部标签栏（62px）留位，否则正文最后一段会被底栏盖住；桌面端无底栏，恢复 pb-8
+          min-w-0：main 是 flex 子项，默认 min-width:auto 会被「不允许换行」的内容（如菜谱卡的 truncate 标题）
+            顶到内容最小宽度，把整页横向撑开 —— 实测 390px 视口被撑到 607px，固定底栏随之被推到布局视口外
+            （底栏 bottom 从 844 变 1249），表现为「页面比手机宽 + 右侧露白 + 底栏看不见」。
+          pt-20：移动端顶栏 h-16(64px) 与 pt-16(64px) 等值，页面标题紧贴页眉分割线，这里留 16px 空隙。 */}
+      <main className="flex-1 min-w-0 md:ml-0 pt-20 md:pt-4 px-4 md:px-8 pb-24 md:pb-8">
         <div className="max-w-5xl mx-auto">
           {children}
         </div>

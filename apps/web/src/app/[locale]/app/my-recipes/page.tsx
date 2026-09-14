@@ -316,7 +316,7 @@ export default function MyRecipesPage() {
           onClose={() => setStarBanner(false)}
         />
       )}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-6">
         <h1 className="text-2xl font-bold text-text-primary">{tr("myRecipes")}</h1>
         <div className="flex gap-2 items-center">
           {isSelectMode ? (
@@ -405,7 +405,9 @@ export default function MyRecipesPage() {
               }`}>
                 <button
                   onClick={() => isSelectMode ? toggleSelect(recipe.id) : setExpandedId(expandedId === recipe.id ? null : recipe.id)}
-                  className="w-full text-left p-4 flex items-start justify-between hover:bg-surface/30 transition-colors"
+                  // min-w-0：卡内标题/描述是 truncate（white-space:nowrap），button 默认 min-width:auto
+                  // 会被它撑到「一整行文字」的宽度，成为整页横向溢出的源头
+                  className="w-full min-w-0 text-left p-4 flex items-start justify-between hover:bg-surface/30 transition-colors"
                 >
                   <div className="flex items-start gap-2 flex-1 min-w-0">
                     {isSelectMode && (

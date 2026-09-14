@@ -193,16 +193,26 @@ export function MobileNav({
                   submenu ? "-translate-x-full" : "translate-x-0"
                 }`}
               >
-                {name && (
-                  <div className="flex items-center gap-3 px-3 py-2.5 mb-1.5 rounded-xl bg-surface">
-                    <span className="flex items-center justify-center w-9 h-9 rounded-full bg-accent/10 text-accent text-sm font-bold shrink-0">
-                      {initial}
-                    </span>
-                    <span className="text-sm font-medium text-text-primary truncate">
-                      {isDemoUser && !isChineseLocale(locale) ? "Demo User" : name}
-                    </span>
-                  </div>
-                )}
+                {/* 用户信息行右侧原本是空白 —— 「退出登录」直接放这里：
+                    原先挂在抽屉最底部，小屏一屏放不下，还得多滚一段才能点到。
+                    行内不判空 name：name 缺失时头像回退成「?」，但退出入口必须始终可达。 */}
+                <div className="flex items-center gap-3 px-3 py-2.5 mb-1.5 rounded-xl bg-surface">
+                  <span className="flex items-center justify-center w-9 h-9 rounded-full bg-accent/10 text-accent text-sm font-bold shrink-0">
+                    {initial}
+                  </span>
+                  <span className="flex-1 min-w-0 text-sm font-medium text-text-primary truncate">
+                    {isDemoUser && !isChineseLocale(locale) ? "Demo User" : name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => signOut({ callbackUrl: "/" })}
+                    title={t("logout")}
+                    className="flex items-center gap-1.5 shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-card text-text-secondary hover:text-error hover:bg-border transition-colors cursor-pointer"
+                  >
+                    <LogoutIcon />
+                    <span>{t("logout")}</span>
+                  </button>
+                </div>
 
                 {/* 未进底栏的内容页（食材库 / 账单） */}
                 {MOBILE_MENU_ITEMS.map((item) => (
@@ -297,18 +307,6 @@ export function MobileNav({
                   </span>
                 </button>
 
-                <div className="border-t border-border my-1.5" />
-
-                <button
-                  type="button"
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                  className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-medium text-text-secondary hover:bg-surface hover:text-error transition-colors cursor-pointer text-left"
-                >
-                  <span className="w-5 flex justify-center shrink-0">
-                    <LogoutIcon />
-                  </span>
-                  <span className="truncate">{t("logout")}</span>
-                </button>
               </div>
 
               {/* 第二层：二级子菜单（从右侧滑入 —— 与桌面端行为一致，只是不越出屏幕） */}
@@ -332,7 +330,12 @@ export function MobileNav({
                         <button
                           key={o.value}
                           type="button"
-                          onClick={() => applyPref(o.value)}
+                          onClick={() => {
+                            // 选完立即收起整个抽屉 —— 与语言一致（switchLocale 里也调了 close()），
+                            // 否则用户选完主题仍停在主题列表上，还要自己点返回/遮罩退出
+                            applyPref(o.value)
+                            close()
+                          }}
                           className={
                             "flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm transition-colors cursor-pointer text-left " +
                             (pref === o.value
