@@ -38,6 +38,8 @@
   --color-success-strong: #16a34a; /* 原 green-600：成功 toast 背景 */
   --color-success-deep: #166534;   /* 原 green-800：Toast 成功深色 */
   --color-accent-hover: #e55a2b;   /* 品牌按钮 hover（原硬编码 hex） */
+  --color-accent-soft: #fff7ed;    /* 主色最淡态：选中态/表头大底，仅浅色用；
+                                    深色下走 dark:bg-accent/15 路径自动跟 --color-accent（#FF6B35） */
   --color-info: #3b82f6;
   --color-green: #22c55e;
   --color-blue: #3b82f6;
@@ -61,6 +63,7 @@
   --color-success-strong: var(--color-success-strong);
   --color-success-deep: var(--color-success-deep);
   --color-accent-hover: var(--color-accent-hover);
+  --color-accent-soft: var(--color-accent-soft);
   --color-info: var(--color-info);
   --color-green: var(--color-green);
   --color-blue: var(--color-blue);
