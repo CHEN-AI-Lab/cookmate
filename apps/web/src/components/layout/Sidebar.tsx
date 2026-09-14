@@ -8,10 +8,18 @@ import { useTranslations } from "next-intl"
 import { useLocale } from "next-intl"
 import { useState, useRef, useEffect, useLayoutEffect, useSyncExternalStore, type ReactNode } from "react"
 import { createPortal } from "react-dom"
-import { locales, localeNames } from "@cookmate/shared/constants"
+import {
+  isNavActive,
+  locales,
+  localeNames,
+  NAV_ACCOUNT_LINKS,
+  NAV_ADMIN_ITEM,
+  NAV_ITEMS,
+} from "@cookmate/shared/constants"
 import { isChineseLocale } from "@cookmate/shared/constants/locales"
 import { useToast } from "@/components/ui/Toast"
 import { SUPPORT_EMAIL } from "@cookmate/shared/constants/support-email"
+import { GearIcon, GlobeIcon, LogoutIcon, MailIcon } from "@/components/ui/nav-icons"
 import {
   applyPref,
   CheckIcon,
@@ -23,15 +31,10 @@ import {
   type ThemePref,
 } from "@/components/ui/theme"
 
-const navItems = [
-  { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
-  { href: "/app/my-recipes", icon: "📚", labelKey: "myRecipes" },
-  { href: "/app/recipes", icon: "🍳", labelKey: "aiRecipes" },
-  { href: "/app/meal-plan", icon: "📅", labelKey: "mealPlan" },
-  { href: "/app/grocery-list", icon: "🛒", labelKey: "groceryList" },
-  { href: "/app/pantry", icon: "🥦", labelKey: "pantry" },
-  { href: "/app/billing", icon: "💳", labelKey: "billing" },
-]
+// 导航项来自 shared/constants/nav.ts（桌面端 / 移动端 / 将来的小程序共用一份）。
+// 禁止在本文件里再写一份列表 —— 历史上就因为两端各写一份，
+// 「我的菜谱 / AI菜谱」调换顺序只改了桌面端、手机端没跟上。
+const navItems = NAV_ITEMS
 
 export function Sidebar({
   name,
@@ -69,7 +72,7 @@ export function Sidebar({
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || pathname.endsWith(item.href)
+          const isActive = isNavActive(pathname, item.href)
           return (
             <Link
               key={item.href}
@@ -87,15 +90,15 @@ export function Sidebar({
         })}
         {isAdmin && (
           <Link
-            href="/admin"
+            href={NAV_ADMIN_ITEM.href}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-              pathname === "/admin" || pathname.endsWith("/admin")
+              isNavActive(pathname, NAV_ADMIN_ITEM.href)
                 ? "bg-accent/10 text-accent"
                 : "text-text-secondary hover:bg-accent/10 hover:text-accent"
             }`}
           >
-            <span className="text-lg">🛡️</span>
-            <span className="truncate">管理员</span>
+            <span className="text-lg">{NAV_ADMIN_ITEM.icon}</span>
+            <span className="truncate">{NAV_ADMIN_ITEM.label}</span>
           </Link>
         )}
       </nav>
@@ -110,10 +113,7 @@ export function Sidebar({
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-text-secondary hover:bg-accent/10 hover:text-accent transition-colors font-medium cursor-pointer w-full text-left"
         >
           <span className="flex items-center justify-center w-7 h-7 shrink-0">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="4" width="20" height="16" rx="2" />
-              <path d="m22 7-10 5L2 7" />
-            </svg>
+            <MailIcon />
           </span>
           <span>{t("support")}</span>
         </button>
@@ -139,26 +139,7 @@ export function Sidebar({
   )
 }
 
-/** 设置（齿轮）——单色线性 SVG，与主题的日/月/显示器图标同一风格 */
-function GearIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  )
-}
-
-/** 语言（地球）——同上 */
-function GlobeIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-      <path d="M2 12h20" />
-    </svg>
-  )
-}
+// GearIcon / GlobeIcon 已移到 @/components/ui/nav-icons（移动端导航也要用，抽出去共用一份）
 
 function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: string; t: (key: string) => string; isDemoUser?: boolean }) {
   const [open, setOpen] = useState(false)
@@ -293,14 +274,14 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
       {open && (
         <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-xl shadow-lg py-1.5 text-sm">
           <Link
-            href="/app/settings"
+            href={NAV_ACCOUNT_LINKS[0].href}
             onClick={() => { setOpen(false); setLangOpen(false) }}
             className="flex items-center gap-2.5 px-4 py-2 text-text-secondary hover:bg-surface hover:text-accent transition-colors"
           >
             <span className="inline-flex shrink-0 text-text-secondary">
               <GearIcon />
             </span>
-            <span>{t("settings")}</span>
+            <span>{t(NAV_ACCOUNT_LINKS[0].labelKey)}</span>
           </Link>
           <div className="border-t border-border my-1" />
           {/* Theme sub-menu（与语言同样的二级展开方式） */}
@@ -393,11 +374,7 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
             onClick={() => signOut({ callbackUrl: "/" })}
             className="flex items-center gap-2.5 px-4 py-2 text-text-secondary hover:bg-surface hover:text-error w-full text-left transition-colors"
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
+            <LogoutIcon />
             <span>{t("logout")}</span>
           </button>
         </div>

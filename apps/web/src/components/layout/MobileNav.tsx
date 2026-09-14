@@ -1,95 +1,381 @@
 "use client"
 
-import { Link } from "@/i18n/navigation"
-import { usePathname } from "next/navigation"
-import { useTranslations } from "next-intl"
-import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
-import ThemeToggle from "@/components/ui/ThemeToggle"
-import { useToast } from "@/components/ui/Toast"
-import { SUPPORT_EMAIL } from "@cookmate/shared/constants/support-email"
+// 移动端导航（< md 显示）：
+//   ① 顶栏：Logo + 头像（账户入口）
+//   ② 底栏：共享定义里标记 inMobileTab 的高频内容页（最多 5 格）
+//   ③ 头像菜单：其余内容页 + 账户项 + 偏好（主题 / 语言走二级子菜单）+ 联系支持 + 退出登录
+//
+// 导航项一律从 shared/constants/nav.ts 取，禁止在本文件手写列表 ——
+// 历史上 Sidebar 与 MobileNav 各写一份，导致顺序调换只改了桌面端。
 
-const navItems = [
-  { href: "/app/dashboard", icon: "📊", labelKey: "dashboard" },
-  { href: "/app/recipes", icon: "🍳", labelKey: "aiRecipes" },
-  { href: "/app/my-recipes", icon: "📚", labelKey: "myRecipes" },
-  { href: "/app/meal-plan", icon: "📅", labelKey: "mealPlan" },
-  { href: "/app/grocery-list", icon: "🛒", labelKey: "groceryList" },
-  { href: "/app/pantry", icon: "🥦", labelKey: "pantry" },
-  { href: "/app/settings", icon: "⚙️", labelKey: "settings" },
-  { href: "/app/billing", icon: "💳", labelKey: "billing" },
-]
+import { Link, useRouter } from "@/i18n/navigation"
+import { usePathname } from "next/navigation"
+import { useLocale, useTranslations } from "next-intl"
+import { signOut } from "next-auth/react"
+import { useCallback, useEffect, useState, useSyncExternalStore, type ReactNode } from "react"
+import { createPortal } from "react-dom"
+import {
+  isNavActive,
+  locales,
+  localeNames,
+  MOBILE_MENU_ITEMS,
+  MOBILE_TAB_ITEMS,
+  NAV_ACCOUNT_LINKS,
+  NAV_ADMIN_ITEM,
+} from "@cookmate/shared/constants"
+import { isChineseLocale } from "@cookmate/shared/constants/locales"
+import { SUPPORT_EMAIL } from "@cookmate/shared/constants/support-email"
+import { useToast } from "@/components/ui/Toast"
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  GearIcon,
+  GlobeIcon,
+  LogoutIcon,
+  MailIcon,
+} from "@/components/ui/nav-icons"
+import {
+  applyPref,
+  CheckIcon,
+  currentPref,
+  MonitorIcon,
+  MoonIcon,
+  subscribeTheme,
+  SunIcon,
+  type ThemePref,
+} from "@/components/ui/theme"
+
+/** 头像菜单里的二级子菜单 —— 同时只开一个 */
+type Submenu = "theme" | "language" | null
 
 export function MobileNav({
+  name,
   isDemoUser,
   isAdmin,
 }: {
+  name?: string | undefined | null
   isDemoUser?: boolean
   isAdmin?: boolean
 }) {
   const pathname = usePathname()
   const t = useTranslations("nav")
+  const locale = useLocale()
+  const router = useRouter()
   const { showToast } = useToast()
+  const [openPath, setOpenPath] = useState<string | null>(null)
+  const [submenu, setSubmenu] = useState<Submenu>(null)
+  const initial = name?.charAt(0)?.toUpperCase() || "?"
+  const pref = useSyncExternalStore(subscribeTheme, currentPref, (): ThemePref => "system")
+
+  // 菜单是否展开：绑定「打开时所在的路由」，路由一变即自动收起。
+  // 用派生值而不是在 effect 里 setState —— 后者会触发级联渲染
+  // （eslint react-hooks/set-state-in-effect 明确禁止）。
+  const open = openPath === pathname
+
+  const close = useCallback(() => {
+    setOpenPath(null)
+    setSubmenu(null)
+  }, [])
+
+  const openMenu = () => {
+    setSubmenu(null)
+    setOpenPath(pathname)
+  }
+
+  // 菜单打开时锁背景滚动 + 支持 Esc 关闭（只操作 DOM / 订阅事件，不在此 setState）
+  useEffect(() => {
+    if (!open) return
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close()
+    }
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.body.style.overflow = prevOverflow
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [open, close])
+
+  // 联系支持：优先复制邮箱，剪贴板不可用也不报错，照常给提示（与桌面端一致）
   const copySupportEmail = async () => {
     try {
       await navigator.clipboard.writeText(SUPPORT_EMAIL)
-      showToast(t("supportCopied", { email: SUPPORT_EMAIL }))
     } catch {
-      showToast(t("supportCopied", { email: SUPPORT_EMAIL }))
+      /* 忽略：http 或未授权时剪贴板不可用 */
     }
+    showToast(t("supportCopied", { email: SUPPORT_EMAIL }))
+    close()
   }
 
-  return (
-    <header className="fixed top-0 left-0 right-0 md:hidden bg-card border-b border-border h-16 z-50 flex items-center justify-between px-4">
-      {/* Left: Logo */}
-      <Link href="/app/dashboard" className="flex items-center gap-2">
-        <span className="text-xl">🍳</span>
-        <span className="text-base font-bold text-text-primary">CookMate</span>
-      </Link>
+  // 体验用户只能在中文 / 英文之间切换（与桌面端头像菜单同一口径）
+  const visibleLocales = isDemoUser
+    ? (locales as readonly string[]).filter((l) => l === "zh-CN" || l === "en")
+    : locales
 
-      {/* Right: Icon-only nav links */}
-      <nav className="flex items-center gap-3">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href
+  const switchLocale = (next: string) => {
+    close()
+    if (isDemoUser && next !== "zh-CN" && next !== "en") return
+    // replace 而非 push：切换语言不往历史栈加记录，返回按钮回到上一个界面
+    router.replace(
+      pathname.replace(new RegExp("^/(?:" + locales.join("|") + ")(/|$)"), "/") || "/",
+      { locale: next },
+    )
+  }
+
+  const themeOptions: { value: ThemePref; label: string; icon: ReactNode }[] = [
+    { value: "light", label: t("themeLight"), icon: <SunIcon /> },
+    { value: "dark", label: t("themeDark"), icon: <MoonIcon /> },
+    { value: "system", label: t("themeSystem"), icon: <MonitorIcon /> },
+  ]
+  const themeCurrent = themeOptions.find((o) => o.value === pref) ?? themeOptions[2]
+
+  return (
+    <>
+      {/* 顶栏：只留 Logo 与头像。导航项全部下移 —— 原先 8 项 + 管理员 + 支持 + 主题 + 语言
+          全塞在 64px 顶栏里且没有 overflow-x，溢出部分被直接裁掉（只露 6 个、还滑不动）。 */}
+      <header className="fixed top-0 left-0 right-0 md:hidden bg-card border-b border-border h-16 z-40 flex items-center justify-between px-4">
+        <Link href="/app/dashboard" className="flex items-center gap-2">
+          <span className="text-xl">🍳</span>
+          <span className="text-base font-bold text-text-primary">CookMate</span>
+        </Link>
+        <button
+          type="button"
+          onClick={openMenu}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          className="flex items-center justify-center w-9 h-9 rounded-full bg-accent/10 text-accent text-sm font-bold shrink-0 cursor-pointer"
+        >
+          {initial}
+        </button>
+      </header>
+
+      {/* 底栏：高频内容页，最多 5 格（6 格时每格约 62px，日文标签会截断） */}
+      <nav
+        className="fixed bottom-0 left-0 right-0 md:hidden bg-card border-t border-border z-40 flex"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        {MOBILE_TAB_ITEMS.map((item) => {
+          const isActive = isNavActive(pathname, item.href)
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg transition-colors ${
-                isActive
-                  ? "text-accent"
-                  : "text-text-secondary hover:text-accent"
+              className={`flex-1 min-w-0 h-[62px] flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
+                isActive ? "text-accent" : "text-text-secondary"
               }`}
             >
-              <span className="text-lg">{item.icon}</span>
-              <span className="text-[10px] font-medium leading-tight">{t(item.labelKey)}</span>
+              <span className="text-lg leading-none">{item.icon}</span>
+              <span className="max-w-full truncate">{t(item.labelKey)}</span>
             </Link>
           )
         })}
-        {isAdmin && (
-          <Link
-            href="/admin"
-            className={`flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg transition-colors ${
-              pathname === "/admin" || pathname.endsWith("/admin")
-                ? "text-accent"
-                : "text-text-secondary hover:text-accent"
-            }`}
-          >
-            <span className="text-lg">🛡️</span>
-            <span className="text-[10px] font-medium leading-tight">管理员</span>
-          </Link>
-        )}
-        <button
-          type="button"
-          onClick={copySupportEmail}
-          title={SUPPORT_EMAIL}
-          className="flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg transition-colors text-text-secondary hover:text-accent cursor-pointer"
-        >
-          <span className="text-lg">✉️</span>
-          <span className="text-[10px] font-medium leading-tight">{t("support")}</span>
-        </button>
-        <ThemeToggle />
-        <LanguageSwitcher isDemoUser={isDemoUser} />
       </nav>
-    </header>
+
+      {/* 头像菜单（底部抽屉）—— portal 到 body，避免被主内容容器裁切 */}
+      {open && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[80] md:hidden">
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-hidden="true"
+            onClick={close}
+            className="absolute inset-0 bg-overlay cursor-default"
+          />
+          <div
+            className="absolute left-0 right-0 bottom-0 bg-card border-t border-border rounded-t-2xl max-h-[80%] overflow-y-auto"
+            style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+          >
+            <div className="relative overflow-hidden">
+              {/* 第一层：主菜单 */}
+              <div
+                className={`px-2 pt-3 pb-2 transition-transform duration-200 ${
+                  submenu ? "-translate-x-full" : "translate-x-0"
+                }`}
+              >
+                {name && (
+                  <div className="flex items-center gap-3 px-3 py-2.5 mb-1.5 rounded-xl bg-surface">
+                    <span className="flex items-center justify-center w-9 h-9 rounded-full bg-accent/10 text-accent text-sm font-bold shrink-0">
+                      {initial}
+                    </span>
+                    <span className="text-sm font-medium text-text-primary truncate">
+                      {isDemoUser && !isChineseLocale(locale) ? "Demo User" : name}
+                    </span>
+                  </div>
+                )}
+
+                {/* 未进底栏的内容页（食材库 / 账单） */}
+                {MOBILE_MENU_ITEMS.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
+                      isNavActive(pathname, item.href)
+                        ? "bg-accent/10 text-accent"
+                        : "text-text-secondary hover:bg-surface hover:text-accent"
+                    }`}
+                  >
+                    <span className="w-5 text-center text-base">{item.icon}</span>
+                    <span className="truncate">{t(item.labelKey)}</span>
+                  </Link>
+                ))}
+
+                {/* 账户 */}
+                <Link
+                  href={NAV_ACCOUNT_LINKS[0].href}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
+                    isNavActive(pathname, NAV_ACCOUNT_LINKS[0].href)
+                      ? "bg-accent/10 text-accent"
+                      : "text-text-secondary hover:bg-surface hover:text-accent"
+                  }`}
+                >
+                  <span className="w-5 flex justify-center shrink-0">
+                    <GearIcon />
+                  </span>
+                  <span className="truncate">{t(NAV_ACCOUNT_LINKS[0].labelKey)}</span>
+                </Link>
+                {isAdmin && (
+                  <Link
+                    href={NAV_ADMIN_ITEM.href}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
+                      isNavActive(pathname, NAV_ADMIN_ITEM.href)
+                        ? "bg-accent/10 text-accent"
+                        : "text-text-secondary hover:bg-surface hover:text-accent"
+                    }`}
+                  >
+                    <span className="w-5 text-center text-base">{NAV_ADMIN_ITEM.icon}</span>
+                    <span className="truncate">{NAV_ADMIN_ITEM.label}</span>
+                  </Link>
+                )}
+
+                <div className="border-t border-border my-1.5" />
+
+                {/* 联系支持（Creem 要求应用内可见） */}
+                <button
+                  type="button"
+                  onClick={copySupportEmail}
+                  title={SUPPORT_EMAIL}
+                  className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-medium text-text-secondary hover:bg-surface hover:text-accent transition-colors cursor-pointer text-left"
+                >
+                  <span className="w-5 flex justify-center shrink-0">
+                    <MailIcon />
+                  </span>
+                  <span className="truncate">{t("support")}</span>
+                </button>
+
+                {/* 主题 → 二级子菜单 */}
+                <button
+                  type="button"
+                  onClick={() => setSubmenu("theme")}
+                  aria-haspopup="menu"
+                  aria-expanded={submenu === "theme"}
+                  className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-medium text-text-secondary hover:bg-surface hover:text-accent transition-colors cursor-pointer text-left"
+                >
+                  <span className="w-5 flex justify-center shrink-0">{themeCurrent.icon}</span>
+                  <span className="flex-1 truncate">{t("themeTitle")}</span>
+                  <span className="shrink-0 text-text-secondary">{themeCurrent.label}</span>
+                  <span className="shrink-0 text-text-secondary">
+                    <ChevronRightIcon />
+                  </span>
+                </button>
+
+                {/* 语言 → 二级子菜单 */}
+                <button
+                  type="button"
+                  onClick={() => setSubmenu("language")}
+                  aria-haspopup="menu"
+                  aria-expanded={submenu === "language"}
+                  className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-medium text-text-secondary hover:bg-surface hover:text-accent transition-colors cursor-pointer text-left"
+                >
+                  <span className="w-5 flex justify-center shrink-0">
+                    <GlobeIcon />
+                  </span>
+                  <span className="flex-1 truncate">{t("language")}</span>
+                  <span className="shrink-0 text-text-secondary">{localeNames[locale] || locale}</span>
+                  <span className="shrink-0 text-text-secondary">
+                    <ChevronRightIcon />
+                  </span>
+                </button>
+
+                <div className="border-t border-border my-1.5" />
+
+                <button
+                  type="button"
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm font-medium text-text-secondary hover:bg-surface hover:text-error transition-colors cursor-pointer text-left"
+                >
+                  <span className="w-5 flex justify-center shrink-0">
+                    <LogoutIcon />
+                  </span>
+                  <span className="truncate">{t("logout")}</span>
+                </button>
+              </div>
+
+              {/* 第二层：二级子菜单（从右侧滑入 —— 与桌面端行为一致，只是不越出屏幕） */}
+              <div
+                className={`absolute inset-0 bg-card transition-transform duration-200 ${
+                  submenu ? "translate-x-0" : "translate-x-full"
+                }`}
+                aria-hidden={submenu === null}
+              >
+                <button
+                  type="button"
+                  onClick={() => setSubmenu(null)}
+                  className="flex items-center gap-2 w-full px-3 py-3 border-b border-border text-sm font-medium text-text-primary cursor-pointer"
+                >
+                  <ChevronLeftIcon />
+                  <span>{submenu === "theme" ? t("themeTitle") : t("language")}</span>
+                </button>
+                <div className="px-2 py-2">
+                  {submenu === "theme"
+                    ? themeOptions.map((o) => (
+                        <button
+                          key={o.value}
+                          type="button"
+                          onClick={() => applyPref(o.value)}
+                          className={
+                            "flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm transition-colors cursor-pointer text-left " +
+                            (pref === o.value
+                              ? "text-accent bg-accent/10 font-medium"
+                              : "text-text-secondary hover:bg-surface hover:text-accent")
+                          }
+                        >
+                          <span className="w-5 flex justify-center shrink-0">{o.icon}</span>
+                          <span className="flex-1">{o.label}</span>
+                          {pref === o.value && (
+                            <span className="shrink-0">
+                              <CheckIcon />
+                            </span>
+                          )}
+                        </button>
+                      ))
+                    : visibleLocales.map((l) => (
+                        <button
+                          key={l}
+                          type="button"
+                          onClick={() => switchLocale(l)}
+                          className={
+                            "flex items-center gap-3 w-full px-3 py-3 rounded-xl text-sm transition-colors cursor-pointer text-left " +
+                            (l === locale
+                              ? "text-accent bg-accent/10 font-medium"
+                              : "text-text-secondary hover:bg-surface hover:text-accent")
+                          }
+                        >
+                          <span className="flex-1">{localeNames[l] || l}</span>
+                          {l === locale && (
+                            <span className="shrink-0">
+                              <CheckIcon />
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
   )
 }
