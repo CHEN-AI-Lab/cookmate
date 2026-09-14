@@ -13,6 +13,15 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // 后台接口一律不缓存。未显式设置时响应头是 `public, max-age=0, must-revalidate`，
+        // 对需要登录的接口语义不正确（`public` 允许 CDN/浏览器存副本），故显式关闭，
+        // 确保后台列表每次刷新都取实时数据。
+        source: "/api/admin/:path*",
+        headers: [
+          { key: "Cache-Control", value: "private, no-store, max-age=0, must-revalidate" },
+        ],
+      },
+      {
         source: "/(.*)",
         headers: [
           { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
