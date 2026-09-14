@@ -256,19 +256,36 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
         document.body
       )}
     <div ref={menuRef} className="relative">
-      {/* Avatar button */}
-      <button
-        onClick={() => { if (open) setLangOpen(false); setOpen(!open) }}
-        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-primary hover:bg-surface w-full text-left transition-colors"
-      >
-        <span className="flex items-center justify-center w-7 h-7 rounded-full bg-accent/10 text-accent text-xs font-bold shrink-0">
-          {initial}
-        </span>
-        <span className="truncate flex-1">{isDemoUser && !isChineseLocale(locale) ? "Demo User" : name}</span>
-        <svg className={`w-4 h-4 text-text-secondary transition-transform ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </button>
+      {/* 头像行：右侧直接放「退出登录」——与移动端头像抽屉保持同一种做法，
+          不用展开下拉菜单才找得到。
+          ⚠️ 这一行原来是**一个** button，如果直接在里面再放一个退出 button，
+             就变成 button 套 button 的非法结构（React 报 hydration error），
+             所以这里拆成并列的两个兄弟按钮：左边负责展开菜单，右边负责退出。 */}
+      <div className="flex items-center">
+        <button
+          onClick={() => { if (open) setLangOpen(false); setOpen(!open) }}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-primary hover:bg-surface w-full min-w-0 text-left transition-colors cursor-pointer"
+        >
+          <span className="flex items-center justify-center w-7 h-7 rounded-full bg-accent/10 text-accent text-xs font-bold shrink-0">
+            {initial}
+          </span>
+          <span className="truncate flex-1">{isDemoUser && !isChineseLocale(locale) ? "Demo User" : name}</span>
+          <svg className={`w-4 h-4 shrink-0 text-text-secondary transition-transform ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onClick={() => signOut({ callbackUrl: "/" })}
+          title={t("logout")}
+          aria-label={t("logout")}
+          className="flex items-center justify-center w-8 h-8 shrink-0 rounded-lg text-text-secondary hover:bg-surface hover:text-error transition-colors cursor-pointer"
+        >
+          <LogoutIcon />
+        </button>
+      </div>
 
       {/* Dropdown */}
       {open && (
