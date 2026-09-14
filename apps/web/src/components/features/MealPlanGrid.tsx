@@ -53,7 +53,7 @@ export function MealPlanGrid({ plan, onSlotClick }: MealPlanGridProps) {
           key={day}
           className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden"
         >
-          <div className="bg-accent/10 px-4 py-2 font-bold text-text-primary text-sm">{day}</div>
+          <div className="bg-accent-soft text-accent px-4 py-2 font-bold text-sm">{day}</div>
           <div className="grid grid-cols-3 divide-x divide-border">
             {MEAL_TYPES.map((meal) => {
               const slot = plan.slots.find(

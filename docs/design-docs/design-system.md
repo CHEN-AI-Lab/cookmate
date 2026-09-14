@@ -14,6 +14,8 @@
 | 用途 | 亮色模式 | 暗色模式 | CSS 变量 |
 |------|---------|---------|----------|
 | 主色（品牌橙） | #FF8C42 | #FF6B35 | `--color-accent` |
+| 主色最淡态（选中态/表头大底） | #FFF7ED | #3A2218 | `--color-accent-soft` |
+| 主色 hover（按钮） | #E55A2B | #E55A2B | `--color-accent-hover` |
 | 页面底色 | #FFF8F0 | #171310 | `--color-bg-brand` |
 | 卡片 | #FFFFFF | #1A1A2E | `--color-card` |
 | 次级面 | #F5F5F5 | #16213E | `--color-surface` |
@@ -95,3 +97,46 @@
 - 参考实现：AI菜谱页 `recipes/page.tsx`（errorKind 三分类）、周计划 `meal-plan/page.tsx`
 - 食材名等输入校验规则：`shared/validators/index.ts` 的 `isValidIngredient`（AI菜谱页、食材库页、后端 `/api/pantry` 三处共用，**禁止在页面里再复制一份**）
 - 后端返回裸 key（如 `"pantryLimitReached"`），前端用对应命名空间 `t()` / `t.rich()` 翻译；带升级链接的文案必须用 `t.rich` + `UpgradeInline`，否则 `<upgrade>` 标签会原样显示
+
+## 选中态与大面积暖底（选中导航项 / 周计划表头）
+
+> 2026-09 连续返工三轮后确立。**改选中态或表头底色前必读本节，禁止随手选色。**
+
+### 1. 两种合法写法
+
+| 场景 | 写法 | 效果 |
+|------|------|------|
+| 选中导航项 / 周计划表头（大面积暖底） | `bg-accent-soft text-accent` | 亮色 = 浅米橙底 #FFF7ED + 主色字；暗色 = 暖棕底 #3A2218 + 主色字 |
+| 小元素（头像圈 / 图标底 / 徽章 / 下拉选中条） | `bg-accent/10 text-accent` | 低透明度点缀，面积小不会显粉 |
+
+### 2. 🔴 铁律：跨主题的「主题色派生态」必须用语义变量 + 明确值
+
+**禁止**用 `bg-accent/N%`（或任何 `bg-X/N`）+ `dark:` 前缀去表达"主题色的最淡态"。
+
+理由（实测）：Tailwind v4 把 `bg-accent/15` 编译成 `color-mix(in oklab, var(--color-accent) 15%, transparent)`。
+2026-09-14 实测截图取色发现，深色模式下 `dark:bg-accent/15` **实际渲染成约 83% alpha 的实色**（`#d84c36`），
+而不是预期的 15% 叠加（应约 `#3c262f`）—— 跨主题时透明度修饰符不可靠。
+
+**正确做法**：让语义变量在**每个主题里都有明确数值**：
+
+```css
+:root {           --color-accent-soft: #fff7ed; }  /* 亮色 */
+:root.dark,       --color-accent-soft: #3a2218;    /* 深色（@media 与 .dark 两处都要写） */
+```
+
+样式里只写 `bg-accent-soft text-accent`，**不加 `dark:` 前缀**，变量自动切换。
+
+### 3. 已废弃写法（改到这些就是回退 bug）
+
+| 废弃写法 | 问题 |
+|---------|------|
+| `bg-accent/10` 做大面积底（表头/选中行） | 亮色下 #FF8C42 低透明叠加 = **粉红观感**，用户三次嫌弃 |
+| `bg-accent`（实底）+ 白字做大面积底 | 主题色铺太满，**稀释品牌色辨识度**，看不出主题色是啥 |
+| `dark:bg-accent/15` | 跨主题透明度叠加失效（见铁律 2），实际渲染成近似实色 |
+| `bg-orange-50` 等 Tailwind 默认色阶 | 与项目主题色**不联动**，主题色改了它不跟 |
+
+### 4. 颜色类改动验证手法
+
+1. 改完先 `grep` 读回命中数 + **反向校验旧值零残留**（python 断言，别靠肉眼）
+2. 视觉验证用 **PNG 像素取色**：`python - struct+zlib` 解 IDAT，取实际 RGB 跟设计值 diff 对比
+3. 深色/亮色**两种模式都要测**；改完提醒用户硬刷新（Vercel 构建 2-5 分钟 + 浏览器 CSS 缓存）
