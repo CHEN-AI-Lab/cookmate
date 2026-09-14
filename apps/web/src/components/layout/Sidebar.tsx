@@ -318,7 +318,13 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
                 {themeOptions.map((o) => (
                   <button
                     key={o.value}
-                    onClick={() => applyPref(o.value)}
+                    onClick={() => {
+                      applyPref(o.value)
+                      // 与手机版一致：选中后收起子菜单并关闭整个用户面板
+                      setThemeOpen(false)
+                      setThemePos(null)
+                      setOpen(false)
+                    }}
                     className={"flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors " + (pref === o.value ? "text-accent bg-accent/10 font-medium" : "text-text-secondary hover:bg-accent/10 hover:text-accent")}
                   >
                     <span className="inline-flex shrink-0">{o.icon}</span>
