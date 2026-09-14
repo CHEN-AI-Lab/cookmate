@@ -164,7 +164,7 @@ export default function BillingPage() {
   return (
     <>
       {topBanner && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-green-600 text-white text-center text-sm font-medium py-3 px-4 shadow-lg">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-success-strong text-white text-center text-sm font-medium py-3 px-4 shadow-lg">
           {topBanner}
         </div>
       )}

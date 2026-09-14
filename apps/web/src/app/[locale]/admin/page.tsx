@@ -1278,7 +1278,7 @@ function ConfigRow({ label, value, required, tone, tag, env, desc, showDesc, env
           onMouseLeave={hideTip}
           onClick={(e) => (desc ? toggleTip(e.currentTarget.getBoundingClientRect()) : undefined)}
         >
-          {label}{required ? <span className="text-red-500 ml-0.5">*</span> : ""}
+          {label}{required ? <span className="text-error ml-0.5">*</span> : ""}
         </div>
         {env ? (
           <EnvName

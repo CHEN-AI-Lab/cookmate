@@ -4,8 +4,8 @@ import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react"
 import { cn } from "@cookmate/shared/utils"
 
 const variantStyles = {
-  default: "bg-accent text-white hover:bg-[#e55a2b] shadow-sm",
-  primary: "bg-accent text-white hover:bg-[#e55a2b] shadow-sm",
+  default: "bg-accent text-white hover:bg-accent-hover shadow-sm",
+  primary: "bg-accent text-white hover:bg-accent-hover shadow-sm",
   outline: "border border-accent text-accent hover:bg-bg-brand",
   ghost: "text-text-secondary hover:bg-surface",
   destructive: "bg-error/100 text-white hover:bg-red-600 shadow-sm",

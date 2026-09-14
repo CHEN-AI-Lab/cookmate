@@ -34,6 +34,10 @@
   --color-border: #e5e7eb;
   --color-error: #ef4444;
   --color-success: #22c55e;
+  /* 以下三值为原硬编码色的精确值，替换后颜色与之前完全一致；暗色模式不覆盖（与原硬编码行为相同） */
+  --color-success-strong: #16a34a; /* 原 green-600：成功 toast 背景 */
+  --color-success-deep: #166534;   /* 原 green-800：Toast 成功深色 */
+  --color-accent-hover: #e55a2b;   /* 品牌按钮 hover（原硬编码 hex） */
   --color-info: #3b82f6;
   --color-green: #22c55e;
   --color-blue: #3b82f6;
@@ -54,6 +58,9 @@
   --color-border: var(--color-border);
   --color-error: var(--color-error);
   --color-success: var(--color-success);
+  --color-success-strong: var(--color-success-strong);
+  --color-success-deep: var(--color-success-deep);
+  --color-accent-hover: var(--color-accent-hover);
   --color-info: var(--color-info);
   --color-green: var(--color-green);
   --color-blue: var(--color-blue);
