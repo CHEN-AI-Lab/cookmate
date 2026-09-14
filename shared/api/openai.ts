@@ -5,6 +5,7 @@
 import OpenAI from "openai"
 import { AI_TIMEOUT_MS } from "../constants/api-errors"
 import { SUBSCRIPTION_TIER } from "../constants"
+import { isChineseLocale } from "../constants/locales"
 
 // ─── 按订阅层级（tier）分流的 AI 客户端 ───
 // 免费版与付费版可指向完全不同的 provider：key / baseURL / model 三者各自独立。
@@ -267,7 +268,7 @@ function buildSystemPrompt(locale?: string): string {
 
 function buildWeeklyPrompt(locale?: string, days?: number[]): string {
   const lang = getLangName(locale)
-  const dayNames = locale === "en"
+  const dayNames = !isChineseLocale(locale ?? "")
     ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     : ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
   const targetDays = days ?? [0, 1, 2, 3, 4, 5, 6]
@@ -321,7 +322,7 @@ export async function generateRecipes(
   locale?: string,
   subscriptionTier?: string | null
 ): Promise<{ recipes: RecipeResult[]; fallback: boolean }> {
-  const isEnglish = locale === "en"
+  const isEnglish = !isChineseLocale(locale ?? "")
 
   if (!hasAIKeyForTier(subscriptionTier)) {
     return { recipes: isEnglish ? getMockRecipesEn(ingredients, preferences) : getMockRecipes(ingredients, preferences), fallback: true }
@@ -422,7 +423,7 @@ export async function generateWeeklyPlan(
   days?: number[],
   subscriptionTier?: string | null
 ): Promise<WeeklyPlanResult> {
-  const isEnglish = locale === "en"
+  const isEnglish = !isChineseLocale(locale ?? "")
   const targetDays = days ?? [0, 1, 2, 3, 4, 5, 6]
   const dayNames = isEnglish
     ? ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]

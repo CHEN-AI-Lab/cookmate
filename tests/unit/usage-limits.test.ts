@@ -74,13 +74,15 @@ describe('免费版限制 — isFreeUser', () => {
     stores.users.set('u1', { id: 'u1', subscriptionTier: 'PRO', subscriptionExpiryDate: null })
     expect(await isFreeUser('u1')).toBe(false)
   })
-  it('PRO 但已过期 → false（降级交给 cron，请求时不动手）', async () => {
-    // 设计约定：不在接口里提前把过期用户降级，避免出现「页面还显示 PRO、功能已被限」的投诉。
-    // 降级统一由 /api/cron/expire-sweep 执行，它把 tier 改成 FREE 后限制才生效。
+  it('PRO 但已过期 → true（到期即按免费版算，不等 cron 降级）', async () => {
+    // 口径变更（2026-09-11）：以前约定「不在接口里提前降级，避免页面显示 PRO 但功能被限」。
+    // 但用户页面（dashboard）现在本来就是按到期日**实时**算的、到期即显示免费版，
+    // 所以后端再不跟上就变成反向的割裂：页面说免费、功能照给（过期用户仍能无限生成）。
+    // 现在 isFreeUser / canUseAiToday 都走 effectiveTier()，与页面同一套判断。
     const past = new Date()
     past.setDate(past.getDate() - 1)
     stores.users.set('u1', { id: 'u1', subscriptionTier: 'PRO', subscriptionExpiryDate: past })
-    expect(await isFreeUser('u1')).toBe(false)
+    expect(await isFreeUser('u1')).toBe(true)
   })
   it('FREE 但权益未过期 → false（免费体验期内不受限）', async () => {
     const future = new Date()

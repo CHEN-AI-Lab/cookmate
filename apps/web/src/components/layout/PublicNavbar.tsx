@@ -3,6 +3,7 @@
 import { Link } from "@/i18n/navigation"
 import { useTranslations } from "next-intl"
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
+import ThemeToggle from "@/components/ui/ThemeToggle"
 
 export default function PublicNavbar() {
   const tnav = useTranslations("nav")
@@ -31,10 +32,11 @@ export default function PublicNavbar() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <LanguageSwitcher />
           <Link
             href="/login"
-            className="text-accent font-medium hover:text-orange-600 text-sm"
+            className="text-accent font-medium hover:text-accent text-sm"
           >
             {tnav("login")}
           </Link>

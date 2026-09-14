@@ -46,3 +46,7 @@ export function useMediaQuery(query: string): boolean {
   }, [query]);
   return matches;
 }
+
+// ─── 后台列表通用查询（分页 + 列筛选，服务端过滤）───
+export { useTableQuery, isFilterActive } from './useTableQuery';
+export type { FilterValue, TableQuery } from './useTableQuery';

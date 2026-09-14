@@ -34,6 +34,8 @@ export default function GroceryListPage() {
 
   // useRef 同步跟踪已同步到食材库的物品，防止 React StrictMode 双重调用导致重复创建
   const syncedRef = useRef<Set<string>>(new Set())
+  // 同一食材正在处理中时忽略后续 toggle：防 label 隐式关联 + 移动端 300ms 点按延迟导致的"双击"
+  const togglingRef = useRef<Set<string>>(new Set())
   // 记录每个物品是"新增"还是"原来就有的"：true=本次新增, false=原来就有
   const newlyAddedRef = useRef<Map<string, boolean>>(new Map())
 
@@ -135,6 +137,9 @@ export default function GroceryListPage() {
   }
 
   const toggleCheck = (name: string) => {
+    if (togglingRef.current.has(name)) return
+    togglingRef.current.add(name)
+    setTimeout(() => togglingRef.current.delete(name), 400)
     if (isDemoUser) {
       setDemoToast(tg("demoLockedAction"))
       setTimeout(() => setDemoToast(""), 3000)
@@ -329,7 +334,7 @@ export default function GroceryListPage() {
             <div className="flex items-center gap-3 text-sm">
               <span className="text-text-secondary">{tg("totalItems", { count: total + manualItems.length })}</span>
               {inPantryCount > 0 && (
-                <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded-full">
+                <span className="bg-success/10 text-success px-2 py-0.5 rounded-full">
                   {tg("inPantryCount", { count: inPantryCount })}
                 </span>
               )}
@@ -366,9 +371,9 @@ export default function GroceryListPage() {
                       <input type="checkbox" checked={checked.has(item.name)} onChange={() => toggleCheck(item.name)} className="rounded accent-accent w-3.5 h-3.5 shrink-0" />
                       <span
                         className={`${
-                          item.inPantry ? "text-green-600" : checked.has(item.name) ? "text-text-secondary line-through" : "text-text-secondary"
+                          item.inPantry ? "text-success" : checked.has(item.name) ? "text-text-secondary line-through" : "text-text-secondary"
                         } cursor-pointer ${
-                          item.sources && item.sources.length > 0 ? "border-b border-dashed border-gray-300 hover:border-accent" : ""
+                          item.sources && item.sources.length > 0 ? "border-b border-dashed border-border hover:border-accent" : ""
                         }`}
                         onClick={(e) => {
                           e.preventDefault()
@@ -379,7 +384,7 @@ export default function GroceryListPage() {
                         {item.quantity && <span className="text-text-secondary font-normal"> ({displayQuantity(item.quantity, locale)})</span>}
                       </span>
                       {item.inPantry && (
-                        <span className="text-[10px] text-green-600 bg-green-50 px-1 rounded shrink-0">{tg("inPantry")}</span>
+                        <span className="text-[10px] text-success bg-success/10 px-1 rounded shrink-0">{tg("inPantry")}</span>
                       )}
                       {item.sources && item.sources.length > 0 && (
                         <span className="text-[10px] text-accent opacity-0 group-hover:opacity-100 transition-opacity shrink-0">🔍</span>
@@ -400,7 +405,7 @@ export default function GroceryListPage() {
                       <span className={`${checked.has(name) ? "text-text-secondary line-through" : "text-text-secondary"}`}>
                         {displayIngredient(name, locale)}
                       </span>
-                      <button onClick={() => removeManualItem(name)} className="text-text-secondary hover:text-red-600 text-xs ml-auto">✕</button>
+                      <button onClick={() => removeManualItem(name)} className="text-text-secondary hover:text-error text-xs ml-auto">✕</button>
                     </label>
                   ))}
                 </div>
@@ -434,7 +439,7 @@ export default function GroceryListPage() {
 
       {/* 手动添加输入框 */}
       {!isDemoUser && (
-      <div className="mt-6 bg-card rounded-xl border border-gray-100 p-3">
+      <div className="mt-6 bg-card rounded-xl border border-border p-3">
         <div className="flex gap-2">
           <input
             type="text"
@@ -457,7 +462,7 @@ export default function GroceryListPage() {
       {/* 添加到食材库通知 */}
       {purchaseNotify && (
         <div className="fixed left-1/2 top-[33vh] -translate-x-1/2 z-[100] animate-bounce-in">
-          <div className="bg-green-600 text-white px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2">
+          <div className="bg-success-strong text-white px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2">
             {purchaseNotify.existing ? (
               <>{tg("alreadyInPantry", { name: purchaseNotify.name })}</>
             ) : (
@@ -500,7 +505,7 @@ export default function GroceryListPage() {
             </div>
             <div className="space-y-3">
               {sourceDialog.sources.map((src, i) => (
-                <div key={i} className="flex items-center justify-between bg-orange-50 rounded-xl px-4 py-3">
+                <div key={i} className="flex items-center justify-between bg-surface rounded-xl px-4 py-3">
                   <span className="text-sm font-medium text-text-primary">{displaySourceTitle(src.title, locale)}</span>
                   <span className="text-sm text-text-secondary">{displayQuantity(src.quantity, locale)}</span>
                 </div>
@@ -519,7 +524,7 @@ export default function GroceryListPage() {
       {/* 重复添加提示 */}
       {dupDialog && (
         <div className="fixed inset-0 z-[100] pointer-events-none flex items-start justify-center pt-[33vh]">
-          <div className="bg-card border border-gray-100 shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-card border border-border shadow-xl rounded-xl px-5 py-3.5 text-sm flex items-center gap-2.5 pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
             <span className="text-amber-500 text-base shrink-0">⚠️</span>
             <span className="text-text-primary">{tg("alreadyInList", { name: displayIngredient(dupDialog, locale) })}</span>
           </div>
@@ -528,7 +533,7 @@ export default function GroceryListPage() {
 
       {/* Demo user toast */}
       {demoToast && (
-        <div className="fixed left-1/2 top-[33vh] -translate-x-1/2 bg-amber-50 border border-amber-200 text-amber-800 px-6 py-3 rounded-xl text-sm shadow-lg z-[100]">
+        <div className="fixed left-1/2 top-[33vh] -translate-x-1/2 bg-surface border border-amber-500/30 text-amber-500 px-6 py-3 rounded-xl text-sm shadow-lg z-[100]">
           {demoToast}
         </div>
       )}

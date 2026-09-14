@@ -79,7 +79,7 @@ export default function LanguageSwitcher({
         </button>
 
         {open && (
-          <div className="absolute right-0 top-full mt-1 bg-card border border-gray-100 rounded-xl shadow-lg py-1 min-w-[100px] z-50">
+          <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[100px] z-50">
             {visibleLocales.map((l) => {
               const active = l === locale
               return (
@@ -88,7 +88,7 @@ export default function LanguageSwitcher({
                   onClick={() => switchLocale(l)}
                   className={`w-full text-left px-4 py-2 text-sm transition-colors ${
                     active
-                      ? "text-accent bg-orange-50 font-medium"
+                      ? "text-accent bg-surface font-medium"
                       : "text-text-secondary hover:bg-surface hover:text-accent"
                   }`}
                 >
@@ -102,7 +102,7 @@ export default function LanguageSwitcher({
       {toast && typeof document !== "undefined" && createPortal(
         /* Centered toast — floats in middle of screen, auto-dismisses 2.5s */
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[99999]">
-          <div className="bg-amber-50 border border-amber-200 text-amber-700 px-5 py-3 rounded-xl text-sm shadow-lg">
+          <div className="bg-surface border border-amber-500/30 text-amber-500 px-5 py-3 rounded-xl text-sm shadow-lg">
             {toast}
           </div>
         </div>,

@@ -5,6 +5,7 @@ import { isDemoUser } from "@/lib/auth-helpers"
 import { err } from "@cookmate/shared/utils/locale"
 import { DEMO_LINKED_ACCOUNTS } from "@cookmate/shared/utils/demo-guard"
 import { SUBSCRIPTION_TIER } from "@cookmate/shared/constants"
+import { effectiveTier } from "@cookmate/shared/utils/subscription"
 
 export async function GET() {
   try {
@@ -68,7 +69,11 @@ const user = await prisma.user.findUnique({
       email: user.email || "",
       loginMethod,
       createdAt: user.createdAt.toISOString(),
-      subscriptionTier: user.subscriptionTier,
+      // 到期感知：这个字段被我的菜谱 / 周计划 / 购物清单 / 设置页用来判断「是不是免费版」
+      // （决定免费额度提示和升级弹框弹不弹）。数据库字段要等每天 UTC 00:00（北京 08:00）的
+      // expire-sweep 才降级，且该任务只在正式环境跑 —— 直接返回字段会让已过期的用户
+      // 在各页面仍被当成 Pro，前端拦截全部失效。
+      subscriptionTier: effectiveTier(user.subscriptionTier, user.subscriptionExpiryDate),
       hasPassword: !!user.passwordHash,
       subscriptionExpiryDate: user.subscriptionExpiryDate?.toISOString() || null,
       isDemoUser: isDemoUser(session),

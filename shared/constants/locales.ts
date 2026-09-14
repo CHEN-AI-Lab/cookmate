@@ -23,3 +23,14 @@ export const localeNames: Record<string, string> = {
 export function isChineseLocale(locale: string): boolean {
   return typeof locale === "string" && locale.startsWith("zh")
 }
+
+/**
+ * 双语文本选取：中文语系取 zh，其余（en / ja 等）取 en。
+ *
+ * 与 isChineseLocale 同一口径，是「成对书写的中英文」的统一入口 ——
+ * 邮件内容、API 错误消息、AI 提示词等一律用它，**不要再在各自文件里写一份 emailT / errMsg 之类的本地副本**
+ * （历史上就因此出现过多份口径不一的实现，导致 zh-TW 掉回英文、ja 掉回中文）。
+ */
+export function pickLocaleText(locale: string, zh: string, en: string): string {
+  return isChineseLocale(locale) ? zh : en
+}

@@ -1,6 +1,8 @@
 // ─── API 错误消息中英文对照表 ───
 // 所有 API 路由统一从此引用，不要硬编码中文/英文错误消息
 
+import { isChineseLocale } from "./locales"
+
 export const API_ERRORS = {
   // ── Auth ──
   loginRequired:             { zh: "请先登录",                    en: "Please log in first" },
@@ -70,7 +72,8 @@ type ErrorKey = keyof typeof API_ERRORS
 export function apiError(key: ErrorKey, locale: string): string {
   const msg = API_ERRORS[key]
   if (!msg) return key
-  return locale === "en" || locale.startsWith("en") ? msg.en : msg.zh
+  // 口径统一走 isChineseLocale（中文语系中文，其余 en/ja 一律英文）
+  return isChineseLocale(locale) ? msg.zh : msg.en
 }
 
 // ─── 前端请求超时（毫秒）───

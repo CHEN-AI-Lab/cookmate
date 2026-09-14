@@ -14,7 +14,9 @@
     "sourceMap": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "outDir": "./dist",
-    "rootDir": "."
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": { "@cookmate/shared/*": ["./*"] }
   },
   "include": ["./**/*.ts"],
   "exclude": ["node_modules", "dist"]

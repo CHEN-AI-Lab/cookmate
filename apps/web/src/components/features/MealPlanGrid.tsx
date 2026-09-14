@@ -51,10 +51,10 @@ export function MealPlanGrid({ plan, onSlotClick }: MealPlanGridProps) {
       {DAY_LABELS.map((day, dayIdx) => (
         <div
           key={day}
-          className="bg-card rounded-2xl shadow-sm border border-orange-50 overflow-hidden"
+          className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden"
         >
-          <div className="bg-orange-50 px-4 py-2 font-bold text-[#2D3436] text-sm">{day}</div>
-          <div className="grid grid-cols-3 divide-x divide-gray-100">
+          <div className="bg-accent/10 px-4 py-2 font-bold text-text-primary text-sm">{day}</div>
+          <div className="grid grid-cols-3 divide-x divide-border">
             {MEAL_TYPES.map((meal) => {
               const slot = plan.slots.find(
                 (s) => s.dayOfWeek === dayIdx && s.mealType === meal
@@ -63,7 +63,7 @@ export function MealPlanGrid({ plan, onSlotClick }: MealPlanGridProps) {
                 <button
                   key={meal}
                   onClick={() => onSlotClick(dayIdx, meal)}
-                  className="p-3 text-left hover:bg-orange-50/50 transition-colors min-h-[70px]"
+                  className="p-3 text-left hover:bg-accent/5 transition-colors min-h-[70px]"
                 >
                   <p className="text-xs text-text-secondary mb-1">
                     {MEAL_EMOJIS[meal]} {MEAL_LABELS[meal]}

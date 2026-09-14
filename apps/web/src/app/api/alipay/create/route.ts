@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { trackEvent } from "@cookmate/shared/utils/track"
 import { createPagePay, isAlipayConfigured } from "@cookmate/shared/api/alipay-pay"
 import { generateOrderId } from "@cookmate/shared/utils/order-id"
 import { isDemoUser } from "@/lib/auth-helpers"
@@ -49,6 +50,8 @@ export async function POST(req: Request) {
         status: "PENDING",
       },
     })
+
+    await trackEvent("checkout_alipay")
 
     return NextResponse.json({ orderId, payUrl })
   } catch (error: unknown) {

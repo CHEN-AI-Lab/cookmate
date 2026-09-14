@@ -6,7 +6,10 @@ export type DietaryPreference = 'none' | 'vegetarian' | 'vegan' | 'keto' | 'pale
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
-export type SubscriptionTier = 'free' | 'pro' | 'family';
+// SubscriptionTier 统一由 shared/constants/index.ts 定义（从 SUBSCRIPTION_TIER 常量派生，值域 FREE/PRO/FAMILY）。
+// 这里原先还留着一份 Stripe 时期的小写版本（'free'|'pro'|'family'），
+// 除了与数据库实际值不符，还和 constants 的那份冲突 —— shared/index.ts 同时 export * 两边，
+// 触发 TS2308「已经导出同名成员」。已删除。
 
 export interface Recipe {
   id: string;

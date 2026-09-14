@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { cookies } from "next/headers"
 import { Inter } from "next/font/google"
 import { NextIntlClientProvider } from "next-intl"
 import { getMessages, setRequestLocale, getTranslations } from "next-intl/server"
@@ -8,7 +9,21 @@ import VisitTracker from "@/components/VisitTracker"
 
 const inter = Inter({ subsets: ["latin"] })
 
+// 关键：内联首屏暗色样式。配合下方 <style href+precedence> 用，
+// React 19 会把它 hoist 进 <head>（不再只是留在 body），随 HTML 首字节即可套用，
+// 与 viewport.colorScheme 的 meta 形成「双保险」，彻底消除刷新时的白底闪烁（FOUC）。
+const CRITICAL_CSS =
+  ":root{color-scheme:light;background-color:#ffffff}" +
+  "@media (prefers-color-scheme:dark){:root:not(.light){color-scheme:dark;background-color:#0a0a0a;color:#ededed}}" +
+  ':root.dark{color-scheme:dark;background-color:#0a0a0a;color:#ededed}'
+
 const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN
+
+// Next 16：viewport.colorScheme 会在 SSR <head> 内联 <meta name="color-scheme" content="light dark">，
+// 浏览器首屏解析 HTML 即生效，深色模式刷新不再闪白（FOUC）。这是 GitHub 等站点的标准做法。
+export const viewport = {
+  colorScheme: "light dark",
+}
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -39,9 +54,16 @@ export default async function LocaleLayout({
   setRequestLocale(locale)
   const messages = await getMessages({ locale })
 
+  // 主题偏好存在 cookie（ThemeToggle 写入）。服务端读出来直接把 .dark/.light 渲染进
+  // <html class>，浏览器拿到 HTML 首屏即命中正确主题 —— 刷新绝不闪色，且不依赖 JS。
+  // 没有 cookie 时不加 class，交给 globals.css 的 @media(prefers-color-scheme) 跟随系统。
+  const themeCookie = (await cookies()).get("theme")?.value
+  const themeClass = themeCookie === "dark" || themeCookie === "light" ? themeCookie : undefined
+
   return (
-    <html lang={locale}>
+    <html lang={locale} className={themeClass} suppressHydrationWarning>
       <body className={inter.className}>
+        <style href="cookmate-critical-css" precedence="critical">{CRITICAL_CSS}</style>
         {plausibleDomain && (
           <script
             defer

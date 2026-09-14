@@ -85,6 +85,9 @@ export default function MealPlanPage() {
   // 收藏上限横幅（持久显示，带内嵌升级链接）：收藏操作在详情弹窗里触发，
   // toast 2.5 秒就没了，用户经常来不及看原因，所以再加一条横幅兜底
   const [starBanner, setStarBanner] = useState(false)
+  // 免费版周计划天数上限：用居中弹框（与收藏/菜谱等免费上限同一套交互），
+  // 不用页面顶部横幅 —— 横幅在顶部，用户点完「生成」根本看不到，而且升级入口不可点。
+  const [daysLimitDialog, setDaysLimitDialog] = useState(false)
   const [limitNotice, setLimitNotice] = useState<null | { kind: "reached" } | { kind: "exceed"; picked: number; remaining: number }>(null)
   // 免费版剩余可规划天数：3 - 本周已规划天数（0 = 已用完）
   const [freeRemainingDays, setFreeRemainingDays] = useState(0)
@@ -117,9 +120,9 @@ export default function MealPlanPage() {
           setIsDemoUser(true)
           setPlan((prev) => prev || getDemoMealPlan(locale))
         }
-        // 免费版标识：严格跟后端 isFreeUser() 保持一致——只认 subscriptionTier。
-        // 降级由 /api/cron/expire-sweep 统一处理（会把 tier 改成 FREE），
-        // 前端不能自行把「到期但仍是 PRO」的用户按免费版显示，否则用户看到自己是会员却受限。
+        // 免费版标识：以 /api/user/profile 返回的套餐为准 —— 它已经是「到期感知」的结果
+        // （effectiveTier），与账单页、与后端额度限制同一套判断。
+        // 以前这里依赖数据库原始字段，导致已过期的用户在前端仍被当成 Pro，前端拦截整体失效。
         if (data.subscriptionTier === SUBSCRIPTION_TIER.FREE && !data.isDemoUser) setFreeUser(true)
       })
       .catch((err) => console.error("load profile error:", err))
@@ -192,7 +195,8 @@ export default function MealPlanPage() {
           if (res.status === 403) {
             if (data?.error === "mealPlanDaysLimit") {
               console.error(errorLogContext("meal-plan:generate", { kind: "paymentRequired", status: 403, detail: "meal_plan_days_limit", retryable: false }))
-              setError(t("genError_mealPlanDaysLimit"))
+              // 弹居中弹框（文案里带可点的「升级 Pro」），不往页面顶部塞横幅
+              setDaysLimitDialog(true)
               setErrorInfo(null)
               return
             }
@@ -349,7 +353,7 @@ export default function MealPlanPage() {
 
       {/* AI 降级提示：有数据可用，只是不是 AI 生成的，用提示条区分于真正的错误 */}
       {notice && (
-        <p className="mb-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5">
+        <p className="mb-3 text-sm text-amber-500 bg-surface border border-amber-500/30 rounded-xl px-4 py-2.5">
           {notice}
         </p>
       )}
@@ -358,9 +362,9 @@ export default function MealPlanPage() {
         // 限额提示是升级引导而非报错：品牌配色；网络/服务故障保持红色。
         // 框宽贴合文字（w-fit）并水平居中，不留大片空白（Carbon Toast 规范：提示不应占满整行）。
         const isRateLimit = errorInfo?.kind === "rateLimit"
-        const boxCls = "mb-4 mx-auto w-fit max-w-full flex items-center gap-3 rounded-xl px-4 py-2.5 " + (isRateLimit ? "bg-bg-brand border border-accent/60" : "bg-red-50 border border-red-200")
-        const textCls = "text-sm " + (isRateLimit ? "text-text-primary" : "text-red-700")
-        const btnCls = "shrink-0 text-sm font-medium underline disabled:opacity-50 " + (isRateLimit ? "text-accent" : "text-red-700")
+        const boxCls = "mb-4 mx-auto w-fit max-w-full flex items-center gap-3 rounded-xl px-4 py-2.5 " + (isRateLimit ? "bg-bg-brand border border-accent/60" : "bg-error/10 border border-error/30")
+        const textCls = "text-sm " + (isRateLimit ? "text-text-primary" : "text-error")
+        const btnCls = "shrink-0 text-sm font-medium underline disabled:opacity-50 " + (isRateLimit ? "text-accent" : "text-error")
         return (
           <div className={boxCls}>
             <p className={textCls}>{error}</p>
@@ -384,6 +388,16 @@ export default function MealPlanPage() {
             upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline>,
           })}
           onClose={() => setStarBanner(false)}
+        />
+      )}
+
+      {/* 免费版周计划天数上限：同样居中弹框，升级入口嵌在文案中间，可点 */}
+      {daysLimitDialog && (
+        <UpgradeDialog
+          text={t.rich("genError_mealPlanDaysLimit", {
+            upgrade: (chunks) => <UpgradeInline>{chunks}</UpgradeInline>,
+          })}
+          onClose={() => setDaysLimitDialog(false)}
         />
       )}
 
@@ -422,7 +436,7 @@ export default function MealPlanPage() {
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setDeleteConfirm(false)}>
           <div className="bg-card rounded-2xl shadow-xl p-5 mx-4 max-w-xs w-full text-center" onClick={(e) => e.stopPropagation()}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mx-auto mb-2 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mx-auto mb-2 text-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
             </svg>
             <p className="text-sm text-text-primary font-medium mb-1">{t("confirmDeleteTitle")}</p>
@@ -430,7 +444,7 @@ export default function MealPlanPage() {
             <p className="text-xs text-text-secondary mt-2">{t("irreversible")}</p>
             <div className="flex gap-2 mt-4">
               <button onClick={() => setDeleteConfirm(false)} className="flex-1 bg-surface text-text-secondary py-2 rounded-xl text-sm">{tc("cancel")}</button>
-              <button onClick={() => { setDeleteConfirm(false); confirmDelete() }} className="flex-1 bg-red-500 text-white py-2 rounded-xl text-sm">{t("confirmDelete")}</button>
+              <button onClick={() => { setDeleteConfirm(false); confirmDelete() }} className="flex-1 bg-error/100 text-white py-2 rounded-xl text-sm">{t("confirmDelete")}</button>
             </div>
           </div>
         </div>
@@ -443,7 +457,7 @@ export default function MealPlanPage() {
       )}
 
       {demoToast && (
-        <div className="fixed left-1/2 top-[33vh] -translate-x-1/2 bg-amber-50 border border-amber-200 text-amber-800 px-6 py-3 rounded-xl text-sm shadow-lg z-[100]">
+        <div className="fixed left-1/2 top-[33vh] -translate-x-1/2 bg-surface border border-amber-500/30 text-amber-500 px-6 py-3 rounded-xl text-sm shadow-lg z-[100]">
           {demoToast}
         </div>
       )}
@@ -456,7 +470,7 @@ export default function MealPlanPage() {
           onClick={() => setShowPicker(false)}
         >
           <div
-            className="bg-white w-full max-w-[440px] p-6"
+            className="bg-card w-full max-w-[440px] p-6"
             style={{ borderRadius: 20, boxShadow: "0 20px 50px rgba(0,0,0,0.2)" }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -488,29 +502,29 @@ export default function MealPlanPage() {
 
                 let style: React.CSSProperties = {
                   borderRadius: 10,
-                  border: "1.5px dashed #fed7aa",
+                  border: "1.5px dashed rgba(255,140,66,0.4)",
                   padding: "10px 0",
                   textAlign: "center",
                   fontSize: 13,
-                  color: "#6b7280",
-                  background: "#fff",
+                  color: "var(--color-text-secondary)",
+                  background: "var(--color-card)",
                   cursor: "pointer",
                   transition: "all .15s",
                 }
                 if (hasOld && !isStart && !isRangeMid && !isRangeEnd) {
-                  style = { ...style, borderStyle: "solid", borderColor: "#22c55e", background: "#f0fdf4", color: "#16a34a", fontWeight: 600 }
+                  style = { ...style, borderStyle: "solid", borderColor: "var(--color-success)", background: "rgba(34,197,94,0.12)", color: "var(--color-success)", fontWeight: 600 }
                 }
                 if (isStart) {
-                  style = { ...style, borderStyle: "solid", borderColor: "#FF6B35", background: "#FF6B35", color: "#fff", fontWeight: 700 }
+                  style = { ...style, borderStyle: "solid", borderColor: "var(--color-accent)", background: "var(--color-accent)", color: "#fff", fontWeight: 700 }
                 }
                 if (isHint) {
                   style = { ...style, animation: "pickerPulse 1.2s infinite" }
                 }
                 if (isRangeMid) {
-                  style = { ...style, borderStyle: "solid", borderColor: "#FF6B35", background: "#ffedd5", color: "#FF6B35", fontWeight: 600 }
+                  style = { ...style, borderStyle: "solid", borderColor: "var(--color-accent)", background: "rgba(255,140,66,0.12)", color: "var(--color-accent)", fontWeight: 600 }
                 }
                 if (isRangeEnd) {
-                  style = { ...style, borderStyle: "solid", borderColor: "#FF6B35", background: "#FF6B35", color: "#fff", fontWeight: 700 }
+                  style = { ...style, borderStyle: "solid", borderColor: "var(--color-accent)", background: "var(--color-accent)", color: "#fff", fontWeight: 700 }
                 }
                 return (
                   <div key={key} style={style} onClick={() => handleDayClick(i)}>
@@ -523,7 +537,7 @@ export default function MealPlanPage() {
             {/* 图例 */}
             <div className="flex gap-4 text-[12px] text-text-secondary mt-1.5 mb-3 flex-wrap">
               <span className="flex items-center gap-1.5">
-                <span style={{ width: 12, height: 12, borderRadius: 4, background: "#FF6B35", display: "inline-block" }} />
+                <span style={{ width: 12, height: 12, borderRadius: 4, background: "#FF8C42", display: "inline-block" }} />
                 {t("pickerLegendGenerate")}
               </span>
               <span className="flex items-center gap-1.5">
@@ -543,8 +557,8 @@ export default function MealPlanPage() {
             <div
               className="text-[13px] mb-4 leading-relaxed"
               style={{
-                background: "#fff7ed",
-                border: "1px solid #fed7aa",
+                background: "rgba(255,140,66,0.08)",
+                border: "1px solid rgba(255,140,66,0.35)",
                 borderRadius: 12,
                 padding: "12px 16px",
                 minHeight: 48,
@@ -558,8 +572,8 @@ export default function MealPlanPage() {
                         const lo = Math.min(pickStart!, pickEnd!)
                         const hi = Math.max(pickStart!, pickEnd!)
                         const n = hi - lo + 1
-                        const range = `从 <b style="color:#FF6B35">${t(DAYS[lo])}</b> 到 <b style="color:#FF6B35">${t(DAYS[hi])}</b>，共 <b style="color:#FF6B35">${n} 天 ${n * 3} 餐</b>`
-                        const tip = n >= 6 ? `<br><span style="color:#6b7280;font-size:12px">💡 ${t("pickerTip")}</span>` : ""
+                        const range = `从 <b style="color:#FF8C42">${t(DAYS[lo])}</b> 到 <b style="color:#FF8C42">${t(DAYS[hi])}</b>，共 <b style="color:#FF8C42">${n} 天 ${n * 3} 餐</b>`
+                        const tip = n >= 6 ? `<br><span style="color:var(--color-text-secondary);font-size:12px">💡 ${t("pickerTip")}</span>` : ""
                         return `${range}${tip}`
                       })(),
               }}
@@ -579,7 +593,7 @@ export default function MealPlanPage() {
               <button
                 onClick={() => setShowPicker(false)}
                 className="flex-1 py-3 rounded-xl text-[14px] font-semibold transition-all"
-                style={{ border: "none", background: "#f3f4f6", color: "#6b7280", cursor: "pointer" }}
+                style={{ border: "none", background: "var(--color-surface)", color: "var(--color-text-secondary)", cursor: "pointer" }}
               >
                 {tc("cancel")}
               </button>
@@ -592,7 +606,7 @@ export default function MealPlanPage() {
                     className="flex-1 py-3 rounded-xl text-[14px] font-semibold transition-all"
                     style={{
                       border: "none",
-                      background: disabled ? "#fed7aa" : "#FF6B35",
+                      background: disabled ? "var(--color-surface)" : "var(--color-accent)",
                       color: "#fff",
                       cursor: disabled ? "not-allowed" : "pointer",
                     }}

@@ -20,6 +20,10 @@ model User {
   subscriptionExpiryDate DateTime?
   subscriptionPeriod String?                        // 权威订阅周期: monthly / annual（webhook 支付成功时写入，方案A 兜底「周期取自订单」）
   creemSubscriptionId String?
+  // Creem 官方订阅状态，webhook 原样落库：
+  // active / trialing / past_due / unpaid / incomplete / paused / scheduled_cancel / canceled / expired
+  // 后台「用户列表 → 订阅状态」直接用官方状态，不再只靠本地字段反推。仅 Creem 渠道有值。
+  creemSubscriptionStatus String?
   dietType       String?  @default("不限")
   cuisinePref    String?  @default("不限")
   servingSize    Int      @default(2)

@@ -30,11 +30,11 @@ interface RecipeCardProps {
 function diffColor(d: string) {
   switch (d) {
     case "easy":
-      return "text-green-600 bg-green-50"
+      return "text-success bg-success/10"
     case "medium":
-      return "text-yellow-600 bg-yellow-50"
+      return "text-amber-500 bg-amber-500/10"
     case "hard":
-      return "text-red-600 bg-red-50"
+      return "text-error bg-error/10"
     default:
       return "text-text-secondary bg-surface"
   }
@@ -63,14 +63,14 @@ export function RecipeCard({
   }
 
   return (
-    <div className="bg-card rounded-2xl shadow-sm border border-orange-50 overflow-hidden transition-all">
+    <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden transition-all">
       <div
         onClick={onToggleExpand}
-        className="w-full text-left p-6 flex items-start justify-between hover:bg-orange-50/30 transition-colors cursor-pointer"
+        className="w-full text-left p-6 flex items-start justify-between hover:bg-surface/30 transition-colors cursor-pointer"
       >
-        <div className="flex items-start gap-3 flex-1">
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
               <span className="text-xl">🍽️</span>
               <h3 className="text-lg font-bold text-text-primary">{recipe.title}</h3>
               <button
@@ -90,7 +90,7 @@ export function RecipeCard({
                   e.stopPropagation()
                   onDelete(recipe)
                 }}
-                className="ml-1 text-text-secondary hover:text-red-600 transition-colors"
+                className="ml-1 text-text-secondary hover:text-error transition-colors"
                 title={tc("delete")}
               >
                 <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -122,7 +122,7 @@ export function RecipeCard({
                   <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                   {ing}
                   {isFromPantry(ing.split(" ")[0]) && (
-                    <span className="text-[10px] text-green-600 bg-green-50 px-1 rounded">
+                    <span className="text-[10px] text-success bg-success/10 px-1 rounded">
                       {t("inPantry")}
                     </span>
                   )}

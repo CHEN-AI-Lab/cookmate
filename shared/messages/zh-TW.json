@@ -45,10 +45,17 @@
     "pantry": "食材庫",
     "settings": "設置",
     "billing": "賬單",
+    "support": "聯絡支援",
+    "supportCopied": "已複製信箱：{email}",
     "demoLangToast": "體驗用戶只能在中文和英文間切換",
     "language": "語言",
     "logout": "退出登錄",
-    "howToUse": "使用流程"
+    "howToUse": "使用流程",
+    "themeDark": "深色",
+    "themeToggle": "切換主題",
+    "themeLight": "淺色",
+    "themeSystem": "跟隨系統",
+    "themeTitle": "主題"
   },
   "hero": {
     "title": "今天吃什麼？",
@@ -68,8 +75,7 @@
     "demoRecipe": "推薦菜譜：",
     "demoRecipeName": "🍗 照燒雞腿飯",
     "demoRecipeMeta": "⏱ 30分鐘 · 🔥 450卡 · 難度：簡單",
-    "demoRecipeDesc": "雞肉用醬油和蒜醃製後煎至金黃，搭配焯水的西蘭花和米飯...",
-    "tryDemo": "體驗演示版"
+    "demoRecipeDesc": "雞肉用醬油和蒜醃製後煎至金黃，搭配焯水的西蘭花和米飯..."
   },
   "howItWorks": {
     "step1Title": "1. 告訴 AI 你的食材",
@@ -241,6 +247,9 @@
     "loading": "加載中...",
     "pantryCount": "食材數",
     "starredCount": "收藏菜譜",
+    "plannedDays": "本週規劃",
+    "subtextPlannedDays": "已規劃餐食的天數（共 7 天）",
+    "subtextPlannedDaysDemo": "範例資料",
     "pantryDesc": "看看冰箱裡還有什麼",
     "mealPlanTitle": "周計劃",
     "mealPlanDesc": "規劃這一週吃什麼",
@@ -312,7 +321,7 @@
     "genError_unknown": "生成失敗，請稍後重試",
     "freeLimitHint": "免費版本週還可規劃 {days} 天，本次選擇超出剩餘天數",
     "freeLimitReached": "免費版本週 3 天規劃額度已用完，<upgrade>升級 Pro</upgrade> 解鎖整週計畫",
-    "genError_mealPlanDaysLimit": "免費版每週最多規劃 3 天，請減少生成天數或升級 Pro",
+    "genError_mealPlanDaysLimit": "免費版每週最多規劃 3 天，請減少生成天數或<upgrade>升級 Pro</upgrade>",
     "mealPlanDaysLimit": "免費版每週最多規劃 3 天，升級 Pro 解鎖整週計畫",
     "freeLimitExceed": "本次選擇了 {picked} 天，超出本週剩餘額度（還剩 {remaining} 天）。<upgrade>升級 Pro</upgrade> 可規劃整週",
     "genError_recipeLimit": "食譜總數已達免費版上限（25 個），週計畫會一次性寫入多個食譜，請清理食譜或升級 Pro",
@@ -490,7 +499,8 @@
     "dinner": "晚餐",
     "aiThinking": "🤔 AI 正在思考...",
     "clearAll": "清空",
-    "duplicateIngredient": "「{name}」已在食材列表中"
+    "duplicateIngredient": "「{name}」已在食材列表中",
+    "delete": "刪除"
   },
   "billing": {
     "title": "💳 賬單與訂閱",
@@ -525,6 +535,7 @@
       "智能週計劃",
       "自動購物清單（按超市分區分類）",
       "飲食定製（減脂/增肌/素食等）",
+      "營養分析（熱量、蛋白質與營養素）· 即將上線",
       "完整食材庫管理",
       "無限收藏食譜",
       "新功能優先體驗",
@@ -538,6 +549,7 @@
     "proPlanDesc": "解鎖全部功能，不限量使用",
     "freeBadge": "🆓 免費版",
     "expiryDate": "到期時間：{date}",
+    "nextCharge": "下次扣款：{date}",
     "payDesc": "掃碼即付 · 安全快捷",
     "subscriptionManage": "訂閱管理",
     "subscriptionManageDesc": "管理你的訂閱狀態",
@@ -573,6 +585,7 @@
     "networkError": "網絡錯誤",
     "downgradeToFree": "降級到免費版",
     "monthlyPeriod": "隨時取消",
+    "checkoutMonthEndNotice": "您的訂閱週期按自然月計算：購買日對應每月同日扣款；若購買日為月底（29/30/31 日），則對應月份只有該月最後一天時扣款日提前到當月最後一天。例如 1/31 訂閱將在 2/28 扣款。",
     "refundNotice": "會員服務係網路虛擬商品，採用先付費後服務的方式。會員費用為所購會員服務對應的價格，而非預付款、存款或定金。會員服務一經開通即不支持退款、不可轉讓（法規另有強制規定，或服務存在重大瑕疵致使您完全無法使用的情形除外）。取消訂閱後，會員權益將持續至當前計費週期屆滿，剩餘天數不予折現或退還。",
     "checkoutRefundNotice": "會員服務為虛擬商品，一經開通不支持退款（法定例外情形除外）。取消訂閱後，權益持續至當前計費週期屆滿。",
     "starLimitReached": "收藏已達上限（10 個），<upgrade>升級 Pro</upgrade> 即可無限收藏",
@@ -714,13 +727,15 @@
   },
   "terms": {
     "title": "服務條款",
-    "lastUpdated": "最後更新：2026 年 7 月",
+    "lastUpdated": "最後更新：2026 年 9 月",
     "acceptTitle": "1. 條款接受",
     "acceptDesc": "使用 CookMate 即表示您同意本服務條款。如不同意，請勿使用本服務。",
     "accountTitle": "2. 賬號責任",
     "accountDesc": "您負責維護賬號安全，對賬號下的所有活動負責。請勿將賬號信息透露給他人。",
     "subscriptionTitle": "3. 訂閱與付費",
     "subscriptionDesc": "付費訂閱按所選方案自動續費。您可在賬單頁面管理訂閱。取消訂閱後，當前週期內仍可使用 Pro 功能至週期結束。",
+    "subscriptionRenewalTitle": "訂閱週期與扣款規則",
+    "subscriptionRenewalDesc": "您的訂閱週期按自然月計算：購買日對應每月同日扣款；若購買日為月底（29/30/31 日），則對應月份沒有該日時，扣款日提前到當月最後一天。例如：1/31 訂閱將在 2/28 扣款；3/31 訂閱將在 4/30 扣款。",
     "aiTitle": "4. AI 生成內容",
     "aiDesc": "AI 生成的菜譜信息僅供參考，包括但不限於營養成分、熱量估算。建議用戶在使用前自行核實。",
     "disclaimerTitle": "5. 免責聲明",
@@ -857,29 +872,6 @@
     "ctaDesc": "免費註冊，立即體驗 AI 智能食譜推薦",
     "ctaButton": "免費開始使用",
     "featureFullTitle": "全流程管理"
-  },
-  "stats": {
-    "title": "數據",
-    "usersLabel": "註冊用戶",
-    "recipesLabel": "菜譜生成",
-    "mealsLabel": "餐食規劃",
-    "satisfactionLabel": "用戶滿意度",
-    "users": "10,000+",
-    "recipes": "50,000+",
-    "meals": "200,000+",
-    "satisfaction": "98%"
-  },
-  "testimonials": {
-    "title": "用戶怎麼說",
-    "item1Content": "以前每天下班最煩的就是想吃什麼。現在打開 CookMate 輸入冰箱裡的食材，3 秒就有答案，太方便了！",
-    "item2Name": "張大力",
-    "item2Role": "健身教練 · 上海",
-    "item2Content": "減脂期需要精確控制卡路里和營養比例，CookMate 的 AI 推薦幫了大忙，每週計劃一鍵搞定。",
-    "item3Role": "家庭主婦 · 廣州",
-    "item3Content": "家裡人多口味雜，CookMate 的周計劃功能讓我們家再也不用為做飯吵架了，購物清單也省心。",
-    "item1Name": "王小美",
-    "item1Role": "上班族 · 北京",
-    "item3Name": "李阿姨"
   },
   "ctaBanner": {
     "title": "準備好告別選擇困難了嗎？",

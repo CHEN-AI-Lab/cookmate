@@ -27,6 +27,7 @@ import Google from "next-auth/providers/google"
 import GitHub from "next-auth/providers/github"
 import Credentials from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
+import { trackEvent } from "@cookmate/shared/utils/track"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import WeChatProvider from "@/lib/providers/wechat"
 import { hasDemoCookie, DEMO_SESSION } from "@cookmate/shared/utils/demo-cookie"
@@ -89,6 +90,7 @@ providers.push(
         user = await prisma.user.create({
           data: { phone, name: `用户${phone.slice(-4)}`, termsAgreedAt: new Date() },
         })
+        await trackEvent("register")
       }
 
       return { id: user.id, name: user.name, phone: user.phone, emailVerified: new Date() }
@@ -145,6 +147,7 @@ providers.push(
         user = await prisma.user.create({
           data: { email, name: email.split("@")[0], termsAgreedAt: new Date() },
         })
+        await trackEvent("register")
       }
 
       return { id: user.id, name: user.name, email: user.email!, emailVerified: new Date() }
@@ -337,6 +340,13 @@ async function getSessionUserId(): Promise<string | null> {
 
 const { handlers: nextAuthHandlers, auth: nextAuthAuth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
+  // 注册埋点：OAuth（Google/GitHub/微信）新用户由 adapter 创建 → NextAuth 触发 createUser 事件；
+  // 手机/邮箱验证码注册的 user.create 在各 authorize 里手动埋点，两处不会重复计数
+  events: {
+    createUser: async () => {
+      await trackEvent("register").catch(() => {})
+    },
+  },
   session: { strategy: "jwt" },
   // 信任请求主机：Vercel 会自动推断，但自托管/自定义反代部署缺省时 /api/auth/* 会 500（UntrustedHost）
   trustHost: true,

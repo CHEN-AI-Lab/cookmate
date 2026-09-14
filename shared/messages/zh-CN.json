@@ -46,9 +46,16 @@
     "pantry": "食材库",
     "settings": "设置",
     "billing": "账单",
+    "support": "联系支持",
+    "supportCopied": "邮箱已复制：{email}",
     "demoLangToast": "体验用户只能在中文和英文间切换",
     "language": "语言",
-    "logout": "退出登录"
+    "logout": "退出登录",
+    "themeDark": "深色",
+    "themeToggle": "切换主题",
+    "themeLight": "浅色",
+    "themeSystem": "跟随系统",
+    "themeTitle": "主题"
   },
   "hero": {
     "title": "今天吃什么？",
@@ -68,8 +75,7 @@
     "demoRecipe": "推荐菜谱：",
     "demoRecipeName": "🍗 照烧鸡腿饭",
     "demoRecipeMeta": "⏱ 30分钟 · 🔥 450卡 · 难度：简单",
-    "demoRecipeDesc": "鸡肉用酱油和蒜腌制后煎至金黄，搭配焯水的西兰花和米饭...",
-    "tryDemo": "体验演示版"
+    "demoRecipeDesc": "鸡肉用酱油和蒜腌制后煎至金黄，搭配焯水的西兰花和米饭..."
   },
   "howItWorks": {
     "title": "三步搞定",
@@ -242,6 +248,9 @@
     "aiGenerate": "AI 生成",
     "pantryCount": "食材数",
     "starredCount": "收藏菜谱",
+    "plannedDays": "本周规划",
+    "subtextPlannedDays": "已规划餐食的天数（共 7 天）",
+    "subtextPlannedDaysDemo": "示例数据",
     "quickAccess": "快捷入口",
     "managePantry": "管理食材",
     "pantryDesc": "看看冰箱里还有什么",
@@ -324,7 +333,7 @@
     "freeLimitHint": "免费版本周还可规划 {days} 天",
     "freeLimitReached": "免费版本周 3 天规划额度已用完，<upgrade>升级 Pro</upgrade> 解锁整周计划",
     "freeLimitExceed": "本次选择了 {picked} 天，超出本周剩余额度（还剩 {remaining} 天）。<upgrade>升级 Pro</upgrade> 可规划整周",
-    "genError_mealPlanDaysLimit": "免费版每周最多规划 3 天，请减少生成天数或升级 Pro",
+    "genError_mealPlanDaysLimit": "免费版每周最多规划 3 天，请减少生成天数或<upgrade>升级 Pro</upgrade>",
     "genError_recipeLimit": "菜谱总数已达免费版上限（25 个），周计划会一次性写入多个菜谱，请清理菜谱或升级 Pro",
     "mealPlanDaysLimit": "免费版每周最多规划 3 天，升级 Pro 解锁整周计划"
   },
@@ -490,7 +499,8 @@
     "nextPage": "下一页",
     "pageInfo": "第 {page} / {total} 页",
     "duplicateIngredient": "「{name}」已在食材列表中",
-    "demoToast": "体验模式仅供浏览，注册后即可使用完整功能"
+    "demoToast": "体验模式仅供浏览，注册后即可使用完整功能",
+    "delete": "删除"
   },
   "billing": {
     "title": "💳 账单与订阅",
@@ -531,6 +541,7 @@
       "智能周计划",
       "自动购物清单（按超市分区分类）",
       "饮食定制（减脂/增肌/素食等）",
+      "营养分析（热量、蛋白质与营养素）· 即将上线",
       "完整食材库管理",
       "无限收藏菜谱",
       "新功能优先体验",
@@ -545,6 +556,7 @@
     "freeBadge": "🆓 免费版",
     "proBadge": "🌟 Pro",
     "expiryDate": "到期时间：{date}",
+    "nextCharge": "下次扣款：{date}",
     "paymentMethods": "支付方式",
     "payDesc": "扫码即付 · 安全快捷",
     "subscriptionManage": "订阅管理",
@@ -557,6 +569,7 @@
     "yearlyPro": "Pro 年付",
     "monthlyPro": "Pro 月付",
     "monthlyPeriod": "随时取消",
+    "checkoutMonthEndNotice": "您的订阅周期按自然月计算：购买日对应每月同日扣款；若购买日为月底（29/30/31 日），则对应月份只有该月最后一天时扣款日提前到当月最后一天。例如 1/31 订阅将在 2/28 扣款。",
     "demoBillingTitle": "🔒 体验模式",
     "demoBillingDesc": "体验用户无法使用支付功能。注册账号后可升级到 Pro，解锁无限 AI 生成和周计划功能。",
     "savePercent": "省 {percent}%",
@@ -714,13 +727,15 @@
   },
   "terms": {
     "title": "服务条款",
-    "lastUpdated": "最后更新：2026 年 7 月",
+    "lastUpdated": "最后更新：2026 年 9 月",
     "acceptTitle": "1. 条款接受",
     "acceptDesc": "使用 CookMate 即表示您同意本服务条款。如不同意，请勿使用本服务。",
     "accountTitle": "2. 账号责任",
     "accountDesc": "您负责维护账号安全，对账号下的所有活动负责。请勿将账号信息透露给他人。",
     "subscriptionTitle": "3. 订阅与付费",
     "subscriptionDesc": "付费订阅按所选方案自动续费。您可在账单页面管理订阅。取消订阅后，当前周期内仍可使用 Pro 功能至周期结束。",
+    "subscriptionRenewalTitle": "订阅周期与扣款规则",
+    "subscriptionRenewalDesc": "您的订阅周期按自然月计算：购买日对应每月同日扣款；若购买日为月底（29/30/31 日），则对应月份没有该日时，扣款日提前到当月最后一天。例如：1/31 订阅将在 2/28 扣款；3/31 订阅将在 4/30 扣款。",
     "aiTitle": "4. AI 生成内容",
     "aiDesc": "AI 生成的菜谱信息仅供参考，包括但不限于营养成分、热量估算。建议用户在使用前自行核实。",
     "disclaimerTitle": "5. 免责声明",
@@ -857,29 +872,6 @@
     "ctaTitle": "🚀 开始使用",
     "ctaDesc": "免费注册，立即体验 AI 智能食谱推荐",
     "ctaButton": "免费开始使用"
-  },
-  "stats": {
-    "title": "数据",
-    "users": "10,000+",
-    "usersLabel": "注册用户",
-    "recipes": "50,000+",
-    "recipesLabel": "菜谱生成",
-    "meals": "200,000+",
-    "mealsLabel": "餐食规划",
-    "satisfaction": "98%",
-    "satisfactionLabel": "用户满意度"
-  },
-  "testimonials": {
-    "title": "用户怎么说",
-    "item1Name": "王小美",
-    "item1Role": "上班族 · 北京",
-    "item1Content": "以前每天下班最烦的就是想吃什么。现在打开 CookMate 输入冰箱里的食材，3 秒就有答案，太方便了！",
-    "item2Name": "张大力",
-    "item2Role": "健身教练 · 上海",
-    "item2Content": "减脂期需要精确控制卡路里和营养比例，CookMate 的 AI 推荐帮了大忙，每周计划一键搞定。",
-    "item3Name": "李阿姨",
-    "item3Role": "家庭主妇 · 广州",
-    "item3Content": "家里人多口味杂，CookMate 的周计划功能让我们家再也不用为做饭吵架了，购物清单也省心。"
   },
   "ctaBanner": {
     "title": "准备好告别选择困难了吗？",

@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server"
 import crypto from "node:crypto"
 import { prisma } from "@/lib/prisma"
+import { trackEvent } from "@cookmate/shared/utils/track"
 
 interface AlipayTokenResponse {
   alipay_system_oauth_token_response?: { access_token: string; user_id: string }
@@ -104,6 +105,7 @@ export async function GET(req: Request) {
       userId = existingAccount.userId
     } else {
       const newUser = await prisma.user.create({ data: { name: alipayNick, termsAgreedAt: new Date() } })
+      await trackEvent("register")
       await prisma.account.create({
         data: { userId: newUser.id, type: "oauth", provider: "alipay", providerAccountId: alipayUserId },
       })

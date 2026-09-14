@@ -46,9 +46,16 @@
     "pantry": "Pantry",
     "settings": "Settings",
     "billing": "Billing",
+    "support": "Contact Support",
+    "supportCopied": "Email copied: {email}",
     "demoLangToast": "Demo users can only switch between Chinese and English",
     "language": "Language",
-    "logout": "Log Out"
+    "logout": "Log Out",
+    "themeDark": "Dark",
+    "themeToggle": "Toggle theme",
+    "themeLight": "Light",
+    "themeSystem": "System",
+    "themeTitle": "Theme"
   },
   "hero": {
     "title": "What's for dinner?",
@@ -68,8 +75,7 @@
     "demoRecipe": "Recommended:",
     "demoRecipeName": "🍗 Teriyaki Chicken Rice Bowl",
     "demoRecipeMeta": "⏱ 30 min · 🔥 450 cal · Difficulty: Easy",
-    "demoRecipeDesc": "Marinate chicken with soy sauce and garlic, pan-fry until golden. Serve with blanched broccoli and rice...",
-    "tryDemo": "Try Demo"
+    "demoRecipeDesc": "Marinate chicken with soy sauce and garlic, pan-fry until golden. Serve with blanched broccoli and rice..."
   },
   "howItWorks": {
     "title": "Three Simple Steps",
@@ -242,6 +248,9 @@
     "aiGenerate": "AI Generated",
     "pantryCount": "Pantry Items",
     "starredCount": "Starred Recipes",
+    "plannedDays": "Planned This Week",
+    "subtextPlannedDays": "Days with meals planned (of 7)",
+    "subtextPlannedDaysDemo": "Sample data",
     "quickAccess": "Quick Access",
     "managePantry": "Manage Pantry",
     "pantryDesc": "See what's in your fridge",
@@ -324,7 +333,7 @@
     "freeLimitHint": "Free plan: {days} days left this week",
     "freeLimitReached": "This week's 3 free planning days are used up. <upgrade>Upgrade to Pro</upgrade> to plan the whole week",
     "freeLimitExceed": "You picked {picked} days, more than the {remaining} day(s) left this week. <upgrade>Upgrade to Pro</upgrade> to plan the whole week",
-    "genError_mealPlanDaysLimit": "Free plan allows up to 3 days per week. Pick fewer days or upgrade to Pro",
+    "genError_mealPlanDaysLimit": "Free plan allows up to 3 days per week. Pick fewer days or <upgrade>upgrade to Pro</upgrade>",
     "genError_recipeLimit": "Recipe limit reached (25). A weekly plan writes several recipes at once, so delete some recipes or upgrade to Pro",
     "mealPlanDaysLimit": "Free plan allows up to 3 days per week. Upgrade to Pro for a full week"
   },
@@ -490,7 +499,8 @@
     "nextPage": "Next",
     "pageInfo": "Page {page} / {total}",
     "duplicateIngredient": "「{name}」is already in the ingredient list",
-    "demoToast": "Demo mode is read-only. Sign up to use all features."
+    "demoToast": "Demo mode is read-only. Sign up to use all features.",
+    "delete": "Delete"
   },
   "billing": {
     "title": "💳 Billing & Subscription",
@@ -531,6 +541,7 @@
       "Smart meal planning",
       "Auto shopping list (sorted by aisle)",
       "Diet customization (keto, vegan, low-carb, etc.)",
+      "Nutrition analysis (calories, protein & macros) · Coming soon",
       "Full pantry management",
       "Save unlimited recipes",
       "Early access to new features",
@@ -545,6 +556,7 @@
     "freeBadge": "🆓 Free",
     "proBadge": "🌟 Pro",
     "expiryDate": "Expires: {date}",
+    "nextCharge": "Next charge: {date}",
     "paymentMethods": "Payment Methods",
     "payDesc": "Scan to pay · Safe & Fast",
     "subscriptionManage": "Subscription Management",
@@ -557,6 +569,7 @@
     "yearlyPro": "Pro Yearly",
     "monthlyPro": "Pro Monthly",
     "monthlyPeriod": "Cancel anytime",
+    "checkoutMonthEndNotice": "Your billing cycle is calculated by calendar month: charges occur on the same date each month. If you subscribed on a month-end date (29th/30th/31st) and the next month has fewer days, your next charge will be on the last day of that month. For example, a Jan 31 subscription renews on Feb 28.",
     "demoBillingTitle": "🔒 Demo Mode",
     "demoBillingDesc": "Demo users cannot use payment features. Sign up to upgrade to Pro for unlimited AI generation and meal plans.",
     "savePercent": "Save {percent}%",
@@ -714,13 +727,15 @@
   },
   "terms": {
     "title": "Terms of Service",
-    "lastUpdated": "Last updated: July 2026",
+    "lastUpdated": "Last updated: September 2026",
     "acceptTitle": "1. Acceptance of Terms",
     "acceptDesc": "By using CookMate, you agree to these Terms of Service. If you do not agree, do not use the service.",
     "accountTitle": "2. Account Responsibility",
     "accountDesc": "You are responsible for maintaining your account security and for all activities under your account. Do not share your credentials.",
     "subscriptionTitle": "3. Subscriptions & Payments",
     "subscriptionDesc": "Paid subscriptions auto-renew according to your selected plan. You can manage your subscription in the billing page. Upon cancellation, Pro features remain available until the end of the current billing period.",
+    "subscriptionRenewalTitle": "Billing Cycle & Renewal Rules",
+    "subscriptionRenewalDesc": "Your billing cycle is calculated by calendar month: charges occur on the same date each month. If you subscribed on a month-end date (29th/30th/31st) and the next month has fewer days, your next charge will be on the last day of that month. For example: a Jan 31 subscription renews on Feb 28; a Mar 31 subscription renews on Apr 30.",
     "aiTitle": "4. AI-Generated Content",
     "aiDesc": "AI-generated recipes are for reference only, including nutritional information and calorie estimates. Users should verify independently before use.",
     "disclaimerTitle": "5. Disclaimer",
@@ -857,29 +872,6 @@
     "ctaTitle": "🚀 Get Started",
     "ctaDesc": "Sign up for free and experience AI-powered smart recipe recommendations",
     "ctaButton": "Get Started Free"
-  },
-  "stats": {
-    "title": "By the Numbers",
-    "users": "10,000+",
-    "usersLabel": "Registered Users",
-    "recipes": "50,000+",
-    "recipesLabel": "Recipes Generated",
-    "meals": "200,000+",
-    "mealsLabel": "Meals Planned",
-    "satisfaction": "98%",
-    "satisfactionLabel": "User Satisfaction"
-  },
-  "testimonials": {
-    "title": "What Users Say",
-    "item1Name": "Xiaomei Wang",
-    "item1Role": "Office Worker · Beijing",
-    "item1Content": "After work, the last thing I want is to figure out dinner. Now I open CookMate, type in what's in my fridge, and get an answer in 3 seconds. So convenient!",
-    "item2Name": "Dali Zhang",
-    "item2Role": "Fitness Coach · Shanghai",
-    "item2Content": "Tracking calories during my cutting phase used to be a pain. CookMate's AI recommendations handle the nutrition breakdown for me — one click and my weekly plan is ready.",
-    "item3Name": "Aunt Li",
-    "item3Role": "Homemaker · Guangzhou",
-    "item3Content": "With a big family and different tastes, CookMate's meal plan saved us from dinner arguments. The shopping list is a lifesaver too."
   },
   "ctaBanner": {
     "title": "Ready to stop wondering what to cook?",

@@ -40,6 +40,8 @@
     "groceryList": "買い物リスト",
     "pantry": "食材庫",
     "billing": "課金管理",
+    "support": "サポートに連絡",
+    "supportCopied": "メールアドレスをコピーしました：{email}",
     "settings": "設定",
     "logout": "ログアウト",
     "about": "について",
@@ -48,7 +50,12 @@
     "faq": "よくある質問",
     "howToUse": "使い方",
     "login": "ログイン",
-    "pricing": "料金"
+    "pricing": "料金",
+    "themeDark": "ダーク",
+    "themeToggle": "テーマを切り替え",
+    "themeLight": "ライト",
+    "themeSystem": "システム",
+    "themeTitle": "テーマ"
   },
   "hero": {
     "title": "何を作るか、もう迷わない",
@@ -68,8 +75,7 @@
     "demoRecipe": "おすすめ：",
     "demoRecipeName": "🍗 照り焼きチキンライスボウル",
     "demoRecipeMeta": "⏱ 30分 · 🔥 450kcal · 難易度：簡単",
-    "demoRecipeDesc": "鶏肉を醤油とニンニクで漬け込み、黄金色になるまでフライパンで焼く。ブロッコリーとご飯を添えて完成。",
-    "tryDemo": "体験版"
+    "demoRecipeDesc": "鶏肉を醤油とニンニクで漬け込み、黄金色になるまでフライパンで焼く。ブロッコリーとご飯を添えて完成。"
   },
   "howItWorks": {
     "title": "3つの簡単ステップ",
@@ -248,6 +254,9 @@
     "quickAccess": "クイックアクセス",
     "recommendDesc": "食材を入力するか、AIにおすすめを依頼して3秒で夕食を決める",
     "starredCount": "お気に入りレシピ",
+    "plannedDays": "今週の計画",
+    "subtextPlannedDays": "食事を計画した日数（7日中）",
+    "subtextPlannedDaysDemo": "サンプルデータ",
     "subtextAiGenerateDemo": "サンプルデータ · 登録後は1日1回のAI生成",
     "subtextAiGenerateFree": "無料：1日1回",
     "subtextAiGeneratePro": "無制限",
@@ -324,7 +333,7 @@
     "freeLimitHint": "無料版は今週あと{days}日の献立を作成できます",
     "freeLimitReached": "今週の3日間の無料枠を使い切りました。<upgrade>Proにアップグレード</upgrade>すると1週間すべて計画できます",
     "freeLimitExceed": "{picked}日を選択しましたが、今週の残り枠（あと{remaining}日）を超えています。<upgrade>Proにアップグレード</upgrade>すると1週間すべて計画できます",
-    "genError_mealPlanDaysLimit": "無料版は週3日までの献立が可能です。少ない日数を選択するか、Proにアップグレードしてください",
+    "genError_mealPlanDaysLimit": "無料版は週3日までの献立が可能です。日数を減らすか<upgrade>Proにアップグレード</upgrade>してください",
     "genError_recipeLimit": "レシピ数が無料版の上限（25件）に達しました。週間計画は複数のレシピを一度に作成するため、レシピを削除するかProにアップグレードしてください",
     "mealPlanDaysLimit": "無料版は週3日までの献立が可能です。Proで週間計画を解除"
   },
@@ -490,7 +499,8 @@
     "unstar": "お気に入り解除",
     "unstarToast": "お気に入り解除",
     "wednesday": "水",
-    "yourPantry": "あなたの食材庫"
+    "yourPantry": "あなたの食材庫",
+    "delete": "削除"
   },
   "billing": {
     "title": "課金管理",
@@ -527,6 +537,7 @@
       "スマート週間プラン",
       "自動買い物リスト（売り場順）",
       "食事カスタマイズ（低カロリー/筋トレ/ベジタリアン等）",
+      "栄養分析（カロリー・タンパク質・栄養素）・ 近日公開",
       "食材庫のフル管理",
       "お気に入り無制限",
       "新機能の先行利用",
@@ -540,6 +551,7 @@
     "proPlanDesc": "すべての機能を解放、無制限で利用可能",
     "freeBadge": "🆓 無料",
     "expiryDate": "有効期限：{date}",
+    "nextCharge": "次回のお支払い：{date}",
     "paymentMethods": "支払い方法",
     "payDesc": "スキャンして支払う・安全・迅速",
     "subscriptionManage": "サブスクリプション管理",
@@ -552,6 +564,7 @@
     "yearlyPro": "Pro年払い",
     "monthlyPro": "Pro月払い",
     "monthlyPeriod": "いつでも解約可",
+    "checkoutMonthEndNotice": "請求サイクルは暦月で計算されます：購入日と同じ日付に毎月課金されます。月末（29/30/31日）に契約し、翌月がそれより短い場合、課金日はその月の最終日に繰上げとなります。例：1/31 契約の次回課金は 2/28。",
     "demoBillingTitle": "🔒 デモモード",
     "demoBillingDesc": "デモユーザーは支払い機能を利用できません。登録してProにアップグレードすると、無制限のAI生成と週間献立が利用できます。",
     "demoBillingRegister": "無料登録",
@@ -729,6 +742,8 @@
     "liabilityTitle": "6. 責任の制限",
     "subscriptionDesc": "有料サブスクリプションは選択したプランに従って自動更新されます。課金管理ページでサブスクリプションを管理できます。キャンセル後も現在の請求期間が終了するまでPro機能をご利用いただけます。",
     "subscriptionTitle": "3. サブスクリプション & 支払い",
+    "subscriptionRenewalTitle": "請求サイクルと更新ルール",
+    "subscriptionRenewalDesc": "請求サイクルは暦月で計算されます：購入日と同じ日付に毎月課金されます。月末（29/30/31日）に契約し、翌月がそれより短い場合、課金日はその月の最終日に繰上げとなります。例：1/31 契約の次回課金は 2/28、3/31 契約の次回課金は 4/30。",
     "viewPrivacy": "プライバシーポリシーを見る →"
   },
   "faq": {
@@ -857,29 +872,6 @@
     "storyP2": "そこで考えました。AIにこの決断を任せたらどうか？冷蔵庫の食材や食べたい味をCookMateに伝えるだけで、3秒でカスタムレシピを取得。週間献立から買い物リストまで、「何を食べるか→何を買うか→どう作るか」の完全なサイクルをワンストップで解決します。",
     "storyTitle": "📖 私たちのストーリー",
     "subtitle": "AIが毎日の「何を食べるか」問題を解決"
-  },
-  "stats": {
-    "usersLabel": "アクティブユーザー",
-    "recipesLabel": "生成されたレシピ",
-    "meals": "100,000+",
-    "mealsLabel": "計画された食事",
-    "satisfactionLabel": "ユーザー満足度",
-    "title": "数字で見る",
-    "users": "10,000+",
-    "recipes": "50,000+",
-    "satisfaction": "98%"
-  },
-  "testimonials": {
-    "title": "ユーザーの声",
-    "item1Name": "田中 花子",
-    "item1Role": "主婦",
-    "item1Content": "毎日の献立に悩むことがなくなりました。冷蔵庫の残り物を入れるだけで、美味しいレシピを提案してくれます。",
-    "item2Name": "鈴木 太郎",
-    "item2Role": "会社員",
-    "item2Content": "筋トレ中の食事管理に最適です。タンパク質を考慮したレシピを提案してくれて、週間献立も自動で組んでくれます。",
-    "item3Name": "佐藤 美咲",
-    "item3Role": "大学生",
-    "item3Content": "料理初心者でも簡単に使えます。材料を入れるだけで3秒でレシピが出てくるので、自炊のハードルがグッと下がりました。"
   },
   "ctaBanner": {
     "title": "さあ、今日から始めよう",

@@ -15,7 +15,7 @@ export default function Separator({
     return (
       <div
         className={cn(
-          "mx-2 inline-block h-full w-px self-stretch bg-gray-200",
+          "mx-2 inline-block h-full w-px self-stretch bg-border",
           className,
         )}
         aria-orientation="vertical"
@@ -42,7 +42,7 @@ export default function Separator({
 
   return (
     <div
-      className={cn("h-px w-full bg-gray-200", className)}
+      className={cn("h-px w-full bg-border", className)}
       role="separator"
       aria-orientation="horizontal"
     />

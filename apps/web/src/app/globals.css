@@ -1,17 +1,43 @@
 @import "tailwindcss";
 
+/* 深色变体改为挂 class（.dark）：脚本会在 <html> 上挂 .dark/.light，
+   这样「手动切深色 + 刷新」也能在首屏就命中，不依赖系统偏好 */
+/* dark: 必须同时覆盖两个分支，否则「跟随系统 + 系统为深色」时 dark: 的样式不会生效
+   （例如 dashboard/billing 的琥珀横幅会退回浅奶油渐变，在深色页上非常刺眼）：
+   ① 显式选了深色 → <html class="dark">；
+   ② 没有显式选（跟随系统）且系统为深色 → 媒体查询命中，但显式选了浅色(.light)时要排除。 */
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not(.light), :root:not(.light) *) {
+      @slot;
+    }
+  }
+}
+
 :root {
+  /* 默认浅色。暗色由下面的 @media(prefers-color-scheme:dark) 或手动 .dark 覆盖；
+     color-scheme 决定原生控件/画布配色，必须跟着一起切 */
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
   --color-bg-brand: #FFF8F0;
   --color-bg-inverse: #2D3436;
   --color-text-primary: #2D3436;
-  --color-accent: #FF6B35;
+  /* 亮色模式主色：原 #FF6B35 色相偏红（约 18°），在米白底上呈暗红感；
+     改用 #FF8C42（色相约 24°）降低红味，保留暖橙食欲感。暗色模式维持原值不变。 */
+  --color-accent: #FF8C42;
   --color-card: #ffffff;
   --color-surface: #f5f5f5;
   --color-border: #e5e7eb;
   --color-error: #ef4444;
   --color-success: #22c55e;
+  /* 以下三值为原硬编码色的精确值，替换后颜色与之前完全一致；暗色模式不覆盖（与原硬编码行为相同） */
+  --color-success-strong: #16a34a; /* 原 green-600：成功 toast 背景 */
+  --color-success-deep: #166534;   /* 原 green-800：Toast 成功深色 */
+  --color-accent-hover: #e55a2b;   /* 品牌按钮 hover（原硬编码 hex） */
   --color-info: #3b82f6;
   --color-green: #22c55e;
   --color-blue: #3b82f6;
@@ -32,6 +58,9 @@
   --color-border: var(--color-border);
   --color-error: var(--color-error);
   --color-success: var(--color-success);
+  --color-success-strong: var(--color-success-strong);
+  --color-success-deep: var(--color-success-deep);
+  --color-accent-hover: var(--color-accent-hover);
   --color-info: var(--color-info);
   --color-green: var(--color-green);
   --color-blue: var(--color-blue);
@@ -53,23 +82,55 @@
 }
 
 @keyframes pickerPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,53,0.35); }
-  50% { box-shadow: 0 0 0 6px rgba(255,107,53,0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,140,66,0.35); }
+  50% { box-shadow: 0 0 0 6px rgba(255,140,66,0); }
 }
 
+/* 系统跟随（默认）：系统为暗色、且用户没有显式选浅色(.light)时生效 */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
+    color-scheme: dark;
     --background: #0a0a0a;
     --foreground: #ededed;
     --color-card: #1a1a2e;
     --color-surface: #16213e;
+    /* bg-bg-brand 是全站的页面底色（app/layout、AppShell、公开页都在用），必须一起翻深，
+       否则会出现「米色底 + 浅色字」，整个应用都看不清 */
+    --color-bg-brand: #171310;
     --color-border: rgba(255,255,255,0.1);
     --color-overlay: rgba(0,0,0,0.7);
+    /* 必须覆盖：否则 text-primary 仍是 #2D3436（深炭色），
+       在 #0a0a0a 背景 / #1a1a2e 卡片上变成「深色字 + 深色底」，直接看不清 */
+    --color-text-primary: #ededed;
     --color-text-secondary: #9ca3af;
+    /* 暗色模式沿用原主色（用户确认暗色下观感正常，不做改动） */
+    --color-accent: #FF6B35;
     --color-info: #60a5fa;
     --color-green: #4ade80;
     --color-blue: #60a5fa;
   }
+}
+
+/* 用户显式选深色：不依赖系统偏好，刷新后由 <html class="dark"> 直接命中 */
+:root.dark {
+  color-scheme: dark;
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --color-card: #1a1a2e;
+  --color-surface: #16213e;
+  --color-bg-brand: #171310;
+  --color-border: rgba(255,255,255,0.1);
+  --color-overlay: rgba(0,0,0,0.7);
+  --color-text-primary: #ededed;
+  --color-text-secondary: #9ca3af;
+  --color-accent: #FF6B35;
+  --color-info: #60a5fa;
+  --color-green: #4ade80;
+  --color-blue: #60a5fa;
+}
+
+html {
+  background-color: var(--background);
 }
 
 body {
@@ -83,3 +144,17 @@ input[type="password"]::-ms-reveal,
 input[type="password"]::-webkit-reveal {
   display: none;
 }
+
+/* ------------------------------------------------------------------
+   主题按钮的三态显隐（浅色 / 深色 / 跟随系统）。
+   依据 <html> 上是 .light、.dark、还是两者都没有来决定显示哪一个。
+   注意与 dark: 变体的区别：dark: 表达「当前解析出的明暗」，这里表达「用户显式选了什么」，
+   所以必须用 class（而非媒体查询）判断，不能用 dark:/light: 变体。
+------------------------------------------------------------------ */
+.theme-opt { display: none; }
+:root.light .theme-opt-light,
+:root.dark .theme-opt-dark,
+:root:not(.light):not(.dark) .theme-opt-system { display: inline; }
+:root.light .theme-opt-icon.theme-opt-light,
+:root.dark .theme-opt-icon.theme-opt-dark,
+:root:not(.light):not(.dark) .theme-opt-icon.theme-opt-system { display: inline-flex; }
