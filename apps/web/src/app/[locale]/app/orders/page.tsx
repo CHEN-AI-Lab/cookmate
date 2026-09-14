@@ -77,7 +77,7 @@ export default function OrdersPage() {
   const statusLabel: Record<string, string> = { PAID: t("completed"), PENDING: t("pending"), CANCELED: t("cancelled"), EXPIRED: t("expired") }
   const statusColor: Record<string, string> = {
     PAID: "text-success bg-success/10",
-    PENDING: "text-amber-500 bg-amber-500/10",
+    PENDING: "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-400/10",
     CANCELED: "text-text-secondary bg-surface",
     EXPIRED: "text-text-secondary bg-surface",
   }
