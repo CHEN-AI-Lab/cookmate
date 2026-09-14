@@ -125,11 +125,7 @@ export function Sidebar({
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-text-secondary hover:bg-surface hover:text-accent transition-colors w-full text-left font-medium"
           >
             <span className="flex items-center justify-center w-7 h-7 shrink-0">
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
+              <LogoutIcon />
             </span>
             <span>{t("logout")}</span>
           </button>
@@ -386,14 +382,9 @@ function UserMenu({ name, initial, t, isDemoUser }: { name: string; initial: str
               document.body
             )}
           </div>
-          <div className="border-t border-border my-1" />
-          <button
-            onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex items-center gap-2.5 px-4 py-2 text-text-secondary hover:bg-surface hover:text-error w-full text-left transition-colors"
-          >
-            <LogoutIcon />
-            <span>{t("logout")}</span>
-          </button>
+          {/* 这里原先还有一条「退出登录」，已移除：头像行右侧已经有专门的退出按钮，
+              同一个面板里放两个做同一件事的入口纯属冗余（移动端本来就只保留一个），
+              而且两处入口以后改退出逻辑要改两遍、容易漏掉一处。 */}
         </div>
       )}
     </div>
